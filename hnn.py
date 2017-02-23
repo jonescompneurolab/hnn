@@ -1,21 +1,53 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# jnk4
-#
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication
-
 import multiprocessing
+from subprocess import Popen, PIPE, call
+import shlex
+from time import time, clock
+import pickle, tempfile
+
 ncore = multiprocessing.cpu_count()
+fprm = './model/param/default.param'
 
 if not os.path.exists('model'):
   print("No model found!")
   sys.exit(1)
 
+cmd = 'mpiexec -n ' + str(ncore) + ' python ./model/run.py ./model/param/default.param'
+maxruntime = 120
+foutput = './model/data/sim.out'
+
+# run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
   print("Running simulation using",ncore,"cores.")
+  cmdargs = shlex.split(cmd)
+  print("cmd:",cmd,"cmdargs:",cmdargs)
+  proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE)
+  cstart = time(); killed = False
+  while not killed and proc.poll() is None: # job is not done
+    cend = time(); rtime = cend - cstart
+    if rtime >= maxruntime:
+      killed = True
+      print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
+      try:
+        proc.kill() # has to be called before proc ends
+      except:
+        print('could not kill')
+  if not killed:
+    try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
+    except: print('could not communicate') # Process finished.
+    try: # lack of output file may occur if invalid param values lead to an nrniv crash
+      with open(foutput,'r') as fp:
+        i = 0
+        for ln in fp.readlines():
+          i += 1
+        print("Read ",i," lines from",foutput)
+    except:
+      print('WARN: could not read simulation output:',foutput)
 
 class HNNGUI (QMainWindow):
 
