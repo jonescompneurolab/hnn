@@ -1,0 +1,173 @@
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+sim_prefix: default
+expmt_groups: {default}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Poisson input
+T_pois: 1000.
+
+# maximal conductances for all synapses
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 5e-4
+# gbar_L2Pyr_L2Pyr_ampa: 1e-3
+gbar_L2Pyr_L2Pyr_nmda: 5e-4
+# gbar_L2Basket_L2Pyr: 5e-2
+
+# max conductances TO L2Baskets
+gbar_L2Pyr_L2Basket: 5e-4
+# gbar_L2Pyr_L2Basket: 1e-2
+gbar_L2Basket_L2Basket: 2e-2
+# gbar_L2Basket_L2Basket: 2e-3
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 5e-3
+gbar_L5Pyr_L5Pyr_nmda: 5e-4
+gbar_L2Pyr_L5Pyr: 2.5e-4
+gbar_L2Basket_L5Pyr: 1e-3
+# gbar_L5Basket_L5Pyr: 2.5e-2
+
+# max conductances TO L5Baskets
+gbar_L5Basket_L5Basket: 2e-2
+# gbar_L5Basket_L5Basket: 2e-3
+gbar_L5Pyr_L5Basket: 5e-4
+# gbar_L5Pyr_L5Basket: 1e-3
+gbar_L2Pyr_L5Basket: 2.5e-4
+
+# Ongoing proximal alpha rhythm
+distribution_prox: normal
+t0_input_prox: 150.
+tstop_input_prox: 1000.
+f_input_prox: 10.
+f_stdev_prox: 20.
+events_per_cycle_prox: 2
+
+# Ongoing distal alpha rhythm
+distribution_dist: normal
+t0_input_dist: 1500.
+tstop_input_dist: 1000.
+f_input_dist: 10.
+f_stdev_dist: 20.
+events_per_cycle_dist: 2
+
+# thalamic input amplitudes and delays
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
+input_prox_A_weight_inh: 8e-5
+input_prox_A_delay_L2: 0.1
+input_prox_A_delay_L5: 1.0
+
+input_dist_A_weight_L2Pyr: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_inh: 8e-5
+input_dist_A_delay_L2: 5.0
+input_dist_A_delay_L5: 5.0
+
+# evprox (early) feed strength
+t_evprox_early: 104.
+sigma_t_evprox_early: 0
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
+
+# evprox (late) feed strength
+dt_evprox0_evprox1: -1
+t_evprox_late: 214.
+sigma_t_evprox_late: 0
+gbar_evprox_late_L2Pyr: 5.3e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2.7e-3
+gbar_evprox_late_L5Basket: 5.3e-3
+
+# evdist feed strengths
+dt_evprox0_evdist: -1
+t_evdist: 149.
+sigma_t_evdist: 0
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
+
+# amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
+# L2 Basket params
+L2Basket_Gauss_A_weight: 0.
+L2Basket_Gauss_mu: 2000.
+L2Basket_Gauss_sigma: 3.6
+L2Basket_Pois_A_weight: 0.
+L2Basket_Pois_lamtha: 0.
+
+# L2 Pyr params
+L2Pyr_Gauss_A_weight: 0.
+L2Pyr_Gauss_mu: 2000.
+L2Pyr_Gauss_sigma: 3.6
+L2Pyr_Pois_A_weight: 0.
+L2Pyr_Pois_lamtha: 0.
+
+# L5 Pyr params
+L5Pyr_Gauss_A_weight: 0.
+L5Pyr_Gauss_mu: 2000.
+L5Pyr_Gauss_sigma: 4.8
+L5Pyr_Pois_A_weight: 0.
+L5Pyr_Pois_lamtha: 0.
+
+# L5 Basket params
+L5Basket_Gauss_A_weight: 0.
+L5Basket_Gauss_mu: 2000.
+L5Basket_Gauss_sigma: 2.
+L5Basket_Pois_A_weight: 0.
+L5Basket_Pois_lamtha: 0.
+
+# analysis
+save_spec_data: 0
+f_max_spec: 41.
+
+# N_trials
+N_trials: 0
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: 0
+prng_seedcore_input_dist: 1
+prng_seedcore_extpois: 2
+prng_seedcore_extgauss: 3
+prng_seedcore_evprox_early: 4
+prng_seedcore_evdist: 5
+prng_seedcore_evprox_late: 6
+
+# Numerics
+tstop: 350.
+dt: 0.025
+
+# new params from default
+gbar_L2Pyr_L2Basket: 1e-2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1
+gbar_L2Pyr_L2Pyr_ampa: 1e-3
+gbar_L5Basket_L5Basket: 2e-3
+gbar_L5Pyr_L5Basket: 1e-3
+Itonic_A_L5Pyr_soma: 0.2
+gbar_L2Basket_L2Basket: 2e-3
+
+# new params from default
+Itonic_T_L2Pyr_soma: -1
+Itonic_t0_L2Pyr_soma: 50.
+Itonic_A_L2Pyr_soma: 0.
+
+# new params from default
+gbar_gabab_L2Basket_L2Pyr: 5e-2
+gbar_L2Basket_L2Pyr_gabaa: 5e-2
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
+
+# new params from default
+gbar_L2Basket_L2Pyr_gabab: 5e-2
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+gbar_L2Basket_L2Pyr_gabaa: 5e-2

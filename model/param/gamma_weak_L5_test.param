@@ -1,0 +1,34 @@
+# defines param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else
+
+sim_prefix: gamma_weak_L5_test
+expmt_groups: {spike}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Numerics
+tstop: 550.
+N_trials: 0
+
+gbar_L5Pyr_L5Basket: 1e-3
+gbar_L5Basket_L5Basket: 1e-2
+gbar_L5Basket_L5Pyr_gabaa: 7e-3
+
+# pois inputs
+L5Pyr_Pois_A_weight: 8e-4
+L5Pyr_Pois_lamtha: 140.
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 0.
+gbar_L5Pyr_L5Pyr_nmda: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 100.
+
+# and when these values are not -1
+prng_seedcore_extpois: -1

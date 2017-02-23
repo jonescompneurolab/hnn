@@ -1,0 +1,75 @@
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+sim_prefix: gamma_L5rand_L2strong
+expmt_groups: {spike}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Numerics
+tstop: 250.
+
+# PING L2 params
+Itonic_A_L2Pyr_soma: 1.6
+Itonic_t0_L2Pyr_soma: 0.
+Itonic_T_L2Pyr_soma: -1
+
+gbar_L2Pyr_L2Basket: 1.42e-4
+gbar_L2Basket_L2Pyr_gabab: 0.
+gbar_L2Basket_L2Pyr_gabaa: 1e-2
+
+# PING L5 Params
+Itonic_A_L5Pyr_soma: 0.
+Itonic_t0_L5Pyr_soma: 0.
+Itonic_T_L5Pyr_soma: -1
+
+gbar_L5Pyr_L5Basket: 7e-3
+gbar_L5Basket_L5Basket: 1.16e-2
+gbar_L5Basket_L5Pyr_gabaa: 0.
+gbar_L5Basket_L5Pyr_gabab: 0.
+
+L5Pyr_Pois_A_weight: 2.78e-3
+L5Pyr_Pois_lamtha: 150.
+
+# maximal conductances for all synapses
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 0.
+gbar_L2Pyr_L2Pyr_nmda: 0.
+
+# max conductances TO L2Baskets
+gbar_L2Basket_L2Basket: 0.
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 0.
+gbar_L5Pyr_L5Pyr_nmda: 0.
+gbar_L2Pyr_L5Pyr: 0.
+gbar_L2Basket_L5Pyr: 0.
+
+# max conductances TO L5Baskets
+gbar_L2Pyr_L5Basket: 0.
+
+# L2 Pyr params
+L2Pyr_Pois_A_weight: 0.
+L2Pyr_Pois_lamtha: 0.
+
+# L5 Basket params
+L5Basket_Pois_A_weight: 0.
+L5Basket_Pois_lamtha: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 150
+
+# N_trials
+N_trials: 0
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: 0
+prng_seedcore_input_dist: 0
+prng_seedcore_extpois: -1

@@ -1,0 +1,38 @@
+# defines param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else
+
+sim_prefix: gamma_L5ping_L2weak
+expmt_groups: {laminar}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Numerics
+tstop: 550.
+N_trials: 0
+
+# L2: pois inputs
+L2Pyr_Pois_A_weight: 8e-4
+L2Pyr_Pois_lamtha: 140.
+
+# L2: weak ping
+gbar_L2Pyr_L2Basket: 1.2e-3
+gbar_L2Basket_L2Basket: 1e-2
+gbar_L2Basket_L2Pyr_gabaa: 7e-3
+
+# L5: PING
+Itonic_A_L5Pyr_soma: 6.
+
+gbar_L5Pyr_L5Basket: 6e-5
+gbar_L5Basket_L5Pyr_gabaa: 0.3
+gbar_L5Basket_L5Basket: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 80.
+
+# Random seeds
+prng_seedcore_extpois: -1

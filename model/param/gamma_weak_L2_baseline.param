@@ -1,0 +1,38 @@
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+sim_prefix: gamma_weak_L2_disconnected
+expmt_groups: {spike}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Numerics
+tstop: 250.
+
+gbar_L2Pyr_L2Basket: 0.
+gbar_L2Basket_L2Basket: 0.
+gbar_L2Basket_L2Pyr_gabaa: 0.
+
+# pois inputs
+L2Pyr_Pois_A_weight: 8e-4
+L2Pyr_Pois_lamtha: 140.
+
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 0.
+gbar_L2Pyr_L2Pyr_nmda: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 100.
+
+# N_trials
+N_trials: 5
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_extpois: -1

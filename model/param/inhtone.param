@@ -1,0 +1,180 @@
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+sim_prefix: inhtone_lamtha
+expmt_groups: {baseline}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
+# L2 Basket params
+# L2Basket_Gauss_A_weight: 0.
+L2Basket_Gauss_A_weight: 1.5e-4
+L2Basket_Gauss_mu: 300.
+L2Basket_Gauss_sigma: 2.5
+L2Basket_Pois_A_weight: 1.25e-2
+L2Basket_Pois_lamtha: [10., 20.]
+
+# L2 Pyr params
+# L2Pyr_Gauss_A_weight: [2e-4, 3e-4]
+L2Pyr_Gauss_A_weight: 1.5e-4
+L2Pyr_Gauss_mu: 300.
+L2Pyr_Gauss_sigma: 15.
+# L2Pyr_Gauss_sigma: [15., 10.]
+L2Pyr_Pois_A_weight: 6.25e-3
+L2Pyr_Pois_lamtha: 5.
+
+# L5 Pyr params
+L5Pyr_Gauss_A_weight: 3e-3
+L5Pyr_Gauss_mu: 3000.
+L5Pyr_Gauss_sigma: 5.
+L5Pyr_Pois_A_weight: 2e-2
+L5Pyr_Pois_lamtha: 5.
+
+# L5 Basket params
+L5Basket_Gauss_A_weight: 0
+L5Basket_Gauss_mu: 3000.
+L5Basket_Gauss_sigma: 5.
+L5Basket_Pois_A_weight: 6.25e-3
+L5Basket_Pois_lamtha: 5.
+
+# maximal conductances for all synapses
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 0.
+gbar_L2Pyr_L2Pyr_nmda: 0.
+# gbar_L2Pyr_L2Pyr_ampa: 5e-4
+# gbar_L2Pyr_L2Pyr_nmda: 5e-4
+# gbar_L2Basket_L2Pyr: 5.56e-3
+# gbar_L2Basket_L2Pyr: 5e-2
+
+# max conductances TO L2Baskets
+gbar_L2Pyr_L2Basket: 5e-4
+gbar_L2Basket_L2Basket: 0
+# gbar_L2Basket_L2Basket: 2e-2
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 0.
+gbar_L5Pyr_L5Pyr_nmda: 0.
+# gbar_L5Pyr_L5Pyr_ampa: 5e-3
+# gbar_L5Pyr_L5Pyr_nmda: 5e-4
+gbar_L2Pyr_L5Pyr: 2.5e-4
+gbar_L2Basket_L5Pyr: 5e-4
+# gbar_L2Basket_L5Pyr: 1e-3
+# gbar_L5Basket_L5Pyr: 2.7e-3
+# gbar_L5Basket_L5Pyr: 2.5e-2
+
+# max conductances TO L5Baskets
+gbar_L5Basket_L5Basket: 0.
+# gbar_L5Basket_L5Basket: 2e-2
+gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 2.5e-4
+
+# Ongoing proximal alpha rhythm
+t0_input_prox: 2000.
+tstop_input_prox: 2000.
+f_input_prox: 10.
+f_stdev_prox: 20.
+
+# Ongoing distal alpha rhythm
+t0_input_dist: 2000.
+tstop_input_dist: 2000.
+f_input_dist: 10.
+f_stdev_dist: 20.
+
+# thalamic input amplitudes and delays
+input_prox_A_weight_inh_ampa: 8e-5
+input_prox_A_delay_L2: 0.1
+input_prox_A_delay_L5: 1.0
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_weight_inh_ampa: 4e-5
+input_dist_A_delay_L2: 5.0
+input_dist_A_delay_L5: 5.0
+
+# times for evoked responses
+t_evprox_early: 2000.
+t_evprox_late: 2000.
+t_evdist: 2000.
+
+sigma_t_evprox_early: 2.5
+sigma_t_evprox_late: 6.
+sigma_t_evdist: 7.
+
+# evoked response strengths
+# evprox (early) feed strength
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
+
+# evprox (late) feed strength
+gbar_evprox_late_L2Pyr: 5e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2e-3
+gbar_evprox_late_L5Basket: 1e-3
+
+# evdist feed strengths
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
+
+# analysis
+save_spec_data: 0
+f_max_spec: 41.
+
+# Poisson input
+T_pois: 500.
+
+# n trials
+N_trials: 0
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: 0
+prng_seedcore_input_dist: 1
+prng_seedcore_extpois: 2
+prng_seedcore_extgauss: 3
+prng_seedcore_evprox_early: 4
+prng_seedcore_evdist: 5
+prng_seedcore_evprox_late: 6
+
+# Numerics
+tstop: 400.
+dt: 0.025
+
+# new params from default
+dt_evprox0_evdist: -1
+dt_evprox0_evprox1: -1
+
+# new params from default
+events_per_cycle_prox: 2
+events_per_cycle_dist: 2
+distribution_dist: normal
+distribution_prox: normal
+
+# new params from default
+input_prox_A_weight_L2Pyr_ampa: 4e-5
+input_prox_A_weight_L5Pyr_ampa: 4e-5
+input_dist_A_weight_L5Pyr_ampa: 4e-5
+input_dist_A_weight_L2Pyr_ampa: 4e-5
+
+# new params from default
+Itonic_A_L5Pyr_soma: 0.2
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1
+
+# new params from default
+Itonic_T_L2Pyr_soma: -1
+Itonic_t0_L2Pyr_soma: 50.
+Itonic_A_L2Pyr_soma: 0.
+
+# new params from default
+gbar_L2Basket_L2Pyr_gabab: 5e-22
+gbar_L2Basket_L2Pyr_gabaa: 5e-2
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2

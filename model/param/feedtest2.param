@@ -1,0 +1,104 @@
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+sim_prefix: test-10Hz
+expmt_groups: {testing0}
+# expmt_groups: {stdev-00, stdev-05, stdev-10, stdev-20, stdev-30}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 2
+N_pyr_y: 2
+
+# Ongoing proximal alpha rhythm
+distribution_prox: normal
+t0_input_prox: 50.
+tstop_input_prox: 0.
+f_input_prox: [10.]
+f_stdev_prox: 20.
+# f_input_prox: {5, 10, 15, 20, 30., 40}
+# f_stdev_prox: [1., 5., 10., 20., 30.]
+# f_stdev_prox: {0., 5., 10., 20., 30.}
+events_per_cycle_prox: 2
+
+# Ongoing distal alpha rhythm
+distribution_dist: normal
+t0_input_dist: 50.
+tstop_input_dist: 0.
+f_input_dist: [10.]
+f_stdev_dist: 20.
+# f_input_dist: 0.
+# f_stdev_dist: 0.
+# f_stdev_dist: {1., 5., 10., 20., 30.}
+events_per_cycle_dist: 2
+
+# thalamic input amplitudes and delays
+input_prox_A_weight_L2Pyr_ampa: 4e-5
+input_prox_A_weight_L5Pyr_ampa: 4e-5
+input_prox_A_weight_inh_ampa: 4e-5
+input_prox_A_weight_L2Pyr_nmda: 0.
+input_prox_A_weight_L5Pyr_nmda: 0.
+input_prox_A_weight_inh_nmda: 0.
+input_prox_A_delay_L2: 0.1
+input_prox_A_delay_L5: 1.0
+
+# current values, not sure where these distal values come from, need to check
+input_dist_A_weight_L5Pyr_ampa: 4e-5
+input_dist_A_weight_L2Pyr_ampa: 4e-5
+input_dist_A_weight_inh_ampa: 4e-5
+input_dist_A_weight_L5Pyr_nmda: 0.
+input_dist_A_weight_L2Pyr_nmda: 0.
+input_dist_A_weight_inh_nmda: 0.
+input_dist_A_delay_L2: 5. 
+input_dist_A_delay_L5: 5.
+# input_dist_A_delay_L2: [50., 60., 70., 80., 90.]
+# input_dist_A_delay_L5: input_dist_A_delay_L2
+# input_dist_A_delay_L2: [0.1, 5., 10., 20., 30.]
+# input_dist_A_delay_L5: input_dist_A_delay_L2
+
+# analysis
+save_spec_data: 1
+f_max_spec: 60.
+
+# n trials
+N_trials: 10
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+prng_seedcore_input_prox: -1
+prng_seedcore_input_dist: -1
+prng_seedcore_extpois: -1
+prng_seedcore_extgauss: -1
+prng_seedcore_evprox_early: -1
+prng_seedcore_evdist: -1
+prng_seedcore_evprox_late: -1
+
+# Numerics
+tstop: 1000.
+dt: 0.025
+
+# maximal conductances for all synapses
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 5e-4
+gbar_L2Pyr_L2Pyr_nmda: 5e-4
+gbar_L2Basket_L2Pyr_gabab: 5e-2
+gbar_L2Basket_L2Pyr_gabaa: 5e-2
+
+# max conductances TO L2Baskets
+gbar_L2Pyr_L2Basket: 5e-4
+gbar_L2Basket_L2Basket: 2e-2
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 5e-3
+gbar_L5Pyr_L5Pyr_nmda: 5e-4
+gbar_L2Pyr_L5Pyr: 2.5e-4
+gbar_L2Basket_L5Pyr: 1e-3
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
+
+# max conductances TO L5Baskets
+gbar_L5Basket_L5Basket: 2e-2
+gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 2.5e-4

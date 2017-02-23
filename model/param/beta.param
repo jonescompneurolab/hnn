@@ -1,0 +1,36 @@
+# defines param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+
+sim_prefix: beta_tests
+expmt_groups: {tonic}
+
+# dim for grids
+N_pyr_x: 1
+N_pyr_y: 1
+
+# Numerics
+tstop: 1000.
+N_trials: 0
+
+# PING L2 params
+Itonic_A_L2Pyr_soma: 2.7
+Itonic_A_L2Basket: 0.15144
+
+# m current params
+L2Pyr_soma_gbar_km: 1000.
+L2Pyr_dend_gbar_km: 1000.
+
+# gbar_L2Pyr_L2Basket: 1e-4
+# gbar_L2Basket_L2Pyr_gabaa: 0.15
+gbar_L2Basket_L2Pyr_gabaa: 3.0
+gbar_L2Basket_L2Basket: 1.0
+
+# max conductances TO L2Pyrs
+gbar_L2Pyr_L2Pyr_ampa: 0.
+gbar_L2Pyr_L2Pyr_nmda: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 80.

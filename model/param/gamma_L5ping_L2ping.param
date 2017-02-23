@@ -1,0 +1,35 @@
+# defines param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else
+
+sim_prefix: gamma_L5ping_L2ping
+expmt_groups: {spike}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# Numerics
+tstop: 550.
+N_trials: 0
+
+# PING Params
+Itonic_A_L2Pyr_soma: L[1.7, 5., 4]
+Itonic_A_L5Pyr_soma: 6.
+
+# L2 params
+gbar_L2Pyr_L2Basket: 6.0e-5
+gbar_L2Basket_L2Pyr_gabaa: 0.15
+
+# L5 params
+gbar_L5Pyr_L5Basket: 6.0e-5
+gbar_L5Basket_L5Pyr_gabaa: 0.3
+
+# old L5 params ...
+# gbar_L5Pyr_L5Basket: 1.42e-4
+# gbar_L5Basket_L5Pyr_gabaa: 1e-2
+
+# analysis
+save_spec_data: 1
+f_max_spec: 80.
