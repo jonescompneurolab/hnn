@@ -402,10 +402,11 @@ def return_data_dir():
   fshort_default = '.datadir_default'
   dcode = os.getcwd()
   # check if the current working directory is this one
-  if dcode.split('/')[-1] == 'fn': dcode = os.path.abspath(os.path.join(dcode, '..'))
+  #if dcode.split('/')[-1] == 'model': dcode = os.path.abspath(os.path.join(dcode, '..'))
   # get the full filenames
-  flocal = os.path.join(dcode, fshort_local)
-  fdefault = os.path.join(dcode, fshort_default)
+  flocal = fshort_local # os.path.join(dcode, fshort_local)
+  fdefault = fshort_default # os.path.join(dcode, fshort_default)
+  print("dcode:",dcode,"flocal:",flocal,"fdefault:",fdefault)
   # check if the local file exists
   if not os.path.isfile(flocal):
     if os.path.isfile(fdefault):

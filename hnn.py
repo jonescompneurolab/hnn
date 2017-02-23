@@ -17,16 +17,18 @@ if not os.path.exists('model'):
   print("No model found!")
   sys.exit(1)
 
-cmd = 'mpiexec -n ' + str(ncore) + ' python ./model/run.py ./model/param/default.param'
+cmd = 'mpiexec -n ' + str(ncore) + ' python run.py param/default.param'
 maxruntime = 120
-foutput = './model/data/sim.out'
+foutput = './data/sim.out'
+debug = False # True
 
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
   print("Running simulation using",ncore,"cores.")
   cmdargs = shlex.split(cmd)
   print("cmd:",cmd,"cmdargs:",cmdargs)
-  proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE)
+  proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+  print("proc:",proc)
   cstart = time(); killed = False
   while not killed and proc.poll() is None: # job is not done
     cend = time(); rtime = cend - cstart
@@ -86,6 +88,10 @@ class HNNGUI (QMainWindow):
     self.show()
         
 if __name__ == '__main__':    
-  app = QApplication(sys.argv)
-  ex = HNNGUI()
-  sys.exit(app.exec_())  
+  if debug:
+    pass
+  else:
+    app = QApplication(sys.argv)
+    ex = HNNGUI()
+    sys.exit(app.exec_())  
+  
