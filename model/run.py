@@ -12,11 +12,11 @@ sys.path.append(os.path.join(os.getcwd(), 'fn'))
 import time
 import shutil
 import numpy as np
-from neuron import h
+
 h.load_file("stdrun.hoc")
 
 # Cells are defined in other files
-import net
+import network
 import fileio as fio
 import paramrw as paramrw
 import plotfn as plotfn
@@ -185,7 +185,7 @@ def exec_runsim(f_psim):
                 file_spikes_tmp = fio.file_spike_tmp(dproj)
 
                 # Create network from net's Network class
-                net = net.NetworkOnNode(p)
+                net = network.NetworkOnNode(p)
 
                 # debug: off (0), on (1)
                 debug = 0
