@@ -20,10 +20,10 @@ nrn.load_file("stdrun.hoc")
 
 # Cells are defined in other files
 import net
-import fn.fileio as fio
-import fn.paramrw as paramrw
-import fn.plotfn as plotfn
-import fn.specfn as specfn
+import fileio as fio
+import paramrw as paramrw
+import plotfn as plotfn
+import specfn as specfn
 
 # spike write function
 def spikes_write(net, filename_spikes):
@@ -350,12 +350,10 @@ def exec_runsim(f_psim):
         print("Simulation run time: %4.4f s" % (t1-t0))
 
 if __name__ == "__main__":
-    # reads the specified param file
-    try:
-        f_psim = sys.argv[1]
-
-    except (IndexError):
-        print("Usage: %s param_input" % sys.argv[0])
-        sys.exit(1)
-
-    exec_runsim(f_psim)
+  # reads the specified param file
+  if len(sys.argv) > 1:
+    f_psim = sys.argv[1]
+  else:
+    f_psim = "param/default.param"
+    print("Using param/default.param")
+  exec_runsim(f_psim)

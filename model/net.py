@@ -9,12 +9,12 @@ import numpy as np
 import sys
 
 from neuron import h as nrn
-from fn.class_feed import ParFeedAll
-from fn.L2_pyramidal import L2Pyr
-from fn.L5_pyramidal import L5Pyr
-from fn.L2_basket import L2Basket
-from fn.L5_basket import L5Basket
-import fn.paramrw as paramrw
+from feed import ParFeedAll
+from L2_pyramidal import L2Pyr
+from L5_pyramidal import L5Pyr
+from L2_basket import L2Basket
+from L5_basket import L5Basket
+import paramrw as paramrw
 
 # create Network class
 class NetworkOnNode():
