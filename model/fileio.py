@@ -384,6 +384,18 @@ def epscompress(dfig_spk, fext_figspk, local=0):
     for epsbakfile in epsbackuplist:
         os.remove(epsbakfile)
 
+# make dir, catch exceptions
+def safemkdir (dn):
+  try:
+    os.mkdir(dn)
+    return True
+  except OSError:
+    if not os.path.exists(dn):
+      print('could not create', dn)
+      return False
+    else:
+      return True
+
 # returns the data dir
 def return_data_dir():
   fshort_local = '.datadir_local'
@@ -399,12 +411,15 @@ def return_data_dir():
     if os.path.isfile(fdefault):
       shutil.copyfile(fdefault, flocal)
     else:
-      print("Neither default nor local data file could be found.")
-      sys.exit(1)
+      print("Neither default nor local data file could be found, trying ./data.")
+      if not safemkdir('./data'):
+        print('Could not make ./dadta')
+        sys.exit(1)
   # get the lines of the file and assume the local directory exists
   lines = clean_lines(flocal)
   ddefault = lines[0]
   # make sure it exists
+  if not os.path.exists(ddefault): safemkdir(ddefault)
   if os.path.exists(ddefault):
     dfinal = ddefault
   else:
