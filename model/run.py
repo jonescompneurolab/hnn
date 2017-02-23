@@ -12,11 +12,7 @@ sys.path.append(os.path.join(os.getcwd(), 'fn'))
 import time
 import shutil
 import numpy as np
-#from mpi4py import MPI
-from multiprocessing import Pool
-
-from neuron import h as nrn
-nrn.load_file("stdrun.hoc")
+h.load_file("stdrun.hoc")
 
 # Cells are defined in other files
 import net
@@ -27,13 +23,13 @@ import specfn as specfn
 
 # spike write function
 def spikes_write(net, filename_spikes):
-    pc = nrn.ParallelContext()
+    pc = h.ParallelContext()
 
     for rank in range(int(pc.nhost())):
         # guarantees node order and no competition
         pc.barrier()
         if rank == int(pc.id()):
-            # net.spiketimes and net.spikegids are type nrn.Vector()
+            # net.spiketimes and net.spikegids are type h.Vector()
             L = int(net.spikegids.size())
             with open(filename_spikes, 'a') as file_spikes:
                 for i in range(L):
@@ -67,7 +63,7 @@ def exec_runsim(f_psim):
     # serial execution of each param file, since we're already doing charity here
     # copy the param file and write the param dict to a file for that specific sim.
 
-    pc = nrn.ParallelContext()
+    pc = h.ParallelContext()
     rank = int(pc.id())
     # print(rank, pc.nhost())
 
@@ -80,7 +76,6 @@ def exec_runsim(f_psim):
 
     # one directory for all experiments
     if rank == 0:
-        print('yo')
         ddir = fio.SimulationPaths()
         ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
         ddir.create_dirs()
@@ -141,8 +136,8 @@ def exec_runsim(f_psim):
                     print("Run %i of %i" % (n, N_total_runs-1))
 
                 # global variable bs, should be node-independent
-                nrn("dp_total_L2 = 0.")
-                nrn("dp_total_L5 = 0.")
+                h("dp_total_L2 = 0.")
+                h("dp_total_L5 = 0.")
 
                 # if there are N_trials, then randomize the seed
                 # establishes random seed for the seed seeder (yeah.)
@@ -151,8 +146,8 @@ def exec_runsim(f_psim):
 
                 if rank == 0:
                     # initialize vector to 1 element, with a 0
-                    # v = nrn.Vector(Length, Init)
-                    r = nrn.Vector(1, 0)
+                    # v = h.Vector(Length, Init)
+                    r = h.Vector(1, 0)
 
                     # seeds that come from prng_base are stereotyped
                     # these are seeded with seed rank! Blerg.
@@ -163,7 +158,7 @@ def exec_runsim(f_psim):
                         r.x[0] = prng_tmp.randint(1e9)
                 else:
                     # create the vector 'r' but don't change its init value
-                    r = nrn.Vector(1, 0)
+                    r = h.Vector(1, 0)
 
                 # broadcast random seed value in r to everyone
                 pc.broadcast(r, 0)
@@ -179,8 +174,8 @@ def exec_runsim(f_psim):
                     p[param] = prng_base.randint(1e9)
 
                 # Set tstop before instantiating any classes
-                nrn.tstop = p['tstop']
-                nrn.dt = p['dt']
+                h.tstop = p['tstop']
+                h.dt = p['dt']
 
                 # create prefix for files everyone knows about
                 exp_prefix = p_exp.trial_prefix_str % (i, j)
@@ -210,16 +205,16 @@ def exec_runsim(f_psim):
                         filename_debug = 'debug.dat'
 
                 # set t vec to record
-                t_vec = nrn.Vector()
-                t_vec.record(nrn._ref_t)
+                t_vec = h.Vector()
+                t_vec.record(h._ref_t)
 
                 # set dipoles to record
-                dp_rec_L2 = nrn.Vector()
-                dp_rec_L2.record(nrn._ref_dp_total_L2)
+                dp_rec_L2 = h.Vector()
+                dp_rec_L2.record(h._ref_dp_total_L2)
 
                 # L5 dipole
-                dp_rec_L5 = nrn.Vector()
-                dp_rec_L5.record(nrn._ref_dp_total_L5)
+                dp_rec_L5 = h.Vector()
+                dp_rec_L5.record(h._ref_dp_total_L5)
 
                 # sets the default max solver step in ms (purposefully large)
                 pc.set_maxstep(10)
@@ -227,14 +222,14 @@ def exec_runsim(f_psim):
                 # initialize cells to -65 mV and compile code
                 # after all the NetCon delays have been specified
                 # and run the solver
-                nrn.finitialize()
-                nrn.fcurrent()
+                h.finitialize()
+                h.fcurrent()
 
-                # set state variables if they have been changed since nrn.finitialize
-                nrn.frecord_init()
+                # set state variables if they have been changed since h.finitialize
+                h.frecord_init()
 
                 # actual simulation
-                pc.psolve(nrn.tstop)
+                pc.psolve(h.tstop)
 
                 # combine dp_rec, this combines on every proc
                 # 1 refers to adding the contributions together
@@ -342,7 +337,7 @@ def exec_runsim(f_psim):
 
             print("time: %4.4f s" % (time.time() - plot_start))
 
-        nrn.quit()
+        h.quit()
 
     else:
         # end clock time
