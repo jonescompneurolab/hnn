@@ -84,127 +84,100 @@ class SimulationPaths():
     # this is a hack
     # checks root expmt_group directory for any files i've thrown there
     def find_aggregate_file(self, expmt_group, datatype):
-        # file name is in format: '%s-%s-%s' % (sim_prefix, expmt_group, datatype-ish)
-        fname = '%s-%s-%s.txt' % (self.sim_prefix, expmt_group, datatype)
-        # get a list of txt files in the expmt_group
-
-        # local=1 forces the search to be local to this directory and not recursive
-        local = 1
-        flist = file_match(self.dexpmt_dict[expmt_group], fname, local)
-
-        return flist
+      # file name is in format: '%s-%s-%s' % (sim_prefix, expmt_group, datatype-ish)
+      fname = '%s-%s-%s.txt' % (self.sim_prefix, expmt_group, datatype)
+      # get a list of txt files in the expmt_group
+      # local=1 forces the search to be local to this directory and not recursive
+      local = 1
+      flist = file_match(self.dexpmt_dict[expmt_group], fname, local)
+      return flist
 
     # returns a filename for an example type of data
     def return_filename_example(self, datatype, expmt_group, sim_no=None, tr=None, ext='png'):
-        fname_short = "%s-%s" % (self.sim_prefix, expmt_group)
-
-        if sim_no is not None:
-            fname_short += "-%03i" % (sim_no)
-
-        if tr is not None:
-            fname_short += "-T%03i" % (tr)
-
-        # add the extension
-        fname_short += ".%s" % (ext)
-
-        fname = os.path.join(self.dfig[expmt_group][datatype], fname_short)
-
-        return fname
+      fname_short = "%s-%s" % (self.sim_prefix, expmt_group)
+      if sim_no is not None: fname_short += "-%03i" % (sim_no)
+      if tr is not None: fname_short += "-T%03i" % (tr)
+      # add the extension
+      fname_short += ".%s" % (ext)
+      fname = os.path.join(self.dfig[expmt_group][datatype], fname_short)
+      return fname
 
     # creates a dict of dicts for each experiment and all the datatype directories
     # this is the empty template that gets filled in later.
     def __ddata_dict_template(self):
-        dfig = dict.fromkeys(self.expmt_groups)
-
-        for key in dfig:
-            dfig[key] = dict.fromkeys(self.__datatypes)
-
-        return dfig
+      dfig = dict.fromkeys(self.expmt_groups)
+      for key in dfig: dfig[key] = dict.fromkeys(self.__datatypes)
+      return dfig
 
     # read directories for an already existing sim
     def __read_dirs(self):
-        dfig = self.__ddata_dict_template()
-
-        for expmt_group, dexpmt in self.dexpmt_dict.items():
-            for key in self.__datatypes.keys():
-                ddatatype = os.path.join(dexpmt, key)
-                dfig[expmt_group][key] = ddatatype
-
-        return dfig
+      dfig = self.__ddata_dict_template()
+      for expmt_group, dexpmt in self.dexpmt_dict.items():
+        for key in self.__datatypes.keys():
+          ddatatype = os.path.join(dexpmt, key)
+          dfig[expmt_group][key] = ddatatype
+      return dfig
 
     # extern function to create directories
     def create_dirs(self):
-        # create expmt directories
-        for expmt_group, dexpmt in self.dexpmt_dict.items():
-            dir_create(dexpmt)
-
-            for key in self.__datatypes.keys():
-                ddatatype = os.path.join(dexpmt, key)
-                self.dfig[expmt_group][key] = ddatatype
-                dir_create(ddatatype)
+      # create expmt directories
+      for expmt_group, dexpmt in self.dexpmt_dict.items():
+        dir_create(dexpmt)
+        for key in self.__datatypes.keys():
+          ddatatype = os.path.join(dexpmt, key)
+          self.dfig[expmt_group][key] = ddatatype
+          dir_create(ddatatype)
 
     # Returns date directory
     # this is NOT safe for midnight
     def __datedir(self):
-        self.str_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        ddate = os.path.join(self.dproj, self.str_date)
-
-        return ddate
+      self.str_date = datetime.datetime.now().strftime("%Y-%m-%d")
+      ddate = os.path.join(self.dproj, self.str_date)
+      return ddate
 
     # returns the directory for the sim
     def __simdir(self):
-        n = 0
+      n = 0
+      self.sim_name = self.sim_prefix + '-%03d' % n
+      dsim = os.path.join(self.ddate, self.sim_name)
+      while dir_check(dsim):
+        n += 1
         self.sim_name = self.sim_prefix + '-%03d' % n
         dsim = os.path.join(self.ddate, self.sim_name)
-
-        while dir_check(dsim):
-            n += 1
-            self.sim_name = self.sim_prefix + '-%03d' % n
-            dsim = os.path.join(self.ddate, self.sim_name)
-
-        return dsim
+      return dsim
 
     # creates all the experimental directories based on dproj
     def __create_dexpmt(self, expmt_groups):
-        d = dict.fromkeys(expmt_groups)
-        for expmt_group in d:
-            d[expmt_group] = os.path.join(self.dsim, expmt_group)
-
-        return d
+      d = dict.fromkeys(expmt_groups)
+      for expmt_group in d: d[expmt_group] = os.path.join(self.dsim, expmt_group)
+      return d
 
     # dictionary creation
     # this is specific to a expmt_group
     def create_dict(self, expmt_group):
-        fileinfo = dict.fromkeys(self.__datatypes)
-
-        for key in self.__datatypes.keys():
-            # join directory name
-            dtype = os.path.join(self.dexpmt_dict(expmt_group), key)
-            fileinfo[key] = (self.__datatypes[key], dtype)
-
-        return fileinfo
+      fileinfo = dict.fromkeys(self.__datatypes)
+      for key in self.__datatypes.keys():
+        # join directory name
+        dtype = os.path.join(self.dexpmt_dict(expmt_group), key)
+        fileinfo[key] = (self.__datatypes[key], dtype)
+      return fileinfo
 
     def return_specific_filename(self, expmt_group, datatype, n_sim, n_trial):
-        f_list = self.file_match(expmt_group, datatype)
-        trial_prefix = self.trial_prefix_str % (n_sim, n_trial)
-
-        # assume there is only one match (this should be true)
-        f_datatype = [f for f in f_list if trial_prefix in f][0]
-
-        return f_datatype
+      f_list = self.file_match(expmt_group, datatype)
+      trial_prefix = self.trial_prefix_str % (n_sim, n_trial)
+      # assume there is only one match (this should be true)
+      f_datatype = [f for f in f_list if trial_prefix in f][0]
+      return f_datatype
 
     # requires dict lookup
     def create_filename(self, expmt_group, key, name_prefix):
-        # some kind of if key in self.fileinfo.keys() catch
-        file_name_raw = name_prefix + self.__datatypes[key]
-
-        # grab the whole experimental directory
-        dexpmt = self.dexpmt_dict[expmt_group]
-
-        # create the full path name for the file
-        file_path_full = os.path.join(dexpmt, key, file_name_raw)
-
-        return file_path_full
+      # some kind of if key in self.fileinfo.keys() catch
+      file_name_raw = name_prefix + self.__datatypes[key]
+      # grab the whole experimental directory
+      dexpmt = self.dexpmt_dict[expmt_group]
+      # create the full path name for the file
+      file_path_full = os.path.join(dexpmt, key, file_name_raw)
+      return file_path_full
 
     # Get the data files matching file_ext in this directory
     # functionally the same as the previous function but with a local scope
@@ -230,56 +203,46 @@ class SimulationPaths():
         return file_list
 
     def exp_files_of_type(self, datatype):
-        # create dict of experiments
-        d = dict.fromkeys(self.expmt_groups)
-
-        # create file lists that match the dict keys for only files for this experiment
-        # this all would be nicer with a freaking folder
-        for key in d:
-            d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
-
-        return d
+      # create dict of experiments
+      d = dict.fromkeys(self.expmt_groups)
+      # create file lists that match the dict keys for only files for this experiment
+      # this all would be nicer with a freaking folder
+      for key in d: d[key] = [file for file in self.filelists[datatype] if key in file.split("/")[-1]]
+      return d
 
 # Cleans input files
 def clean_lines(file):
-    with open(file) as f_in:
-        lines = (line.rstrip() for line in f_in)
-        lines = [line for line in lines if line]
-
-    return lines
+  with open(file) as f_in:
+    lines = (line.rstrip() for line in f_in)
+    lines = [line for line in lines if line]
+  return lines
 
 # this make a little more sense in fileio
 def prettyprint(iterable_items):
-    for item in iterable_items:
-        print(item)
+  for item in iterable_items: print(item)
 
 # create gid dict from a file
 def gid_dict_from_file(fparam):
-    l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
-    d = dict.fromkeys(l)
-
-    plist = clean_lines(fparam)
-    for param in plist:
-        print(param)
+  l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
+  d = dict.fromkeys(l)
+  plist = clean_lines(fparam)
+  for param in plist: print(param)
 
 # create file name for temporary spike file
 # that every processor is aware of
 def file_spike_tmp(dproj):
-    filename_spikes = 'spikes_tmp.spk'
-    file_spikes = os.path.join(dproj, filename_spikes)
-    return file_spikes
+  filename_spikes = 'spikes_tmp.spk'
+  file_spikes = os.path.join(dproj, filename_spikes)
+  return file_spikes
 
 # this is ugly, potentially. sorry, future
 # i.e will change when the file name format changes
 def strip_extprefix(filename):
-    f_raw = filename.split("/")[-1]
-    f = f_raw.split(".")[0].split("-")[:-1]
-    ext_prefix = f.pop(0)
-
-    for part in f:
-        ext_prefix += "-%s" % part
-
-    return ext_prefix
+  f_raw = filename.split("/")[-1]
+  f = f_raw.split(".")[0].split("-")[:-1]
+  ext_prefix = f.pop(0)
+  for part in f: ext_prefix += "-%s" % part
+  return ext_prefix
 
 # Get the data files matching file_ext in this directory
 # this function traverses ALL directories
@@ -318,32 +281,24 @@ def fparam_match_minimal(dsim, p_exp):
 
 # check any directory
 def dir_check(d):
-    if not os.path.isdir(d):
-        return 0
-
-    else:
-        return os.path.isdir(d)
+  if not os.path.isdir(d): return 0
+  else: return os.path.isdir(d)
 
 # only create if check comes back 0
 def dir_create(d):
-    if not dir_check(d):
-        os.makedirs(d)
+  if not dir_check(d): os.makedirs(d)
 
 # non-destructive copy routine
 def dir_copy(din, dout):
     # this command should work on most posix systems
     cmd_cp = 'cp -R %s %s' % (din, dout)
-
     # if the dir doesn't already exist, copy it over
     if not dir_check(dout):
         # print the actual command when successful
         print(cmd_cp)
-
         # use call to run the command
         subprocess.call(cmd_cp, shell=True)
-
         return 0
-
     else:
         print("Directory already exists.")
 
@@ -431,40 +386,31 @@ def epscompress(dfig_spk, fext_figspk, local=0):
 
 # returns the data dir
 def return_data_dir():
-    fshort_local = '.datadir_local'
-    fshort_default = '.datadir_default'
-
-    dcode = os.getcwd()
-
-    # check if the current working directory is this one
-    if dcode.split('/')[-1] == 'fn':
-        dcode = os.path.abspath(os.path.join(dcode, '..'))
-
-    # get the full filenames
-    flocal = os.path.join(dcode, fshort_local)
-    fdefault = os.path.join(dcode, fshort_default)
-
-    # check if the local file exists
-    if not os.path.isfile(flocal):
-        if os.path.isfile(fdefault):
-            shutil.copyfile(fdefault, flocal)
-
-        else:
-            print("Neither default nor local data file could be found.")
-            sys.exit(1)
-
-    # get the lines of the file and assume the local directory exists
-    lines = clean_lines(flocal)
-    ddefault = lines[0]
-
-    # make sure it exists
-    if os.path.exists(ddefault):
-        dfinal = ddefault
-
+  fshort_local = '.datadir_local'
+  fshort_default = '.datadir_default'
+  dcode = os.getcwd()
+  # check if the current working directory is this one
+  if dcode.split('/')[-1] == 'fn': dcode = os.path.abspath(os.path.join(dcode, '..'))
+  # get the full filenames
+  flocal = os.path.join(dcode, fshort_local)
+  fdefault = os.path.join(dcode, fshort_default)
+  # check if the local file exists
+  if not os.path.isfile(flocal):
+    if os.path.isfile(fdefault):
+      shutil.copyfile(fdefault, flocal)
     else:
-        dfinal = None
-
-    return dfinal
+      print("Neither default nor local data file could be found.")
+      sys.exit(1)
+  # get the lines of the file and assume the local directory exists
+  lines = clean_lines(flocal)
+  ddefault = lines[0]
+  # make sure it exists
+  if os.path.exists(ddefault):
+    dfinal = ddefault
+  else:
+    dfinal = None
+  print("dfinal is",dfinal)
+  return dfinal
 
 if __name__ == '__main__':
-    return_data_dir()
+  return_data_dir()
