@@ -12,6 +12,7 @@ sys.path.append(os.path.join(os.getcwd(), 'fn'))
 import time
 import shutil
 import numpy as np
+from neuron import h
 h.load_file("stdrun.hoc")
 
 # Cells are defined in other files
