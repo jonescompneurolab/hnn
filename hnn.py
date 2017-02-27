@@ -17,10 +17,10 @@ if not os.path.exists('model'):
   print("No model found!")
   sys.exit(1)
 
-cmd = 'mpiexec -n ' + str(ncore) + ' python run.py param/default.param'
+cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi run.py param/default.param'
 maxruntime = 120
 foutput = './data/sim.out'
-debug = True
+debug = False
 
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():

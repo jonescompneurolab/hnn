@@ -347,9 +347,14 @@ def exec_runsim(f_psim):
 
 if __name__ == "__main__":
   # reads the specified param file
-  if len(sys.argv) > 1:
-    f_psim = sys.argv[1]
-  else:
+  foundprm = False
+  for i in range(len(sys.argv)):
+    if sys.argv[i].endswith('.param'):
+      f_psim = sys.argv[i]
+      foundprm = True
+      print('using ',f_psim,' param file.')
+      break
+  if not foundprm:
     f_psim = "param/default.param"
     print("Using param/default.param")
   exec_runsim(f_psim)
