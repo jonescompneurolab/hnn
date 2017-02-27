@@ -57,7 +57,7 @@ class Spikes():
     a.hist(s_agg, bins, normed=True, facecolor='g', alpha=0.75)
 
 # Class to handle extinput event times
-class ExtInputs(Spikes):
+class ExtInputs (Spikes):
   def __init__ (self, fspk, fparam):
     # load gid and param dicts
     self.gid_dict, self.p_dict = paramrw.read(fparam)
@@ -131,6 +131,7 @@ class ExtInputs(Spikes):
     if not xlim:
       xlim = (0., p_dict['tstop'])
     if len(self.inputs[extinput]):
+      print("bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
     else:
       hist = None

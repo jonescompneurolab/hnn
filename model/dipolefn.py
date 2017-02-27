@@ -14,6 +14,7 @@ import specfn
 import matplotlib.pyplot as plt
 from neuron import h as nrn
 import axes_create as ac
+from math import ceil
 
 # class Dipole() is for a single set of f_dpl and f_param
 class Dipole():
@@ -648,7 +649,7 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
     extinputs.add_delay_times()
 
     # set number of bins (150 bins per 1000ms)
-    bins = 150. * (xlim_new[1] - xlim_new[0]) / 1000.
+    bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
 
     # plot histograms
     hist = {}
