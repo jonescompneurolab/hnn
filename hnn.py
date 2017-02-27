@@ -7,7 +7,7 @@ from PyQt5.QtCore import QCoreApplication
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
-from time import time, clock
+from time import time, clock, sleep
 import pickle, tempfile
 
 ncore = multiprocessing.cpu_count()
@@ -18,20 +18,24 @@ if not os.path.exists('model'):
   sys.exit(1)
 
 cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi run.py param/default.param'
-maxruntime = 120
+maxruntime = 1200 # 20 minutes - will allow terminating sim later
 foutput = './data/sim.out'
 debug = False
+prtime = True
 
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
   print("Running simulation using",ncore,"cores.")
   cmdargs = shlex.split(cmd)
   print("cmd:",cmd,"cmdargs:",cmdargs)
-  #proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
-  proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
-  print("proc:",proc)
+  if prtime:
+    proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
+  else:
+    proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+  if debug: print("proc:",proc)
   cstart = time(); killed = False
   while not killed and proc.poll() is None: # job is not done
+    sleep(1)
     cend = time(); rtime = cend - cstart
     if rtime >= maxruntime:
       killed = True
@@ -43,6 +47,7 @@ def runsim ():
   if not killed:
     try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
     except: print('could not communicate') # Process finished.
+    """ # no output to read yet
     try: # lack of output file may occur if invalid param values lead to an nrniv crash
       with open(foutput,'r') as fp:
         i = 0
@@ -51,6 +56,7 @@ def runsim ():
         print("Read ",i," lines from",foutput)
     except:
       print('WARN: could not read simulation output:',foutput)
+    """
 
 class HNNGUI (QMainWindow):
 
