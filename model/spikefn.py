@@ -131,7 +131,7 @@ class ExtInputs (Spikes):
     if not xlim:
       xlim = (0., p_dict['tstop'])
     if len(self.inputs[extinput]):
-      print("bins:",bins,type(bins))
+      #print("bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
     else:
       hist = None

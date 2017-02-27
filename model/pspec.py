@@ -13,6 +13,7 @@ import paramrw
 import fileio as fio
 import multiprocessing as mp
 from neuron import h as nrn
+from math import ceil
 
 import fileio as fio
 import currentfn
@@ -139,7 +140,7 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
     extinputs.get_envelope(dpl.t, feed='dist')
 
     # set number of bins (150 bins per 1000ms)
-    bins = 150. * (xlim_new[1] - xlim_new[0]) / 1000.
+    bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins should be int
 
     # plot histograms
     hist = {}
