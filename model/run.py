@@ -95,7 +95,7 @@ def writedat (p,f_psim,rank,debug):
     print("... finished in: %4.4f s" % (t_sims[n]))
 """
 
-def runanalysis ():
+def runanalysis (ddir,p):
   print("Analysis ...",)
   t_start_analysis = time.time()
   # run the spectral analysis
@@ -108,15 +108,44 @@ def runanalysis ():
   specfn.analysis_typespecific(ddir, spec_opts)
   print("time: %4.4f s" % (time.time() - t_start_analysis))
 
-  def savefigs ():
-    print("Plot ...",)
-    plot_start = time.time()
-    # run plots and epscompress function
-    # spec results is passed as an argument here
-    # because it's not necessarily saved
-    xlim_plot = (0., p['tstop'])
-    plotfn.pall(ddir, p_exp, xlim_plot)
-    print("time: %4.4f s" % (time.time() - plot_start))
+def savefigs (ddir,p,p_exp):
+  print("Plot ...",)
+  plot_start = time.time()
+  # run plots and epscompress function
+  # spec results is passed as an argument here
+  # because it's not necessarily saved
+  xlim_plot = (0., p['tstop'])
+  plotfn.pall(ddir, p_exp, xlim_plot)
+  print("time: %4.4f s" % (time.time() - plot_start))
+
+def setupsimdir (f_psim,dproj,p_exp):
+  ddir = fio.SimulationPaths()
+  ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
+  ddir.create_dirs()
+  copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
+  # iterate through groups and through params in the group
+  N_expmt_groups = len(p_exp.expmt_groups)
+  s = '%i total experimental group'
+  # purely for vanity
+  if N_expmt_groups > 1: s += 's'
+  print(s % N_expmt_groups)
+  return ddir
+
+def setoutfiles (ddir,expmt_group,exp_prefix,debug):
+  # create file names
+  file_dpl = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
+  file_current = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
+  file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
+  file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
+  file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
+  # if debug is set to 1, this debug block will run
+  if debug:
+    # net's method rec_debug(rank, gid)
+    v_debug = net.rec_debug(0, 8)
+  else:
+    v_debug = None
+  filename_debug = 'debug.dat'
+  return file_dpl, file_current, file_param, file_spikes, file_spec, filename_debug, v_debug
 
 # All units for time: ms
 def exec_runsim (f_psim):
@@ -134,19 +163,7 @@ def exec_runsim (f_psim):
   p_exp = paramrw.ExpParams(f_psim)
   # project directory
   dproj = fio.return_data_dir()
-  # one directory for all experiments
-  if rank == 0:
-    ddir = fio.SimulationPaths()
-    ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
-    ddir.create_dirs()
-    copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
-  # iterate through groups and through params in the group
-  if rank == 0:
-    N_expmt_groups = len(p_exp.expmt_groups)
-    s = '%i total experimental group'
-    # purely for vanity
-    if N_expmt_groups > 1: s += 's'
-    print(s % N_expmt_groups)
+  if rank == 0: ddir = setupsimdir(f_psim,dproj,p_exp) # one directory for all experiments
   # Set number of trials per unique simulation per experiment
   # if N_trials is set to 0, run 1 anyway!
   if not p_exp.N_trials: N_trialruns = 1
@@ -179,6 +196,7 @@ def exec_runsim (f_psim):
           # global variable bs, should be node-independent
           h("dp_total_L2 = 0.")
           h("dp_total_L5 = 0.")
+
           # if there are N_trials, then randomize the seed
           # establishes random seed for the seed seeder (yeah.)
           # this creates a prng_tmp on each, but only the value from 0 will be used
@@ -206,6 +224,7 @@ def exec_runsim (f_psim):
           # otherwise, its originally set value will remain
           # give a random int seed from [0, 1e9]
           for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
+          
           # Set tstop before instantiating any classes
           h.tstop = p['tstop']
           h.dt = p['dt']
@@ -219,17 +238,7 @@ def exec_runsim (f_psim):
           debug = 0
           # create rotating data files and dirs on ONE central node
           if rank == 0:
-            # create file names
-            file_dpl = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
-            file_current = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
-            file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
-            file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
-            file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-            # if debug is set to 1, this debug block will run
-            if debug:
-              # net's method rec_debug(rank, gid)
-              v_debug = net.rec_debug(0, 8)
-              filename_debug = 'debug.dat'
+            file_dpl, file_current, file_param, file_spikes, file_spec, filename_debug, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
           # set t vec to record
           t_vec = h.Vector()
           t_vec.record(h._ref_t)
@@ -319,8 +328,8 @@ def exec_runsim (f_psim):
     t1 = time.time()
     print("Simulation run time: %4.4f s" % (t1-t0))
 
-  runanalysis() # run spectral analysis
-  savefigs() # save output figures
+  runanalysis(ddir,p) # run spectral analysis
+  savefigs(ddir,p,p_exp) # save output figures
 
   if pc.nhost() > 1: h.quit()
 
