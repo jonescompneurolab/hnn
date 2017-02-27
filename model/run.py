@@ -95,6 +95,29 @@ def writedat (p,f_psim,rank,debug):
     print("... finished in: %4.4f s" % (t_sims[n]))
 """
 
+def runanalysis ():
+  print("Analysis ...",)
+  t_start_analysis = time.time()
+  # run the spectral analysis
+  spec_opts = {
+    'type': 'dpl_laminar',
+    'f_max': p['f_max_spec'],
+    'save_date': 0,
+    'runtype': 'parallel',
+  }
+  specfn.analysis_typespecific(ddir, spec_opts)
+  print("time: %4.4f s" % (time.time() - t_start_analysis))
+
+  def savefigs ():
+    print("Plot ...",)
+    plot_start = time.time()
+    # run plots and epscompress function
+    # spec results is passed as an argument here
+    # because it's not necessarily saved
+    xlim_plot = (0., p['tstop'])
+    plotfn.pall(ddir, p_exp, xlim_plot)
+    print("time: %4.4f s" % (time.time() - plot_start))
+
 # All units for time: ms
 def exec_runsim (f_psim):
   # clock start time
@@ -296,32 +319,8 @@ def exec_runsim (f_psim):
     t1 = time.time()
     print("Simulation run time: %4.4f s" % (t1-t0))
 
-  def runanalysis ():
-    print("Analysis ...",)
-    t_start_analysis = time.time()
-    # run the spectral analysis
-    spec_opts = {
-      'type': 'dpl_laminar',
-      'f_max': p['f_max_spec'],
-      'save_date': 0,
-      'runtype': 'parallel',
-    }
-    specfn.analysis_typespecific(ddir, spec_opts)
-    print("time: %4.4f s" % (time.time() - t_start_analysis))
-
-  runanalysis()
-
-  def savefigs ():
-    print("Plot ...",)
-    plot_start = time.time()
-    # run plots and epscompress function
-    # spec results is passed as an argument here
-    # because it's not necessarily saved
-    xlim_plot = (0., p['tstop'])
-    plotfn.pall(ddir, p_exp, xlim_plot)
-    print("time: %4.4f s" % (time.time() - plot_start))
-
-  savefigs()
+  runanalysis() # run spectral analysis
+  savefigs() # save output figures
 
   if pc.nhost() > 1: h.quit()
 
