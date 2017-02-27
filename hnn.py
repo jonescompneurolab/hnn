@@ -27,7 +27,8 @@ def runsim ():
   print("Running simulation using",ncore,"cores.")
   cmdargs = shlex.split(cmd)
   print("cmd:",cmd,"cmdargs:",cmdargs)
-  proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+  #proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+  proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
   print("proc:",proc)
   cstart = time(); killed = False
   while not killed and proc.poll() is None: # job is not done

@@ -48,6 +48,15 @@ def copy_paramfile (dsim, f_psim, str_date):
   # open the new param file and append the date to it
   with open(paramfile_sim, 'a') as f_param: f_param.write('\nRun_Date: %s' % str_date)
 
+def prsimtime ():
+  sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
+  sys.stdout.flush()
+
+# handler for printing out time during simulation run
+def evprtime ():
+  for i in range(0,int(h.tstop),100): 
+    h.cvode.event(i, "print(" + str(i) + ")")
+
 # All units for time: ms
 def exec_runsim (f_psim):
     # clock start time
@@ -180,6 +189,8 @@ def exec_runsim (f_psim):
                 # after all the NetCon delays have been specified
                 # and run the solver
                 h.finitialize()
+                if rank == 0: 
+                  for tt in range(0,int(h.tstop),100): h.cvode.event(tt, prsimtime)
                 h.fcurrent()
                 # set state variables if they have been changed since h.finitialize
                 h.frecord_init()
