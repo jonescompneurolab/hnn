@@ -20,7 +20,7 @@ if not os.path.exists('model'):
 cmd = 'mpiexec -n ' + str(ncore) + ' python run.py param/default.param'
 maxruntime = 120
 foutput = './data/sim.out'
-debug = False # True
+debug = True
 
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
