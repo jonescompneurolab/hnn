@@ -54,13 +54,12 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-"""
-def writedat (p,f_psim,rank,debug):
+def writedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
     # write the dipole
-    with open(file_dpl, 'a') as f:
+    with open(doutf['file_dpl'], 'a') as f:
       for k in range(int(t_vec.size())):
         f.write("%03.3f\t" % t_vec.x[k])
         f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
@@ -68,7 +67,7 @@ def writedat (p,f_psim,rank,debug):
         f.write("%5.4f\n" % dp_rec_L5.x[k])
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic
-    with open(file_current, 'w') as fc:
+    with open(doutf['file_current'], 'w') as fc:
       for t, i_L2, i_L5 in zip(t_vec.x, net.current['L2Pyr_soma'].x, net.current['L5Pyr_soma'].x):
         fc.write("%03.3f\t" % t)
         # fc.write("%5.4f\t" % (i_L2 + i_L5))
@@ -79,21 +78,21 @@ def writedat (p,f_psim,rank,debug):
     p['Trial'] = j
     p['exp_prefix'] = exp_prefix
     # write params to the file
-    paramrw.write(file_param, p, net.gid_dict)
+    paramrw.write(doutf['file_param'], p, net.gid_dict)
     if debug:
-      with open(filename_debug, 'w+') as file_debug:
+      with open(doutf['filename_debug'], 'w+') as file_debug:
         for m in range(int(t_vec.size())):
           file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[m], v_debug.x[m]))
       # also create a debug plot
-      pdipole(filename_debug, os.getcwd())
+      pdipole(doutf['filename_debug'], os.getcwd())
   # write output spikes
+  file_spikes_tmp = fio.file_spike_tmp(dproj)
   spikes_write(net, file_spikes_tmp)
   # move the spike file to the spike dir
   if rank == 0:
-    shutil.move(file_spikes_tmp, file_spikes)
-    t_sims[n] = time.time() - t_trial_start
-    print("... finished in: %4.4f s" % (t_sims[n]))
-"""
+    shutil.move(file_spikes_tmp, doutf['file_spikes'])
+    t_sims[simindex] = time.time() - t_trial_start
+    print("... finished in: %4.4f s" % (t_sims[simindex]))
 
 def runanalysis (ddir,p):
   print("Analysis ...",)
@@ -132,20 +131,21 @@ def setupsimdir (f_psim,dproj,p_exp):
   return ddir
 
 def setoutfiles (ddir,expmt_group,exp_prefix,debug):
+  doutf = {}
   # create file names
-  file_dpl = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
-  file_current = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
-  file_param = ddir.create_filename(expmt_group, 'param', exp_prefix)
-  file_spikes = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
-  file_spec = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
+  doutf['file_dpl'] = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
+  doutf['file_current'] = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
+  doutf['file_param'] = ddir.create_filename(expmt_group, 'param', exp_prefix)
+  doutf['file_spikes'] = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
+  doutf['file_spec'] = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
   # if debug is set to 1, this debug block will run
   if debug:
     # net's method rec_debug(rank, gid)
     v_debug = net.rec_debug(0, 8)
   else:
     v_debug = None
-  filename_debug = 'debug.dat'
-  return file_dpl, file_current, file_param, file_spikes, file_spec, filename_debug, v_debug
+  doutf['filename_debug'] = 'debug.dat'
+  return doutf, v_debug
 
 # All units for time: ms
 def exec_runsim (f_psim):
@@ -172,9 +172,9 @@ def exec_runsim (f_psim):
   for expmt_group in p_exp.expmt_groups:
       if rank == 0:
         print("Experimental group: %s" % expmt_group)
-        N_total_runs = p_exp.N_sims * N_trialruns
-        # simulation times, to get a qnd avg
-        t_sims = np.zeros(N_total_runs)
+      N_total_runs = p_exp.N_sims * N_trialruns
+      # simulation times, to get a qnd avg
+      t_sims = np.zeros(N_total_runs)
       # iterate through number of unique simulations
       for i in range(p_exp.N_sims):
         if rank == 0: t_expmt_start = time.time()
@@ -186,13 +186,14 @@ def exec_runsim (f_psim):
           # tries to ensure we're all running the same params at the same time!
           pc.barrier()
           pc.gid_clear()
-          if rank == 0:
-            # create a compound index for all sims
-            n = i*N_trialruns+j
-            # trial start time
-            t_trial_start = time.time()
-            # print the run number
-            print("Run %i of %i" % (n, N_total_runs-1))
+
+          # create a compound index for all sims
+          simindex = n = i*N_trialruns+j
+          # trial start time
+          t_trial_start = time.time()
+          # print the run number
+          if rank==0: print("Run %i of %i" % (n, N_total_runs-1))
+
           # global variable bs, should be node-independent
           h("dp_total_L2 = 0.")
           h("dp_total_L5 = 0.")
@@ -237,8 +238,8 @@ def exec_runsim (f_psim):
           # debug: off (0), on (1)
           debug = 0
           # create rotating data files and dirs on ONE central node
-          if rank == 0:
-            file_dpl, file_current, file_param, file_spikes, file_spec, filename_debug, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
+          doutf = {}
+          if rank == 0: doutf, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
           # set t vec to record
           t_vec = h.Vector()
           t_vec.record(h._ref_t)
@@ -273,43 +274,9 @@ def exec_runsim (f_psim):
 
           # write time and calculated dipole to data file only if on the first proc
           # only execute this statement on one proc
-          if rank == 0:
-              # write the dipole
-              with open(file_dpl, 'a') as f:
-                for k in range(int(t_vec.size())):
-                  f.write("%03.3f\t" % t_vec.x[k])
-                  f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
-                  f.write("%5.4f\t" % dp_rec_L2.x[k])
-                  f.write("%5.4f\n" % dp_rec_L5.x[k])
-              # write the somatic current to the file
-              # for now does not write the total but just L2 somatic and L5 somatic
-              with open(file_current, 'w') as fc:
-                for t, i_L2, i_L5 in zip(t_vec.x, net.current['L2Pyr_soma'].x, net.current['L5Pyr_soma'].x):
-                  fc.write("%03.3f\t" % t)
-                  # fc.write("%5.4f\t" % (i_L2 + i_L5))
-                  fc.write("%5.4f\t" % i_L2)
-                  fc.write("%5.4f\n" % i_L5)
-              # write the params, but add some more information
-              p['Sim_No'] = i
-              p['Trial'] = j
-              p['exp_prefix'] = exp_prefix
-              # write params to the file
-              paramrw.write(file_param, p, net.gid_dict)
-              if debug:
-                with open(filename_debug, 'w+') as file_debug:
-                  for m in range(int(t_vec.size())):
-                    file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[m], v_debug.x[m]))
-                # also create a debug plot
-                pdipole(filename_debug, os.getcwd())
-          # write output spikes
-          spikes_write(net, file_spikes_tmp)
-          # move the spike file to the spike dir
-          if rank == 0:
-            shutil.move(file_spikes_tmp, file_spikes)
-            t_sims[n] = time.time() - t_trial_start
-            print("... finished in: %4.4f s" % (t_sims[n]))
+          writedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
 
-      # completely superficial
+      # print runtimes
       if rank == 0:
         # print qnd mean
         print("Total runtime: %4.4f s, Mean runtime: %4.4f s" % (np.sum(t_sims), np.mean(t_sims)))
