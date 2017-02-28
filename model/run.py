@@ -49,12 +49,12 @@ def copy_paramfile (dsim, f_psim, str_date):
   with open(paramfile_sim, 'a') as f_param: f_param.write('\nRun_Date: %s' % str_date)
 
 # callback function for printing out time during simulation run
-printdt = 25
+printdt = 10
 def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-def writedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex):
+def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -274,7 +274,7 @@ def exec_runsim (f_psim):
 
           # write time and calculated dipole to data file only if on the first proc
           # only execute this statement on one proc
-          writedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
+          savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
 
       # print runtimes
       if rank == 0:
