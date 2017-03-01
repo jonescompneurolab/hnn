@@ -52,7 +52,7 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex):
+def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,exp_prefix,t_trial_start,simindex):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -72,8 +72,6 @@ def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debu
         fc.write("%5.4f\t" % i_L2)
         fc.write("%5.4f\n" % i_L5)
     # write the params, but add some more information
-    p['Sim_No'] = i
-    p['Trial'] = j
     p['exp_prefix'] = exp_prefix
     # write params to the file
     paramrw.write(doutf['file_param'], p, net.gid_dict)
@@ -270,7 +268,7 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
+  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,exp_prefix,t_trial_start,simindex)
 
   # print runtimes
   if rank == 0:
