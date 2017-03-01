@@ -18,19 +18,19 @@ class SimulationPaths ():
     # fig extensions are not currently being used as well as they could be
     # add new directories here to be automatically created for every simulation
     self.__datatypes = {
-      'rawspk': '-spk.txt',
-      'rawdpl': '-dpl.txt',
-      'rawcurrent': '-i.txt',
-      'rawspec': '-spec.npz',
-      'rawspeccurrent': '-speci.npz',
-      'avgdpl': '-dplavg.txt',
-      'avgspec': '-specavg.npz',
-      'figavgdpl': '-dplavg.png',
-      'figavgspec': '-specavg.png',
-      'figdpl': '-dpl.png',
-      'figspec': '-spec.png',
-      'figspk': '-spk.png',
-      'param': '-param.txt',
+      'rawspk': 'spk.txt',
+      'rawdpl': 'dpl.txt',
+      'rawcurrent': 'i.txt',
+      'rawspec': 'spec.npz',
+      'rawspeccurrent': 'speci.npz',
+      'avgdpl': 'dplavg.txt',
+      'avgspec': 'specavg.npz',
+      'figavgdpl': 'dplavg.png',
+      'figavgspec': 'specavg.png',
+      'figdpl': 'dpl.png',
+      'figspec': 'spec.png',
+      'figspk': 'spk.png',
+      'param': 'param.txt',
     }
     # empty until a sim is created or read
     self.fparam = None
@@ -128,7 +128,7 @@ class SimulationPaths ():
     return ddate
 
   # returns the directory for the sim
-  def __simdir (self): return self.sim_prefix 
+  def __simdir (self): return os.path.join('data',self.sim_prefix)
 
   # creates all the experimental directories based on dproj
   def __create_dexpmt (self, expmt_groups):
@@ -155,8 +155,14 @@ class SimulationPaths ():
 
   # requires dict lookup
   def create_filename (self, expmt_group, key, name_prefix):
+
+    d = self.__simdir()
+
     # some kind of if key in self.fileinfo.keys() catch
-    file_name_raw = name_prefix + self.__datatypes[key]
+    file_name_raw = self.__datatypes[key]
+
+    return os.path.join(d,file_name_raw)
+
     # grab the whole experimental directory
     dexpmt = self.dexpmt_dict[expmt_group]
     # create the full path name for the file
