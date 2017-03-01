@@ -58,7 +58,9 @@ def prsimtime ():
   sys.stdout.flush()
 
 #
-def savedat (p,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net):
+def savedat (p,f_psim,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
+  # create rotating data files and dirs on ONE central node
+  doutf = setoutfiles(ddir,expmt_group)
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -179,13 +181,10 @@ def runsim (f_psim):
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
   # spike file needs to be known by all nodes
   file_spikes_tmp = fio.file_spike_tmp(dproj)  
-  net = network.NetworkOnNode(p) # Create network from net's Network class
+  net = network.NetworkOnNode(p) # create node-specific network
   if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(rank, gid)
   else: v_debug = None
 
-  # create rotating data files and dirs on ONE central node
-  doutf = {} # stores output file paths
-  if rank == 0: doutf = setoutfiles(ddir,expmt_group)
   t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
   dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
   dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
