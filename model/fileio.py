@@ -348,39 +348,16 @@ def safemkdir (dn):
     return True
   except OSError:
     if not os.path.exists(dn):
-      print('could not create', dn)
+      print('ERR: could not create', dn)
       return False
     else:
       return True
 
 # returns the data dir
 def return_data_dir():
-  fshort_local = '.datadir_local'
-  fshort_default = '.datadir_default'
-  dcode = os.getcwd()
-  # get the full filenames
-  flocal = fshort_local # os.path.join(dcode, fshort_local)
-  fdefault = fshort_default # os.path.join(dcode, fshort_default)
-  print("dcode:",dcode,"flocal:",flocal,"fdefault:",fdefault)
-  # check if the local file exists
-  if not os.path.isfile(flocal):
-    if os.path.isfile(fdefault):
-      shutil.copyfile(fdefault, flocal)
-    else:
-      print("Neither default nor local data file could be found, trying ./data.")
-      if not safemkdir('./data'):
-        print('Could not make ./dadta')
-        sys.exit(1)
-  # get the lines of the file and assume the local directory exists
-  lines = clean_lines(flocal)
-  ddefault = lines[0]
-  # make sure it exists
-  if not os.path.exists(ddefault): safemkdir(ddefault)
-  if os.path.exists(ddefault):
-    dfinal = ddefault
-  else:
-    dfinal = None
-  print("dfinal is",dfinal)
+  dfinal = os.path.join('.','data')
+  if not safemkdir(dfinal): sys.exit(1)
+  print("data dir is",dfinal)
   return dfinal
 
 if __name__ == '__main__':
