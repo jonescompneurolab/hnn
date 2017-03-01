@@ -8,13 +8,11 @@
 
 import os
 import sys
-sys.path.append(os.path.join(os.getcwd(), 'fn'))
 import time
 import shutil
 import numpy as np
 from neuron import h
 h.load_file("stdrun.hoc")
-
 # Cells are defined in other files
 import network
 import fileio as fio
@@ -148,7 +146,7 @@ def setoutfiles (ddir,expmt_group,exp_prefix,debug):
   return doutf, v_debug
 
 # All units for time: ms
-def exec_runsim (f_psim):
+def runsim (f_psim):
   # clock start time
   t0 = time.time()
   # dealing with multiple params - there is a lot of overhead to this
@@ -166,122 +164,121 @@ def exec_runsim (f_psim):
   if rank == 0: ddir = setupsimdir(f_psim,dproj,p_exp) # one directory for all experiments
   # Set number of trials per unique simulation per experiment
   # if N_trials is set to 0, run 1 anyway!
-  if not p_exp.N_trials: N_trialruns = 1
-  else: N_trialruns = p_exp.N_trials
+  N_trialruns = 1
   # core iterator through experimental groups
-  for expmt_group in p_exp.expmt_groups:
-      if rank == 0:
-        print("Experimental group: %s" % expmt_group)
-      N_total_runs = p_exp.N_sims * N_trialruns
-      # simulation times, to get a qnd avg
-      t_sims = np.zeros(N_total_runs)
-      # iterate through number of unique simulations
-      for i in range(p_exp.N_sims):
-        if rank == 0: t_expmt_start = time.time()
-        # return the param dict for this simulation
-        p = p_exp.return_pdict(expmt_group, i)
-        # iterate through trialruns
-        for j in range(N_trialruns):
-          # get all nodes to this place before continuing
-          # tries to ensure we're all running the same params at the same time!
-          pc.barrier()
-          pc.gid_clear()
+  expmt_group = p_exp.expmt_groups[0]
 
-          # create a compound index for all sims
-          simindex = n = i*N_trialruns+j
-          # trial start time
-          t_trial_start = time.time()
-          # print the run number
-          if rank==0: print("Run %i of %i" % (n, N_total_runs-1))
+  N_total_runs = p_exp.N_sims * N_trialruns
+  # simulation times, to get a qnd avg
+  t_sims = np.zeros(N_total_runs)
+  # iterate through number of unique simulations
+  i = 0
+  for i in range(p_exp.N_sims):
+  if rank == 0: t_expmt_start = time.time()
+  # return the param dict for this simulation
+  p = p_exp.return_pdict(expmt_group, i)
+  j = 0
+  # get all nodes to this place before continuing
+  # tries to ensure we're all running the same params at the same time!
+  pc.barrier()
+  pc.gid_clear()
 
-          # global variable bs, should be node-independent
-          h("dp_total_L2 = 0.")
-          h("dp_total_L5 = 0.")
+  # create a compound index for all sims
+  simindex = n = 0
+  # trial start time
+  t_trial_start = time.time()
+  # print the run number
+  if rank==0: print("Run %i of %i" % (n, N_total_runs-1))
 
-          # if there are N_trials, then randomize the seed
-          # establishes random seed for the seed seeder (yeah.)
-          # this creates a prng_tmp on each, but only the value from 0 will be used
-          prng_tmp = np.random.RandomState()
-          if rank == 0:
-            # initialize vector to 1 element, with a 0
-            # v = h.Vector(Length, Init)
-            r = h.Vector(1, 0)
-            # seeds that come from prng_base are stereotyped
-            # these are seeded with seed rank! Blerg.
-            if not p_exp.N_trials:
-              prng_base = np.random.RandomState(rank)
-            else:
-              # Create a random seed value
-              r.x[0] = prng_tmp.randint(1e9)
-          else:
-            # create the vector 'r' but don't change its init value
-            r = h.Vector(1, 0)
-          # broadcast random seed value in r to everyone
-          pc.broadcast(r, 0)
-          # set object prngbase to random state for the seed value
-          # other random seeds here will then be based on the gid
-          prng_base = np.random.RandomState(int(r.x[0]))
-          # seed list is now a list of seeds to be changed on each run
-          # otherwise, its originally set value will remain
-          # give a random int seed from [0, 1e9]
-          for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
-          
-          # Set tstop before instantiating any classes
-          h.tstop = p['tstop']
-          h.dt = p['dt']
-          # create prefix for files everyone knows about
-          exp_prefix = p_exp.trial_prefix_str % (i, j)
-          # spike file needs to be known by all nodes
-          file_spikes_tmp = fio.file_spike_tmp(dproj)
-          # Create network from net's Network class
-          net = network.NetworkOnNode(p)
-          # debug: off (0), on (1)
-          debug = 0
-          # create rotating data files and dirs on ONE central node
-          doutf = {}
-          if rank == 0: doutf, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
-          # set t vec to record
-          t_vec = h.Vector()
-          t_vec.record(h._ref_t)
-          # set dipoles to record
-          dp_rec_L2 = h.Vector()
-          dp_rec_L2.record(h._ref_dp_total_L2)
-          # L5 dipole
-          dp_rec_L5 = h.Vector()
-          dp_rec_L5.record(h._ref_dp_total_L5)
-          # sets the default max solver step in ms (purposefully large)
-          pc.set_maxstep(10)
-          # initialize cells to -65 mV and compile code
-          # after all the NetCon delays have been specified
-          # and run the solver
-          h.finitialize()
-          if rank == 0: 
-            for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime)
-          h.fcurrent()
-          # set state variables if they have been changed since h.finitialize
-          h.frecord_init()
-          # actual simulation
-          pc.psolve(h.tstop)
-          # combine dp_rec, this combines on every proc
-          # 1 refers to adding the contributions together
-          pc.allreduce(dp_rec_L2, 1)
-          pc.allreduce(dp_rec_L5, 1)
-          # aggregate the currents independently on each proc
-          net.aggregate_currents()
-          # combine the net.current{} variables on each proc
-          pc.allreduce(net.current['L5Pyr_soma'], 1)
-          pc.allreduce(net.current['L2Pyr_soma'], 1)
+  # global variable bs, should be node-independent
+  h("dp_total_L2 = 0.")
+  h("dp_total_L5 = 0.")
 
-          # write time and calculated dipole to data file only if on the first proc
-          # only execute this statement on one proc
-          savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
+  # if there are N_trials, then randomize the seed
+  # establishes random seed for the seed seeder (yeah.)
+  # this creates a prng_tmp on each, but only the value from 0 will be used
+  prng_tmp = np.random.RandomState()
+  if rank == 0:
+    # initialize vector to 1 element, with a 0
+    # v = h.Vector(Length, Init)
+    r = h.Vector(1, 0)
+    # seeds that come from prng_base are stereotyped
+    # these are seeded with seed rank! Blerg.
+    if not p_exp.N_trials:
+      prng_base = np.random.RandomState(rank)
+    else:
+      # Create a random seed value
+      r.x[0] = prng_tmp.randint(1e9)
+  else:
+    # create the vector 'r' but don't change its init value
+    r = h.Vector(1, 0)
 
-      # print runtimes
-      if rank == 0:
-        # print qnd mean
-        print("Total runtime: %4.4f s, Mean runtime: %4.4f s" % (np.sum(t_sims), np.mean(t_sims)))
-        # this prints a newline without having to specify it.
-        print("")
+  # broadcast random seed value in r to everyone
+  pc.broadcast(r, 0)
+  # set object prngbase to random state for the seed value
+  # other random seeds here will then be based on the gid
+  prng_base = np.random.RandomState(int(r.x[0]))
+  # seed list is now a list of seeds to be changed on each run
+  # otherwise, its originally set value will remain
+  # give a random int seed from [0, 1e9]
+  for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
+
+  # Set tstop before instantiating any classes
+  h.tstop = p['tstop']
+  h.dt = p['dt']
+  # create prefix for files everyone knows about
+  exp_prefix = p_exp.trial_prefix_str % (i, j)
+  # spike file needs to be known by all nodes
+  file_spikes_tmp = fio.file_spike_tmp(dproj)
+  # Create network from net's Network class
+  net = network.NetworkOnNode(p)
+  # debug: off (0), on (1)
+  debug = 0
+  # create rotating data files and dirs on ONE central node
+  doutf = {}
+  if rank == 0: doutf, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
+  # set t vec to record
+  t_vec = h.Vector()
+  t_vec.record(h._ref_t)
+  # set dipoles to record
+  dp_rec_L2 = h.Vector()
+  dp_rec_L2.record(h._ref_dp_total_L2)
+  # L5 dipole
+  dp_rec_L5 = h.Vector()
+  dp_rec_L5.record(h._ref_dp_total_L5)
+  # sets the default max solver step in ms (purposefully large)
+  pc.set_maxstep(10)
+  # initialize cells to -65 mV and compile code
+  # after all the NetCon delays have been specified
+  # and run the solver
+  h.finitialize()
+  if rank == 0: 
+    for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime)
+  h.fcurrent()
+  # set state variables if they have been changed since h.finitialize
+  h.frecord_init()
+  # actual simulation
+  pc.psolve(h.tstop)
+  # combine dp_rec, this combines on every proc
+  # 1 refers to adding the contributions together
+  pc.allreduce(dp_rec_L2, 1)
+  pc.allreduce(dp_rec_L5, 1)
+  # aggregate the currents independently on each proc
+  net.aggregate_currents()
+  # combine the net.current{} variables on each proc
+  pc.allreduce(net.current['L5Pyr_soma'], 1)
+  pc.allreduce(net.current['L2Pyr_soma'], 1)
+
+  # write time and calculated dipole to data file only if on the first proc
+  # only execute this statement on one proc
+  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,i,j,exp_prefix,t_trial_start,simindex)
+
+  # print runtimes
+  if rank == 0:
+    # print qnd mean
+    print("Total runtime: %4.4f s, Mean runtime: %4.4f s" % (np.sum(t_sims), np.mean(t_sims)))
+    # this prints a newline without having to specify it.
+    print("")
 
   if pc.nhost() > 1:
     pc.runworker()
@@ -312,4 +309,4 @@ if __name__ == "__main__":
   if not foundprm:
     f_psim = "param/default.param"
     print("Using param/default.param")
-  exec_runsim(f_psim)
+    runsim(f_psim)
