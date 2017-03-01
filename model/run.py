@@ -52,7 +52,7 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,exp_prefix,t_trial_start,simindex):
+def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefi):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -87,8 +87,6 @@ def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debu
   # move the spike file to the spike dir
   if rank == 0:
     shutil.move(file_spikes_tmp, doutf['file_spikes'])
-    t_sims[simindex] = time.time() - t_trial_start
-    print("... finished in: %4.4f s" % (t_sims[simindex]))
 
 def runanalysis (ddir,p):
   print("Analysis ...",)
@@ -145,39 +143,24 @@ def setoutfiles (ddir,expmt_group,exp_prefix,debug):
 
 # All units for time: ms
 def runsim (f_psim):
-  # clock start time
-  t0 = time.time()
-  # dealing with multiple params - there is a lot of overhead to this
-  # read the ranges of params and make up all combinations
-  # for loop that changes these params serially, with different file names and whatnot
-  # serial execution of each param file, since we're already doing charity here
-  # copy the param file and write the param dict to a file for that specific sim.
+  t0 = time.time() # clock start time
+
   pc = h.ParallelContext()
-  rank = int(pc.id())
-  # print(rank, pc.nhost())
-  # creates p_exp.sim_prefix and other param structures
-  p_exp = paramrw.ExpParams(f_psim)
+  rank = int(pc.id()) # print(rank, pc.nhost())  
+  p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
   # project directory
   dproj = fio.return_data_dir()
   if rank == 0: ddir = setupsimdir(f_psim,dproj,p_exp) # one directory for all experiments
   # core iterator through experimental groups
   expmt_group = p_exp.expmt_groups[0]
 
-  # simulation times, to get a qnd avg
-  t_sims = np.zeros(1)
-  # iterate through number of unique simulations
   if rank == 0: t_expmt_start = time.time()
-  # return the param dict for this simulation
-  p = p_exp.return_pdict(expmt_group, 0)
-  # get all nodes to this place before continuing
-  # tries to ensure we're all running the same params at the same time!
-  pc.barrier()
-  pc.gid_clear()
+  p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
 
-  # create a compound index for all sims
-  simindex = n = 0
-  # trial start time
-  t_trial_start = time.time()
+  pc.barrier() # get all nodes to this place before continuing
+  pc.gid_clear()
+  
+  t_trial_start = time.time() # trial start time
 
   # global variables, should be node-independent
   h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
@@ -239,14 +222,9 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefix,t_trial_start,simindex)
+  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefix)
 
-  # print runtimes
-  if rank == 0:
-    # print qnd mean
-    print("Total runtime: %4.4f s, Mean runtime: %4.4f s" % (np.sum(t_sims), np.mean(t_sims)))
-    # this prints a newline without having to specify it.
-    print("")
+  if rank == 0:  print("Total runtime: %4.4f s\n" % (time.time() - t_trial_start)) # print runtimes
 
   if pc.nhost() > 1:
     pc.runworker()
@@ -275,6 +253,6 @@ if __name__ == "__main__":
       print('using ',f_psim,' param file.')
       break
   if not foundprm:
-    f_psim = "param/default.param"
-    print("Using param/default.param")
+    f_psim = os.path.join('param','default.param')
+    print(f_psim)
     runsim(f_psim)

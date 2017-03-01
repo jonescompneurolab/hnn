@@ -13,7 +13,7 @@ from params_default import get_params_default
 
 # class controlling multiple simulation files (.param)
 class ExpParams():
-    def __init__(self, f_psim):
+    def __init__ (self, f_psim):
         self.expmt_group_params = []
 
         # self.prng_seedcore = {}
