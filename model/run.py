@@ -173,7 +173,6 @@ def runsim (f_psim):
   t_sims = np.zeros(N_total_runs)
   # iterate through number of unique simulations
   i = 0
-  for i in range(p_exp.N_sims):
   if rank == 0: t_expmt_start = time.time()
   # return the param dict for this simulation
   p = p_exp.return_pdict(expmt_group, i)
