@@ -179,9 +179,8 @@ def runsim (f_psim):
   # trial start time
   t_trial_start = time.time()
 
-  # global variable bs, should be node-independent
-  h("dp_total_L2 = 0.")
-  h("dp_total_L5 = 0.")
+  # global variables, should be node-independent
+  h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
   # if there are N_trials, then randomize the seed
   # establishes random seed for the seed seeder (yeah.)
@@ -233,15 +232,10 @@ def runsim (f_psim):
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
   pc.psolve(h.tstop) # actual simulation - run the solver
-  # combine dp_rec, this combines on every proc
-  # 1 refers to adding the contributions together
-  pc.allreduce(dp_rec_L2, 1)
-  pc.allreduce(dp_rec_L5, 1)
-  # aggregate the currents independently on each proc
-  net.aggregate_currents()
-  # combine the net.current{} variables on each proc
-  pc.allreduce(net.current['L5Pyr_soma'], 1)
-  pc.allreduce(net.current['L2Pyr_soma'], 1)
+  pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
+  net.aggregate_currents() # aggregate the currents independently on each proc
+  # combine net.current{} variables on each proc
+  pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
