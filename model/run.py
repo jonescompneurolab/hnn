@@ -20,6 +20,11 @@ import paramrw as paramrw
 import plotfn as plotfn
 import specfn as specfn
 
+# data directory - ./data
+dproj = fio.return_data_dir()
+
+debug = False 
+
 # spike write function
 def spikes_write (net, filename_spikes):
   pc = h.ParallelContext()
@@ -52,7 +57,8 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefi):
+#
+def savedat (p,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -71,8 +77,6 @@ def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_p
         # fc.write("%5.4f\t" % (i_L2 + i_L5))
         fc.write("%5.4f\t" % i_L2)
         fc.write("%5.4f\n" % i_L5)
-    # write the params, but add some more information
-    p['exp_prefix'] = exp_prefix
     # write params to the file
     paramrw.write(doutf['file_param'], p, net.gid_dict)
     if debug:
@@ -88,6 +92,7 @@ def savedat (p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_p
   if rank == 0:
     shutil.move(file_spikes_tmp, doutf['file_spikes'])
 
+#
 def runanalysis (ddir,p):
   print("Analysis ...",)
   t_start_analysis = time.time()
@@ -101,6 +106,7 @@ def runanalysis (ddir,p):
   specfn.analysis_typespecific(ddir, spec_opts)
   print("time: %4.4f s" % (time.time() - t_start_analysis))
 
+#
 def savefigs (ddir,p,p_exp):
   print("Plot ...",)
   plot_start = time.time()
@@ -111,35 +117,24 @@ def savefigs (ddir,p,p_exp):
   plotfn.pall(ddir, p_exp, xlim_plot)
   print("time: %4.4f s" % (time.time() - plot_start))
 
-def setupsimdir (f_psim,dproj,p_exp):
+#
+def setupsimdir (f_psim,p_exp):
   ddir = fio.SimulationPaths()
   ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
   #ddir.create_dirs()
   copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
-  # iterate through groups and through params in the group
-  N_expmt_groups = len(p_exp.expmt_groups)
-  s = '%i total experimental group'
-  # purely for vanity
-  if N_expmt_groups > 1: s += 's'
-  print(s % N_expmt_groups)
   return ddir
 
-def setoutfiles (ddir,expmt_group,exp_prefix,debug):
+# create file names
+def setoutfiles (ddir,expmt_group):
   doutf = {}
-  # create file names
-  doutf['file_dpl'] = ddir.create_filename(expmt_group, 'rawdpl', exp_prefix)
-  doutf['file_current'] = ddir.create_filename(expmt_group, 'rawcurrent', exp_prefix)
-  doutf['file_param'] = ddir.create_filename(expmt_group, 'param', exp_prefix)
-  doutf['file_spikes'] = ddir.create_filename(expmt_group, 'rawspk', exp_prefix)
-  doutf['file_spec'] = ddir.create_filename(expmt_group, 'rawspec', exp_prefix)
-  # if debug is set to 1, this debug block will run
-  if debug:
-    # net's method rec_debug(rank, gid)
-    v_debug = net.rec_debug(0, 8)
-  else:
-    v_debug = None
+  doutf['file_dpl'] = ddir.create_filename(expmt_group, 'rawdpl')
+  doutf['file_current'] = ddir.create_filename(expmt_group, 'rawcurrent')
+  doutf['file_param'] = ddir.create_filename(expmt_group, 'param')
+  doutf['file_spikes'] = ddir.create_filename(expmt_group, 'rawspk')
+  doutf['file_spec'] = ddir.create_filename(expmt_group, 'rawspec')
   doutf['filename_debug'] = 'debug.dat'
-  return doutf, v_debug
+  return doutf
 
 # All units for time: ms
 def runsim (f_psim):
@@ -148,20 +143,15 @@ def runsim (f_psim):
   pc = h.ParallelContext()
   rank = int(pc.id()) # print(rank, pc.nhost())  
   p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
-  # project directory
-  dproj = fio.return_data_dir()
-  if rank == 0: ddir = setupsimdir(f_psim,dproj,p_exp) # one directory for all experiments
+  if rank == 0: ddir = setupsimdir(f_psim,p_exp) # one directory for all experiments
   # core iterator through experimental groups
   expmt_group = p_exp.expmt_groups[0]
 
-  if rank == 0: t_expmt_start = time.time()
   p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
 
   pc.barrier() # get all nodes to this place before continuing
   pc.gid_clear()
   
-  t_trial_start = time.time() # trial start time
-
   # global variables, should be node-independent
   h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
@@ -170,20 +160,11 @@ def runsim (f_psim):
   # this creates a prng_tmp on each, but only the value from 0 will be used
   prng_tmp = np.random.RandomState()
   if rank == 0:
-    # initialize vector to 1 element, with a 0
-    # v = h.Vector(Length, Init)
-    r = h.Vector(1, 0)
-    # seeds that come from prng_base are stereotyped
-    # these are seeded with seed rank! Blerg.
-    if not p_exp.N_trials:
-      prng_base = np.random.RandomState(rank)
-    else:
-      # Create a random seed value
-      r.x[0] = prng_tmp.randint(1e9)
+    r = h.Vector(1, 0) # initialize vector to 1 element, with a 0
+    prng_base = np.random.RandomState(rank)
   else:
     # create the vector 'r' but don't change its init value
     r = h.Vector(1, 0)
-
   # broadcast random seed value in r to everyone
   pc.broadcast(r, 0)
   # set object prngbase to random state for the seed value
@@ -196,15 +177,15 @@ def runsim (f_psim):
 
   # Set tstop before instantiating any classes
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
-  # create prefix for files everyone knows about
-  exp_prefix = p_exp.trial_prefix_str % (i, j)
   # spike file needs to be known by all nodes
   file_spikes_tmp = fio.file_spike_tmp(dproj)  
   net = network.NetworkOnNode(p) # Create network from net's Network class
-  debug = 0 # debug: off (0), on (1)
+  if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(rank, gid)
+  else: v_debug = None
+
   # create rotating data files and dirs on ONE central node
   doutf = {} # stores output file paths
-  if rank == 0: doutf, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
+  if rank == 0: doutf = setoutfiles(ddir,expmt_group)
   t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
   dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
   dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
@@ -214,7 +195,7 @@ def runsim (f_psim):
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
-  pc.psolve(h.tstop) # actual simulation - run the solver
+  #pc.psolve(h.tstop) # actual simulation - run the solver
   pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
   net.aggregate_currents() # aggregate the currents independently on each proc
   # combine net.current{} variables on each proc
@@ -222,9 +203,7 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefix)
-
-  if rank == 0:  print("Total runtime: %4.4f s\n" % (time.time() - t_trial_start)) # print runtimes
+  savedat(p,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net)
 
   if pc.nhost() > 1:
     pc.runworker()
@@ -233,9 +212,8 @@ def runsim (f_psim):
     if rank == 0:
       print("Simulation run time: %4.4f s" % (t1-t0))
       print("Simulation directory is: %s" % ddir.dsim)
-  else:
-    # end clock time
-    t1 = time.time()
+  else:    
+    t1 = time.time() # end clock time
     print("Simulation run time: %4.4f s" % (t1-t0))
 
   runanalysis(ddir,p) # run spectral analysis

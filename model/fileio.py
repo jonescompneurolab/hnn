@@ -154,7 +154,7 @@ class SimulationPaths ():
     return f_datatype
 
   # requires dict lookup
-  def create_filename (self, expmt_group, key, name_prefix):
+  def create_filename (self, expmt_group, key):
     d = self.__simdir()
     # some kind of if key in self.fileinfo.keys() catch
     file_name_raw = self.__datatypes[key]
