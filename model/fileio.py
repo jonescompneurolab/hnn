@@ -12,7 +12,7 @@ import paramrw
 # creates data dirs and a dictionary of useful types
 # self.dfig is a dictionary of experiments, which is each a dictionary of data type
 # keys and the specific directories that contain them.
-class SimulationPaths():
+class SimulationPaths ():
   def __init__(self):
     # hard coded data types
     # fig extensions are not currently being used as well as they could be
@@ -44,7 +44,7 @@ class SimulationPaths():
     self.dfig = {}
 
   # reads sim information based on sim directory and param files
-  def read_sim(self, dproj, dsim):
+  def read_sim (self, dproj, dsim):
     self.dproj = dproj
     self.dsim = dsim
     # match the param from this sim
@@ -59,7 +59,7 @@ class SimulationPaths():
     return self.dsim
 
   # only run for the creation of a new simulation
-  def create_new_sim(self, dproj, expmt_groups, sim_prefix='test'):
+  def create_new_sim (self, dproj, expmt_groups, sim_prefix='test'):
     self.dproj = dproj
     self.expmt_groups = expmt_groups
     # prefix for these simulations in both filenames and directory in ddate
@@ -75,7 +75,7 @@ class SimulationPaths():
 
   # this is a hack
   # checks root expmt_group directory for any files i've thrown there
-  def find_aggregate_file(self, expmt_group, datatype):
+  def find_aggregate_file (self, expmt_group, datatype):
     # file name is in format: '%s-%s-%s' % (sim_prefix, expmt_group, datatype-ish)
     fname = '%s-%s-%s.txt' % (self.sim_prefix, expmt_group, datatype)
     # get a list of txt files in the expmt_group
@@ -85,7 +85,7 @@ class SimulationPaths():
     return flist
 
   # returns a filename for an example type of data
-  def return_filename_example(self, datatype, expmt_group, sim_no=None, tr=None, ext='png'):
+  def return_filename_example (self, datatype, expmt_group, sim_no=None, tr=None, ext='png'):
     fname_short = "%s-%s" % (self.sim_prefix, expmt_group)
     if sim_no is not None: fname_short += "-%03i" % (sim_no)
     if tr is not None: fname_short += "-T%03i" % (tr)
@@ -96,13 +96,13 @@ class SimulationPaths():
 
   # creates a dict of dicts for each experiment and all the datatype directories
   # this is the empty template that gets filled in later.
-  def __ddata_dict_template(self):
+  def __ddata_dict_template (self):
     dfig = dict.fromkeys(self.expmt_groups)
     for key in dfig: dfig[key] = dict.fromkeys(self.__datatypes)
     return dfig
 
   # read directories for an already existing sim
-  def __read_dirs(self):
+  def __read_dirs (self):
     dfig = self.__ddata_dict_template()
     for expmt_group, dexpmt in self.dexpmt_dict.items():
       for key in self.__datatypes.keys():
@@ -111,7 +111,7 @@ class SimulationPaths():
     return dfig
 
   # extern function to create directories
-  def create_dirs(self):
+  def create_dirs (self):
     # create expmt directories
     for expmt_group, dexpmt in self.dexpmt_dict.items():
       dir_create(dexpmt)
@@ -122,31 +122,23 @@ class SimulationPaths():
 
   # Returns date directory
   # this is NOT safe for midnight
-  def __datedir(self):
+  def __datedir (self):
     self.str_date = datetime.datetime.now().strftime("%Y-%m-%d")
     ddate = os.path.join(self.dproj, self.str_date)
     return ddate
 
   # returns the directory for the sim
-  def __simdir(self):
-    n = 0
-    self.sim_name = self.sim_prefix + '-%03d' % n
-    dsim = os.path.join(self.ddate, self.sim_name)
-    while dir_check(dsim):
-      n += 1
-      self.sim_name = self.sim_prefix + '-%03d' % n
-      dsim = os.path.join(self.ddate, self.sim_name)
-    return dsim
+  def __simdir (self): return self.sim_prefix 
 
   # creates all the experimental directories based on dproj
-  def __create_dexpmt(self, expmt_groups):
+  def __create_dexpmt (self, expmt_groups):
     d = dict.fromkeys(expmt_groups)
     for expmt_group in d: d[expmt_group] = os.path.join(self.dsim, expmt_group)
     return d
 
   # dictionary creation
   # this is specific to a expmt_group
-  def create_dict(self, expmt_group):
+  def create_dict (self, expmt_group):
     fileinfo = dict.fromkeys(self.__datatypes)
     for key in self.__datatypes.keys():
       # join directory name
@@ -162,7 +154,7 @@ class SimulationPaths():
     return f_datatype
 
   # requires dict lookup
-  def create_filename(self, expmt_group, key, name_prefix):
+  def create_filename (self, expmt_group, key, name_prefix):
     # some kind of if key in self.fileinfo.keys() catch
     file_name_raw = name_prefix + self.__datatypes[key]
     # grab the whole experimental directory
@@ -173,7 +165,7 @@ class SimulationPaths():
 
   # Get the data files matching file_ext in this directory
   # functionally the same as the previous function but with a local scope
-  def file_match(self, expmt_group, key):
+  def file_match (self, expmt_group, key):
     # grab the relevant fext
     fext = self.__datatypes[key]
     file_list = []
@@ -187,7 +179,7 @@ class SimulationPaths():
     file_list.sort()
     return file_list
 
-  def exp_files_of_type(self, datatype):
+  def exp_files_of_type (self, datatype):
     # create dict of experiments
     d = dict.fromkeys(self.expmt_groups)
     # create file lists that match the dict keys for only files for this experiment
@@ -196,18 +188,18 @@ class SimulationPaths():
     return d
 
 # Cleans input files
-def clean_lines(file):
+def clean_lines (file):
   with open(file) as f_in:
     lines = (line.rstrip() for line in f_in)
     lines = [line for line in lines if line]
   return lines
 
 # this make a little more sense in fileio
-def prettyprint(iterable_items):
+def prettyprint (iterable_items):
   for item in iterable_items: print(item)
 
 # create gid dict from a file
-def gid_dict_from_file(fparam):
+def gid_dict_from_file (fparam):
   l = ['L2_pyramidal', 'L5_pyramidal', 'L2_basket', 'L5_basket', 'extinput']
   d = dict.fromkeys(l)
   plist = clean_lines(fparam)
@@ -215,14 +207,14 @@ def gid_dict_from_file(fparam):
 
 # create file name for temporary spike file
 # that every processor is aware of
-def file_spike_tmp(dproj):
+def file_spike_tmp (dproj):
   filename_spikes = 'spikes_tmp.spk'
   file_spikes = os.path.join(dproj, filename_spikes)
   return file_spikes
 
 # this is ugly, potentially. sorry, future
 # i.e will change when the file name format changes
-def strip_extprefix(filename):
+def strip_extprefix (filename):
   f_raw = filename.split("/")[-1]
   f = f_raw.split(".")[0].split("-")[:-1]
   ext_prefix = f.pop(0)
@@ -232,7 +224,7 @@ def strip_extprefix(filename):
 # Get the data files matching file_ext in this directory
 # this function traverses ALL directories
 # local=1 makes the search local and not recursive
-def file_match(dsearch, file_ext, local=0):
+def file_match (dsearch, file_ext, local=0):
   file_list = []
   if not local:
     if os.path.exists(dsearch):
@@ -246,7 +238,7 @@ def file_match(dsearch, file_ext, local=0):
   return file_list
 
 # Get minimum list of param dicts (i.e. excludes duplicates due to N_trials > 1)
-def fparam_match_minimal(dsim, p_exp):
+def fparam_match_minimal (dsim, p_exp):
   # Complete list of all param dicts used in simulation
   fparam_list_complete = file_match(dsim, '-param.txt')
   # List of indices from which to pull param dicts from fparam_list_complete
@@ -258,16 +250,16 @@ def fparam_match_minimal(dsim, p_exp):
   return fparam_list_minimal
 
 # check any directory
-def dir_check(d):
+def dir_check (d):
   if not os.path.isdir(d): return 0
   else: return os.path.isdir(d)
 
 # only create if check comes back 0
-def dir_create(d):
+def dir_create (d):
   if not dir_check(d): os.makedirs(d)
 
 # non-destructive copy routine
-def dir_copy(din, dout):
+def dir_copy (din, dout):
   # this command should work on most posix systems
   cmd_cp = 'cp -R %s %s' % (din, dout)
   # if the dir doesn't already exist, copy it over
@@ -281,7 +273,7 @@ def dir_copy(din, dout):
     print("Directory already exists.")
 
 # Finds and moves files to created subdirectories.
-def subdir_move(dir_out, name_dir, file_pattern):
+def subdir_move (dir_out, name_dir, file_pattern):
   dir_name = os.path.join(dir_out, name_dir)
   # create directories that do not exist
   if not os.path.isdir(dir_name): os.mkdir(dir_name)
@@ -289,7 +281,7 @@ def subdir_move(dir_out, name_dir, file_pattern):
 
 # currently used only minimally in epscompress
 # need to figure out how to change argument list in cmd as below
-def cmds_runmulti(cmdlist):
+def cmds_runmulti (cmdlist):
   n_threads = multiprocessing.cpu_count()
   list_runs = [cmdlist[i:i+n_threads] for i in range(0, len(cmdlist), n_threads)]
   # open devnull for writing extraneous output
@@ -299,7 +291,7 @@ def cmds_runmulti(cmdlist):
       for proc in procs: proc.wait()
 
 # small kernel for png optimization based on fig directory
-def pngoptimize(dfig):
+def pngoptimize (dfig):
   local = 0
   pnglist = file_match(dfig, '.png', local)
   cmds_opti = [('optipng', pngfile) for pngfile in pnglist]
@@ -307,7 +299,7 @@ def pngoptimize(dfig):
 
 # list spike raster eps files and then rasterize them to HQ png files, lossless compress,
 # reencapsulate as eps, and remove backups when successful
-def epscompress(dfig_spk, fext_figspk, local=0):
+def epscompress (dfig_spk, fext_figspk, local=0):
   cmds_gs = []
   cmds_opti = []
   cmds_encaps = []
@@ -354,7 +346,7 @@ def safemkdir (dn):
       return True
 
 # returns the data dir
-def return_data_dir():
+def return_data_dir ():
   dfinal = os.path.join('.','data')
   if not safemkdir(dfinal): sys.exit(1)
   print("data dir is",dfinal)
