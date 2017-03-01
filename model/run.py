@@ -160,21 +160,15 @@ def runsim (f_psim):
   # project directory
   dproj = fio.return_data_dir()
   if rank == 0: ddir = setupsimdir(f_psim,dproj,p_exp) # one directory for all experiments
-  # Set number of trials per unique simulation per experiment
-  # if N_trials is set to 0, run 1 anyway!
-  N_trialruns = 1
   # core iterator through experimental groups
   expmt_group = p_exp.expmt_groups[0]
 
-  N_total_runs = p_exp.N_sims * N_trialruns
   # simulation times, to get a qnd avg
-  t_sims = np.zeros(N_total_runs)
+  t_sims = np.zeros(1)
   # iterate through number of unique simulations
-  i = 0
   if rank == 0: t_expmt_start = time.time()
   # return the param dict for this simulation
-  p = p_exp.return_pdict(expmt_group, i)
-  j = 0
+  p = p_exp.return_pdict(expmt_group, 0)
   # get all nodes to this place before continuing
   # tries to ensure we're all running the same params at the same time!
   pc.barrier()
@@ -184,8 +178,6 @@ def runsim (f_psim):
   simindex = n = 0
   # trial start time
   t_trial_start = time.time()
-  # print the run number
-  if rank==0: print("Run %i of %i" % (n, N_total_runs-1))
 
   # global variable bs, should be node-independent
   h("dp_total_L2 = 0.")
@@ -221,41 +213,26 @@ def runsim (f_psim):
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
 
   # Set tstop before instantiating any classes
-  h.tstop = p['tstop']
-  h.dt = p['dt']
+  h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
   # create prefix for files everyone knows about
   exp_prefix = p_exp.trial_prefix_str % (i, j)
   # spike file needs to be known by all nodes
-  file_spikes_tmp = fio.file_spike_tmp(dproj)
-  # Create network from net's Network class
-  net = network.NetworkOnNode(p)
-  # debug: off (0), on (1)
-  debug = 0
+  file_spikes_tmp = fio.file_spike_tmp(dproj)  
+  net = network.NetworkOnNode(p) # Create network from net's Network class
+  debug = 0 # debug: off (0), on (1)
   # create rotating data files and dirs on ONE central node
-  doutf = {}
+  doutf = {} # stores output file paths
   if rank == 0: doutf, v_debug = setoutfiles(ddir,expmt_group,exp_prefix,debug)
-  # set t vec to record
-  t_vec = h.Vector()
-  t_vec.record(h._ref_t)
-  # set dipoles to record
-  dp_rec_L2 = h.Vector()
-  dp_rec_L2.record(h._ref_dp_total_L2)
-  # L5 dipole
-  dp_rec_L5 = h.Vector()
-  dp_rec_L5.record(h._ref_dp_total_L5)
-  # sets the default max solver step in ms (purposefully large)
-  pc.set_maxstep(10)
-  # initialize cells to -65 mV and compile code
-  # after all the NetCon delays have been specified
-  # and run the solver
-  h.finitialize()
+  t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
+  dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
+  dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
+  pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
+  h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if rank == 0: 
-    for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime)
-  h.fcurrent()
-  # set state variables if they have been changed since h.finitialize
-  h.frecord_init()
-  # actual simulation
-  pc.psolve(h.tstop)
+    for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
+  h.fcurrent()  
+  h.frecord_init() # set state variables if they have been changed since h.finitialize
+  pc.psolve(h.tstop) # actual simulation - run the solver
   # combine dp_rec, this combines on every proc
   # 1 refers to adding the contributions together
   pc.allreduce(dp_rec_L2, 1)
@@ -268,7 +245,7 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,t_sims,debug,exp_prefix,t_trial_start,simindex)
+  savedat(p,dproj,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net,debug,exp_prefix,t_trial_start,simindex)
 
   # print runtimes
   if rank == 0:
