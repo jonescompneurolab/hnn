@@ -120,7 +120,7 @@ def savefigs (ddir,p,p_exp):
 def setupsimdir (f_psim,dproj,p_exp):
   ddir = fio.SimulationPaths()
   ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
-  ddir.create_dirs()
+  #ddir.create_dirs()
   copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
   # iterate through groups and through params in the group
   N_expmt_groups = len(p_exp.expmt_groups)

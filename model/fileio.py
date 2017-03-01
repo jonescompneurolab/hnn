@@ -13,7 +13,7 @@ import paramrw
 # self.dfig is a dictionary of experiments, which is each a dictionary of data type
 # keys and the specific directories that contain them.
 class SimulationPaths ():
-  def __init__(self):
+  def __init__ (self):
     # hard coded data types
     # fig extensions are not currently being used as well as they could be
     # add new directories here to be automatically created for every simulation
@@ -155,14 +155,10 @@ class SimulationPaths ():
 
   # requires dict lookup
   def create_filename (self, expmt_group, key, name_prefix):
-
     d = self.__simdir()
-
     # some kind of if key in self.fileinfo.keys() catch
     file_name_raw = self.__datatypes[key]
-
     return os.path.join(d,file_name_raw)
-
     # grab the whole experimental directory
     dexpmt = self.dexpmt_dict[expmt_group]
     # create the full path name for the file
