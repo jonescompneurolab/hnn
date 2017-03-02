@@ -24,12 +24,12 @@ import specfn as specfn
 dproj = fio.return_data_dir()
 simstr = ''
 datdir = ''
-
 debug = False 
+pc = h.ParallelContext()
+pcID = int(pc.id())
 
 # spike write function
 def spikes_write (net, filename_spikes):
-  pc = h.ParallelContext()
   for rank in range(int(pc.nhost())):
     # guarantees node order and no competition
     pc.barrier()
@@ -142,11 +142,9 @@ def setoutfiles (ddir):
 # All units for time: ms
 def runsim (f_psim):
   t0 = time.time() # clock start time
-
-  pc = h.ParallelContext()
-  rank = int(pc.id()) # print(rank, pc.nhost())  
+  rank = pcID
   p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
-  ddir = setupsimdir(f_psim,p_exp,rank) # one directory for all experiments
+  ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
   # core iterator through experimental groups
   expmt_group = p_exp.expmt_groups[0]
 
@@ -162,9 +160,9 @@ def runsim (f_psim):
   # establishes random seed for the seed seeder (yeah.)
   # this creates a prng_tmp on each, but only the value from 0 will be used
   prng_tmp = np.random.RandomState()
-  if rank == 0:
+  if pcID == 0:
     r = h.Vector(1, 0) # initialize vector to 1 element, with a 0
-    prng_base = np.random.RandomState(rank)
+    prng_base = np.random.RandomState(pcID)
   else:
     # create the vector 'r' but don't change its init value
     r = h.Vector(1, 0)
@@ -183,7 +181,7 @@ def runsim (f_psim):
   # spike file needs to be known by all nodes
   file_spikes_tmp = fio.file_spike_tmp(dproj)  
   net = network.NetworkOnNode(p) # create node-specific network
-  if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(rank, gid)
+  if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
   else: v_debug = None
 
   t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
@@ -191,7 +189,7 @@ def runsim (f_psim):
   dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
-  if rank == 0: 
+  if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
@@ -203,13 +201,13 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net)
+  savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
 
   if pc.nhost() > 1:
     pc.runworker()
     pc.done()
     t1 = time.time()
-    if rank == 0:
+    if pcID == 0:
       print("Simulation run time: %4.4f s" % (t1-t0))
       print("Simulation directory is: %s" % ddir.dsim)
   else:    
