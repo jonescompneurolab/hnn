@@ -94,17 +94,17 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
 
 #
 def runanalysis (ddir,p):
-  print("Analysis ...",)
+  if pcID==0: print("Analysis ...",)
   t_start_analysis = time.time()
   # run the spectral analysis
   spec_opts = {
     'type': 'dpl_laminar',
     'f_max': p['f_max_spec'],
-    'save_date': 0,
+    'save_data': 0,
     'runtype': 'parallel',
   }
-  specfn.analysis_typespecific(ddir, spec_opts)
-  print("time: %4.4f s" % (time.time() - t_start_analysis))
+  specfn.analysis_simp(datdir, ddir, spec_opts)
+  if pcID==0: print("time: %4.4f s" % (time.time() - t_start_analysis))
 
 #
 def savefigs (ddir,p,p_exp):
@@ -214,7 +214,7 @@ def runsim (f_psim):
     t1 = time.time() # end clock time
     print("Simulation run time: %4.4f s" % (t1-t0))
 
-  #runanalysis(ddir,p) # run spectral analysis
+  runanalysis(ddir,p) # run spectral analysis
   #savefigs(ddir,p,p_exp) # save output figures
 
   if pc.nhost() > 1: h.quit()

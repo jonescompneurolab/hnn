@@ -890,6 +890,24 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
 
+def analysis_simp (datdir, ddata, opts):
+  opts_run = {
+    'type': 'dpl_laminar',
+    'f_max': 100.,
+    'save_data': 0,
+    'runtype': 'parallel',
+  }
+  if opts:
+    for key, val in opts.items():
+      if key in opts_run.keys():
+        opts_run[key] = val
+  expmt_group = ddata.expmt_groups[0]
+  fparam  = ddata.file_match(expmt_group, 'param')[0]
+  print('fparam:',fparam)
+  fts = os.path.join(datdir,'dpl.txt')
+  fspec = os.path.join(datdir,'rawspec.npz')
+  spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
+
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
 def analysis_typespecific(ddata, opts=None):
@@ -903,7 +921,6 @@ def analysis_typespecific(ddata, opts=None):
         'save_data': 0,
         'runtype': 'parallel',
     }
-
     # check if opts is supplied
     if opts:
         # assume opts is a dict
@@ -912,74 +929,58 @@ def analysis_typespecific(ddata, opts=None):
         for key, val in opts.items():
             if key in opts_run.keys():
                 opts_run[key] = val
-
     # preallocate lists for use below
-    list_param = []
-    list_ts = []
-    list_spec = []
+    list_param, list_ts, list_spec = [], [], []
 
     # aggregrate all files from individual expmts into lists
-    for expmt_group in ddata.expmt_groups:
-        # get the list of params
-        # returns an alpha SORTED list
-        # add to list of all param files
-        param_tmp = ddata.file_match(expmt_group, 'param')
-        list_param.extend(param_tmp)
-
-        # get exp prefix for each trial in this expmt group
-        list_exp_prefix = [fio.strip_extprefix(fparam) for fparam in param_tmp]
-
-        # get the list of dipoles and create spec output filenames
-        if opts_run['type'] in ('dpl', 'dpl_laminar'):
-            list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
-            list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in list_exp_prefix])
-
-        elif opts_run['type'] == 'current':
-            list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
-            list_spec.extend(ddata.create_filename(expmt_group, 'rawspeccurrent', list_exp_prefix[-1]))
-
-        # create list of spec output names
-        # this is sorted because of file_match
-        # exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in list_param]
+    expmt_group = ddata.expmt_groups[0]
+    # get the list of params
+    # returns an alpha SORTED list
+    # add to list of all param files
+    param_tmp = ddata.file_match(expmt_group, 'param')
+    print('param_tmp:',param_tmp)
+    list_param.extend(param_tmp)
+    # get exp prefix for each trial in this expmt group
+    list_exp_prefix = [fio.strip_extprefix(fparam) for fparam in param_tmp]
+    # get the list of dipoles and create spec output filenames
+    if opts_run['type'] in ('dpl', 'dpl_laminar'):
+        list_ts.extend(ddata.file_match(expmt_group, 'rawdpl'))
+        list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in list_exp_prefix])
+    elif opts_run['type'] == 'current':
+        list_ts.extend(ddata.file_match(expmt_group, 'rawcurrent'))
+        list_spec.extend(ddata.create_filename(expmt_group, 'rawspeccurrent', list_exp_prefix[-1]))
+    # create list of spec output names
+    # this is sorted because of file_match
+    # exp_prefix_list = [fio.strip_extprefix(fparam) for fparam in list_param]
 
     # perform analysis on all runs from all exmpts at same time
     if opts_run['type'] == 'current':
         # list_spec.extend([ddata.create_filename(expmt_group, 'rawspeccurrent', exp_prefix) for exp_prefix in exp_prefix_list])
-
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
-
             for fparam, fts, fspec in zip(list_param, list_ts, list_spec):
                 pl.apply_async(spec_current_kernel, (fparam, fts, fspec, opts_run['f_max']))
-
             pl.close()
             pl.join()
-
         elif opts_run['runtype'] == 'debug':
             for fparam, fts, fspec in zip(list_param, list_ts, list_spec):
                 spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
-
     elif opts_run['type'] == 'dpl_laminar':
         # these should be OUTPUT filenames that are being generated
         # list_spec.extend([ddata.create_filename(expmt_group, 'rawspec', exp_prefix) for exp_prefix in exp_prefix_list])
-
         # also in this case, the original spec results will be overwritten
         # and replaced by laminar specific ones and aggregate ones
         # in this case, list_ts is a list of dipole
         if opts_run['runtype'] == 'parallel':
             pl = mp.Pool()
-
             for fparam, fts, fspec in zip(list_param, list_ts, list_spec):
                 pl.apply_async(spec_dpl_kernel, (fparam, fts, fspec, opts_run['f_max']))
-
             pl.close()
             pl.join()
-
         elif opts_run['runtype'] == 'debug':
             # spec_results_L2 and _L5
             for fparam, fts, fspec in zip(list_param, list_ts, list_spec):
                 spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
-
     # else:
     #     print('Type %s not recognized. Try again later.' %(opts_run['type']))
 

@@ -178,7 +178,7 @@ class SimulationPaths ():
     fext = self.__datatypes[key]
     file_list = []
     # dexpmt_group = self.dexpmt_dict[expmt_group]
-    ddata = self.dfig[expmt_group][key]
+    ddata = self.__simdir() # self.dfig[expmt_group][key]
     # search the sim directory for all relevant files
     if os.path.exists(ddata):
       for root, dirnames, filenames in os.walk(ddata):
