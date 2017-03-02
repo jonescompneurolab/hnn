@@ -165,5 +165,5 @@ prng_seedcore_evdist: 5
 prng_seedcore_evprox_late: 6
 
 # Numerics
-tstop: 200.
+tstop: 100.
 dt: 0.025

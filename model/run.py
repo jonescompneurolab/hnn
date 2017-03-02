@@ -22,6 +22,8 @@ import specfn as specfn
 
 # data directory - ./data
 dproj = fio.return_data_dir()
+simstr = ''
+datdir = ''
 
 debug = False 
 
@@ -54,9 +56,9 @@ def prsimtime ():
   sys.stdout.flush()
 
 #
-def savedat (p,f_psim,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
+def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   # create rotating data files and dirs on ONE central node
-  doutf = setoutfiles(ddir,expmt_group)
+  doutf = setoutfiles(ddir)
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -116,22 +118,24 @@ def savefigs (ddir,p,p_exp):
   print("time: %4.4f s" % (time.time() - plot_start))
 
 #
-def setupsimdir (f_psim,p_exp):
+def setupsimdir (f_psim,p_exp,rank):
   ddir = fio.SimulationPaths()
   ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
-  ddir.create_dirs()
-  ddir.create_datadir()
-  copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
+  if rank==0:
+    ddir.create_datadir()
+    copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
   return ddir
 
+def getfname (ddir,key): return os.path.join(datdir,ddir._SimulationPaths__datatypes[key])
+
 # create file names
-def setoutfiles (ddir,expmt_group):
+def setoutfiles (ddir):
   doutf = {}
-  doutf['file_dpl'] = ddir.create_filename(expmt_group, 'rawdpl')
-  doutf['file_current'] = ddir.create_filename(expmt_group, 'rawcurrent')
-  doutf['file_param'] = ddir.create_filename(expmt_group, 'param')
-  doutf['file_spikes'] = ddir.create_filename(expmt_group, 'rawspk')
-  doutf['file_spec'] = ddir.create_filename(expmt_group, 'rawspec')
+  doutf['file_dpl'] = getfname(ddir,'rawdpl')
+  doutf['file_current'] = getfname(ddir,'rawcurrent')
+  doutf['file_param'] = getfname(ddir, 'param')
+  doutf['file_spikes'] = getfname(ddir, 'rawspk')
+  doutf['file_spec'] = getfname(ddir, 'rawspec')
   doutf['filename_debug'] = 'debug.dat'
   return doutf
 
@@ -142,7 +146,7 @@ def runsim (f_psim):
   pc = h.ParallelContext()
   rank = int(pc.id()) # print(rank, pc.nhost())  
   p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
-  if rank == 0: ddir = setupsimdir(f_psim,p_exp) # one directory for all experiments
+  ddir = setupsimdir(f_psim,p_exp,rank) # one directory for all experiments
   # core iterator through experimental groups
   expmt_group = p_exp.expmt_groups[0]
 
@@ -199,7 +203,7 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,f_psim,rank,doutf,t_vec,dp_rec_L2,dp_rec_L5,net)
+  savedat(p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net)
 
   if pc.nhost() > 1:
     pc.runworker()
@@ -212,8 +216,8 @@ def runsim (f_psim):
     t1 = time.time() # end clock time
     print("Simulation run time: %4.4f s" % (t1-t0))
 
-  runanalysis(ddir,p) # run spectral analysis
-  savefigs(ddir,p,p_exp) # save output figures
+  #runanalysis(ddir,p) # run spectral analysis
+  #savefigs(ddir,p,p_exp) # save output figures
 
   if pc.nhost() > 1: h.quit()
 
@@ -229,4 +233,6 @@ if __name__ == "__main__":
   if not foundprm:
     f_psim = os.path.join('param','default.param')
     print(f_psim)
+  simstr = f_psim.split(os.path.sep)[-1].split('.param')[0]
+  datdir = os.path.join(dproj,simstr)
   runsim(f_psim)

@@ -357,7 +357,6 @@ def safemkdir (dn):
 def return_data_dir ():
   dfinal = os.path.join('.','data')
   if not safemkdir(dfinal): sys.exit(1)
-  print("data dir is",dfinal)
   return dfinal
 
 if __name__ == '__main__':
