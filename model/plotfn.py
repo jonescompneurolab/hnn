@@ -41,13 +41,13 @@ def pkernel(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None, ylim=None
   return 0
 
 # Kernel for plotting dipole and spec with alpha feed histograms
-def pkernel_with_hist(dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None, ylim=None):
+def pkernel_with_hist(datdir, dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim=None, ylim=None):
   # gid_dict, p_dict = paramrw.read(f_param)
   # tstop = p_dict['tstop']
   # fig dirs
-  dfig_dpl = dfig['figdpl']
-  dfig_spec = dfig['figspec']
-  dfig_spk = dfig['figspk']
+  dfig_dpl = datdir
+  dfig_spec = datdir
+  dfig_spk = datdir
   pdipole_dict = {
     'xmin': None,
     'xmax': None,
@@ -65,7 +65,31 @@ def cb(r): pass
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pall(ddir, p_exp, xlim=None, ylim=None):
+def pallsimp (datdir, ddir, p_exp, xlim=None, ylim=None):
+  # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
+  dsim = ddir.dsim
+  key_types = p_exp.get_key_types()
+  # preallocate lists for use below
+  param_list = []
+  dpl_list = []
+  spec_list = []
+  spk_list = []
+  dfig_list = []
+  expmt_group = ddir.expmt_groups[0]
+  # these should be equivalent lengths
+  param_list = ddir.file_match(expmt_group, 'param')
+  dpl_list = [os.path.join(datdir,'dpl.txt')] #dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+  spec_list = [os.path.join(datdir,'rawspec.npz')] # spec_list.extend(ddir.file_match(expmt_group, 'rawspec'))
+  spk_list = [os.path.join(datdir,'spk.txt')] # spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
+  print('param_list:',param_list,'dpl_list:',dpl_list,'spec_list:',spec_list,'spk_list:',spk_list)
+  for i in range(len(ddir.file_match(expmt_group, 'param'))):
+    dfig_list.append(ddir.dfig[expmt_group])
+  for dfig, f_param, f_spk, f_dpl, f_spec in zip(dfig_list, param_list, spk_list, dpl_list, spec_list):
+    pkernel_with_hist(datdir, dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
+
+# plot function - this is sort of a stop-gap and shouldn't live here, really
+# reads all data except spec and gid_dict from files
+def pall(datdir, ddir, p_exp, xlim=None, ylim=None):
   # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
   # runtype allows easy (hard coded switching between two modes)
   # either 'parallel' or 'debug'

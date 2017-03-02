@@ -100,7 +100,7 @@ def runanalysis (ddir,p):
   spec_opts = {
     'type': 'dpl_laminar',
     'f_max': p['f_max_spec'],
-    'save_data': 0,
+    'save_data': 1,
     'runtype': 'parallel',
   }
   specfn.analysis_simp(datdir, ddir, spec_opts)
@@ -114,7 +114,7 @@ def savefigs (ddir,p,p_exp):
   # spec results is passed as an argument here
   # because it's not necessarily saved
   xlim_plot = (0., p['tstop'])
-  plotfn.pall(ddir, p_exp, xlim_plot)
+  plotfn.pallsimp(datdir, ddir, p_exp, xlim_plot)
   print("time: %4.4f s" % (time.time() - plot_start))
 
 #
@@ -215,7 +215,7 @@ def runsim (f_psim):
     print("Simulation run time: %4.4f s" % (t1-t0))
 
   runanalysis(ddir,p) # run spectral analysis
-  #savefigs(ddir,p,p_exp) # save output figures
+  savefigs(ddir,p,p_exp) # save output figures
 
   if pc.nhost() > 1: h.quit()
 

@@ -345,8 +345,12 @@ class Spec():
         # save details of file
         # may be better ways of doing this...
         self.fspec = fspec
-        self.expmt = fspec.split('/')[6].split('.')[0]
-        self.fname = fspec.split('/')[-1].split('-spec')[0]
+        print('Spec: fspec:',fspec)
+        try:
+          self.expmt = fspec.split('/')[6].split('.')[0]
+        except:
+          self.expmt = ''
+        self.fname = 'spec.npz' # fspec.split('/')[-1].split('-spec')[0]
 
         # parse data
         self.__parse_f(fspec)
@@ -906,7 +910,8 @@ def analysis_simp (datdir, ddata, opts):
   print('fparam:',fparam)
   fts = os.path.join(datdir,'dpl.txt')
   fspec = os.path.join(datdir,'rawspec.npz')
-  spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
+  #spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
+  spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio

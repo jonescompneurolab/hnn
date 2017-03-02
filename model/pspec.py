@@ -88,99 +88,69 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_pa
 
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, ylim=None):
-    # Generate file prefix
-    fprefix = f_spec.split('/')[-1].split('.')[0]
-
-    # Create the fig name
-    fig_name = os.path.join(dfig, fprefix+'.png')
-
-    # load param dict
-    _, p_dict = paramrw.read(f_param)
-
-    f = ac.FigSpecWithHist()
-
-    # load spec data
-    spec = specfn.Spec(f_spec)
-
-    # Plot TFR data and add colorbar
-    pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim)
-    f.f.colorbar(pc, ax=f.ax['spec'])
-
-    # set xlim based on TFR plot
-    xlim_new = f.ax['spec'].get_xlim()
-
-    # grab the dipole data
-    dpl = dipolefn.Dipole(f_dpl)
-    dpl.baseline_renormalize(f_param)
-    dpl.convert_fAm_to_nAm()
-
-    # plot routine
-    dpl.plot(f.ax['dipole'], xlim_new, 'agg')
-
-    # data_dipole = np.loadtxt(open(f_dpl, 'r'))
-
-    # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
-    # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
-
-    # f.ax['dipole'].plot(t_dpl, dp_total)
-    # x = (xmin, xmax)
-
-    # # grab alpha feed data. spikes_from_file() from spikefn.py
-    # s_dict = spikefn.spikes_from_file(f_param, f_spk)
-
-    # # check for existance of alpha feed keys in s_dict.
-    # s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
-
-    # # Account for possible delays
-    # s_dict = spikefn.add_delay_times(s_dict, p_dict)
-
-    # Get extinput data and account for delays
-    extinputs = spikefn.ExtInputs(f_spk, f_param)
-    extinputs.add_delay_times()
-    extinputs.get_envelope(dpl.t, feed='dist')
-
-    # set number of bins (150 bins per 1000ms)
-    bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins should be int
-
-    # plot histograms
-    hist = {}
-
-    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins=bins, xlim=xlim_new, color='red')
-    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins=bins, xlim=xlim_new, color='green')
-
-    # # Proximal feed
-    # hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='red', label='Proximal feed', alpha=0.5)
-
-    # # Distal feed
-    # hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[xlim_new[0], xlim_new[1]], color='green', label='Distal feed')
-
-    # f.ax['testing'].invert_yaxis()
-    f.ax['feed_dist'].invert_yaxis()
-
-    # for now, set the xlim for the other one, force it!
-    f.ax['dipole'].set_xlim(xlim_new)
-    f.ax['spec'].set_xlim(xlim_new)
-    f.ax['feed_prox'].set_xlim(xlim_new)
-    f.ax['feed_dist'].set_xlim(xlim_new)
-
-    # set hist axis props
-    f.set_hist_props(hist)
-
-    # axis labels
-    f.ax['spec'].set_xlabel('Time (ms)')
-    f.ax['spec'].set_ylabel('Frequency (Hz)')
-
-    # Add legend to histogram
-    for key in f.ax.keys():
-        if 'feed' in key:
-            f.ax[key].legend()
-
-    # create title
-    title_str = ac.create_title(p_dict, key_types)
-    f.f.suptitle(title_str)
-
-    f.savepng(fig_name)
-    f.close()
+  # Generate file prefix
+  print('f_spec:',f_spec)
+  fprefix = f_spec.split('/')[-1].split('.')[0]
+  # Create the fig name
+  fig_name = os.path.join(dfig, fprefix+'.png')
+  print('fig_name:',fig_name)
+  # load param dict
+  _, p_dict = paramrw.read(f_param)
+  f = ac.FigSpecWithHist()
+  # load spec data
+  spec = specfn.Spec(f_spec)
+  # Plot TFR data and add colorbar
+  pc = spec.plot_TFR(f.ax['spec'], 'agg', xlim, ylim)
+  f.f.colorbar(pc, ax=f.ax['spec'])
+  # set xlim based on TFR plot
+  xlim_new = f.ax['spec'].get_xlim()
+  # grab the dipole data
+  dpl = dipolefn.Dipole(f_dpl)
+  dpl.baseline_renormalize(f_param)
+  dpl.convert_fAm_to_nAm()
+  # plot routine
+  dpl.plot(f.ax['dipole'], xlim_new, 'agg')
+  # data_dipole = np.loadtxt(open(f_dpl, 'r'))
+  # t_dpl = data_dipole[xmin_ind:xmax_ind+1, 0]
+  # dp_total = data_dipole[xmin_ind:xmax_ind+1, 1]
+  # f.ax['dipole'].plot(t_dpl, dp_total)
+  # x = (xmin, xmax)
+  # # grab alpha feed data. spikes_from_file() from spikefn.py
+  # s_dict = spikefn.spikes_from_file(f_param, f_spk)
+  # # check for existance of alpha feed keys in s_dict.
+  # s_dict = spikefn.alpha_feed_verify(s_dict, p_dict)
+  # # Account for possible delays
+  # s_dict = spikefn.add_delay_times(s_dict, p_dict)
+  # Get extinput data and account for delays
+  extinputs = spikefn.ExtInputs(f_spk, f_param)
+  extinputs.add_delay_times()
+  extinputs.get_envelope(dpl.t, feed='dist')
+  # set number of bins (150 bins per 1000ms)
+  bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins should be int
+  # plot histograms
+  hist = {}
+  hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins=bins, xlim=xlim_new, color='red')
+  hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins=bins, xlim=xlim_new, color='green')
+  f.ax['feed_dist'].invert_yaxis()
+  # for now, set the xlim for the other one, force it!
+  f.ax['dipole'].set_xlim(xlim_new)
+  f.ax['spec'].set_xlim(xlim_new)
+  f.ax['feed_prox'].set_xlim(xlim_new)
+  f.ax['feed_dist'].set_xlim(xlim_new)
+  # set hist axis props
+  f.set_hist_props(hist)
+  # axis labels
+  f.ax['spec'].set_xlabel('Time (ms)')
+  f.ax['spec'].set_ylabel('Frequency (Hz)')
+  # Add legend to histogram
+  for key in f.ax.keys():
+    if 'feed' in key:
+      f.ax[key].legend()
+  # create title
+  title_str = ac.create_title(p_dict, key_types)
+  f.f.suptitle(title_str)
+  f.savepng(fig_name)
+  f.close()
 
 def pspecpwr(file_name, results_list, fparam_list, key_types, error_vec=[]):
     # instantiate fig

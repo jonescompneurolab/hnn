@@ -607,89 +607,63 @@ def pdipole_evoked(dfig, f_dpl, f_spk, f_param, ylim=[]):
 
 # Plots dipole with histogram of alpha feed inputs - slightly deprecated, see note
 def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
-    """ this function has not been converted to use the Dipole() class yet
-    """
-    # dpl is an obj of Dipole() class
-    dpl = Dipole(f_dpl)
-    dpl.baseline_renormalize(f_param)
-    dpl.convert_fAm_to_nAm()
-
-    # split to find file prefix
-    file_prefix = f_dpl.split('/')[-1].split('.')[0]
-
-    # grabbing the p_dict from the f_param
-    _, p_dict = paramrw.read(f_param)
-
-    # get xmin and xmax from the plot_dict
-    if plot_dict['xmin'] is None:
-        xmin = 0.
-    else:
-        xmin = plot_dict['xmin']
-
-    if plot_dict['xmax'] is None:
-        xmax = p_dict['tstop']
-    else:
-        xmax = plot_dict['xmax']
-
-    # truncate tvec and dpl data using logical indexing
-    t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
-    dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]
-
-    # Plotting
-    f = ac.FigDplWithHist()
-
-    # dipole
-    f.ax['dipole'].plot(t_range, dpl_range)
-
-    # set new xlim based on dipole plot
-    xlim_new = f.ax['dipole'].get_xlim()
-
-    # Get extinput data and account for delays
-    extinputs = spikefn.ExtInputs(f_spk, f_param)
-    extinputs.add_delay_times()
-
-    # set number of bins (150 bins per 1000ms)
-    bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
-
-    # plot histograms
-    hist = {}
-
-    hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins, xlim_new, color='red')
-    hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins, xlim_new, color='green')
-
-    # # Proximal feed
-    # hist['feed_prox'] = f.ax['feed_prox'].hist(s_dict['alpha_feed_prox'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='red', label='Proximal feed')
-
-    # # Distal feed
-    # hist['feed_dist'] = f.ax['feed_dist'].hist(s_dict['alpha_feed_dist'].spike_list, bins, range=[t_vec[0], t_vec[-1]], color='green', label='Distal feed')
-
-    # Invert dist histogram
-    f.ax['feed_dist'].invert_yaxis()
-
-    # for now, set the xlim for the other one, force it!
-    f.ax['dipole'].set_xlim(xlim_new)
-    f.ax['feed_prox'].set_xlim(xlim_new)
-    f.ax['feed_dist'].set_xlim(xlim_new)
-
-    # set hist axis properties
-    f.set_hist_props(hist)
-
-    # Add legend to histogram
-    for key in f.ax.keys():
-        if 'feed' in key:
-            f.ax[key].legend()
-
-    # force xlim on histograms
-    f.ax['feed_prox'].set_xlim((xmin, xmax))
-    f.ax['feed_dist'].set_xlim((xmin, xmax))
-
-    title_str = ac.create_title(p_dict, key_types)
-    f.f.suptitle(title_str)
-
-    fig_name = os.path.join(dfig, file_prefix+'.png')
-
-    plt.savefig(fig_name)
-    f.close()
+  """ this function has not been converted to use the Dipole() class yet
+  """
+  # dpl is an obj of Dipole() class
+  dpl = Dipole(f_dpl)
+  dpl.baseline_renormalize(f_param)
+  dpl.convert_fAm_to_nAm()
+  # split to find file prefix
+  file_prefix = f_dpl.split('/')[-1].split('.')[0]
+  # grabbing the p_dict from the f_param
+  _, p_dict = paramrw.read(f_param)
+  # get xmin and xmax from the plot_dict
+  if plot_dict['xmin'] is None:
+    xmin = 0.
+  else:
+    xmin = plot_dict['xmin']
+  if plot_dict['xmax'] is None:
+    xmax = p_dict['tstop']
+  else:
+    xmax = plot_dict['xmax']
+  # truncate tvec and dpl data using logical indexing
+  t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
+  dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]
+  # Plotting
+  f = ac.FigDplWithHist()
+  # dipole
+  f.ax['dipole'].plot(t_range, dpl_range)
+  # set new xlim based on dipole plot
+  xlim_new = f.ax['dipole'].get_xlim()
+  # Get extinput data and account for delays
+  extinputs = spikefn.ExtInputs(f_spk, f_param)
+  extinputs.add_delay_times()
+  # set number of bins (150 bins per 1000ms)
+  bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
+  # plot histograms
+  hist = {}
+  hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins, xlim_new, color='red')
+  hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins, xlim_new, color='green')
+  # Invert dist histogram
+  f.ax['feed_dist'].invert_yaxis()
+  # for now, set the xlim for the other one, force it!
+  f.ax['dipole'].set_xlim(xlim_new)
+  f.ax['feed_prox'].set_xlim(xlim_new)
+  f.ax['feed_dist'].set_xlim(xlim_new)
+  # set hist axis properties
+  f.set_hist_props(hist)
+  # Add legend to histogram
+  for key in f.ax.keys():
+    if 'feed' in key:
+      f.ax[key].legend()
+  # force xlim on histograms
+  f.ax['feed_prox'].set_xlim((xmin, xmax))
+  f.ax['feed_dist'].set_xlim((xmin, xmax))
+  title_str = ac.create_title(p_dict, key_types)
+  f.f.suptitle(title_str)
+  fig_name = os.path.join(dfig, file_prefix+'.png')
+  plt.savefig(fig_name)
+  f.close()
 
 # For a given ddata (SimulationPaths object), find the mean dipole
 def pdipole_exp(ddata, ylim=[]):
