@@ -42,14 +42,10 @@ def spikes_write (net, filename_spikes):
 
 # copies param file into root dsim directory
 def copy_paramfile (dsim, f_psim, str_date):
-  # assumes in this cwd, can use try/except in the future
-  print(os.path.join(os.getcwd(), f_psim))
-  paramfile = f_psim.split("/")[-1]
-  paramfile_orig = os.path.join(os.getcwd(), f_psim)
-  paramfile_sim = os.path.join(dsim, paramfile)
-  shutil.copyfile(paramfile_orig, paramfile_sim)
+  fout = os.path.join(dsim,f_psim.split(os.path.sep)[-1])
+  shutil.copyfile(f_psim,fout)
   # open the new param file and append the date to it
-  with open(paramfile_sim, 'a') as f_param: f_param.write('\nRun_Date: %s' % str_date)
+  with open(fout, 'a') as f_param: f_param.write('\nRun_Date: %s' % str_date)
 
 # callback function for printing out time during simulation run
 printdt = 10
@@ -123,7 +119,8 @@ def savefigs (ddir,p,p_exp):
 def setupsimdir (f_psim,p_exp):
   ddir = fio.SimulationPaths()
   ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
-  #ddir.create_dirs()
+  ddir.create_dirs()
+  ddir.create_datadir()
   copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
   return ddir
 
@@ -179,7 +176,6 @@ def runsim (f_psim):
 
   # Set tstop before instantiating any classes
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
-  if rank==0: print('tstop:',h.tstop,'dt:',h.dt)
   # spike file needs to be known by all nodes
   file_spikes_tmp = fio.file_spike_tmp(dproj)  
   net = network.NetworkOnNode(p) # create node-specific network

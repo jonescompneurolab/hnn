@@ -110,6 +110,12 @@ class SimulationPaths ():
         dfig[expmt_group][key] = ddatatype
     return dfig
 
+  # create the data directory for the sim
+  def create_datadir (self):
+    dout = self.__simdir()
+    if not safemkdir(dout):
+      print("ERR: could not create output dir",dout)
+
   # extern function to create directories
   def create_dirs (self):
     # create expmt directories
