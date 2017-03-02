@@ -191,7 +191,7 @@ def runsim (f_psim):
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
-  #pc.psolve(h.tstop) # actual simulation - run the solver
+  pc.psolve(h.tstop) # actual simulation - run the solver
   pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
   net.aggregate_currents() # aggregate the currents independently on each proc
   # combine net.current{} variables on each proc
