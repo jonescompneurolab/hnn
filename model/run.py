@@ -179,6 +179,7 @@ def runsim (f_psim):
 
   # Set tstop before instantiating any classes
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
+  if rank==0: print('tstop:',h.tstop,'dt:',h.dt)
   # spike file needs to be known by all nodes
   file_spikes_tmp = fio.file_spike_tmp(dproj)  
   net = network.NetworkOnNode(p) # create node-specific network
@@ -232,4 +233,4 @@ if __name__ == "__main__":
   if not foundprm:
     f_psim = os.path.join('param','default.param')
     print(f_psim)
-    runsim(f_psim)
+  runsim(f_psim)
