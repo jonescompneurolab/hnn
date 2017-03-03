@@ -226,11 +226,11 @@ if __name__ == "__main__":
     if sys.argv[i].endswith('.param'):
       f_psim = sys.argv[i]
       foundprm = True
-      print('using ',f_psim,' param file.')
+      if pcID==0: print('using ',f_psim,' param file.')
       break
   if not foundprm:
     f_psim = os.path.join('param','default.param')
-    print(f_psim)
+    if pcID==0: print(f_psim)
   simstr = f_psim.split(os.path.sep)[-1].split('.param')[0]
   datdir = os.path.join(dproj,simstr)
   runsim(f_psim)
