@@ -5,7 +5,7 @@
 # [ ] list comma separated values
 
 sim_prefix: mu_high
-expmt_groups: mu_high
+expmt_groups: {mu_high}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -54,7 +54,7 @@ input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
 # current values, not sure where these distal values come from, need to check
-input_dist_A_weight_L5Pyr_ampa: 6e-5}
+input_dist_A_weight_L5Pyr_ampa: 6e-5
 input_dist_A_weight_L2Pyr_ampa: 6e-5
 input_dist_A_weight_inh_ampa: 1.2e-4
 input_dist_A_delay_L2: 5.0

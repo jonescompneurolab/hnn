@@ -4,8 +4,8 @@
 # L() defines a linspace range
 # [ ] list comma separated values
 
-sim_prefix: mu_lo1
-expmt_groups: mu_low
+sim_prefix: mu_low
+expmt_groups: {mu_low}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
