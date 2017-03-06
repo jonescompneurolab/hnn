@@ -4,8 +4,8 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: default
-expmt_groups: {default}
+sim_prefix: jones2009
+expmt_groups: {jones2009}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
