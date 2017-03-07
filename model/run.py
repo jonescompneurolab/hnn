@@ -19,6 +19,7 @@ import fileio as fio
 import paramrw as paramrw
 import plotfn as plotfn
 import specfn as specfn
+import pickle
 
 # data directory - ./data
 dproj = fio.return_data_dir()
@@ -63,7 +64,14 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   # only execute this statement on one proc
   if rank == 0:
     # write the dipole
-    with open(doutf['file_dpl'], 'a') as f:
+    """
+    ddpl = {}
+    ddpl['t_vec'] = t_vec.to_python()
+    ddpl['L2'] = dp_rec_L2.to_python()
+    ddpl['agg'] = list(np.array(dp_rec_L2.to_python())+np.array(dp_rec_L5.to_python()))
+    ddpl['L5'] = dp_rec_L5.to_python()
+    """
+    with open(doutf['file_dpl'], 'w') as f:
       for k in range(int(t_vec.size())):
         f.write("%03.3f\t" % t_vec.x[k])
         f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
@@ -156,6 +164,7 @@ def runsim (f_psim):
   # global variables, should be node-independent
   h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
+  """
   # if there are N_trials, then randomize the seed
   # establishes random seed for the seed seeder (yeah.)
   # this creates a prng_tmp on each, but only the value from 0 will be used
@@ -175,6 +184,7 @@ def runsim (f_psim):
   # otherwise, its originally set value will remain
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
+  """
 
   # Set tstop before instantiating any classes
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
