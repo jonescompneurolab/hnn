@@ -120,13 +120,13 @@ class HNNGUI (QMainWindow):
     qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
-    qbtn.move(50, 100) 
+    qbtn.move(175, 50) 
 
-    self.setGeometry(300, 300, 300, 200)
+    self.setGeometry(300, 300, 600, 550)
     self.setWindowTitle('HNN')    
 
     m = PlotCanvas(self, width=5, height=4)
-    m.move(0,0)
+    m.move(50,100)
 
     self.show()
 
