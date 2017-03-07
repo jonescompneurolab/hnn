@@ -1,16 +1,16 @@
-import ConfigParser
+from configparser import ConfigParser
 import io
 import pickle
 import os
-import StringIO
+from io import StringIO
 
 # default config as string
 def_config = """
 [params]
 [run]
 [sim]
-simf = model/run.py
-paramf = model/param/default.param
+simf = run.py
+paramf = param/default.param
 """
 
 # parameter used for evolution
@@ -53,7 +53,7 @@ class param:
 # specified in section (sec) , option (opt), and value (val)
 # saves to output filepath fn
 def writeconf (fn,sec,opt,val):
-  conf = ConfigParser.ConfigParser()
+  conf = ConfigParser()
   conf.readfp(io.BytesIO(def_config)) # start with defaults
   # then change entries by user-specs
   for i in range(len(sec)): conf.set(sec[i],opt[i],val[i])
@@ -64,7 +64,7 @@ def str2bool (v): return v.lower() in ("true", "t", "1")
 
 # read config file
 def readconf (fn="netcfg.cfg"):
-  config = ConfigParser.ConfigParser()
+  config = ConfigParser()
   config.optionxform = str
   #config.read(fn)
   
@@ -72,7 +72,8 @@ def readconf (fn="netcfg.cfg"):
     cfg_txt = os.path.expandvars(cfg_file.read())
 
   #config = ConfigParser.ConfigParser()
-  config.readfp(StringIO.StringIO(cfg_txt))
+  #config.readfp(StringIO.StringIO(cfg_txt))
+  config.readfp(StringIO(cfg_txt))
 
   def conffloat (base,var,defa): # defa is default value
     val = defa
@@ -122,8 +123,8 @@ def readconf (fn="netcfg.cfg"):
   #d['params'] = getparamd('params') # param values optimized by evolution
   #d['fixed'] = getparamd('fixed') # optional fixed values, assigned prior to assignment of evolutionary params
 
-  d['simf'] = confstr('sim','simf',os.path.join('model','run.py'))
-  d['paramf'] = confstr('sim','paramf',os.path.join('model','param','default.param'))
+  d['simf'] = confstr('sim','simf','run.py')
+  d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
 
   """
   recstr = confstr('run','recordV','')
