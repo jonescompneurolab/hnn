@@ -2,7 +2,10 @@ from configparser import ConfigParser
 import io
 import pickle
 import os
-from io import StringIO
+try:
+  from StringIO import StringIO
+except ImportError:
+  from io import StringIO
 
 # default config as string
 def_config = """

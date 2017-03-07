@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
+from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication
 import multiprocessing
@@ -10,6 +11,11 @@ import shlex
 from time import time, clock, sleep
 import pickle, tempfile
 from conf import readconf
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+
+import random
 
 ncore = multiprocessing.cpu_count()
 fprm = './model/param/default.param'
@@ -118,7 +124,28 @@ class HNNGUI (QMainWindow):
 
     self.setGeometry(300, 300, 300, 200)
     self.setWindowTitle('HNN')    
+
+    m = PlotCanvas(self, width=5, height=4)
+    m.move(0,0)
+
     self.show()
+
+# based on https://pythonspot.com/en/pyqt5-matplotlib/
+class PlotCanvas(FigureCanvas): 
+  def __init__ (self, parent=None, width=5, height=4, dpi=100):
+    fig = Figure(figsize=(width, height), dpi=dpi)
+    self.axes = fig.add_subplot(111)
+    FigureCanvas.__init__(self, fig)
+    self.setParent(parent)
+    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+    FigureCanvas.updateGeometry(self)
+    self.plot()
+  def plot(self):
+    data = [random.random() for i in range(25)]
+    ax = self.figure.add_subplot(111)
+    ax.plot(data, 'r-')
+    ax.set_title('PyQt Matplotlib Example')
+    self.draw()
         
 if __name__ == '__main__':    
   if debug:
