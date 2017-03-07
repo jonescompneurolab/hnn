@@ -58,42 +58,42 @@ f_stdev_dist: 20.
 events_per_cycle_dist: 2
 
 # thalamic input amplitudes and delays
-input_prox_A_weight_L2Pyr: 0.0
-input_prox_A_weight_L5Pyr: 0.0
-input_prox_A_weight_inh: 0.0
+input_prox_A_weight_L2Pyr: 4e-5
+input_prox_A_weight_L5Pyr: 4e-5
+input_prox_A_weight_inh: 8e-5
 input_prox_A_delay_L2: 0.1
 input_prox_A_delay_L5: 1.0
 
-input_dist_A_weight_L2Pyr: 0.0
-input_dist_A_weight_L5Pyr: 0.0
-input_dist_A_weight_inh: 0.0
+input_dist_A_weight_L2Pyr: 4e-5
+input_dist_A_weight_L5Pyr: 4e-5
+input_dist_A_weight_inh: 8e-5
 input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
 # evprox (early) feed strength
 t_evprox_early: 104.
 sigma_t_evprox_early: 0
-gbar_evprox_early_L2Pyr: 0.0
-gbar_evprox_early_L5Pyr: 0.0
-gbar_evprox_early_L2Basket: 0.0
-gbar_evprox_early_L5Basket: 0.0
+gbar_evprox_early_L2Pyr: 1e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Basket: 1e-3
 
 # evprox (late) feed strength
 dt_evprox0_evprox1: -1
 t_evprox_late: 214.
 sigma_t_evprox_late: 0
-gbar_evprox_late_L2Pyr: 0.0
-gbar_evprox_late_L5Pyr: 0.0
-gbar_evprox_late_L2Basket: 0.0
-gbar_evprox_late_L5Basket: 0.0
+gbar_evprox_late_L2Pyr: 5.3e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L2Basket: 2.7e-3
+gbar_evprox_late_L5Basket: 5.3e-3
 
 # evdist feed strengths
 dt_evprox0_evdist: -1
 t_evdist: 149.
 sigma_t_evdist: 0
-gbar_evdist_L2Pyr: 0.0
-gbar_evdist_L5Pyr: 0.0
-gbar_evdist_L2Basket: 0.0
+gbar_evdist_L2Pyr: 1e-3
+gbar_evdist_L5Pyr: 1e-3
+gbar_evdist_L2Basket: 5e-4
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
 # L2 Basket params

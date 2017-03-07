@@ -11,8 +11,8 @@ from neuron import h as nrn
 # Units for gbar: S/cm^2
 
 # Create a cell class
-class Cell():
-    def __init__(self, soma_props):
+class Cell ():
+    def __init__ (self, soma_props):
         # Parallel methods
         self.pc = nrn.ParallelContext()
 
@@ -49,7 +49,7 @@ class Cell():
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
     # In Cell() and not Pyr() for future possibilities
-    def dipole_insert(self, yscale):
+    def dipole_insert (self, yscale):
         # insert dipole into each section of this cell
         # dends must have already been created!!
         # it's easier to use wholetree here, this includes soma
@@ -123,7 +123,7 @@ class Cell():
             dpp.ztan = y_diff[-1]
 
     # Add IClamp to a segment
-    def insert_IClamp(self, sect_name, props_IClamp):
+    def insert_IClamp (self, sect_name, props_IClamp):
         # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
         # gather list of all sections
         seclist = nrn.SectionList()
@@ -144,7 +144,7 @@ class Cell():
 
     # simple function to record current
     # for now only at the soma
-    def record_current_soma(self):
+    def record_current_soma (self):
         # a soma exists at self.soma
         self.rec_i = nrn.Vector()
 
@@ -166,7 +166,7 @@ class Cell():
 
     # General fn that creates any Exp2Syn synapse type
     # requires dictionary of synapse properties
-    def syn_create(self, secloc, p):
+    def syn_create (self, secloc, p):
         syn = nrn.Exp2Syn(secloc)
         syn.e = p['e']
         syn.tau1 = p['tau1']
@@ -177,7 +177,7 @@ class Cell():
     # For all synapses, section location 'secloc' is being explicitly supplied
     # for clarity, even though they are (right now) always 0.5. Might change in future
     # creates a RECEIVING inhibitory synapse at secloc
-    def syn_gabaa_create(self, secloc):
+    def syn_gabaa_create (self, secloc):
         syn_gabaa = nrn.Exp2Syn(secloc)
         syn_gabaa.e = -80
         syn_gabaa.tau1 = 0.5
@@ -187,7 +187,7 @@ class Cell():
 
     # creates a RECEIVING slow inhibitory synapse at secloc
     # called: self.soma_gabab = syn_gabab_create(self.soma(0.5))
-    def syn_gabab_create(self, secloc):
+    def syn_gabab_create (self, secloc):
         syn_gabab = nrn.Exp2Syn(secloc)
         syn_gabab.e = -80
         syn_gabab.tau1 = 1
@@ -197,7 +197,7 @@ class Cell():
 
     # creates a RECEIVING excitatory synapse at secloc
     # def syn_ampa_create(self, secloc, tau_decay, prng_obj):
-    def syn_ampa_create(self, secloc):
+    def syn_ampa_create (self, secloc):
         syn_ampa = nrn.Exp2Syn(secloc)
         syn_ampa.e = 0.
         syn_ampa.tau1 = 0.5
@@ -207,7 +207,7 @@ class Cell():
 
     # creates a RECEIVING nmda synapse at secloc
     # this is a pretty fast NMDA, no?
-    def syn_nmda_create(self, secloc):
+    def syn_nmda_create (self, secloc):
         syn_nmda = nrn.Exp2Syn(secloc)
         syn_nmda.e = 0.
         syn_nmda.tau1 = 1.
@@ -217,14 +217,14 @@ class Cell():
 
     # connect_to_target created for pc, used in Network()
     # these are SOURCES of spikes
-    def connect_to_target(self, target):
+    def connect_to_target (self, target):
         nc = nrn.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
         nc.threshold = 0
 
         return nc
 
     # parallel receptor-centric connect FROM presyn TO this cell, based on GID
-    def parconnect_from_src(self, gid_presyn, nc_dict, postsyn):
+    def parconnect_from_src (self, gid_presyn, nc_dict, postsyn):
         # nc_dict keys are: {pos_src, A_weight, A_delay, lamtha}
         nc = self.pc.gid_connect(gid_presyn, postsyn)
 
@@ -236,10 +236,12 @@ class Cell():
         nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
         nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
 
+        # print("parconnect_from_src in cell.py, weight = ",nc.weight[0])
+
         return nc
 
     # pardistance function requires pre position, since it is calculated on POST cell
-    def __pardistance(self, pos_pre):
+    def __pardistance (self, pos_pre):
         dx = abs(self.pos[0] - pos_pre[0])
         dy = abs(self.pos[1] - pos_pre[1])
         dz = abs(self.pos[2] - pos_pre[2])
@@ -248,7 +250,7 @@ class Cell():
 
     # Define 3D shape of soma -- is needed for gui representation of cell
     # DO NOT need to call nrn.define_shape() explicitly!!
-    def shape_soma(self):
+    def shape_soma (self):
         nrn.pt3dclear(sec=self.soma)
 
         # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers
@@ -257,8 +259,8 @@ class Cell():
         nrn.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
 
 # Inhibitory cell class
-class BasketSingle(Cell):
-    def __init__(self, pos, cell_name='Basket'):
+class BasketSingle (Cell):
+    def __init__ (self, pos, cell_name='Basket'):
         self.props = self.__set_props(cell_name, pos)
 
         # Cell.__init__(self, properties)
@@ -270,7 +272,7 @@ class BasketSingle(Cell):
         # set 3D shape - unused for now but a prototype
         # self.__shape_change()
 
-    def __set_props(self, cell_name, pos):
+    def __set_props (self, cell_name, pos):
         return {
             'pos': pos,
             'L': 39.,
@@ -283,7 +285,7 @@ class BasketSingle(Cell):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function ease use of gui.
-    def __shape_change(self):
+    def __shape_change (self):
         self.shape_soma()
 
         self.soma.push()
@@ -294,8 +296,8 @@ class BasketSingle(Cell):
         nrn.pop_section()
 
 # General Pyramidal cell class
-class Pyr(Cell):
-    def __init__(self, soma_props):
+class Pyr (Cell):
+    def __init__ (self, soma_props):
         Cell.__init__(self, soma_props)
 
         # store cell_name as self variable for later use
@@ -308,7 +310,7 @@ class Pyr(Cell):
         self.list_dend = []
 
     # Create dictionary of section names with entries to scale section lengths to length along z-axis
-    def get_sectnames(self):
+    def get_sectnames (self):
         seclist = nrn.SectionList()
         seclist.wholetree(sec=self.soma)
 
@@ -333,7 +335,7 @@ class Pyr(Cell):
         return d
 
     # Creates dendritic sections based only on dictionary of dendrite props
-    def create_dends_new(self, p_dend_props):
+    def create_dends_new (self, p_dend_props):
         # iterate over keys in p_dend_props. Create dend for each key.
         for key in p_dend_props:
             # create dend

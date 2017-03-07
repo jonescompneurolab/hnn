@@ -100,7 +100,7 @@ def runanalysis (ddir,p):
   spec_opts = {
     'type': 'dpl_laminar',
     'f_max': p['f_max_spec'],
-    'save_data': 1,
+    'save_data': 0,
     'runtype': 'parallel',
   }
   specfn.analysis_simp(datdir, ddir, spec_opts)
@@ -156,6 +156,7 @@ def runsim (f_psim):
   # global variables, should be node-independent
   h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
+  """
   # if there are N_trials, then randomize the seed
   # establishes random seed for the seed seeder (yeah.)
   # this creates a prng_tmp on each, but only the value from 0 will be used
@@ -175,6 +176,7 @@ def runsim (f_psim):
   # otherwise, its originally set value will remain
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
+  """
 
   # Set tstop before instantiating any classes
   h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
