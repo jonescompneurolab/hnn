@@ -17,7 +17,32 @@ if not os.path.exists('model'):
   print("No model found!")
   sys.exit(1)
 
-cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi run.py param/default.param'
+"""
+# backup the config file
+def backupcfg (simstr):
+  safemkdir('backupcfg')
+  fout = 'backupcfg/' + simstr + '.cfg'
+  if os.path.exists(fout):
+    print 'removing prior cfg file' , fout
+    os.system('rm ' + fout)  
+  os.system('cp ' + fcfg + ' ' + fout) # fcfg created in geom.py via conf.py
+"""
+
+# determine config file name
+def setfcfg ():
+  fcfg = "hnn.cfg" # default config file name
+  for i in xrange(len(sys.argv)):
+    if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
+      fcfg = sys.argv[i]
+  print("hnn config file is " , fcfg)
+  return fcfg
+
+fcfg = setfcfg() # config file name
+dconf = readconf(fcfg)
+simf = dconf['simf']
+paramf = dconf['paramf']
+
+cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
 maxruntime = 1200 # 20 minutes - will allow terminating sim later
 foutput = './data/sim.out'
 debug = False

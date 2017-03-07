@@ -7,9 +7,10 @@ import StringIO
 # default config as string
 def_config = """
 [params]
+[run]
 [sim]
-simf = sim.py
-cell = geom.py
+simf = model/run.py
+paramf = model/param/default.param
 """
 
 # parameter used for evolution
@@ -121,14 +122,16 @@ def readconf (fn="netcfg.cfg"):
   #print 'sections = ' , lsec
 
   d = {}
-  d['params'] = getparamd('params') # param values optimized by evolution
-  d['fixed'] = getparamd('fixed') # optional fixed values, assigned prior to assignment of evolutionary params
+  #d['params'] = getparamd('params') # param values optimized by evolution
+  #d['fixed'] = getparamd('fixed') # optional fixed values, assigned prior to assignment of evolutionary params
 
+  d['simf'] = confstr('sim','simf',os.path.join('model','run.py'))
+  d['paramf'] = confstr('sim','paramf',os.path.join('model','param','default.param'))
+
+  """
   recstr = confstr('run','recordV','')
   d['recordV'] = recstr.split(',') # voltage recording locations
-
   d['recordSpike'] = confstr('run','recordSpike','')
-
   d['tstop'] = conffloat('run','tstop',2000)
   d['baset'] = conffloat('run','baset',500)
   d['stimdel'] = conffloat('run','stimdel',500)
@@ -147,6 +150,7 @@ def readconf (fn="netcfg.cfg"):
   d['spiket'] = confstr('data','spiket','')
   d['sampr'] = conffloat('data','sampr',10000)
   d['lstimamp'] = confstr('data','lstimamp','')
+  """
 
   return d
 
