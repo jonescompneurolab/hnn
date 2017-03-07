@@ -1160,7 +1160,7 @@ def exec_phaselock(ddata, opts):
         f = ac.FigPhase()
 
         extent_xy = [t[0], t[-1], phase.data['f'][-1], 0]
-        pc1 = f.ax['phase'].imshow(phase.data['B'], extent=extent_xy, aspect='auto', origin='upper')
+        pc1 = f.ax['phase'].imshow(phase.data['B'], extent=extent_xy, aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
         pc1.set_clim([0, 1])
         cb1 = f.f.colorbar(pc1, ax=f.ax['phase'])
         # cb1.set_clim([0, 1])

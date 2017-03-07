@@ -76,7 +76,7 @@ class MorletSpec():
     # plots spec to axis
     def plot_to_ax(self, ax_spec, dt):
         # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper')
+        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
 
         return pc
 
@@ -574,7 +574,7 @@ class Spec():
         extent_xy = [xmin, xmax, ymax, ymin]
 
         # plot
-        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper')
+        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
 
         return im
 
@@ -724,7 +724,7 @@ def pspec_ax(ax_spec, fspec, xlim, layer=None):
             print(data_spec.keys())
 
     extent_xy = [xlim[0], xlim[1], f[-1], 0.]
-    pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper')
+    pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
     [vmin, vmax] = pc.get_clim()
     # print(np.min(TFR), np.max(TFR))
     # print(vmin, vmax)

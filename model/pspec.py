@@ -222,7 +222,7 @@ def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param):
 
     pc = spec.plot_TFR(ax['spec'], layer='agg', xlim=x)
     # pc = ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
-    f.f.colorbar(pc, ax=ax['spec'])
+    f.f.colorbar(pc, ax=ax['spec'],cmap=plt.get_cmap('jet'))
 
     # grab the dipole data
     dpl = dipolefn.Dipole(f_dpl)
