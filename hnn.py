@@ -53,6 +53,7 @@ debug = False
 prtime = True
 
 ddat = {}
+running = False
 
 def getinputfiles (paramf):
   dfile = {}
@@ -64,7 +65,8 @@ def getinputfiles (paramf):
 
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
-  global ddat
+  global ddat,running
+  running = True
   print("Running simulation using",ncore,"cores.")
   cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
   maxruntime = 1200 # 20 minutes - will allow terminating sim later
@@ -99,6 +101,7 @@ def runsim ():
       print("Read simulation outputs:",dfile.values())
     except:
       print('WARN: could not read simulation outputs:',dfile.values())
+    running = False
 
 class HNNGUI (QMainWindow):
 
@@ -153,7 +156,10 @@ class PlotCanvas (FigureCanvas):
   def plot (self):
     data = [random.random() for i in range(25)]
     ax = self.figure.add_subplot(111)
-    ax.plot(data, 'r-')
+    if running:
+      ax.plot(data, 'g-')
+    else:
+      ax.plot(data, 'r-')
     ax.set_title('PyQt Matplotlib Example')
     self.draw()
         
