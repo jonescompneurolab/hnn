@@ -14,7 +14,7 @@ from conf import readconf
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-
+import numpy as np
 import random
 
 ncore = multiprocessing.cpu_count()
@@ -49,15 +49,27 @@ dconf = readconf(fcfg)
 simf = dconf['simf']
 paramf = dconf['paramf']
 
-cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
-maxruntime = 1200 # 20 minutes - will allow terminating sim later
-foutput = './data/sim.out'
 debug = False
 prtime = True
 
+ddat = {}
+
+def getinputfiles (paramf):
+  dfile = {}
+  basedir = os.path.join('model','data',paramf.split(os.path.sep)[1].split('.param')[0])
+  dfile['dpl'] = os.path.join(basedir,'dpl.txt')
+  dfile['spec'] = os.path.join(basedir,'rawspec.npz')
+  dfile['spk'] = os.path.join(basedir,'spk.txt')
+  return dfile
+
 # run sim command via mpi, then delete the temp file. returns job index and fitness.
 def runsim ():
+  global ddat
   print("Running simulation using",ncore,"cores.")
+  cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
+  maxruntime = 1200 # 20 minutes - will allow terminating sim later
+  foutput = './data/sim.out'
+  dfile = getinputfiles(paramf)
   cmdargs = shlex.split(cmd)
   print("cmd:",cmd,"cmdargs:",cmdargs)
   if prtime:
@@ -79,16 +91,14 @@ def runsim ():
   if not killed:
     try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
     except: print('could not communicate') # Process finished.
-    """ # no output to read yet
+    # no output to read yet
     try: # lack of output file may occur if invalid param values lead to an nrniv crash
-      with open(foutput,'r') as fp:
-        i = 0
-        for ln in fp.readlines():
-          i += 1
-        print("Read ",i," lines from",foutput)
+      ddat['dpl'] = np.loadtxt(dfile['dpl'])
+      ddat['spec'] = np.load(dfile['spec'])
+      ddat['spk'] = np.loadtxt(dfile['spk'])
+      print("Read simulation outputs:",dfile.values())
     except:
-      print('WARN: could not read simulation output:',foutput)
-    """
+      print('WARN: could not read simulation outputs:',dfile.values())
 
 class HNNGUI (QMainWindow):
 
@@ -131,7 +141,7 @@ class HNNGUI (QMainWindow):
     self.show()
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
-class PlotCanvas(FigureCanvas): 
+class PlotCanvas (FigureCanvas): 
   def __init__ (self, parent=None, width=5, height=4, dpi=100):
     fig = Figure(figsize=(width, height), dpi=dpi)
     self.axes = fig.add_subplot(111)
@@ -140,7 +150,7 @@ class PlotCanvas(FigureCanvas):
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.plot()
-  def plot(self):
+  def plot (self):
     data = [random.random() for i in range(25)]
     ax = self.figure.add_subplot(111)
     ax.plot(data, 'r-')

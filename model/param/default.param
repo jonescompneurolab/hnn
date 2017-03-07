@@ -11,8 +11,8 @@
 # linspaces of values, and experimental values.
 # Limitation: Will not work for feed distributions
 
-sim_prefix: beta_high
-expmt_groups: {beta_high}
+sim_prefix: default
+expmt_groups: {default}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
