@@ -102,11 +102,9 @@ def readconf (fn="netcfg.cfg"):
     if config.has_option(base,'fpath'):
       fn = config.get(base,'fpath')
       d = pickle.load(open(fn))
-      print 'read dprm from ' , fn
+      print('read dprm from ' , fn)
       return d    
-    #print base, ':', lprm
     for i,prm in enumerate(lprm):
-      #print prm
       s = config.get(base,prm)    
       sp = s.split()
       try:
@@ -114,12 +112,11 @@ def readconf (fn="netcfg.cfg"):
         p = param(origval,minval,maxval,bounded,prm)
         d[prm] = p
       except:
-        print 'config skipping ' , s
+        print('config skipping ' , s)
         pass
     return d
 
   lsec = config.sections()
-  #print 'sections = ' , lsec
 
   d = {}
   #d['params'] = getparamd('params') # param values optimized by evolution
