@@ -56,7 +56,7 @@ def writeconf (fn,sec,opt,val):
   conf = ConfigParser.ConfigParser()
   conf.readfp(io.BytesIO(def_config)) # start with defaults
   # then change entries by user-specs
-  for i in xrange(len(sec)): conf.set(sec[i],opt[i],val[i])
+  for i in range(len(sec)): conf.set(sec[i],opt[i],val[i])
   # write config file
   with open(fn, 'wb') as cfile: conf.write(cfile)
 

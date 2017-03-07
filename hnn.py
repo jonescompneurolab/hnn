@@ -31,7 +31,7 @@ def backupcfg (simstr):
 # determine config file name
 def setfcfg ():
   fcfg = "hnn.cfg" # default config file name
-  for i in xrange(len(sys.argv)):
+  for i in range(len(sys.argv)):
     if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
       fcfg = sys.argv[i]
   print("hnn config file is " , fcfg)
