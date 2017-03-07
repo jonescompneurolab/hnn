@@ -4,7 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
 from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QCoreApplication, QThread
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
@@ -103,11 +103,24 @@ def runsim ():
       print('WARN: could not read simulation outputs:',dfile.values())
     running = False
 
+# based on https://nikolak.com/pyqt-threading-tutorial/
+class RunSimThread (QThread):
+  def __init__ (self):
+    QThread.__init__(self)
+  def __del__ (self):
+    self.wait()
+  def run (self):
+    # your logic here
+    runsim()
+
 class HNNGUI (QMainWindow):
 
   def __init__ (self):
     super().__init__()        
     self.initUI()
+
+  def done (self):
+    QtGui.QMessageBox.information(self, "Done!", "Done running sim!")
 
   def initUI (self):       
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
