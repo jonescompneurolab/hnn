@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE, call
 import shlex
 from time import time, clock, sleep
 import pickle, tempfile
+from conf import readconf
 
 ncore = multiprocessing.cpu_count()
 fprm = './model/param/default.param'
