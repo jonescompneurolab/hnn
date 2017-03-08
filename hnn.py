@@ -49,7 +49,7 @@ dconf = readconf(fcfg)
 simf = dconf['simf']
 paramf = dconf['paramf']
 
-debug = False
+debug = True
 prtime = True
 
 ddat = {}
@@ -61,6 +61,12 @@ def getinputfiles (paramf):
   dfile['spec'] = os.path.join(basedir,'rawspec.npz')
   dfile['spk'] = os.path.join(basedir,'spk.txt')
   return dfile
+
+if debug:
+  dfile = getinputfiles(paramf)
+  ddat['dpl'] = np.loadtxt(dfile['dpl'])
+  ddat['spec'] = np.load(dfile['spec'])
+  ddat['spk'] = np.loadtxt(dfile['spk'])
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
@@ -164,10 +170,10 @@ class HNNGUI (QMainWindow):
     qbtn.resize(qbtn.sizeHint())
     qbtn.move(175, 50) 
 
-    self.setGeometry(300, 300, 600, 550)
+    self.setGeometry(300, 300, 1200, 1100)
     self.setWindowTitle('HNN')    
 
-    self.m = m = PlotCanvas(self, width=5, height=4)
+    self.m = m = PlotCanvas(self, width=10, height=8)
     m.move(50,100)
 
     self.c = Communicate()
@@ -261,21 +267,24 @@ class PlotCanvas (FigureCanvas):
       ax = self.figure.add_subplot(312)
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
       ax.set_ylabel('dipole (nA m)')
+      ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
+      ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
       ax = self.figure.add_subplot(313)
       ds = ddat['spec']
-      ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
-      ax.colorbar()
+      cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_ylabel('Frequency (Hz)')
       ax.set_xlabel('Time (ms)')
+      ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
+      ax.set_ylim(ds['freq'][-1],ds['freq'][0])
+      #fig,ax = plt.subplots()
+      self.fig.colorbar(cax)
+      self.fig.tight_layout()
     except:
       print('ERR: in plot')
     self.draw()
         
 if __name__ == '__main__':    
-  if debug:
-    pass
-  else:
-    app = QApplication(sys.argv)
-    ex = HNNGUI()
-    sys.exit(app.exec_())  
+  app = QApplication(sys.argv)
+  ex = HNNGUI()
+  sys.exit(app.exec_())  
   
