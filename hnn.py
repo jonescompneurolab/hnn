@@ -68,11 +68,27 @@ class RunSimThread (QThread):
     QThread.__init__(self)
     self.c = c
     self.killed = False
+    self.proc = None
+
+  def stop (self):
+    self.killed = True
+
   def __del__ (self):
+    self.quit()
     self.wait()
+
   def run (self):
     self.runsim() # your logic here
     self.c.finishSim.emit()
+
+  def killproc (self):
+    if self.proc is None: return
+    print('Thread killing sim. . .')
+    try:
+      self.proc.kill() # has to be called before proc ends
+      self.proc = None
+    except:
+      print('ERR: could not stop simulation process.')
 
   # run sim command via mpi, then delete the temp file. returns job index and fitness.
   def runsim (self):
@@ -81,28 +97,24 @@ class RunSimThread (QThread):
     print("Running simulation using",ncore,"cores.")
     cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
-    foutput = './data/sim.out'
     dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd)
     print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
-      proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
+      self.proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
     else:
-      proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
-    if debug: print("proc:",proc)
-    cstart = time(); killed = False
-    while not self.killed and proc.poll() is None: # job is not done
+      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+    if debug: print("proc:",self.proc)
+    cstart = time(); 
+    while not self.killed and self.proc.poll() is None: # job is not done
       sleep(1)
       cend = time(); rtime = cend - cstart
       if rtime >= maxruntime:
         self.killed = True
         print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
-        try:
-          proc.kill() # has to be called before proc ends
-        except:
-          print('ERR: could not stop simulation process.')
+        self.killproc()
     if not self.killed:
-      try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
+      try: self.proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
       except: print('could not communicate') # Process finished.
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
@@ -112,7 +124,8 @@ class RunSimThread (QThread):
         print("Read simulation outputs:",dfile.values())
       except:
         print('WARN: could not read simulation outputs:',dfile.values())
-
+    else:
+      self.killproc()
 
 class Communicate (QObject):    
   finishSim = pyqtSignal()
@@ -164,7 +177,7 @@ class HNNGUI (QMainWindow):
 
   def controlsim (self):
     if self.runningsim:
-      self.stopsim()
+      self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
       self.startsim()
 
@@ -173,7 +186,7 @@ class HNNGUI (QMainWindow):
       print('Terminating sim. . .')
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
-      self.runthread.killed = True # terminate()
+      self.runthread.stop() # killed = True # terminate()
       self.btnsim.setText("Start sim")
       self.statusBar().showMessage('')
 
