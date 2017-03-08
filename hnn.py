@@ -50,7 +50,7 @@ dconf = readconf(fcfg)
 simf = dconf['simf']
 paramf = dconf['paramf']
 
-debug = False # True
+debug = True
 prtime = True
 
 ddat = {}
@@ -270,13 +270,44 @@ class PlotCanvas (FigureCanvas):
     if len(ddat.keys()) == 0: return
     try:
       fig,ax = plt.subplots(); ax.cla()
-      ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla()
+
+      xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0] )
+      # set number of bins (150 bins per 1000ms)
+      bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
+
+      """
+      # plot histograms
+      hist = {}
+      hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins, xlim_new, color='red')
+      hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins, xlim_new, color='green')
+      # Invert dist histogram
+      f.ax['feed_dist'].invert_yaxis()
+      # for now, set the xlim for the other one, force it!
+      f.ax['dipole'].set_xlim(xlim_new)
+      f.ax['feed_prox'].set_xlim(xlim_new)
+      f.ax['feed_dist'].set_xlim(xlim_new)
+      # set hist axis properties
+      f.set_hist_props(hist)
+      # Add legend to histogram
+      for key in f.ax.keys():
+        if 'feed' in key:
+          f.ax[key].legend()
+      # force xlim on histograms
+      f.ax['feed_prox'].set_xlim((xmin, xmax))
+      f.ax['feed_dist'].set_xlim((xmin, xmax))
+      """
+
+      ax = self.figure.add_subplot(self.G[0,0]); ax.cla() # distal inputs
+
+      ax = self.figure.add_subplot(self.G[1,0]); ax.cla() # proximal inputs
+
+      ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla() # dipole
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
       ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
-      #ax = self.figure.add_subplot(313); ax.cla()
-      ax = self.figure.add_subplot(self.G[6:10,0]); ax.cla()
+
+      ax = self.figure.add_subplot(self.G[6:10,0]); ax.cla() # specgram
       ds = ddat['spec']
       cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_ylabel('Frequency (Hz)')
@@ -285,7 +316,7 @@ class PlotCanvas (FigureCanvas):
       ax.set_ylim(ds['freq'][-1],ds['freq'][0])
       cbaxes = self.fig.add_axes([0.925, 0.125, 0.03, 0.2]) 
       cb = plt.colorbar(cax, cax = cbaxes)  
-      #self.fig.tight_layout()
+      #self.fig.tight_layout() # tight_layout will mess up colorbar location
     except:
       print('ERR: in plot')
     self.draw()
