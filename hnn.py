@@ -240,6 +240,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.statusBar().showMessage("")
     self.btnsim.setText("Start sim")
+    self.m.plot('g')
     #self.btn_stop.setEnabled(False)
     #QtGui.QMessageBox.information(self, "Done!", "Done running sim!") # Show the message that sim is done.
 
@@ -254,10 +255,10 @@ class PlotCanvas (FigureCanvas):
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.plot()
-  def plot (self):
+  def plot (self,color='r'):
     data = [random.random() for i in range(25)]
     ax = self.figure.add_subplot(111)
-    ax.plot(data, 'r-')
+    ax.plot(data, color+'-')
     ax.set_title('PyQt Matplotlib Example')
     self.draw()
         
