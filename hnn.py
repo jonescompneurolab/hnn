@@ -246,7 +246,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.statusBar().showMessage("")
     self.btnsim.setText("Start sim")
-    self.m.plot('g')
+    self.m.plot()
     #self.btn_stop.setEnabled(False)
     #QtGui.QMessageBox.information(self, "Done!", "Done running sim!") # Show the message that sim is done.
 
@@ -255,26 +255,27 @@ class HNNGUI (QMainWindow):
 class PlotCanvas (FigureCanvas): 
   def __init__ (self, parent=None, width=5, height=4, dpi=100):
     self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
-    self.axes = fig.add_subplot(111)
+    #self.axes = fig.add_subplot(111)
     FigureCanvas.__init__(self, fig)
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.plot()
-  def plot (self,color='r'):
+  def plot (self):
     if len(ddat.keys()) == 0: return
     try:
-      ax = self.figure.add_subplot(312)
+      fig,ax = plt.subplots(); ax.cla()
+      ax = self.figure.add_subplot(312); ax.cla()
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
       ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
-      ax = self.figure.add_subplot(313)
+      ax = self.figure.add_subplot(313); ax.cla()
       ds = ddat['spec']
       cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_ylabel('Frequency (Hz)')
       ax.set_xlabel('Time (ms)')
-      ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
+      ax.set_xlim(ds['time'][0],ds['time'][-1])
       ax.set_ylim(ds['freq'][-1],ds['freq'][0])
       #fig,ax = plt.subplots()
       self.fig.colorbar(cax)
