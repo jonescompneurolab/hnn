@@ -4,7 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
 from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import QCoreApplication, QThread
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
@@ -89,7 +89,7 @@ def runsim ():
       try:
         proc.kill() # has to be called before proc ends
       except:
-        print('could not kill')
+        print('ERR: could not stop simulation process.')
   if not killed:
     try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
     except: print('could not communicate') # Process finished.
@@ -105,22 +105,23 @@ def runsim ():
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self):
+  def __init__ (self,c):
     QThread.__init__(self)
+    self.c = c
   def __del__ (self):
     self.wait()
   def run (self):
-    # your logic here
-    runsim()
+    runsim() # your logic here
+    self.c.finishSim.emit()
+
+class Communicate (QObject):    
+    finishSim = pyqtSignal()
 
 class HNNGUI (QMainWindow):
 
   def __init__ (self):
     super().__init__()        
     self.initUI()
-
-  def done (self):
-    QtGui.QMessageBox.information(self, "Done!", "Done running sim!")
 
   def initUI (self):       
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
@@ -136,14 +137,13 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(exitAction)
 
     QToolTip.setFont(QFont('SansSerif', 10))        
-    #self.setToolTip('This is a <b>QWidget</b> widget')        
-    btn = QPushButton('Run model', self)
+    self.btnsim = btn = QPushButton('Run sim', self)
     btn.setToolTip('Run simulation')
     btn.resize(btn.sizeHint())
-    btn.clicked.connect(runsim)
+    btn.clicked.connect(self.startsim)
     btn.move(50, 50)       
 
-    qbtn = QPushButton('Quit', self)
+    self.qbtn = qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
     qbtn.move(175, 50) 
@@ -151,10 +151,67 @@ class HNNGUI (QMainWindow):
     self.setGeometry(300, 300, 600, 550)
     self.setWindowTitle('HNN')    
 
-    m = PlotCanvas(self, width=5, height=4)
+    self.m = m = PlotCanvas(self, width=5, height=4)
     m.move(50,100)
 
+    self.c = Communicate()
+    self.c.finishSim.connect(self.done)
+
     self.show()
+
+  def startsim (self):
+    self.runningsim = True
+
+    self.statusBar().showMessage("Running sim. . .")
+
+    self.runthread = RunSimThread(self.c)
+
+    # Next we need to connect the events from that thread to functions we want
+    # to be run when those signals get fired
+
+    # Adding post will be handeled in the add_post method and the signal that
+    # the thread will emit is  SIGNAL("add_post(QString)")
+    # the rest is same as we can use to connect any signal
+    # self.connect(self.runthread, SIGNAL("add_post(QString)"), self.add_post)
+
+    # This is pretty self explanatory
+    # regardless of whether the thread finishes or the user terminates it
+    # we want to show the notification to the user that adding is done
+    # and regardless of whether it was terminated or finished by itself
+    # the finished signal will go off. So we don't need to catch the
+    # terminated one specifically, but we could if we wanted.
+    # self.connect(self.runthread, SIGNAL("finished()"), self.done)
+
+    # We have all the events we need connected we can start the thread
+    self.runthread.start()
+    # At this point we want to allow user to stop/terminate the thread
+    # so we enable that button
+    self.btnsim.setText("Stop sim") # setEnabled(False)
+    # And we connect the click of that button to the built in
+    # terminate method that all QThread instances have
+    self.btnsim.clicked.connect(self.runthread.terminate)
+    # We don't want to enable user to start another thread while this one is
+    # running so we disable the start button.
+    # self.btn_start.setEnabled(False)
+
+  """
+  def add_post(self, post_text):
+    #Add the text that's given to this function to the
+    #list_submissions QListWidget we have in our GUI and
+    #increase the current value of progress bar by 1
+    #:param post_text: text of the item to add to the list
+    #:type post_text: str
+    self.list_submissions.addItem(post_text)
+    self.progress_bar.setValue(self.progress_bar.value()+1)
+  """
+
+  def done(self):
+    self.runningsim = False
+    self.statusBar().showMessage("")
+    self.btnsim.setText("Start sim")
+    #self.btn_stop.setEnabled(False)
+    #QtGui.QMessageBox.information(self, "Done!", "Done running sim!") # Show the message that sim is done.
+
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class PlotCanvas (FigureCanvas): 
