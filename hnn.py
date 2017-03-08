@@ -194,7 +194,7 @@ class HNNGUI (QMainWindow):
     print('Starting sim. . .')
     self.runningsim = True
 
-    self.statusBar().showMessage("Running sim. . .")
+    self.statusBar().showMessage("Running simulation. . .")
 
     self.runthread = RunSimThread(self.c)
 
@@ -248,7 +248,7 @@ class HNNGUI (QMainWindow):
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class PlotCanvas (FigureCanvas): 
   def __init__ (self, parent=None, width=5, height=4, dpi=100):
-    fig = Figure(figsize=(width, height), dpi=dpi)
+    self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
     self.axes = fig.add_subplot(111)
     FigureCanvas.__init__(self, fig)
     self.setParent(parent)
@@ -256,10 +256,19 @@ class PlotCanvas (FigureCanvas):
     FigureCanvas.updateGeometry(self)
     self.plot()
   def plot (self,color='r'):
-    data = [random.random() for i in range(25)]
-    ax = self.figure.add_subplot(111)
-    ax.plot(data, color+'-')
-    ax.set_title('PyQt Matplotlib Example')
+    if len(ddat.keys()) == 0: return
+    try:
+      ax = self.figure.add_subplot(312)
+      ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
+      ax.set_ylabel('dipole (nA m)')
+      ax = self.figure.add_subplot(313)
+      ds = ddat['spec']
+      ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
+      ax.colorbar()
+      ax.set_ylabel('Frequency (Hz)')
+      ax.set_xlabel('Time (ms)')
+    except:
+      print('ERR: in plot')
     self.draw()
         
 if __name__ == '__main__':    
