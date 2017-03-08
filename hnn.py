@@ -53,7 +53,6 @@ debug = False
 prtime = True
 
 ddat = {}
-running = False
 
 def getinputfiles (paramf):
   dfile = {}
@@ -63,65 +62,68 @@ def getinputfiles (paramf):
   dfile['spk'] = os.path.join(basedir,'spk.txt')
   return dfile
 
-# run sim command via mpi, then delete the temp file. returns job index and fitness.
-def runsim ():
-  global ddat,running
-  running = True
-  print("Running simulation using",ncore,"cores.")
-  cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
-  maxruntime = 1200 # 20 minutes - will allow terminating sim later
-  foutput = './data/sim.out'
-  dfile = getinputfiles(paramf)
-  cmdargs = shlex.split(cmd)
-  print("cmd:",cmd,"cmdargs:",cmdargs)
-  if prtime:
-    proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
-  else:
-    proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
-  if debug: print("proc:",proc)
-  cstart = time(); killed = False
-  while not killed and proc.poll() is None: # job is not done
-    sleep(1)
-    cend = time(); rtime = cend - cstart
-    if rtime >= maxruntime:
-      killed = True
-      print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
-      try:
-        proc.kill() # has to be called before proc ends
-      except:
-        print('ERR: could not stop simulation process.')
-  if not killed:
-    try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
-    except: print('could not communicate') # Process finished.
-    # no output to read yet
-    try: # lack of output file may occur if invalid param values lead to an nrniv crash
-      ddat['dpl'] = np.loadtxt(dfile['dpl'])
-      ddat['spec'] = np.load(dfile['spec'])
-      ddat['spk'] = np.loadtxt(dfile['spk'])
-      print("Read simulation outputs:",dfile.values())
-    except:
-      print('WARN: could not read simulation outputs:',dfile.values())
-    running = False
-
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
   def __init__ (self,c):
     QThread.__init__(self)
     self.c = c
+    self.killed = False
   def __del__ (self):
     self.wait()
   def run (self):
-    runsim() # your logic here
+    self.runsim() # your logic here
     self.c.finishSim.emit()
 
+  # run sim command via mpi, then delete the temp file. returns job index and fitness.
+  def runsim (self):
+    global ddat
+    self.killed = False
+    print("Running simulation using",ncore,"cores.")
+    cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
+    maxruntime = 1200 # 20 minutes - will allow terminating sim later
+    foutput = './data/sim.out'
+    dfile = getinputfiles(paramf)
+    cmdargs = shlex.split(cmd)
+    print("cmd:",cmd,"cmdargs:",cmdargs)
+    if prtime:
+      proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
+    else:
+      proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+    if debug: print("proc:",proc)
+    cstart = time(); killed = False
+    while not self.killed and proc.poll() is None: # job is not done
+      sleep(1)
+      cend = time(); rtime = cend - cstart
+      if rtime >= maxruntime:
+        self.killed = True
+        print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
+        try:
+          proc.kill() # has to be called before proc ends
+        except:
+          print('ERR: could not stop simulation process.')
+    if not self.killed:
+      try: proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
+      except: print('could not communicate') # Process finished.
+      # no output to read yet
+      try: # lack of output file may occur if invalid param values lead to an nrniv crash
+        ddat['dpl'] = np.loadtxt(dfile['dpl'])
+        ddat['spec'] = np.load(dfile['spec'])
+        ddat['spk'] = np.loadtxt(dfile['spk'])
+        print("Read simulation outputs:",dfile.values())
+      except:
+        print('WARN: could not read simulation outputs:',dfile.values())
+
+
 class Communicate (QObject):    
-    finishSim = pyqtSignal()
+  finishSim = pyqtSignal()
 
 class HNNGUI (QMainWindow):
 
   def __init__ (self):
     super().__init__()        
     self.initUI()
+    self.runningsim = False
+    self.runthread = None
 
   def initUI (self):       
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
@@ -137,10 +139,11 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(exitAction)
 
     QToolTip.setFont(QFont('SansSerif', 10))        
+
     self.btnsim = btn = QPushButton('Run sim', self)
     btn.setToolTip('Run simulation')
     btn.resize(btn.sizeHint())
-    btn.clicked.connect(self.startsim)
+    btn.clicked.connect(self.controlsim)
     btn.move(50, 50)       
 
     self.qbtn = qbtn = QPushButton('Quit', self)
@@ -159,7 +162,23 @@ class HNNGUI (QMainWindow):
 
     self.show()
 
+  def controlsim (self):
+    if self.runningsim:
+      self.stopsim()
+    else:
+      self.startsim()
+
+  def stopsim (self):
+    if self.runningsim:
+      print('Terminating sim. . .')
+      self.statusBar().showMessage('Terminating sim. . .')
+      self.runningsim = False
+      self.runthread.killed = True # terminate()
+      self.btnsim.setText("Start sim")
+      self.statusBar().showMessage('')
+
   def startsim (self):
+    print('Starting sim. . .')
     self.runningsim = True
 
     self.statusBar().showMessage("Running sim. . .")
@@ -180,7 +199,6 @@ class HNNGUI (QMainWindow):
     # and regardless of whether it was terminated or finished by itself
     # the finished signal will go off. So we don't need to catch the
     # terminated one specifically, but we could if we wanted.
-    # self.connect(self.runthread, SIGNAL("finished()"), self.done)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -189,7 +207,7 @@ class HNNGUI (QMainWindow):
     self.btnsim.setText("Stop sim") # setEnabled(False)
     # And we connect the click of that button to the built in
     # terminate method that all QThread instances have
-    self.btnsim.clicked.connect(self.runthread.terminate)
+    # self.btnsim.clicked.connect(self.runthread.terminate)
     # We don't want to enable user to start another thread while this one is
     # running so we disable the start button.
     # self.btn_start.setEnabled(False)
@@ -226,10 +244,7 @@ class PlotCanvas (FigureCanvas):
   def plot (self):
     data = [random.random() for i in range(25)]
     ax = self.figure.add_subplot(111)
-    if running:
-      ax.plot(data, 'g-')
-    else:
-      ax.plot(data, 'r-')
+    ax.plot(data, 'r-')
     ax.set_title('PyQt Matplotlib Example')
     self.draw()
         
