@@ -194,6 +194,7 @@ class HNNGUI (QMainWindow):
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
       self.btnsim.setText("Start sim")
+      self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
 
   def startsim (self):
@@ -230,6 +231,7 @@ class HNNGUI (QMainWindow):
     # We don't want to enable user to start another thread while this one is
     # running so we disable the start button.
     # self.btn_start.setEnabled(False)
+    self.qbtn.setEnabled(False)
 
   """
   def add_post(self, post_text):
@@ -246,6 +248,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.statusBar().showMessage("")
     self.btnsim.setText("Start sim")
+    self.qbtn.setEnabled(True)
     self.m.plot()
     #self.btn_stop.setEnabled(False)
     #QtGui.QMessageBox.information(self, "Done!", "Done running sim!") # Show the message that sim is done.
