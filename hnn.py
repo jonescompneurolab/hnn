@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 import random
+from math import ceil
 
 ncore = multiprocessing.cpu_count()
 fprm = './model/param/default.param'
@@ -271,7 +272,7 @@ class PlotCanvas (FigureCanvas):
     try:
       fig,ax = plt.subplots(); ax.cla()
 
-      xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0] )
+      xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
       # set number of bins (150 bins per 1000ms)
       bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
 
