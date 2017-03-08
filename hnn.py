@@ -14,6 +14,7 @@ from conf import readconf
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import numpy as np
 import random
 
@@ -263,17 +264,19 @@ class PlotCanvas (FigureCanvas):
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
+    self.G = gridspec.GridSpec(10,1)
     self.plot()
   def plot (self):
     if len(ddat.keys()) == 0: return
     try:
       fig,ax = plt.subplots(); ax.cla()
-      ax = self.figure.add_subplot(312); ax.cla()
+      ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla()
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
       ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
-      ax = self.figure.add_subplot(313); ax.cla()
+      #ax = self.figure.add_subplot(313); ax.cla()
+      ax = self.figure.add_subplot(self.G[6:10,0]); ax.cla()
       ds = ddat['spec']
       cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_ylabel('Frequency (Hz)')
