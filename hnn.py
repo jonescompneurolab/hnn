@@ -49,7 +49,7 @@ dconf = readconf(fcfg)
 simf = dconf['simf']
 paramf = dconf['paramf']
 
-debug = True
+debug = False # True
 prtime = True
 
 ddat = {}
@@ -277,9 +277,9 @@ class PlotCanvas (FigureCanvas):
       ax.set_xlabel('Time (ms)')
       ax.set_xlim(ds['time'][0],ds['time'][-1])
       ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-      #fig,ax = plt.subplots()
-      self.fig.colorbar(cax)
-      self.fig.tight_layout()
+      cbaxes = self.fig.add_axes([0.925, 0.125, 0.03, 0.2]) 
+      cb = plt.colorbar(cax, cax = cbaxes)  
+      #self.fig.tight_layout()
     except:
       print('ERR: in plot')
     self.draw()
