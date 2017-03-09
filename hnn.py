@@ -65,10 +65,13 @@ def getinputfiles (paramf):
   return dfile
 
 if debug:
-  dfile = getinputfiles(paramf)
-  ddat['dpl'] = np.loadtxt(dfile['dpl'])
-  ddat['spec'] = np.load(dfile['spec'])
-  ddat['spk'] = np.loadtxt(dfile['spk'])
+  try:
+    dfile = getinputfiles(paramf)
+    ddat['dpl'] = np.loadtxt(dfile['dpl'])
+    ddat['spec'] = np.load(dfile['spec'])
+    ddat['spk'] = np.loadtxt(dfile['spk'])
+  except:
+    pass
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
