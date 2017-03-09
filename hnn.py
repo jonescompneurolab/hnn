@@ -144,22 +144,46 @@ class RunSimThread (QThread):
 class Communicate (QObject):    
   finishSim = pyqtSignal()
 
-# widget to specify proximal params
-class ProxParamWidget (QWidget):
-  def __init__ (self, parent):
-    super(ProxParamWidget, self).__init__(parent)
-
-# widget to specify distal params
-class DistParamWidget (QWidget):
-  def __init__ (self, parent):
-    super(DistParamWidget, self).__init__(parent)
+# widget to specify input params (proximal, distal)
+class InputParamDialog (QDialog):
+  def __init__ (self, parent, inty):
+    super(InputParamDialog, self).__init__(parent)
+    self.inty = inty
+    self.initUI()
+  def initUI (self):
+    grid = QGridLayout()
+    grid.setSpacing(10)
+    self.setLayout(grid)         
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    grid.addWidget(self.btnok, 5, 0, 1, 1)
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    grid.addWidget(self.btncancel, 5, 1, 1, 1)
+    self.setGeometry(150, 150, 400, 600)
+    self.setWindowTitle('Set '+self.inty+' Inputs')    
+    self.show()
+    
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
 
   def __init__ (self, parent):
     super(BaseParamDialog, self).__init__(parent)
+    self.proxparamwin = self.distparamwin = None
     self.initUI()
+
+  def setproxparam (self):
+    if self.proxparamwin:
+      self.proxparamwin.show()
+    else:
+      self.proxparamwin = InputParamDialog(self,'Proximal')
+
+  def setdistparam (self):
+    if self.distparamwin:
+      self.distparamwin.show()
+    else:
+      self.distparamwin = InputParamDialog(self,'Distal')
 
   def initUI (self):
 
@@ -176,10 +200,12 @@ class BaseParamDialog (QDialog):
 
     self.btnprox = QPushButton('Set Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
+    self.btnprox.clicked.connect(self.setproxparam)
     grid.addWidget(self.btnprox, 2, 0, 1, 2)
 
     self.btndist = QPushButton('Set Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
+    self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, 3, 0, 1, 2)
 
     self.btnok = QPushButton('OK',self)
