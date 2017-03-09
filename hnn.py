@@ -52,8 +52,10 @@ debug = True
 prtime = True
 
 ddat = {}
+dfile = {}
 
 def getinputfiles (paramf):
+  global dfile
   dfile = {}
   basedir = os.path.join('data',paramf.split(os.path.sep)[1].split('.param')[0])
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
@@ -100,7 +102,7 @@ class RunSimThread (QThread):
 
   # run sim command via mpi, then delete the temp file. returns job index and fitness.
   def runsim (self):
-    global ddat
+    global ddat,dfile
     self.killed = False
     print("Running simulation using",ncore,"cores.")
     cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
@@ -276,31 +278,29 @@ class PlotCanvas (FigureCanvas):
       # set number of bins (150 bins per 1000ms)
       bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
 
+      # plot histograms of inputs
+      # extinputs = spikefn.ExtInputs(dfile['spk'], paramf)
+      # hist = {}
       """
-      # plot histograms
-      hist = {}
-      hist['feed_prox'] = extinputs.plot_hist(f.ax['feed_prox'], 'prox', dpl.t, bins, xlim_new, color='red')
-      hist['feed_dist'] = extinputs.plot_hist(f.ax['feed_dist'], 'dist', dpl.t, bins, xlim_new, color='green')
-      # Invert dist histogram
-      f.ax['feed_dist'].invert_yaxis()
-      # for now, set the xlim for the other one, force it!
-      f.ax['dipole'].set_xlim(xlim_new)
-      f.ax['feed_prox'].set_xlim(xlim_new)
-      f.ax['feed_dist'].set_xlim(xlim_new)
-      # set hist axis properties
-      f.set_hist_props(hist)
-      # Add legend to histogram
-      for key in f.ax.keys():
-        if 'feed' in key:
-          f.ax[key].legend()
-      # force xlim on histograms
-      f.ax['feed_prox'].set_xlim((xmin, xmax))
-      f.ax['feed_dist'].set_xlim((xmin, xmax))
+      axprox = self.figure.add_subplot(self.G[0,0]); ax.cla() # proximal inputs
+      hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='red')
+      axdist = self.figure.add_subplot(self.G[1,0]); ax.cla() # distal inputs
+      hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='green')
       """
-
-      ax = self.figure.add_subplot(self.G[0,0]); ax.cla() # distal inputs
-
-      ax = self.figure.add_subplot(self.G[1,0]); ax.cla() # proximal inputs
+      """
+      for ax in [axprox,axdist]:
+        ax.invert_yaxis()
+        ax.set_xlim(xlim_new)
+        # set hist axis properties
+        f.set_hist_props(hist)
+        # Add legend to histogram
+        for key in f.ax.keys():
+          if 'feed' in key:
+            f.ax[key].legend()
+        # force xlim on histograms
+        f.ax['feed_prox'].set_xlim((xmin, xmax))
+        f.ax['feed_dist'].set_xlim((xmin, xmax))
+      """
 
       ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla() # dipole
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
