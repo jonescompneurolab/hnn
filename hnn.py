@@ -57,7 +57,7 @@ dfile = {}
 def getinputfiles (paramf):
   global dfile
   dfile = {}
-  basedir = os.path.join('data',paramf.split(os.path.sep)[1].split('.param')[0])
+  basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
   dfile['spec'] = os.path.join(basedir,'rawspec.npz')
   dfile['spk'] = os.path.join(basedir,'spk.txt')
