@@ -3,7 +3,7 @@
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
 from PyQt5 import QtCore
@@ -68,10 +68,10 @@ def getinputfiles (paramf):
 
 if debug:
   try:
-    dfile = getinputfiles(paramf)
-    ddat['dpl'] = np.loadtxt(dfile['dpl'])
-    ddat['spec'] = np.load(dfile['spec'])
-    ddat['spk'] = np.loadtxt(dfile['spk'])
+    getinputfiles(paramf)
+    ddat['dpl'] = np.loadtxt(dfile['dpl']);
+    ddat['spec'] = np.load(dfile['spec']); 
+    ddat['spk'] = np.loadtxt(dfile['spk']); 
   except:
     pass
 
@@ -162,14 +162,33 @@ class BaseParamDialog (QDialog):
     self.initUI()
 
   def initUI (self):
+
     grid = QGridLayout()
-    #grid.setSpacing(10)
+    grid.setSpacing(10)
+
+    self.lbl = QLabel(self)
+    self.lbl.setText('Simulation name:')
+    self.lbl.adjustSize()
+    grid.addWidget(self.lbl, 1, 0)
+    self.qle = QLineEdit(self)
+    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
+    grid.addWidget(self.qle, 1, 1)
+
     self.btnprox = QPushButton('Set Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
-    grid.addWidget(self.btnprox, 0, 0, 1, 1)
+    grid.addWidget(self.btnprox, 2, 0, 1, 2)
+
     self.btndist = QPushButton('Set Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
-    grid.addWidget(self.btndist, 0, 1, 1, 1)
+    grid.addWidget(self.btndist, 3, 0, 1, 2)
+
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    grid.addWidget(self.btnok, 4, 0, 1, 1)
+
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    grid.addWidget(self.btncancel, 4, 1, 1, 1)
 
     self.setLayout(grid) 
         
@@ -180,6 +199,7 @@ class BaseParamDialog (QDialog):
 class HNNGUI (QMainWindow):
 
   def __init__ (self):
+    global dfile, ddat, paramf
     super().__init__()        
     self.initUI()
     self.runningsim = False
@@ -206,10 +226,10 @@ class HNNGUI (QMainWindow):
 
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
-    exitAction.setStatusTip('Exit HNN application')
+    exitAction.setStatusTip('Exit HNN application.')
     exitAction.triggered.connect(qApp.quit)
 
-    selParamFile = QAction(QIcon.fromTheme('open'), 'Set param file', self)
+    selParamFile = QAction(QIcon.fromTheme('open'), 'Set parameter file.', self)
     selParamFile.setShortcut('Ctrl+P')
     selParamFile.setStatusTip('Set param file')
     selParamFile.triggered.connect(self.selParamFileDialog)
