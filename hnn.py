@@ -155,9 +155,27 @@ class DistParamWidget (QWidget):
     super(DistParamWidget, self).__init__(parent)
 
 # base widget for specifying params (contains buttons to create other widgets
-class ParamWidget (QWidget):
+class BaseParamDialog (QDialog):
+
   def __init__ (self, parent):
-    super(ParamWidget, self).__init__(parent)
+    super(BaseParamDialog, self).__init__(parent)
+    self.initUI()
+
+  def initUI (self):
+    grid = QGridLayout()
+    #grid.setSpacing(10)
+    self.btnprox = QPushButton('Set Proximal Inputs',self)
+    self.btnprox.resize(self.btnprox.sizeHint())
+    grid.addWidget(self.btnprox, 0, 0, 1, 1)
+    self.btndist = QPushButton('Set Distal Inputs',self)
+    self.btndist.resize(self.btndist.sizeHint())
+    grid.addWidget(self.btndist, 0, 1, 1, 1)
+
+    self.setLayout(grid) 
+        
+    self.setGeometry(100, 100, 400, 100)
+    self.setWindowTitle('Set Sim Parameters')    
+    self.show()
 
 class HNNGUI (QMainWindow):
 
@@ -166,6 +184,7 @@ class HNNGUI (QMainWindow):
     self.initUI()
     self.runningsim = False
     self.runthread = None
+    self.baseparamwin = None
 
   def selParamFileDialog (self):
     global paramf,dfile
@@ -178,7 +197,10 @@ class HNNGUI (QMainWindow):
         pass
 
   def setparams (self):
-    pass
+    if self.baseparamwin:
+      self.baseparamwin.show()
+    else:
+      self.baseparamwin = BaseParamDialog(self)
 
   def initUI (self):       
 
