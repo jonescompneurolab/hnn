@@ -55,7 +55,7 @@ ddat = {}
 dfile = {}
 
 def getinputfiles (paramf):
-  global dfile
+  global dfile,basedir
   dfile = {}
   basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
@@ -272,7 +272,7 @@ class HNNGUI (QMainWindow):
     self.qbtn.setEnabled(True)
     self.m.plot()
     #self.btn_stop.setEnabled(False)
-    #QtGui.QMessageBox.information(self, "Done!", "Done running sim!") # Show the message that sim is done.
+    QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
 
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
