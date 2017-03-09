@@ -467,7 +467,7 @@ def feed_validate(p_ext, d, tstop):
     return p_ext
 
 # creates the external feed params based on individual simulation params p
-def create_pext(p, tstop):
+def create_pext (p, tstop):
     # indexable py list of param dicts for parallel
     # turn off individual feeds by commenting out relevant line here.
     # always valid, no matter the length
@@ -649,7 +649,7 @@ def compare_dictionaries(d1, d2):
 
 # debug test function
 if __name__ == '__main__':
-    fparam = '~/sandbox/S1Beta/param/debug.param'
+    fparam = 'param/debug.param'
     p = ExpParams(fparam)
     # print(find_param(fparam, 'WhoDat')) # ?
 

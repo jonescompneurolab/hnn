@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
-from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
+from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QFileDialog
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
 import multiprocessing
@@ -149,17 +149,33 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.runthread = None
 
+  def selParamFileDialog (self):
+    global paramf,dfile
+    fn = QFileDialog.getOpenFileName(self, 'Open file', 'param')
+    if fn[0]:
+      paramf = fn[0]
+      try:
+        dfile = getinputfiles(paramf) # reset input data - if already exists
+      except:
+        pass
+
   def initUI (self):       
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
     exitAction.setStatusTip('Exit application')
     exitAction.triggered.connect(qApp.quit)
 
+    selParamFile = QAction(QIcon.fromTheme('open'), 'Set param file', self)
+    selParamFile.setShortcut('Ctrl+P')
+    selParamFile.setStatusTip('Set param File')
+    selParamFile.triggered.connect(self.selParamFileDialog)
+
     self.statusBar()
 
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
+    fileMenu.addAction(selParamFile)
     fileMenu.addAction(exitAction)
 
     QToolTip.setFont(QFont('SansSerif', 10))        
