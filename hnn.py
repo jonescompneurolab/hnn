@@ -61,6 +61,7 @@ def getinputfiles (paramf):
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
   dfile['spec'] = os.path.join(basedir,'rawspec.npz')
   dfile['spk'] = os.path.join(basedir,'spk.txt')
+  dfile['outparam'] = os.path.join(basedir,'param.txt')
   return dfile
 
 if debug:
@@ -260,6 +261,7 @@ class HNNGUI (QMainWindow):
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class PlotCanvas (FigureCanvas): 
+
   def __init__ (self, parent=None, width=5, height=4, dpi=100):
     self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
     #self.axes = fig.add_subplot(111)
@@ -268,7 +270,9 @@ class PlotCanvas (FigureCanvas):
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.G = gridspec.GridSpec(10,1)
+    self.invertedhistax = False
     self.plot()
+
   def plot (self):
     if len(ddat.keys()) == 0: return
     try:
@@ -279,28 +283,25 @@ class PlotCanvas (FigureCanvas):
       bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
 
       # plot histograms of inputs
-      # extinputs = spikefn.ExtInputs(dfile['spk'], paramf)
-      # hist = {}
-      """
-      axprox = self.figure.add_subplot(self.G[0,0]); ax.cla() # proximal inputs
-      hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='red')
-      axdist = self.figure.add_subplot(self.G[1,0]); ax.cla() # distal inputs
-      hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='green')
-      """
-      """
-      for ax in [axprox,axdist]:
-        ax.invert_yaxis()
-        ax.set_xlim(xlim_new)
-        # set hist axis properties
-        f.set_hist_props(hist)
-        # Add legend to histogram
-        for key in f.ax.keys():
-          if 'feed' in key:
-            f.ax[key].legend()
-        # force xlim on histograms
-        f.ax['feed_prox'].set_xlim((xmin, xmax))
-        f.ax['feed_dist'].set_xlim((xmin, xmax))
-      """
+      print(dfile['spk'],dfile['outparam'])
+      extinputs = None
+      try:
+        extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
+        extinputs.add_delay_times()
+      except:
+        pass
+      hist = {}
+      axprox = self.figure.add_subplot(self.G[0,0]); axprox.cla() # proximal inputs
+      axdist = self.figure.add_subplot(self.G[1,0]); axdist.cla() # distal inputs
+      if extinputs is not None: # only valid param.txt file after sim was run
+        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='red')
+        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='green')
+        for ax in [axprox,axdist]:
+          if not self.invertedhistax: # only need to invert axes 1X
+            ax.invert_yaxis()
+            self.invertedhistax = True
+          ax.set_xlim(xlim_new)
+          ax.legend()          
 
       ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla() # dipole
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
