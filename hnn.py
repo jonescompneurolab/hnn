@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialo
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
+from PyQt5 import QtCore
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
@@ -139,8 +140,24 @@ class RunSimThread (QThread):
     else:
       self.killproc()
 
+# for signaling
 class Communicate (QObject):    
   finishSim = pyqtSignal()
+
+# widget to specify proximal params
+class ProxParamWidget (QWidget):
+  def __init__ (self, parent):
+    super(ProxParamWidget, self).__init__(parent)
+
+# widget to specify distal params
+class DistParamWidget (QWidget):
+  def __init__ (self, parent):
+    super(DistParamWidget, self).__init__(parent)
+
+# base widget for specifying params (contains buttons to create other widgets
+class ParamWidget (QWidget):
+  def __init__ (self, parent):
+    super(ParamWidget, self).__init__(parent)
 
 class HNNGUI (QMainWindow):
 
@@ -159,6 +176,9 @@ class HNNGUI (QMainWindow):
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
         pass
+
+  def setparams (self):
+    pass
 
   def initUI (self):       
 
@@ -185,44 +205,36 @@ class HNNGUI (QMainWindow):
     grid = QGridLayout()
     grid.setSpacing(10)
 
-    """
-    grid.addWidget(title, 1, 0)
-    grid.addWidget(titleEdit, 1, 1)
-    
-    grid.addWidget(author, 2, 0)
-    grid.addWidget(authorEdit, 2, 1)
-
-    grid.addWidget(review, 3, 0)
-    grid.addWidget(reviewEdit, 3, 1, 5, 1)
-    """
-
-    self.btnsim = btn = QPushButton('Run sim', self)
+    self.btnsim = btn = QPushButton('Run Simulation', self)
     btn.setToolTip('Run simulation')
     btn.resize(btn.sizeHint())
     btn.clicked.connect(self.controlsim)
-    grid.addWidget(self.btnsim, 1, 0)
-    # btn.move(50, 50)       
+    grid.addWidget(self.btnsim, 1, 0, 1, 1)
+
+    self.pbtn = pbtn = QPushButton('Set Parameters', self)
+    pbtn.setToolTip('Set parameters')
+    pbtn.resize(pbtn.sizeHint())
+    pbtn.clicked.connect(self.setparams)
+    grid.addWidget(self.pbtn, 1, 1, 1, 1)
 
     self.qbtn = qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
-    grid.addWidget(self.qbtn, 1, 1)
-    # qbtn.move(175, 50) 
+    grid.addWidget(self.qbtn, 1, 2, 1, 1)
 
     self.setGeometry(300, 300, 1200, 1100)
     self.setWindowTitle('HNN')
 
     self.m = m = PlotCanvas(self, width=10, height=8)
-    # m.move(50,100)
-    grid.addWidget(self.m, 2, 0)
+    grid.addWidget(self.m, 2, 0, 1, 3)
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
 
+    # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
     self.setCentralWidget(widget);
-    #self.setLayout(grid) 
 
     self.show()
 
@@ -253,11 +265,6 @@ class HNNGUI (QMainWindow):
     # Next we need to connect the events from that thread to functions we want
     # to be run when those signals get fired
 
-    # Adding post will be handeled in the add_post method and the signal that
-    # the thread will emit is  SIGNAL("add_post(QString)")
-    # the rest is same as we can use to connect any signal
-    # self.connect(self.runthread, SIGNAL("add_post(QString)"), self.add_post)
-
     # This is pretty self explanatory
     # regardless of whether the thread finishes or the user terminates it
     # we want to show the notification to the user that adding is done
@@ -278,17 +285,6 @@ class HNNGUI (QMainWindow):
     # self.btn_start.setEnabled(False)
     self.qbtn.setEnabled(False)
 
-  """
-  def add_post(self, post_text):
-    #Add the text that's given to this function to the
-    #list_submissions QListWidget we have in our GUI and
-    #increase the current value of progress bar by 1
-    #:param post_text: text of the item to add to the list
-    #:type post_text: str
-    self.list_submissions.addItem(post_text)
-    self.progress_bar.setValue(self.progress_bar.value()+1)
-  """
-
   def done(self):
     self.runningsim = False
     self.statusBar().showMessage("")
@@ -304,7 +300,6 @@ class PlotCanvas (FigureCanvas):
 
   def __init__ (self, parent=None, width=5, height=4, dpi=100):
     self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
-    #self.axes = fig.add_subplot(111)
     FigureCanvas.__init__(self, fig)
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
