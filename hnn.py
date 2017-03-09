@@ -162,12 +162,12 @@ class HNNGUI (QMainWindow):
   def initUI (self):       
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
-    exitAction.setStatusTip('Exit application')
+    exitAction.setStatusTip('Exit HNN application')
     exitAction.triggered.connect(qApp.quit)
 
     selParamFile = QAction(QIcon.fromTheme('open'), 'Set param file', self)
     selParamFile.setShortcut('Ctrl+P')
-    selParamFile.setStatusTip('Set param File')
+    selParamFile.setStatusTip('Set param file')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
     self.statusBar()
@@ -332,7 +332,7 @@ class PlotCanvas (FigureCanvas):
       ax.set_xlabel('Time (ms)')
       ax.set_xlim(ds['time'][0],ds['time'][-1])
       ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-      cbaxes = self.fig.add_axes([0.925, 0.125, 0.03, 0.2]) 
+      cbaxes = self.fig.add_axes([0.915, 0.125, 0.03, 0.2]) 
       cb = plt.colorbar(cax, cax = cbaxes)  
       #self.fig.tight_layout() # tight_layout will mess up colorbar location
     except:
