@@ -185,42 +185,54 @@ class BaseParamDialog (QDialog):
     else:
       self.distparamwin = InputParamDialog(self,'Distal')
 
+  def onChangeSimName(self, text):        
+    self.lbl.setText(text)
+    self.lbl.adjustSize()      
+
   def initUI (self):
 
     grid = QGridLayout()
     grid.setSpacing(10)
 
+    row = 1
+
     self.lbl = QLabel(self)
     self.lbl.setText('Simulation name:')
     self.lbl.adjustSize()
-    grid.addWidget(self.lbl, 1, 0)
+    grid.addWidget(self.lbl, row, 0)
     self.qle = QLineEdit(self)
     self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
-    grid.addWidget(self.qle, 1, 1)
+    self.qle.textChanged[str].connect(self.onChangeSimName)
+    grid.addWidget(self.qle, row, 1)
+    row+=1
 
     self.btnprox = QPushButton('Set Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.setproxparam)
-    grid.addWidget(self.btnprox, 2, 0, 1, 2)
+    grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
     self.btndist = QPushButton('Set Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.clicked.connect(self.setdistparam)
-    grid.addWidget(self.btndist, 3, 0, 1, 2)
+    grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
-    grid.addWidget(self.btnok, 4, 0, 1, 1)
-
+    self.btnok.clicked.connect(self.saveparams)
+    grid.addWidget(self.btnok, row, 0, 1, 1)
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
-    grid.addWidget(self.btncancel, 4, 1, 1, 1)
+    self.btncancel.clicked.connect(self.hide)
+    grid.addWidget(self.btncancel, row, 1, 1, 1); row+=1
 
     self.setLayout(grid) 
         
     self.setGeometry(100, 100, 400, 100)
     self.setWindowTitle('Set Sim Parameters')    
     self.show()
+
+  def saveparams (self):
+    print('Saving params to ', os.path.join('param',self.qle.text() + '.param') )
 
 class HNNGUI (QMainWindow):
 
