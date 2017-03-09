@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
-from PyQt5.QtWidgets import QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget, QFileDialog
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
 import multiprocessing
@@ -160,6 +161,7 @@ class HNNGUI (QMainWindow):
         pass
 
   def initUI (self):       
+
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
     exitAction.setStatusTip('Exit HNN application')
@@ -180,25 +182,47 @@ class HNNGUI (QMainWindow):
 
     QToolTip.setFont(QFont('SansSerif', 10))        
 
+    grid = QGridLayout()
+    grid.setSpacing(10)
+
+    """
+    grid.addWidget(title, 1, 0)
+    grid.addWidget(titleEdit, 1, 1)
+    
+    grid.addWidget(author, 2, 0)
+    grid.addWidget(authorEdit, 2, 1)
+
+    grid.addWidget(review, 3, 0)
+    grid.addWidget(reviewEdit, 3, 1, 5, 1)
+    """
+
     self.btnsim = btn = QPushButton('Run sim', self)
     btn.setToolTip('Run simulation')
     btn.resize(btn.sizeHint())
     btn.clicked.connect(self.controlsim)
-    btn.move(50, 50)       
+    grid.addWidget(self.btnsim, 1, 0)
+    # btn.move(50, 50)       
 
     self.qbtn = qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
-    qbtn.move(175, 50) 
+    grid.addWidget(self.qbtn, 1, 1)
+    # qbtn.move(175, 50) 
 
     self.setGeometry(300, 300, 1200, 1100)
-    self.setWindowTitle('HNN')    
+    self.setWindowTitle('HNN')
 
     self.m = m = PlotCanvas(self, width=10, height=8)
-    m.move(50,100)
+    # m.move(50,100)
+    grid.addWidget(self.m, 2, 0)
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
+
+    widget = QWidget(self)
+    widget.setLayout(grid)
+    self.setCentralWidget(widget);
+    #self.setLayout(grid) 
 
     self.show()
 
