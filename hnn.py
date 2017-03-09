@@ -18,13 +18,10 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import random
 from math import ceil
+import spikefn
 
 ncore = multiprocessing.cpu_count()
-fprm = './model/param/default.param'
-
-if not os.path.exists('model'):
-  print("No model found!")
-  sys.exit(1)
+fprm = 'param/default.param'
 
 """
 # backup the config file
@@ -58,7 +55,7 @@ ddat = {}
 
 def getinputfiles (paramf):
   dfile = {}
-  basedir = os.path.join('model','data',paramf.split(os.path.sep)[1].split('.param')[0])
+  basedir = os.path.join('data',paramf.split(os.path.sep)[1].split('.param')[0])
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
   dfile['spec'] = os.path.join(basedir,'rawspec.npz')
   dfile['spk'] = os.path.join(basedir,'spk.txt')
@@ -112,9 +109,9 @@ class RunSimThread (QThread):
     cmdargs = shlex.split(cmd)
     print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
-      self.proc = Popen(cmdargs,cwd=os.path.join(os.getcwd(),'model'))
+      self.proc = Popen(cmdargs,cwd=os.getcwd())
     else:
-      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.path.join(os.getcwd(),'model'))
+      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd())
     if debug: print("proc:",self.proc)
     cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
