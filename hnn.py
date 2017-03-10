@@ -23,7 +23,6 @@ from math import ceil
 import spikefn
 
 ncore = multiprocessing.cpu_count()
-fprm = 'param/default.param'
 
 """
 # backup the config file
@@ -342,24 +341,11 @@ class HNNGUI (QMainWindow):
 
     self.runthread = RunSimThread(self.c)
 
-    # Next we need to connect the events from that thread to functions we want
-    # to be run when those signals get fired
-
-    # This is pretty self explanatory
-    # regardless of whether the thread finishes or the user terminates it
-    # we want to show the notification to the user that adding is done
-    # and regardless of whether it was terminated or finished by itself
-    # the finished signal will go off. So we don't need to catch the
-    # terminated one specifically, but we could if we wanted.
-
     # We have all the events we need connected we can start the thread
     self.runthread.start()
     # At this point we want to allow user to stop/terminate the thread
     # so we enable that button
     self.btnsim.setText("Stop sim") # setEnabled(False)
-    # And we connect the click of that button to the built in
-    # terminate method that all QThread instances have
-    # self.btnsim.clicked.connect(self.runthread.terminate)
     # We don't want to enable user to start another thread while this one is
     # running so we disable the start button.
     # self.btn_start.setEnabled(False)
