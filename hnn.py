@@ -196,12 +196,12 @@ class OngoingInputTab (QWidget):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.lqline = []
+    self.dqline = []
     for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
       for k,v in d.items():
-        self.lqline.append(QLineEdit(self))
-        self.lqline[-1].setText(str(v))
-        tab.layout.addRow(k,self.lqline[-1])
+        self.dqline[k] = QLineEdit(self)
+        self.dqline[k].setText(str(v))
+        tab.layout.addRow(k,self.dqline[k])
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
@@ -221,9 +221,6 @@ class OngoingInputParamDialog (QDialog):
     self.inty = inty
     self.dprm = {}
     self.initUI()
-
-
-
 
   def writeparams (self):
     print("OngoingInputParamDialog: set params for saving to ",paramf)
@@ -304,6 +301,12 @@ class NetworkParamDialog (QDialog):
   def saveparams (self):
     print("NetworkParamDialog: setting params for saving to ",paramf)
     self.hide()
+    print(self)
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -335,12 +338,12 @@ class NetworkParamDialog (QDialog):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.lqline = []
+    self.dqline = {}
     for d,tab in zip(self.ldict, self.ltabs):
       for k,v in d.items():
-        self.lqline.append(QLineEdit(self))
-        self.lqline[-1].setText(str(v))
-        tab.layout.addRow(k,self.lqline[-1])
+        self.dqline[k] = QLineEdit(self)
+        self.dqline[k].setText(str(v))
+        tab.layout.addRow(k,self.dqline[k])
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
@@ -446,6 +449,10 @@ class BaseParamDialog (QDialog):
   def saveparams (self):
     print('Saving params to ', os.path.join('param',self.qle.text() + '.param') )
     self.hide()
+    print(self)
+
+  def __str__ (self):
+    return ''
 
 class HNNGUI (QMainWindow):
 
