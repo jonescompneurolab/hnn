@@ -225,10 +225,7 @@ class InputParamDialog (QDialog):
   def writeparams (self):
     print("InputParamDialog: writing params to ",paramf)
 
-  def initUI (self):
-    #grid = QGridLayout()
-    #grid.setSpacing(10)
-    #self.setLayout(grid)         
+  def initUI (self):         
     self.layout = QVBoxLayout(self)
 
     # Add stretch to separate the form layout from the button
@@ -236,25 +233,18 @@ class InputParamDialog (QDialog):
 
     self.tabwidget = OngoingInputTab(self,self.inty)
     self.layout.addWidget(self.tabwidget)
-    #self.setCentralWidget(self.table_widget)
-    #grid.addWidget(self.tabwidget, 0, 0, 1, 1)
  
     # Create a horizontal box layout to hold the button
     self.button_box = QHBoxLayout()
  
-    # Add stretch to push the button to the far right
-    # self.button_box.addStretch(1)
-
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
     self.btnok.clicked.connect(self.writeparams)
-    #grid.addWidget(self.btnok, 5, 0, 1, 1)
     self.button_box.addWidget(self.btnok)
 
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
-    #grid.addWidget(self.btncancel, 5, 1, 1, 1)
     self.button_box.addWidget(self.btncancel)
 
     self.layout.addLayout(self.button_box)
@@ -262,11 +252,6 @@ class InputParamDialog (QDialog):
     self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
-
-  """
-  def combchange (self, text):
-    print("text is ", text)
-  """
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
