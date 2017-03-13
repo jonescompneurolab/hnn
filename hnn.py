@@ -299,7 +299,7 @@ class NetworkParamDialog (QDialog):
       'gbar_L2Pyr_L5Basket': 0.,
     }  
 
-    self.ldict = [self.dcells, self.dL2Pyr, self.dL2Bas, self.dL5Pyr, self.dL5Bas]
+    self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
 
   def saveparams (self):
     print("NetworkParamDialog: setting params for saving to ",paramf)
@@ -310,9 +310,6 @@ class NetworkParamDialog (QDialog):
     # Add stretch to separate the form layout from the button
     self.layout.addStretch(1)
 
-    #self.tabwidget = NetworkTab(self,self.inty)
-    #self.layout.addWidget(self.tabwidget)
-
     # Initialize tab screen
     self.ltabs = []
     self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
@@ -321,7 +318,7 @@ class NetworkParamDialog (QDialog):
     self.tabL5Pyr = QWidget()
     self.tabL2Bas = QWidget()
     self.tabL5Bas = QWidget()
-    self.tabs.resize(300,200) 
+    self.tabs.resize(500,200) 
 
     # Add tabs
     self.tabs.addTab(self.tabCells,"Cells"); 
