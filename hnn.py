@@ -148,7 +148,8 @@ class MyTableWidget (QWidget):
 
   def __init__ (self, parent):   
     super(QWidget, self).__init__(parent)
-    self.layout = QVBoxLayout(self)
+    #self.layout = QVBoxLayout(self)
+    self.layout = QVBoxLayout()
 
     # Initialize tab screen
     self.tabs = QTabWidget()
@@ -169,6 +170,7 @@ class MyTableWidget (QWidget):
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
+    #self.tabs.show()
 
   @pyqtSlot()
   def on_click(self):
@@ -189,38 +191,40 @@ class InputParamDialog (QDialog):
     print("InputParamDialog: writing params to ",paramf)
 
   def initUI (self):
-    grid = QGridLayout()
-    grid.setSpacing(10)
-    self.setLayout(grid)         
+    #grid = QGridLayout()
+    #grid.setSpacing(10)
+    #self.setLayout(grid)         
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    self.tabwidget = MyTableWidget(self)
+    self.layout.addWidget(self.tabwidget)
+    #self.setCentralWidget(self.table_widget)
+    #grid.addWidget(self.tabwidget, 0, 0, 1, 1)
+ 
+    # Create a horizontal box layout to hold the button
+    self.button_box = QHBoxLayout()
+ 
+    # Add stretch to push the button to the far right
+    # self.button_box.addStretch(1)
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
     self.btnok.clicked.connect(self.writeparams)
-    grid.addWidget(self.btnok, 5, 0, 1, 1)
+    #grid.addWidget(self.btnok, 5, 0, 1, 1)
+    self.button_box.addWidget(self.btnok)
 
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
-    grid.addWidget(self.btncancel, 5, 1, 1, 1)
+    #grid.addWidget(self.btncancel, 5, 1, 1, 1)
+    self.button_box.addWidget(self.btncancel)
 
-    self.tabwidget = MyTableWidget(self)
-    #self.setCentralWidget(self.table_widget)
-    grid.addWidget(self.tabwidget, 0, 0, 1, 1)
+    self.layout.addLayout(self.button_box)
 
-    """
-    self.combo = combo = QComboBox(self)
-    combo.addItem("Ubuntu")
-    combo.addItem("Mandriva")
-    combo.addItem("Fedora")
-    combo.addItem("Arch")
-    combo.addItem("Gentoo")
-    combo.move(50, 50)
-    #self.lbl.move(50, 150)
-    combo.activated[str].connect(self.combchange)
-    grid.addWidget(self.combo, 0, 0, 1, 1)
-    """
-
-    self.setGeometry(150, 150, 400, 600)
+    self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
 
