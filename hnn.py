@@ -303,6 +303,7 @@ class NetworkParamDialog (QDialog):
 
   def saveparams (self):
     print("NetworkParamDialog: setting params for saving to ",paramf)
+    self.hide()
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -444,6 +445,7 @@ class BaseParamDialog (QDialog):
 
   def saveparams (self):
     print('Saving params to ', os.path.join('param',self.qle.text() + '.param') )
+    self.hide()
 
 class HNNGUI (QMainWindow):
 
