@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
-from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
 import multiprocessing
 from subprocess import Popen, PIPE, call
@@ -143,6 +143,40 @@ class RunSimThread (QThread):
 class Communicate (QObject):    
   finishSim = pyqtSignal()
 
+# from https://pythonspot.com/pyqt5-tabs/
+class MyTableWidget (QWidget):
+
+  def __init__ (self, parent):   
+    super(QWidget, self).__init__(parent)
+    self.layout = QVBoxLayout(self)
+
+    # Initialize tab screen
+    self.tabs = QTabWidget()
+    self.tab1 = QWidget()	
+    self.tab2 = QWidget()
+    self.tabs.resize(300,200) 
+
+    # Add tabs
+    self.tabs.addTab(self.tab1,"Tab 1")
+    self.tabs.addTab(self.tab2,"Tab 2")
+
+    # Create first tab
+    self.tab1.layout = QVBoxLayout(self)
+    self.pushButton1 = QPushButton("PyQt5 button")
+    self.tab1.layout.addWidget(self.pushButton1)
+    self.tab1.setLayout(self.tab1.layout)
+
+    # Add tabs to widget        
+    self.layout.addWidget(self.tabs)
+    self.setLayout(self.layout)
+
+  @pyqtSlot()
+  def on_click(self):
+    print("\n")
+    for currentQTableWidgetItem in self.tableWidget.selectedItems():
+      print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
+
+
 # widget to specify input params (proximal, distal)
 class InputParamDialog (QDialog):
   def __init__ (self, parent, inty):
@@ -169,6 +203,11 @@ class InputParamDialog (QDialog):
     self.btncancel.clicked.connect(self.hide)
     grid.addWidget(self.btncancel, 5, 1, 1, 1)
 
+    self.tabwidget = MyTableWidget(self)
+    #self.setCentralWidget(self.table_widget)
+    grid.addWidget(self.tabwidget, 0, 0, 1, 1)
+
+    """
     self.combo = combo = QComboBox(self)
     combo.addItem("Ubuntu")
     combo.addItem("Mandriva")
@@ -179,13 +218,16 @@ class InputParamDialog (QDialog):
     #self.lbl.move(50, 150)
     combo.activated[str].connect(self.combchange)
     grid.addWidget(self.combo, 0, 0, 1, 1)
+    """
 
     self.setGeometry(150, 150, 400, 600)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
 
+  """
   def combchange (self, text):
     print("text is ", text)
+  """
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
