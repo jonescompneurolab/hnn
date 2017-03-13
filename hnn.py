@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
-from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject
@@ -148,6 +148,7 @@ class InputParamDialog (QDialog):
   def __init__ (self, parent, inty):
     super(InputParamDialog, self).__init__(parent)
     self.inty = inty
+    self.dprm = {}
     self.initUI()
 
   def writeparams (self):
@@ -168,10 +169,23 @@ class InputParamDialog (QDialog):
     self.btncancel.clicked.connect(self.hide)
     grid.addWidget(self.btncancel, 5, 1, 1, 1)
 
+    self.combo = combo = QComboBox(self)
+    combo.addItem("Ubuntu")
+    combo.addItem("Mandriva")
+    combo.addItem("Fedora")
+    combo.addItem("Arch")
+    combo.addItem("Gentoo")
+    combo.move(50, 50)
+    #self.lbl.move(50, 150)
+    combo.activated[str].connect(self.combchange)
+    grid.addWidget(self.combo, 0, 0, 1, 1)
+
     self.setGeometry(150, 150, 400, 600)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
-    
+
+  def combchange (self, text):
+    print("text is ", text)
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
