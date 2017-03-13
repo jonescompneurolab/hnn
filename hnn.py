@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import sys, os
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtGui import QIcon, QFont
@@ -144,28 +144,41 @@ class Communicate (QObject):
   finishSim = pyqtSignal()
 
 # from https://pythonspot.com/pyqt5-tabs/
-class MyTableWidget (QWidget):
+class OngoingInputTab (QWidget):
 
-  def __init__ (self, parent):   
+  def __init__ (self, parent,inty):   
     super(QWidget, self).__init__(parent)
     #self.layout = QVBoxLayout(self)
     self.layout = QVBoxLayout()
+    self.inty = inty
 
     # Initialize tab screen
+    self.ltabs = []
     self.tabs = QTabWidget()
-    self.tab1 = QWidget()	
-    self.tab2 = QWidget()
+    self.tabTiming = QWidget()	
+    self.tabL2 = QWidget()
+    self.tabL5 = QWidget()
+    self.tabInhib = QWidget()
     self.tabs.resize(300,200) 
 
     # Add tabs
-    self.tabs.addTab(self.tab1,"Tab 1")
-    self.tabs.addTab(self.tab2,"Tab 2")
+    self.tabs.addTab(self.tabTiming,"Timing"); 
+    self.tabs.addTab(self.tabL2,"Layer 2")
+    self.tabs.addTab(self.tabL5,"Layer 5")
+    self.tabs.addTab(self.tabInhib,"Inhib")
+  
+    self.ltabs = [self.tabTiming, self.tabL2, self.tabL5, self.tabInhib]
 
     # Create first tab
-    self.tab1.layout = QVBoxLayout(self)
+    for tab in self.ltabs:
+      tab.layout = QFormLayout()
+
+    """
+    self.tabTiming.layout = QVBoxLayout(self)
     self.pushButton1 = QPushButton("PyQt5 button")
     self.tab1.layout.addWidget(self.pushButton1)
     self.tab1.setLayout(self.tab1.layout)
+    """
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
@@ -199,7 +212,7 @@ class InputParamDialog (QDialog):
     # Add stretch to separate the form layout from the button
     self.layout.addStretch(1)
 
-    self.tabwidget = MyTableWidget(self)
+    self.tabwidget = OngoingInputTab(self,self.inty)
     self.layout.addWidget(self.tabwidget)
     #self.setCentralWidget(self.table_widget)
     #grid.addWidget(self.tabwidget, 0, 0, 1, 1)
