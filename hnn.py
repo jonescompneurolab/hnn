@@ -171,6 +171,8 @@ class OngoingInputTab (QWidget):
     self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
                    self.prefix + 'weight_inh_nmda': 0.}
 
+    self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
+
   def initUI (self):
     self.layout = QVBoxLayout()
 
@@ -196,7 +198,7 @@ class OngoingInputTab (QWidget):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.dqline = []
+    self.dqline = {}
     for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
@@ -206,6 +208,11 @@ class OngoingInputTab (QWidget):
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s
 
   @pyqtSlot()
   def on_click(self):
@@ -227,12 +234,7 @@ class OngoingInputParamDialog (QDialog):
     self.hide()
     print(self)
 
-  """
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s
-  """
+  def __str__ (self): return str(self.tabwidget)
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -248,7 +250,7 @@ class OngoingInputParamDialog (QDialog):
  
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.clicked.connect(self.writeparams)
+    self.btnok.clicked.connect(self.saveparams)
     self.button_box.addWidget(self.btnok)
 
     self.btncancel = QPushButton('Cancel',self)
