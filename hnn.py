@@ -473,7 +473,7 @@ class BaseParamDialog (QDialog):
     print(self)
 
   def __str__ (self):
-    return ''
+    return str(self.proxparamwin) + str(self.distparamwin) + str(self.netparamwin)
 
 class HNNGUI (QMainWindow):
 
