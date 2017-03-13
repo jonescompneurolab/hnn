@@ -222,8 +222,11 @@ class OngoingInputParamDialog (QDialog):
     self.dprm = {}
     self.initUI()
 
+
+
+
   def writeparams (self):
-    print("OngoingInputParamDialog: writing params to ",paramf)
+    print("OngoingInputParamDialog: set params for saving to ",paramf)
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -253,13 +256,131 @@ class OngoingInputParamDialog (QDialog):
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
 
+# widget to specify ongoing input params (proximal, distal)
+class NetworkParamDialog (QDialog):
+  def __init__ (self, parent):
+    super(NetworkParamDialog, self).__init__(parent)
+    self.initd()
+    self.initUI()
+
+  def initd (self):
+    # number of cells
+    self.dcells = {'N_pyr_x': 10,
+                   'N_pyr_y': 10}
+
+    # max conductances TO L2Pyr
+    self.dL2Pyr = {
+      'gbar_L2Pyr_L2Pyr_ampa': 0.,
+      'gbar_L2Pyr_L2Pyr_nmda': 0.,
+      'gbar_L2Basket_L2Pyr_gabaa': 0.,
+      'gbar_L2Basket_L2Pyr_gabab': 0.
+    }
+
+    # max conductances TO L2Baskets
+    self.dL2Bas = {
+      'gbar_L2Pyr_L2Basket': 0.,
+      'gbar_L2Basket_L2Basket': 0.
+    }
+
+    # max conductances TO L5Pyr
+    self.dL5Pyr = {
+      'gbar_L5Pyr_L5Pyr_ampa': 0.,
+      'gbar_L5Pyr_L5Pyr_nmda': 0.,
+      'gbar_L2Pyr_L5Pyr': 0.,
+      'gbar_L2Basket_L5Pyr': 0.,
+      'gbar_L5Basket_L5Pyr_gabaa': 0.,
+      'gbar_L5Basket_L5Pyr_gabab': 0.
+    }
+
+    # max conductances TO L5Baskets
+    self.dL5Bas = {
+      'gbar_L5Basket_L5Basket': 0.,
+      'gbar_L5Pyr_L5Basket': 0.,
+      'gbar_L2Pyr_L5Basket': 0.,
+    }  
+
+    self.ldict = [self.dcells, self.dL2Pyr, self.dL2Bas, self.dL5Pyr, self.dL5Bas]
+
+  def saveparams (self):
+    print("NetworkParamDialog: setting params for saving to ",paramf)
+
+  def initUI (self):         
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    #self.tabwidget = NetworkTab(self,self.inty)
+    #self.layout.addWidget(self.tabwidget)
+
+    # Initialize tab screen
+    self.ltabs = []
+    self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
+    self.tabCells = QWidget()
+    self.tabL2Pyr = QWidget()
+    self.tabL5Pyr = QWidget()
+    self.tabL2Bas = QWidget()
+    self.tabL5Bas = QWidget()
+    self.tabs.resize(300,200) 
+
+    # Add tabs
+    self.tabs.addTab(self.tabCells,"Cells"); 
+    self.tabs.addTab(self.tabL2Pyr,"Layer 2 Pyr")
+    self.tabs.addTab(self.tabL5Pyr,"Layer 5 Pyr")
+    self.tabs.addTab(self.tabL2Bas,"Layer 2 Bas")
+    self.tabs.addTab(self.tabL5Bas,"Layer 5 Bas")
+  
+    self.ltabs = [self.tabCells, self.tabL2Pyr, self.tabL5Pyr, self.tabL2Bas, self.tabL5Bas]
+
+    # Create first tab
+    for tab in self.ltabs:
+      tab.layout = QFormLayout()
+      tab.setLayout(tab.layout)
+
+    self.lqline = []
+    for d,tab in zip(self.ldict, self.ltabs):
+      for k,v in d.items():
+        self.lqline.append(QLineEdit(self))
+        self.lqline[-1].setText(str(v))
+        tab.layout.addRow(k,self.lqline[-1])
+
+    # Add tabs to widget        
+    self.layout.addWidget(self.tabs)
+    self.setLayout(self.layout)
+ 
+    # Create a horizontal box layout to hold the button
+    self.button_box = QHBoxLayout()
+ 
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.saveparams)
+    self.button_box.addWidget(self.btnok)
+
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
+    self.button_box.addWidget(self.btncancel)
+
+    self.layout.addLayout(self.button_box)
+
+    self.setGeometry(150, 150, 400, 300)
+    self.setWindowTitle('Set Network Parameters')
+    self.show()
+
+
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
 
   def __init__ (self, parent):
     super(BaseParamDialog, self).__init__(parent)
-    self.proxparamwin = self.distparamwin = None
+    self.proxparamwin = self.distparamwin = self.netparamwin = None
     self.initUI()
+
+  def setnetparam (self):
+    if self.netparamwin:
+      self.netparamwin.show()
+    else:
+      self.netparamwin = NetworkParamDialog(self)
 
   def setproxparam (self):
     if self.proxparamwin:
@@ -293,6 +414,11 @@ class BaseParamDialog (QDialog):
     self.qle.textChanged[str].connect(self.onChangeSimName)
     grid.addWidget(self.qle, row, 1)
     row+=1
+
+    self.btnnet = QPushButton('Set Network Params',self)
+    self.btnnet.resize(self.btnnet.sizeHint())
+    self.btnnet.clicked.connect(self.setnetparam)
+    grid.addWidget(self.btnnet, row, 0, 1, 2); row+=1
 
     self.btnprox = QPushButton('Set Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
