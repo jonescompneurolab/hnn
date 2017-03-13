@@ -149,25 +149,32 @@ class OngoingInputTab (QWidget):
   def __init__ (self, parent,inty):   
     super(QWidget, self).__init__(parent)
     self.inty = inty
-    if self.inty.startswith('prox'): self.prefix = 'input_prox_A_'
-    else: self.prefix = 'input_dist_A_'
+    if self.inty.startswith('Proximal'):
+      self.prefix = 'input_prox_A_'
+      self.postfix = '_prox'
+    else:
+      self.prefix = 'input_dist_A_'
+      self.postfix = '_dist'
     self.initd()
     self.initUI()
 
   def initd (self):
-    self.dtiming = {'distribution_prox': 'normal',
-                    't0_input_prox': 1000.,
-                    'tstop_input_prox': 250.,
-                    'f_input_prox': 10.,
-                    'f_stdev_prox': 20.,
-                    'events_per_cycle_prox': 2}
+    self.dtiming = {'distribution' + self.postfix: 'normal',
+                    't0_input' + self.postfix: 1000.,
+                    'tstop_input' + self.postfix: 250.,
+                    'f_input' + self.postfix: 10.,
+                    'f_stdev' + self.postfix: 20.,
+                    'events_per_cycle' + self.postfix: 2}
+
     self.dL2 = {self.prefix + 'L2Pyr_ampa': 0.,
                 self.prefix + 'L2Pyr_nmda': 0.,
                 self.prefix + 'delay_L2': 0.1}
+
     self.dL5 = {
         self.prefix + 'L5Pyr_ampa': 0.,
         self.prefix + 'L5Pyr_nmda': 0.,
         self.prefix + 'delay_L5': 0.1}
+
     self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
                    self.prefix + 'weight_inh_nmda': 0.}
 
