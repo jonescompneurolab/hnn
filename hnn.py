@@ -146,6 +146,9 @@ class Communicate (QObject):
 # from https://pythonspot.com/pyqt5-tabs/
 class OngoingInputTab (QWidget):
 
+  def initUI (self):
+    pass
+
   def __init__ (self, parent,inty):   
     super(QWidget, self).__init__(parent)
     #self.layout = QVBoxLayout(self)
@@ -172,18 +175,43 @@ class OngoingInputTab (QWidget):
     # Create first tab
     for tab in self.ltabs:
       tab.layout = QFormLayout()
+      tab.setLayout(tab.layout)
+    self.dtiming = {'distribution_prox': 'normal',
+                    't0_input_prox': 1000.,
+                    'tstop_input_prox': 250.,
+                    'f_input_prox': 10.,
+                    'f_stdev_prox': 20.,
+                    'events_per_cycle_prox': 2}
 
-    """
-    self.tabTiming.layout = QVBoxLayout(self)
-    self.pushButton1 = QPushButton("PyQt5 button")
-    self.tab1.layout.addWidget(self.pushButton1)
-    self.tab1.setLayout(self.tab1.layout)
-    """
+    if self.inty.startswith('prox'):
+      self.prefix = 'input_prox_A_'
+    else:
+      self.prefix = 'input_dist_A_'
+
+    self.dL2 = {self.prefix + 'L2Pyr_ampa': 0.,
+                self.prefix + 'L2Pyr_nmda': 0.,
+                self.prefix + 'delay_L2': 0.1}
+
+    self.dL5 = {
+        self.prefix + 'L5Pyr_ampa': 0.,
+        self.prefix + 'L5Pyr_nmda': 0.,
+        self.prefix + 'delay_L5': 0.1}
+
+    self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
+                   self.prefix + 'weight_inh_nmda': 0.}
+
+    self.lqline = []
+    for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
+      for k,v in d.items():
+        self.lqline.append(QLineEdit(self))
+        self.lqline[-1].setText(str(v))
+        tab.layout.addRow(k,self.lqline[-1])
+        #print(k,v)
+        #tab.layout.addRow(k,str(v))
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
-    #self.tabs.show()
 
   @pyqtSlot()
   def on_click(self):
