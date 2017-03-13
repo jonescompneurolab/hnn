@@ -214,16 +214,16 @@ class OngoingInputTab (QWidget):
       print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
 
 
-# widget to specify input params (proximal, distal)
-class InputParamDialog (QDialog):
+# widget to specify ongoing input params (proximal, distal)
+class OngoingInputParamDialog (QDialog):
   def __init__ (self, parent, inty):
-    super(InputParamDialog, self).__init__(parent)
+    super(OngoingInputParamDialog, self).__init__(parent)
     self.inty = inty
     self.dprm = {}
     self.initUI()
 
   def writeparams (self):
-    print("InputParamDialog: writing params to ",paramf)
+    print("OngoingInputParamDialog: writing params to ",paramf)
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -265,13 +265,13 @@ class BaseParamDialog (QDialog):
     if self.proxparamwin:
       self.proxparamwin.show()
     else:
-      self.proxparamwin = InputParamDialog(self,'Proximal')
+      self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
 
   def setdistparam (self):
     if self.distparamwin:
       self.distparamwin.show()
     else:
-      self.distparamwin = InputParamDialog(self,'Distal')
+      self.distparamwin = OngoingInputParamDialog(self,'Distal')
 
   def onChangeSimName(self, text):        
     self.lbl.setText(text)
