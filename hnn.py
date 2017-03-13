@@ -269,7 +269,7 @@ class OngoingInputParamDialog (QDialog):
 
     self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
-    self.show()
+    # self.show()
 
 # widget to specify ongoing input params (proximal, distal)
 class NetworkParamDialog (QDialog):
@@ -384,7 +384,7 @@ class NetworkParamDialog (QDialog):
 
     self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set Network Parameters')
-    self.show()
+    # self.show()
 
 
 # base widget for specifying params (contains buttons to create other widgets
@@ -394,6 +394,9 @@ class BaseParamDialog (QDialog):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = None
     self.initUI()
+    self.netparamwin = NetworkParamDialog(self)    
+    self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
+    self.distparamwin = OngoingInputParamDialog(self,'Distal')
 
   def setnetparam (self):
     if self.netparamwin:
