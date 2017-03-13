@@ -149,16 +149,25 @@ class InputParamDialog (QDialog):
     super(InputParamDialog, self).__init__(parent)
     self.inty = inty
     self.initUI()
+
+  def writeparams (self):
+    print("InputParamDialog: writing params to ",paramf)
+
   def initUI (self):
     grid = QGridLayout()
     grid.setSpacing(10)
     self.setLayout(grid)         
+
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.writeparams)
     grid.addWidget(self.btnok, 5, 0, 1, 1)
+
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
     grid.addWidget(self.btncancel, 5, 1, 1, 1)
+
     self.setGeometry(150, 150, 400, 600)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
     self.show()
