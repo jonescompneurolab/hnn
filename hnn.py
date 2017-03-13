@@ -222,8 +222,17 @@ class OngoingInputParamDialog (QDialog):
     self.dprm = {}
     self.initUI()
 
-  def writeparams (self):
-    print("OngoingInputParamDialog: set params for saving to ",paramf)
+  def saveparams (self):
+    print("OngoingInputParamDialog: setting params for saving to ",paramf)
+    self.hide()
+    print(self)
+
+  """
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s
+  """
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
