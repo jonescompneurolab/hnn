@@ -82,16 +82,15 @@ class RunSimThread (QThread):
     self.killed = False
     self.proc = None
 
-  def stop (self):
-    self.killed = True
+  def stop (self): self.killed = True
 
   def __del__ (self):
     self.quit()
     self.wait()
 
   def run (self):
-    self.runsim() # your logic here
-    self.c.finishSim.emit()
+    self.runsim() # run simulation
+    self.c.finishSim.emit() # send the finish signal
 
   def killproc (self):
     if self.proc is None: return
@@ -155,6 +154,7 @@ class DictDialog (QDialog):
     self.stitle = ''
     self.initd()
     self.initUI()
+    self.setfromdin(din) # set values from input dictionary
 
   def __str__ (self):
     s = ''
@@ -166,7 +166,14 @@ class DictDialog (QDialog):
     self.hide()
     print(self)
 
-  def initd (self): pass
+  def initd (self): pass # implemented in subclass
+
+  def setfromdin (self,din):
+    if not din: return
+    for k1,v1 in din.items():
+      for k in dqline.keys():
+        if k1 == k:
+          dqline[k].setText(str(v1))
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -409,7 +416,6 @@ class BaseParamDialog (QDialog):
         
     self.setGeometry(100, 100, 400, 100)
     self.setWindowTitle('Set Sim Parameters')    
-    self.show()
 
   def saveparams (self):
     print('Saving params to ', os.path.join('param',self.qle.text() + '.param') )
@@ -427,7 +433,7 @@ class HNNGUI (QMainWindow):
     self.initUI()
     self.runningsim = False
     self.runthread = None
-    self.baseparamwin = None
+    self.baseparamwin = BaseParamDialog(self)
 
   def selParamFileDialog (self):
     global paramf,dfile
@@ -442,8 +448,6 @@ class HNNGUI (QMainWindow):
   def setparams (self):
     if self.baseparamwin:
       self.baseparamwin.show()
-    else:
-      self.baseparamwin = BaseParamDialog(self)
 
   def initUI (self):       
 
@@ -454,7 +458,7 @@ class HNNGUI (QMainWindow):
 
     selParamFile = QAction(QIcon.fromTheme('open'), 'Set parameter file.', self)
     selParamFile.setShortcut('Ctrl+P')
-    selParamFile.setStatusTip('Set param file')
+    selParamFile.setStatusTip('Set parameter file.')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
     self.statusBar()
@@ -511,16 +515,16 @@ class HNNGUI (QMainWindow):
 
   def stopsim (self):
     if self.runningsim:
-      print('Terminating sim. . .')
+      print('Terminating simulation. . .')
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
-      self.btnsim.setText("Start sim")
+      self.btnsim.setText("Start simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
 
   def startsim (self):
-    print('Starting sim. . .')
+    print('Starting simulation. . .')
     self.runningsim = True
 
     self.statusBar().showMessage("Running simulation. . .")
@@ -531,7 +535,7 @@ class HNNGUI (QMainWindow):
     self.runthread.start()
     # At this point we want to allow user to stop/terminate the thread
     # so we enable that button
-    self.btnsim.setText("Stop sim") # setEnabled(False)
+    self.btnsim.setText("Stop simulation") # setEnabled(False)
     # We don't want to enable user to start another thread while this one is
     # running so we disable the start button.
     # self.btn_start.setEnabled(False)
@@ -540,10 +544,9 @@ class HNNGUI (QMainWindow):
   def done(self):
     self.runningsim = False
     self.statusBar().showMessage("")
-    self.btnsim.setText("Start sim")
+    self.btnsim.setText("Start simulation")
     self.qbtn.setEnabled(True)
     self.m.plot()
-    #self.btn_stop.setEnabled(False)
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
 
 
