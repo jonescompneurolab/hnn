@@ -158,35 +158,12 @@ class DictDialog (QDialog):
 
   def __str__ (self):
     s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    for k,v in self.dqline.items(): s += k + ': ' + v.text() + '\n'
     return s
 
   def saveparams (self):
     print("Setting params for saving to ",paramf)
     self.hide()
-    oktosave = True
-    if os.path.isfile(paramf):
-      oktosave = False
-      msg = QMessageBox()
-      msg.setIcon(QMessageBox.Warning)
-
-      msg.setText(param + ' already exists. Over-write?')
-      #msg.setInformativeText("This is additional information")
-      msg.setWindowTitle('Over-write file?')
-      #msg.setDetailedText("The details are as follows:")
-      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-      # msg.buttonClicked.connect(msgbtn)
-	
-      retval = msg.exec_()
-      print("value of pressed message box button:", retval)
-      if retval == 1: oktosave = True
-    if oktosave:
-      try:
-        with open(paramf,'w') as fp:
-          fp.write(str(self))
-        print('saved:', str(self), ' to ', paramf)
-      except:
-        print('exception in saving param file ',paramf)
 
   def initd (self): pass # implemented in subclass
 
@@ -435,9 +412,28 @@ class BaseParamDialog (QDialog):
     self.setWindowTitle('Set Sim Parameters')    
 
   def saveparams (self):
-    print('Saving params to ', os.path.join('param',self.qle.text() + '.param') )
+    global paramf
+    tmpf = os.path.join('param',self.qle.text() + '.param')
+    print('Saving params to ',  tmpf)
     self.hide()
-    print(self)
+    oktosave = True
+    if os.path.isfile(tmpf):
+      oktosave = False
+      msg = QMessageBox()
+      msg.setIcon(QMessageBox.Warning)
+      msg.setText(paramf + ' already exists. Over-write?')
+      msg.setWindowTitle('Over-write file?')
+      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
+      if msg.exec_() == QMessageBox.Ok: oktosave = True
+    if oktosave:
+      try:
+        with open(tmpf,'w') as fp: fp.write(str(self))
+        print('saved:', str(self), ' to ', tmpf)
+        paramf = tmpf # success? update paramf
+      except:
+        print('exception in saving param file ',tmpf)
+    print('oktosave:',oktosave)
+    # print(self)
 
   def __str__ (self):
     return str(self.proxparamwin) + str(self.distparamwin) + str(self.netparamwin) + str(self.evparamwin)
