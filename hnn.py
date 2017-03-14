@@ -438,15 +438,13 @@ class BaseParamDialog (QDialog):
     if oktosave:
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
-        print('saved:', str(self), ' to ', tmpf)
         paramf = tmpf # success? update paramf
       except:
         print('exception in saving param file ',tmpf)
-    print('oktosave:',oktosave)
-    # print(self)
 
   def __str__ (self):
-    s = ''
+    s = 'sim_prefix: ' + self.qle.text() + '\n'
+    s += 'expmt_groups: ' + self.qle.text() + '\n'
     for win in self.lsubwin: s += str(win)
     return s
 
