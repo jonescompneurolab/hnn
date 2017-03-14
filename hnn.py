@@ -193,11 +193,7 @@ class DictDialog (QDialog):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
         self.dqline[k].setText(str(v))
-        print(type(tab.layout),tab.layout)
-        try:
-          tab.layout.addRow(k,self.dqline[k])
-        except:
-          pass
+        tab.layout.addRow(k,self.dqline[k])
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
