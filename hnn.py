@@ -562,7 +562,7 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
-      self.btnsim.setText("Start simulation")
+      self.btnsim.setText("Start Simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
 
@@ -578,7 +578,7 @@ class HNNGUI (QMainWindow):
     self.runthread.start()
     # At this point we want to allow user to stop/terminate the thread
     # so we enable that button
-    self.btnsim.setText("Stop simulation") # setEnabled(False)
+    self.btnsim.setText("Stop Simulation") # setEnabled(False)
     # We don't want to enable user to start another thread while this one is
     # running so we disable the start button.
     # self.btn_start.setEnabled(False)
@@ -587,7 +587,7 @@ class HNNGUI (QMainWindow):
   def done(self):
     self.runningsim = False
     self.statusBar().showMessage("")
-    self.btnsim.setText("Start simulation")
+    self.btnsim.setText("Start Simulation")
     self.qbtn.setEnabled(True)
     self.m.plot()
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
