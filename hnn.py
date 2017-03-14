@@ -148,9 +148,12 @@ class Communicate (QObject):
 # and can reduce code explosion / overlap between dialogs 
 class DictDialog (QDialog):
 
-  def __init__ (self, parent, din = None):
+  def __init__ (self, parent, din):
     super(DictDialog, self).__init__(parent)
-    self.initd(din)
+    self.ldict = [] # subclasses should override
+    self.ltitle = []
+    self.stitle = ''
+    self.initd()
     self.initUI()
 
   def __str__ (self):
@@ -163,7 +166,7 @@ class DictDialog (QDialog):
     self.hide()
     print(self)
 
-  def initd (self, din = None): pass
+  def initd (self): pass
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -175,7 +178,7 @@ class DictDialog (QDialog):
     self.ltabs = []
     self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
 
-    for i in range(len(ldict)): self.ltabs.append(QWidget())
+    for i in range(len(self.ldict)): self.ltabs.append(QWidget())
 
     self.tabs.resize(500,200) 
 
@@ -216,7 +219,7 @@ class DictDialog (QDialog):
 
 # widget to specify ongoing input params (proximal, distal)
 class OngoingInputParamDialog (DictDialog):
-  def __init__ (self, parent, inty):
+  def __init__ (self, parent, inty, din=None):
     self.inty = inty
     if self.inty.startswith('Proximal'):
       self.prefix = 'input_prox_A_'
@@ -224,7 +227,7 @@ class OngoingInputParamDialog (DictDialog):
     else:
       self.prefix = 'input_dist_A_'
       self.postfix = '_dist'
-    super(OngoingInputParamDialog, self).__init__(parent)
+    super(OngoingInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
     self.dtiming = {'distribution' + self.postfix: 'normal',
@@ -252,8 +255,8 @@ class OngoingInputParamDialog (DictDialog):
 
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
-  def __init__ (self, parent):
-    super(EvokedInputParamDialog, self).__init__(parent)
+  def __init__ (self, parent, din):
+    super(EvokedInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
 
