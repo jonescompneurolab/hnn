@@ -487,28 +487,34 @@ class HNNGUI (QMainWindow):
     grid = QGridLayout()
     grid.setSpacing(10)
 
-    self.btnsim = btn = QPushButton('Run Simulation', self)
-    btn.setToolTip('Run simulation')
-    btn.resize(btn.sizeHint())
-    btn.clicked.connect(self.controlsim)
-    grid.addWidget(self.btnsim, 1, 0, 1, 1)
-
     self.pbtn = pbtn = QPushButton('Set Parameters', self)
     pbtn.setToolTip('Set parameters')
     pbtn.resize(pbtn.sizeHint())
     pbtn.clicked.connect(self.setparams)
-    grid.addWidget(self.pbtn, 1, 1, 1, 1)
+    grid.addWidget(self.pbtn, 1, 0, 1, 1)
+
+    self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
+    pfbtn.setToolTip('Set Parameters From File')
+    pfbtn.resize(pfbtn.sizeHint())
+    pfbtn.clicked.connect(self.selParamFileDialog)
+    grid.addWidget(self.pfbtn, 1, 1, 1, 1)
+
+    self.btnsim = btn = QPushButton('Run Simulation', self)
+    btn.setToolTip('Run simulation')
+    btn.resize(btn.sizeHint())
+    btn.clicked.connect(self.controlsim)
+    grid.addWidget(self.btnsim, 1, 2, 1, 1)
 
     self.qbtn = qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
-    grid.addWidget(self.qbtn, 1, 2, 1, 1)
+    grid.addWidget(self.qbtn, 1, 3, 1, 1)
 
     self.setGeometry(300, 300, 1200, 1100)
     self.setWindowTitle('HNN')
 
     self.m = m = PlotCanvas(self, width=10, height=8)
-    grid.addWidget(self.m, 2, 0, 1, 3)
+    grid.addWidget(self.m, 2, 0, 1, 4)
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
