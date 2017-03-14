@@ -16,7 +16,42 @@ simf = run.py
 paramf = param/default.param
 """
 
-# parameter used for evolution
+class baseparam:
+  pass
+
+class dlgparam (baseparam):
+  def __init__ (self, title, dID, ntab):
+    self.title = title # displayed text
+    self.ID = dID # dialog ID
+    self.ntab = ntab # number of tabs (-1 means not using tabs)
+
+class tabparam (baseparam):
+  def __init__ (self, title, dID, tID):
+    self.title = title # displayed text
+    self.dID = dID # dialog ID
+    self.tID = tID # tab ID
+
+class param (baseparam):
+  def __init__ (self, title, dID, tID, val, ty, rng=None):
+    self.title = title
+    self.dID = dID
+    self.tID = tID # tab ID (-1 means not in a tab)
+    self.val = val # value
+    self.ty = ty # type (0==number, 1==string)
+    self.rng = rng
+    if rng: self.bounded=True
+    else: self.bounded=False
+
+  # check if value is within bounds
+  def inbounds (self,val):
+    if not bounded: return True
+    return val >= self.rng[0] and val <= self.rng[1]
+
+  def __str__ (self):
+    return str(self.val)
+
+
+# parameter - can be used for GUI
 class param:
   def __init__ (self, origval, minval, maxval, bounded, var):
     self.origval = origval
@@ -99,26 +134,26 @@ def readconf (fn="netcfg.cfg"):
   def confbool (base,var,defa):
     return str2bool(confstr(base,var,defa))
 
-  def getparamd (base):
-    d = {}
-    if not config.has_section(base): return d
-    lprm = config.options(base)
+  def getlparam (base, ty):
+    lout = []
+    if not config.has_section(base): return lout
+    lin = config.options(base)    
+    """
     if config.has_option(base,'fpath'):
       fn = config.get(base,'fpath')
       d = pickle.load(open(fn))
       print('read dprm from ' , fn)
       return d    
-    for i,prm in enumerate(lprm):
-      s = config.get(base,prm)    
+    """
+    for i,prm in enumerate(lin):
+      s = config.get(base,prm)
       sp = s.split()
       try:
-        minval,maxval,origval,bounded = float(sp[0]),float(sp[1]),float(sp[2]),str2bool(sp[3])
-        p = param(origval,minval,maxval,bounded,prm)
-        d[prm] = p
+        lout.append( (prm, ty(*sp)) )
       except:
         print('config skipping ' , s)
         pass
-    return d
+    return lout
 
   lsec = config.sections()
 
@@ -128,6 +163,10 @@ def readconf (fn="netcfg.cfg"):
 
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
+
+  d['dlg'] = getlparam('dialog', dlgparam)
+  d['tab'] = getlparam('tab', tabparam)
+  d['param'] = getlparam('param', param)
 
   """
   recstr = confstr('run','recordV','')
