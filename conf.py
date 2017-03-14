@@ -50,43 +50,6 @@ class param (baseparam):
   def __str__ (self):
     return str(self.val)
 
-
-# parameter - can be used for GUI
-class param:
-  def __init__ (self, origval, minval, maxval, bounded, var):
-    self.origval = origval
-    self.minval = minval
-    self.maxval = maxval
-    self.bounded = bounded
-    if var.count(',') > 0:
-      self.var = var.split(',')
-    else:
-      self.var = var
-  def __str__ (self):
-    sout = ''
-    for s in [self.var, self.minval, self.maxval, self.origval, self.bounded]:
-      sout += str(s)
-      sout += ' '
-    return sout
-  # generates string for execution
-  def assignstr (self, val):
-    if type(self.var) == list:
-      astr = ''
-      for var in self.var: astr += var + ' = ' + str(val) + ';'
-      return astr
-    else:
-      return self.var + ' = ' + str(val)
-  # check if value is within bounds
-  def inbounds (self,val):
-    if not bounded: return True
-    return val >= self.minval and val <= self.maxval
-  # only return assignstr if val is within bounds
-  def checkassign (self,val):
-    if self.inbounds(val):
-      return self.assignstr(val)
-    else:
-      return None
-
 # write config file starting with defaults and new entries
 # specified in section (sec) , option (opt), and value (val)
 # saves to output filepath fn

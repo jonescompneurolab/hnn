@@ -248,42 +248,47 @@ class OngoingInputParamDialog (QDialog):
 
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (QDialog):
-  def __init__ (self, parent, inty):
+  def __init__ (self, parent):
     super(EvokedInputParamDialog, self).__init__(parent)
-    self.inty = inty
-    if self.inty.startswith('Proximal'):
-      self.prefix = 'input_prox_A_'
-      self.postfix = '_prox'
-    else:
-      self.prefix = 'input_dist_A_'
-      self.postfix = '_dist'
     self.initd()
     self.initUI()
 
   def initd (self):
-    self.dtiming = {'distribution' + self.postfix: 'normal',
-                    't0_input' + self.postfix: 1000.,
-                    'tstop_input' + self.postfix: 250.,
-                    'f_input' + self.postfix: 10.,
-                    'f_stdev' + self.postfix: 20.,
-                    'events_per_cycle' + self.postfix: 2}
 
-    self.dL2 = {self.prefix + 'L2Pyr_ampa': 0.,
-                self.prefix + 'L2Pyr_nmda': 0.,
-                self.prefix + 'delay_L2': 0.1}
+    # times and stdevs for evoked responses
+    self.dtiming = {'t_evprox_early': 2000.,
+                    'sigma_t_evprox_early': 2.5,
+                    'dt_evprox0_evdist': -1,
+                    't_evdist': 2000.,
+                    'sigma_t_evdist': 6.,
+                    'dt_evprox0_evprox1': -1,
+                    't_evprox_late': 2000.,
+                    'sigma_t_evprox_late': 7.}
 
-    self.dL5 = {
-        self.prefix + 'L5Pyr_ampa': 0.,
-        self.prefix + 'L5Pyr_nmda': 0.,
-        self.prefix + 'delay_L5': 0.1}
+    # evprox (early) feed strength
+    self.dproxearly = {'gbar_evprox_early_L2Pyr': 0.,
+                       'gbar_evprox_early_L5Pyr': 0.,
+                       'gbar_evprox_early_L2Basket': 0.,
+                       'gbar_evprox_early_L5Basket': 0.,
+    }
 
-    self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
-                   self.prefix + 'weight_inh_nmda': 0.}
+    # evprox (late) feed strength
+    self.dproxlate = {'gbar_evprox_late_L2Pyr': 0.,
+                      'gbar_evprox_late_L5Pyr': 0.,
+                      'gbar_evprox_late_L2Basket': 0.,
+                      'gbar_evprox_late_L5Basket': 0.,
+    }
 
-    self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
+    # evdist feed strengths
+    self.ddist = {'gbar_evdist_L2Pyr': 0.,
+                  'gbar_evdist_L5Pyr': 0.,
+                  'gbar_evdist_L2Basket': 0.,
+    }
+
+    self.ldict = [self.dtiming, self.dproxearly, self.dproxlate, self.ddist]
 
   def saveparams (self):
-    print("OngoingInputParamDialog: setting params for saving to ",paramf)
+    print("EvokedInputParamDialog: setting params for saving to ",paramf)
     self.hide()
     print(self)
 
@@ -302,26 +307,22 @@ class EvokedInputParamDialog (QDialog):
     self.ltabs = []
     self.tabs = QTabWidget()
     self.tabTiming = QWidget()	
-    self.tabL2 = QWidget()
-    self.tabL5 = QWidget()
-    self.tabInhib = QWidget()
+    self.tabproxearly = QWidget()
+    self.tabproxlate = QWidget()
+    self.tabdist = QWidget()
     self.tabs.resize(300,200) 
 
-    # Add tabs
-    self.tabs.addTab(self.tabTiming,"Timing"); 
-    self.tabs.addTab(self.tabL2,"Layer 2")
-    self.tabs.addTab(self.tabL5,"Layer 5")
-    self.tabs.addTab(self.tabInhib,"Inhib")
-  
-    self.ltabs = [self.tabTiming, self.tabL2, self.tabL5, self.tabInhib]
+    self.ltabs = [self.tabTiming, self.tabproxearly, self.tabproxlate, self.tabdist]
+    self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
 
-    # Create first tab
-    for tab in self.ltabs:
+    # create tabs and their layouts
+    for tab,s in zip(self.ltabs,self.ltitle):
+      self.tabs.addTab(tab,s)
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
     self.dqline = {}
-    for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
+    for d,tab in zip([self.dtiming,self.dproxearly,self.dproxlate,self.ddist],self.ltabs):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
         self.dqline[k].setText(str(v))
@@ -346,7 +347,7 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addLayout(self.button_box)
 
     self.setGeometry(150, 150, 400, 300)
-    self.setWindowTitle('Set '+self.inty+' Inputs')    
+    self.setWindowTitle('Set Evoked Inputs')
 
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
@@ -507,14 +508,12 @@ class BaseParamDialog (QDialog):
     self.netparamwin = NetworkParamDialog(self)    
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
-    self.evproxparamwin = EvokedInputParamDialog(self,'Proximal')
-    self.evdistparamwin = EvokedInputParamDialog(self,'Distal')
+    self.evparamwin = EvokedInputParamDialog(self)
 
   def setnetparam (self): self.netparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
-  def setevproxparam (self): self.evproxparamwin.show()
-  def setevdistparam (self): self.evdistparamwin.show()
+  def setevparam (self): self.evparamwin.show()
 
   def onChangeSimName(self, text):        
     self.lbl.setText(text)
@@ -552,15 +551,10 @@ class BaseParamDialog (QDialog):
     self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
 
-    self.btnevprox = QPushButton('Set Evoked Proximal Inputs',self)
-    self.btnevprox.resize(self.btnevprox.sizeHint())
-    self.btnevprox.clicked.connect(self.setevproxparam)
-    grid.addWidget(self.btnevprox, row, 0, 1, 2); row+=1
-
-    self.btnevdist = QPushButton('Set Evoked Distal Inputs',self)
-    self.btnevdist.resize(self.btnevdist.sizeHint())
-    self.btnevdist.clicked.connect(self.setevdistparam)
-    grid.addWidget(self.btnevdist, row, 0, 1, 2); row+=1
+    self.btnev = QPushButton('Set Evoked Inputs',self)
+    self.btnev.resize(self.btnev.sizeHint())
+    self.btnev.clicked.connect(self.setevparam)
+    grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
