@@ -454,17 +454,12 @@ class NetworkParamDialog (QDialog):
     self.tabL5Bas = QWidget()
     self.tabs.resize(500,200) 
 
-    # Add tabs
-    self.tabs.addTab(self.tabCells,"Cells"); 
-    self.tabs.addTab(self.tabL2Pyr,"Layer 2 Pyr")
-    self.tabs.addTab(self.tabL5Pyr,"Layer 5 Pyr")
-    self.tabs.addTab(self.tabL2Bas,"Layer 2 Bas")
-    self.tabs.addTab(self.tabL5Bas,"Layer 5 Bas")
-  
     self.ltabs = [self.tabCells, self.tabL2Pyr, self.tabL5Pyr, self.tabL2Bas, self.tabL5Bas]
-
-    # Create first tab
-    for tab in self.ltabs:
+    self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
+  
+    # create tabs and their layouts
+    for tab,s in zip(self.ltabs,self.ltitle):
+      self.tabs.addTab(tab,s)
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
@@ -577,7 +572,7 @@ class BaseParamDialog (QDialog):
     print(self)
 
   def __str__ (self):
-    return str(self.proxparamwin) + str(self.distparamwin) + str(self.netparamwin)
+    return str(self.proxparamwin) + str(self.distparamwin) + str(self.netparamwin) + str(self.evparamwin)
 
 class HNNGUI (QMainWindow):
 

@@ -127,9 +127,9 @@ def readconf (fn="netcfg.cfg"):
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
 
-  d['dlg'] = getlparam('dialog', dlgparam)
-  d['tab'] = getlparam('tab', tabparam)
-  d['param'] = getlparam('param', param)
+  #d['dlg'] = getlparam('dialog', dlgparam)
+  #d['tab'] = getlparam('tab', tabparam)
+  #d['param'] = getlparam('param', param)
 
   """
   recstr = confstr('run','recordV','')
