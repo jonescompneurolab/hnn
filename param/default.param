@@ -1,66 +1,196 @@
+#Keep ALL params in this file, please
+# defines the large param structure of combinations
+# flat file of value ranges
+# tuples for different "experiments"
+# np.arrays for everything else?
+# turns out some whitespace is valid for dicts!
+
+# Instructions for co-varying (coupling) params:
+# to use the value(s) of one param for those of another, use the name of the former
+# as the value for that of the latter. This works for single param values, lists of values,
+# linspaces of values, and experimental values.
+# Limitation: Will not work for feed distributions
+
 sim_prefix: default
-expmt_groups: default
+expmt_groups: {default}
+
+# numbers of cells making up the pyramidal grids
+N_pyr_x: 10
+N_pyr_y: 10
+
+# maximal conductances for all synapses
+# max conductances TO L2Pyrs
 gbar_L2Pyr_L2Pyr_ampa: 5e-4
-gbar_L2Basket_L2Basket: 2e-2
-gbar_L5Pyr_L5Basket: 5e-4
-gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
-gbar_L5Pyr_L5Pyr_ampa: 5e-3
-N_pyr_x: 11
-gbar_L2Basket_L5Pyr: 5e-3
-gbar_L5Basket_L5Basket: 2e-2
-gbar_L2Pyr_L2Basket: 5e-4
-gbar_L5Basket_L5Pyr_gabab: 2.5e-2
-gbar_L2Basket_L2Pyr_gabaa: 5e-2
-gbar_L2Pyr_L5Pyr: 2.5e-4
-gbar_L2Basket_L2Pyr_gabab: 5e-2
-N_pyr_y: 11
 gbar_L2Pyr_L2Pyr_nmda: 5e-4
-gbar_L2Pyr_L5Basket: 2.5e-4
+gbar_L2Basket_L2Pyr_gabaa: 5e-2
+gbar_L2Basket_L2Pyr_gabab: 5e-2
+
+# max conductances TO L2Baskets
+gbar_L2Pyr_L2Basket: 5e-4
+gbar_L2Basket_L2Basket: 2e-2
+
+# max conductances TO L5Pyrs
+gbar_L5Pyr_L5Pyr_ampa: 5e-3
 gbar_L5Pyr_L5Pyr_nmda: 5e-4
-f_input_prox: 10.
-f_stdev_prox: 20.
+gbar_L2Pyr_L5Pyr: 2.5e-4
+
+#was 1e-3
+gbar_L2Basket_L5Pyr: 5e-3
+gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
+
+#gbar_L5Basket_L5Pyr_gabaa: 0
+gbar_L5Basket_L5Pyr_gabab: 2.5e-2
+#gbar_L5Basket_L5Pyr_gabab: 0
+# max conductances TO L5Baskets
+gbar_L5Basket_L5Basket: 2e-2
+gbar_L5Pyr_L5Basket: 5e-4
+gbar_L2Pyr_L5Basket: 2.5e-4
+
+# Ongoing proximal alpha rhythm
 distribution_prox: normal
-input_prox_A_L2Pyr_nmda: 0.0
 t0_input_prox: 50.
-events_per_cycle_prox: 2
-input_prox_A_weight_inh_ampa: 12e-5
 tstop_input_prox: 710.
-input_prox_A_L5Pyr_nmda: 0.0
-input_prox_A_delay_L2: 0.1
-input_prox_A_delay_L5: 1.0
-input_prox_A_weight_inh_nmda: 0.0
-input_prox_A_L2Pyr_ampa: 0.0
-input_prox_A_L5Pyr_ampa: 0.0
-input_dist_A_L2Pyr_nmda: 0.0
-input_dist_A_delay_L2: 5.0
-input_dist_A_L2Pyr_ampa: 0.0
-input_dist_A_delay_L5: 5.0
+f_input_prox: 10.
+# was 10.
+f_stdev_prox: 20.
+events_per_cycle_prox: 2
+
+# Ongoing distal alpha rhythm
 distribution_dist: normal
-events_per_cycle_dist: 2
-input_dist_A_weight_inh_nmda: 0.0
-input_dist_A_weight_inh_ampa: 12e-5
-f_input_dist: 10.
 t0_input_dist: 50.
 tstop_input_dist: 710.
+f_input_dist: 10.
+# was 10.
 f_stdev_dist: 20.
-input_dist_A_L5Pyr_nmda: 0.0
-input_dist_A_L5Pyr_ampa: 0.0
-gbar_evprox_early_L5Basket: 1e-3
-gbar_evprox_late_L5Pyr: 2.7e-3
-gbar_evprox_late_L2Pyr: 5.3e-3
-t_evdist: 2000.0
-gbar_evprox_early_L2Pyr: 1e-3
-sigma_t_evdist: 6.
-sigma_t_evprox_late: 7.
-dt_evprox0_evprox1: 110
-dt_evprox0_evdist: 45
-gbar_evprox_early_L2Basket: 2e-3
-gbar_evdist_L5Pyr: 5e-4
-gbar_evprox_late_L2Basket: 5.3e-3
-gbar_evprox_early_L5Pyr: 5e-4
-gbar_evdist_L2Pyr: 5e-4
+events_per_cycle_dist: 2
+
+# thalamic input amplitudes and delays
+input_prox_A_weight_L2Pyr_ampa: 6e-5
+#input_prox_A_weight_L2Pyr_nmda: 4e-5
+
+input_prox_A_weight_L5Pyr_ampa: 6e-5
+#input_prox_A_weight_L5Pyr_nmda: 4e-5
+
+input_prox_A_weight_inh_ampa: 12e-5
+# inhb ampa was 1e-3
+#input_prox_A_weight_inh_nmda: 6e-5
+
+input_prox_A_delay_L2: 0.1
+input_prox_A_delay_L5: 1.0
+
+# current values, not sure where these distal values come from,
+# need to check
+input_dist_A_weight_L2Pyr_ampa: 6e-5
+#input_dist_A_weight_L2Pyr_nmda: 4e-5
+
+input_dist_A_weight_L5Pyr_ampa: 6e-5
+#input_dist_A_weight_L5Pyr_nmda: 4e-5
+
+input_dist_A_weight_inh_ampa: 12e-5
+#input_dist_A_weight_inh_nmda: 6e-5
+
+input_dist_A_delay_L2: 5.0
+input_dist_A_delay_L5: 5.0
+
+# evprox (early) input
+#t_evprox_early: A(410, 510, 5) 
 t_evprox_early: 1000
 sigma_t_evprox_early: 2.5
-gbar_evprox_late_L5Basket: 2.7e-3
+gbar_evprox_early_L2Pyr: 1e-3
+
+#was 2e-3 
+gbar_evprox_early_L2Basket: 2e-3
+gbar_evprox_early_L5Pyr: 5e-4
+gbar_evprox_early_L5Basket: 1e-3
+
+# evdist input
+dt_evprox0_evdist: 45
+#t_evdist: 1070.
+sigma_t_evdist: 6.
+# was 1e-3
+gbar_evdist_L2Pyr: 5e-4
+# was 5e-4
 gbar_evdist_L2Basket: 5e-4
-t_evprox_late: 2000.0
+# was 1e-3
+gbar_evdist_L5Pyr: 5e-4
+
+# evprox (late) input
+dt_evprox0_evprox1: 110
+#t_evprox_late: 1135.
+sigma_t_evprox_late: 7.
+gbar_evprox_late_L2Pyr: 5.3e-3
+gbar_evprox_late_L2Basket: 5.3e-3
+gbar_evprox_late_L5Pyr: 2.7e-3
+gbar_evprox_late_L5Basket: 2.7e-3
+
+# amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
+# L2 Basket params
+L2Basket_Gauss_A_weight: 0.
+L2Basket_Gauss_mu: 2000.
+L2Basket_Gauss_sigma: 3.6
+L2Basket_Pois_A_weight: 0.
+L2Basket_Pois_lamtha: 0.
+
+# L2 Pyr params
+L2Pyr_Gauss_A_weight: 0.
+L2Pyr_Gauss_mu: 2000.
+L2Pyr_Gauss_sigma: 3.6
+L2Pyr_Pois_A_weight: 0.
+L2Pyr_Pois_lamtha: 0.
+
+# L5 Pyr params
+L5Pyr_Gauss_A_weight: 0.
+L5Pyr_Gauss_mu: 2000.
+L5Pyr_Gauss_sigma: 4.8
+L5Pyr_Pois_A_weight: 0.
+L5Pyr_Pois_lamtha: 0.
+
+# L5 Basket params
+L5Basket_Gauss_A_weight: 0.
+L5Basket_Gauss_mu: 2000.
+L5Basket_Gauss_sigma: 2.
+L5Basket_Pois_A_weight: 0.
+L5Basket_Pois_lamtha: 0.
+
+# analysis
+save_spec_data: 1
+f_max_spec: 40.
+
+# Tonic input to Pyr cells
+Itonic_A_L2Pyr_soma: 0.
+Itonic_t0_L2Pyr_soma: 50.
+Itonic_T_L2Pyr_soma: -1
+
+# Itonic_A_L5Pyr_soma: 2.
+# Itonic_A_L5Pyr_soma: [0., 1., 2.]
+# Itonic_A_L5Pyr_soma: L[0., 2., 3]
+Itonic_A_L5Pyr_soma: 0.
+Itonic_t0_L5Pyr_soma: 50.
+Itonic_T_L5Pyr_soma: -1
+
+# N_trials
+N_trials: 1
+
+# these values will only be used with N_trials = 0
+# and when these values are not -1
+# these values also override others when N_trials is on
+prng_seedcore_input_prox: 4
+prng_seedcore_input_dist: 4
+prng_seedcore_extpois: 4
+prng_seedcore_extgauss: 4
+# ec=vprox_early was 1
+prng_seedcore_evprox_early: 4
+prng_seedcore_evdist: 4
+# evprox_late was 0
+prng_seedcore_evprox_late: 4
+
+# Numerics
+tstop: 710.
+dt: 0.025
+
+# Poisson input
+T_pois: 1000.
+
+Run_Date: 2016-01-11
+
+Run_Date: 2017-01-15
