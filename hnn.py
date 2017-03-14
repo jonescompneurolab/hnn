@@ -164,7 +164,29 @@ class DictDialog (QDialog):
   def saveparams (self):
     print("Setting params for saving to ",paramf)
     self.hide()
-    print(self)
+    oktosave = True
+    if os.path.isfile(paramf):
+      oktosave = False
+      msg = QMessageBox()
+      msg.setIcon(QMessageBox.Warning)
+
+      msg.setText(param + ' already exists. Over-write?')
+      #msg.setInformativeText("This is additional information")
+      msg.setWindowTitle('Over-write file?')
+      #msg.setDetailedText("The details are as follows:")
+      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+      # msg.buttonClicked.connect(msgbtn)
+	
+      retval = msg.exec_()
+      print("value of pressed message box button:", retval)
+      if retval == 1: oktosave = True
+    if oktosave:
+      try:
+        with open(paramf,'w') as fp:
+          fp.write(str(self))
+        print('saved:', str(self), ' to ', paramf)
+      except:
+        print('exception in saving param file ',paramf)
 
   def initd (self): pass # implemented in subclass
 
@@ -362,10 +384,6 @@ class BaseParamDialog (QDialog):
   def setdistparam (self): self.distparamwin.show()
   def setevparam (self): self.evparamwin.show()
 
-  def onChangeSimName(self, text):        
-    self.lbl.setText(text)
-    self.lbl.adjustSize()      
-
   def initUI (self):
 
     grid = QGridLayout()
@@ -379,7 +397,6 @@ class BaseParamDialog (QDialog):
     grid.addWidget(self.lbl, row, 0)
     self.qle = QLineEdit(self)
     self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
-    self.qle.textChanged[str].connect(self.onChangeSimName)
     grid.addWidget(self.qle, row, 1)
     row+=1
 
