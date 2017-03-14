@@ -159,7 +159,7 @@ class DictDialog (QDialog):
 
   def __str__ (self):
     s = ''
-    for k,v in self.dqline.items(): s += k + ': ' + v.text() + '\n'
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + '\n'
     return s
 
   def saveparams (self):
