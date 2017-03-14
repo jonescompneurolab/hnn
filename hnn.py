@@ -143,10 +143,80 @@ class RunSimThread (QThread):
 class Communicate (QObject):    
   finishSim = pyqtSignal()
 
+# DictDialog - dictionary-based dialog with tabs - should make all dialogs
+# specifiable via cfg file format - then can customize gui without changing py code
+# and can reduce code explosion / overlap between dialogs 
+class DictDialog (QDialog):
+
+  def __init__ (self, parent, din = None):
+    super(DictDialog, self).__init__(parent)
+    self.initd(din)
+    self.initUI()
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s
+
+  def saveparams (self):
+    print("Setting params for saving to ",paramf)
+    self.hide()
+    print(self)
+
+  def initd (self, din = None): pass
+
+  def initUI (self):         
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    # Initialize tab screen
+    self.ltabs = []
+    self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
+
+    for i in range(len(ldict)): self.ltabs.append(QWidget())
+
+    self.tabs.resize(500,200) 
+
+    # create tabs and their layouts
+    for tab,s in zip(self.ltabs,self.ltitle):
+      self.tabs.addTab(tab,s)
+      tab.layout = QFormLayout()
+      tab.setLayout(tab.layout)
+
+    self.dqline = {}
+    for d,tab in zip(self.ldict, self.ltabs):
+      for k,v in d.items():
+        self.dqline[k] = QLineEdit(self)
+        self.dqline[k].setText(str(v))
+        tab.layout.addRow(k,self.dqline[k])
+
+    # Add tabs to widget        
+    self.layout.addWidget(self.tabs)
+    self.setLayout(self.layout)
+ 
+    # Create a horizontal box layout to hold the button
+    self.button_box = QHBoxLayout()
+ 
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.saveparams)
+    self.button_box.addWidget(self.btnok)
+
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
+    self.button_box.addWidget(self.btncancel)
+
+    self.layout.addLayout(self.button_box)
+
+    self.setGeometry(150, 150, 400, 300)
+    self.setWindowTitle(self.stitle)  
+
 # widget to specify ongoing input params (proximal, distal)
-class OngoingInputParamDialog (QDialog):
+class OngoingInputParamDialog (DictDialog):
   def __init__ (self, parent, inty):
-    super(OngoingInputParamDialog, self).__init__(parent)
     self.inty = inty
     if self.inty.startswith('Proximal'):
       self.prefix = 'input_prox_A_'
@@ -154,8 +224,7 @@ class OngoingInputParamDialog (QDialog):
     else:
       self.prefix = 'input_dist_A_'
       self.postfix = '_dist'
-    self.initd()
-    self.initUI()
+    super(OngoingInputParamDialog, self).__init__(parent)
 
   def initd (self):
     self.dtiming = {'distribution' + self.postfix: 'normal',
@@ -178,80 +247,13 @@ class OngoingInputParamDialog (QDialog):
                    self.prefix + 'weight_inh_nmda': 0.}
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
-
-  def saveparams (self):
-    print("OngoingInputParamDialog: setting params for saving to ",paramf)
-    self.hide()
-    print(self)
-
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s    
-
-  def initUI (self):         
-    self.layout = QVBoxLayout(self)
-
-    # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
-
-    # Initialize tab screen
-    self.ltabs = []
-    self.tabs = QTabWidget()
-    self.tabTiming = QWidget()	
-    self.tabL2 = QWidget()
-    self.tabL5 = QWidget()
-    self.tabInhib = QWidget()
-    self.tabs.resize(300,200) 
-
-    # Add tabs
-    self.tabs.addTab(self.tabTiming,"Timing"); 
-    self.tabs.addTab(self.tabL2,"Layer 2")
-    self.tabs.addTab(self.tabL5,"Layer 5")
-    self.tabs.addTab(self.tabInhib,"Inhib")
-  
-    self.ltabs = [self.tabTiming, self.tabL2, self.tabL5, self.tabInhib]
-
-    # Create first tab
-    for tab in self.ltabs:
-      tab.layout = QFormLayout()
-      tab.setLayout(tab.layout)
-
-    self.dqline = {}
-    for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
-      for k,v in d.items():
-        self.dqline[k] = QLineEdit(self)
-        self.dqline[k].setText(str(v))
-        tab.layout.addRow(k,self.dqline[k])
-
-    # Add tabs to widget        
-    self.layout.addWidget(self.tabs)
- 
-    # Create a horizontal box layout to hold the button
-    self.button_box = QHBoxLayout()
- 
-    self.btnok = QPushButton('OK',self)
-    self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.clicked.connect(self.saveparams)
-    self.button_box.addWidget(self.btnok)
-
-    self.btncancel = QPushButton('Cancel',self)
-    self.btncancel.resize(self.btncancel.sizeHint())
-    self.btncancel.clicked.connect(self.hide)
-    self.button_box.addWidget(self.btncancel)
-
-    self.layout.addLayout(self.button_box)
-
-    self.setGeometry(150, 150, 400, 300)
-    self.setWindowTitle('Set '+self.inty+' Inputs')    
-
+    self.ltitles = ['Timing', 'Layer2', 'Layer5', 'Inhib']
+    self.stitle = 'Set '+self.inty+' Inputs'
 
 # widget to specify ongoing input params (proximal, distal)
-class EvokedInputParamDialog (QDialog):
+class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent):
     super(EvokedInputParamDialog, self).__init__(parent)
-    self.initd()
-    self.initUI()
 
   def initd (self):
 
@@ -286,109 +288,18 @@ class EvokedInputParamDialog (QDialog):
     }
 
     self.ldict = [self.dtiming, self.dproxearly, self.dproxlate, self.ddist]
+    self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
+    self.stitle = 'Set Evoked Inputs'
 
   def saveparams (self):
     print("EvokedInputParamDialog: setting params for saving to ",paramf)
     self.hide()
     print(self)
 
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s    
-
-  def initUI (self):         
-    self.layout = QVBoxLayout(self)
-
-    # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
-
-    # Initialize tab screen
-    self.ltabs = []
-    self.tabs = QTabWidget()
-    self.tabTiming = QWidget()	
-    self.tabproxearly = QWidget()
-    self.tabproxlate = QWidget()
-    self.tabdist = QWidget()
-    self.tabs.resize(300,200) 
-
-    self.ltabs = [self.tabTiming, self.tabproxearly, self.tabproxlate, self.tabdist]
-    self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
-
-    # create tabs and their layouts
-    for tab,s in zip(self.ltabs,self.ltitle):
-      self.tabs.addTab(tab,s)
-      tab.layout = QFormLayout()
-      tab.setLayout(tab.layout)
-
-    self.dqline = {}
-    for d,tab in zip([self.dtiming,self.dproxearly,self.dproxlate,self.ddist],self.ltabs):
-      for k,v in d.items():
-        self.dqline[k] = QLineEdit(self)
-        self.dqline[k].setText(str(v))
-        tab.layout.addRow(k,self.dqline[k])
-
-    # Add tabs to widget        
-    self.layout.addWidget(self.tabs)
- 
-    # Create a horizontal box layout to hold the button
-    self.button_box = QHBoxLayout()
- 
-    self.btnok = QPushButton('OK',self)
-    self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.clicked.connect(self.saveparams)
-    self.button_box.addWidget(self.btnok)
-
-    self.btncancel = QPushButton('Cancel',self)
-    self.btncancel.resize(self.btncancel.sizeHint())
-    self.btncancel.clicked.connect(self.hide)
-    self.button_box.addWidget(self.btncancel)
-
-    self.layout.addLayout(self.button_box)
-
-    self.setGeometry(150, 150, 400, 300)
-    self.setWindowTitle('Set Evoked Inputs')
-
-
-# DictDialog - dictionary-based dialog with tabs - should make all dialogs
-# specifiable via cfg file format - then can customize gui without changing py code
-# and can reduce code explosion / overlap between dialogs 
-class DictDialog (QDialog):
-
-  def __init__ (self, parent, din = None):
-    super(DictDialog, self).__init__(parent)
-    self.ltabs = []
-    self.dqline = {}
-    self.initd(ind)
-    self.initUI()
-
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s
-
-  def saveparams (self):
-    print("Setting params for saving to ",paramf)
-    self.hide()
-    print(self)
-
-  def addtabs (self): pass
-
-  def initUI (self):
-    self.layout = QVBoxLayout(self)
-
-    # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
-
-    self.addtabs()
-  
-
 # widget to specify ongoing input params (proximal, distal)
-class NetworkParamDialog (QDialog):
-  def __init__ (self, parent, ind = None):
-    super(NetworkParamDialog, self).__init__(parent)
-    self.initd()
-    self.initUI()
+class NetworkParamDialog (DictDialog):
+  def __init__ (self, parent, din = None):
+    super(NetworkParamDialog, self).__init__(parent,din)
 
   def initd (self):
     # number of cells
@@ -427,71 +338,8 @@ class NetworkParamDialog (QDialog):
     }  
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
-
-  def saveparams (self):
-    print("NetworkParamDialog: setting params for saving to ",paramf)
-    self.hide()
-    print(self)
-
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s
-
-  def initUI (self):         
-    self.layout = QVBoxLayout(self)
-
-    # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
-
-    # Initialize tab screen
-    self.ltabs = []
-    self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
-    self.tabCells = QWidget()
-    self.tabL2Pyr = QWidget()
-    self.tabL5Pyr = QWidget()
-    self.tabL2Bas = QWidget()
-    self.tabL5Bas = QWidget()
-    self.tabs.resize(500,200) 
-
-    self.ltabs = [self.tabCells, self.tabL2Pyr, self.tabL5Pyr, self.tabL2Bas, self.tabL5Bas]
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
-  
-    # create tabs and their layouts
-    for tab,s in zip(self.ltabs,self.ltitle):
-      self.tabs.addTab(tab,s)
-      tab.layout = QFormLayout()
-      tab.setLayout(tab.layout)
-
-    self.dqline = {}
-    for d,tab in zip(self.ldict, self.ltabs):
-      for k,v in d.items():
-        self.dqline[k] = QLineEdit(self)
-        self.dqline[k].setText(str(v))
-        tab.layout.addRow(k,self.dqline[k])
-
-    # Add tabs to widget        
-    self.layout.addWidget(self.tabs)
-    self.setLayout(self.layout)
- 
-    # Create a horizontal box layout to hold the button
-    self.button_box = QHBoxLayout()
- 
-    self.btnok = QPushButton('OK',self)
-    self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.clicked.connect(self.saveparams)
-    self.button_box.addWidget(self.btnok)
-
-    self.btncancel = QPushButton('Cancel',self)
-    self.btncancel.resize(self.btncancel.sizeHint())
-    self.btncancel.clicked.connect(self.hide)
-    self.button_box.addWidget(self.btncancel)
-
-    self.layout.addLayout(self.button_box)
-
-    self.setGeometry(150, 150, 400, 300)
-    self.setWindowTitle('Set Network Parameters')
-
+    self.stitle = 'Set Network Parameters'
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
