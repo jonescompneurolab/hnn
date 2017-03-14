@@ -193,7 +193,11 @@ class DictDialog (QDialog):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
         self.dqline[k].setText(str(v))
-        tab.layout.addRow(k,self.dqline[k])
+        print(type(tab.layout),tab.layout)
+        try:
+          tab.layout.addRow(k,self.dqline[k])
+        except:
+          pass
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
@@ -294,11 +298,6 @@ class EvokedInputParamDialog (DictDialog):
     self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
     self.stitle = 'Set Evoked Inputs'
 
-  def saveparams (self):
-    print("EvokedInputParamDialog: setting params for saving to ",paramf)
-    self.hide()
-    print(self)
-
 # widget to specify ongoing input params (proximal, distal)
 class NetworkParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
@@ -354,7 +353,7 @@ class BaseParamDialog (QDialog):
     self.netparamwin = NetworkParamDialog(self)    
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
-    self.evparamwin = EvokedInputParamDialog(self)
+    self.evparamwin = EvokedInputParamDialog(self,None)
 
   def setnetparam (self): self.netparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
