@@ -21,6 +21,7 @@ import numpy as np
 import random
 from math import ceil
 import spikefn
+import params_default
 
 ncore = multiprocessing.cpu_count()
 
@@ -170,9 +171,9 @@ class DictDialog (QDialog):
   def setfromdin (self,din):
     if not din: return
     for k1,v1 in din.items():
-      for k in dqline.keys():
+      for k in self.dqline.keys():
         if k1 == k:
-          dqline[k].setText(str(v1))
+          self.dqline[k].setText(str(v1))
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -355,6 +356,15 @@ class BaseParamDialog (QDialog):
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
+    self.lsubwin = [self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin]
+    self.updateDispParam()
+
+  def updateDispParam (self):
+    # now update the GUI components to reflect the param file selected
+    din = quickreadprm(paramf)
+    ddef = params_default.get_params_default()
+    for dlg in self.lsubwin: dlg.setfromdin(ddef) # first set to default?
+    for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
 
   def setnetparam (self): self.netparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
@@ -436,7 +446,21 @@ class BaseParamDialog (QDialog):
     # print(self)
 
   def __str__ (self):
-    return str(self.proxparamwin) + str(self.distparamwin) + str(self.netparamwin) + str(self.evparamwin)
+    s = ''
+    for win in self.lsubwin: s += str(win)
+    return s
+
+def quickreadprm (fn):
+  d = {}
+  with open(fn,'r') as fp:
+    ln = fp.readlines()
+    for l in ln:
+      s = l.strip()
+      if s.startswith('#'): continue
+      sp = s.split(':')
+      if len(sp) > 1:
+        d[sp[0]]=str(sp[1])
+  return d
 
 class HNNGUI (QMainWindow):
 
@@ -457,6 +481,8 @@ class HNNGUI (QMainWindow):
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
         pass
+      # now update the GUI components to reflect the param file selected
+      self.baseparamwin.updateDispParam()
 
   def setparams (self):
     if self.baseparamwin:

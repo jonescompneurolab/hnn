@@ -5,7 +5,7 @@
 # last major: (SL: Added default params for L2Basket and L5Basket cells)
 
 # returns default params - see note
-def get_params_default():
+def get_params_default ():
     """ Note that nearly all start times are set BEYOND tstop for this file
         Most values here are set to whatever default value inactivates them, such as 0 for conductance
         prng seed values are also set to 0 (non-random)
