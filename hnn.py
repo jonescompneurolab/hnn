@@ -254,7 +254,7 @@ class OngoingInputParamDialog (DictDialog):
                    self.prefix + 'weight_inh_nmda': 0.}
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
-    self.ltitles = ['Timing', 'Layer2', 'Layer5', 'Inhib']
+    self.ltitle = ['Timing', 'Layer2', 'Layer5', 'Inhib']
     self.stitle = 'Set '+self.inty+' Inputs'
 
 # widget to specify ongoing input params (proximal, distal)
@@ -263,7 +263,6 @@ class EvokedInputParamDialog (DictDialog):
     super(EvokedInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
-
     # times and stdevs for evoked responses
     self.dtiming = {'t_evprox_early': 2000.,
                     'sigma_t_evprox_early': 2.5,
