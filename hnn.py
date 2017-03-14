@@ -143,11 +143,10 @@ class RunSimThread (QThread):
 class Communicate (QObject):    
   finishSim = pyqtSignal()
 
-# from https://pythonspot.com/pyqt5-tabs/
-class OngoingInputTab (QWidget):
-
-  def __init__ (self, parent,inty):   
-    super(QWidget, self).__init__(parent)
+# widget to specify ongoing input params (proximal, distal)
+class OngoingInputParamDialog (QDialog):
+  def __init__ (self, parent, inty):
+    super(OngoingInputParamDialog, self).__init__(parent)
     self.inty = inty
     if self.inty.startswith('Proximal'):
       self.prefix = 'input_prox_A_'
@@ -180,8 +179,21 @@ class OngoingInputTab (QWidget):
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
 
-  def initUI (self):
-    self.layout = QVBoxLayout()
+  def saveparams (self):
+    print("OngoingInputParamDialog: setting params for saving to ",paramf)
+    self.hide()
+    print(self)
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s    
+
+  def initUI (self):         
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
 
     # Initialize tab screen
     self.ltabs = []
@@ -214,43 +226,6 @@ class OngoingInputTab (QWidget):
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
-    self.setLayout(self.layout)
-
-  def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
-    return s
-
-  @pyqtSlot()
-  def on_click(self):
-    print("\n")
-    for currentQTableWidgetItem in self.tableWidget.selectedItems():
-      print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
-
-
-# widget to specify ongoing input params (proximal, distal)
-class OngoingInputParamDialog (QDialog):
-  def __init__ (self, parent, inty):
-    super(OngoingInputParamDialog, self).__init__(parent)
-    self.inty = inty
-    self.dprm = {}
-    self.initUI()
-
-  def saveparams (self):
-    print("OngoingInputParamDialog: setting params for saving to ",paramf)
-    self.hide()
-    print(self)
-
-  def __str__ (self): return str(self.tabwidget)
-
-  def initUI (self):         
-    self.layout = QVBoxLayout(self)
-
-    # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
-
-    self.tabwidget = OngoingInputTab(self,self.inty)
-    self.layout.addWidget(self.tabwidget)
  
     # Create a horizontal box layout to hold the button
     self.button_box = QHBoxLayout()
@@ -269,11 +244,147 @@ class OngoingInputParamDialog (QDialog):
 
     self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set '+self.inty+' Inputs')    
-    # self.show()
+
+
+# widget to specify ongoing input params (proximal, distal)
+class EvokedInputParamDialog (QDialog):
+  def __init__ (self, parent, inty):
+    super(EvokedInputParamDialog, self).__init__(parent)
+    self.inty = inty
+    if self.inty.startswith('Proximal'):
+      self.prefix = 'input_prox_A_'
+      self.postfix = '_prox'
+    else:
+      self.prefix = 'input_dist_A_'
+      self.postfix = '_dist'
+    self.initd()
+    self.initUI()
+
+  def initd (self):
+    self.dtiming = {'distribution' + self.postfix: 'normal',
+                    't0_input' + self.postfix: 1000.,
+                    'tstop_input' + self.postfix: 250.,
+                    'f_input' + self.postfix: 10.,
+                    'f_stdev' + self.postfix: 20.,
+                    'events_per_cycle' + self.postfix: 2}
+
+    self.dL2 = {self.prefix + 'L2Pyr_ampa': 0.,
+                self.prefix + 'L2Pyr_nmda': 0.,
+                self.prefix + 'delay_L2': 0.1}
+
+    self.dL5 = {
+        self.prefix + 'L5Pyr_ampa': 0.,
+        self.prefix + 'L5Pyr_nmda': 0.,
+        self.prefix + 'delay_L5': 0.1}
+
+    self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
+                   self.prefix + 'weight_inh_nmda': 0.}
+
+    self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
+
+  def saveparams (self):
+    print("OngoingInputParamDialog: setting params for saving to ",paramf)
+    self.hide()
+    print(self)
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s    
+
+  def initUI (self):         
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    # Initialize tab screen
+    self.ltabs = []
+    self.tabs = QTabWidget()
+    self.tabTiming = QWidget()	
+    self.tabL2 = QWidget()
+    self.tabL5 = QWidget()
+    self.tabInhib = QWidget()
+    self.tabs.resize(300,200) 
+
+    # Add tabs
+    self.tabs.addTab(self.tabTiming,"Timing"); 
+    self.tabs.addTab(self.tabL2,"Layer 2")
+    self.tabs.addTab(self.tabL5,"Layer 5")
+    self.tabs.addTab(self.tabInhib,"Inhib")
+  
+    self.ltabs = [self.tabTiming, self.tabL2, self.tabL5, self.tabInhib]
+
+    # Create first tab
+    for tab in self.ltabs:
+      tab.layout = QFormLayout()
+      tab.setLayout(tab.layout)
+
+    self.dqline = {}
+    for d,tab in zip([self.dtiming,self.dL2,self.dL5,self.dInhib],self.ltabs):
+      for k,v in d.items():
+        self.dqline[k] = QLineEdit(self)
+        self.dqline[k].setText(str(v))
+        tab.layout.addRow(k,self.dqline[k])
+
+    # Add tabs to widget        
+    self.layout.addWidget(self.tabs)
+ 
+    # Create a horizontal box layout to hold the button
+    self.button_box = QHBoxLayout()
+ 
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.saveparams)
+    self.button_box.addWidget(self.btnok)
+
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
+    self.button_box.addWidget(self.btncancel)
+
+    self.layout.addLayout(self.button_box)
+
+    self.setGeometry(150, 150, 400, 300)
+    self.setWindowTitle('Set '+self.inty+' Inputs')    
+
+
+# DictDialog - dictionary-based dialog with tabs - should make all dialogs
+# specifiable via cfg file format - then can customize gui without changing py code
+# and can reduce code explosion / overlap between dialogs 
+class DictDialog (QDialog):
+
+  def __init__ (self, parent, din = None):
+    super(DictDialog, self).__init__(parent)
+    self.ltabs = []
+    self.dqline = {}
+    self.initd(ind)
+    self.initUI()
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ' : ' + v.text() + '\n'
+    return s
+
+  def saveparams (self):
+    print("Setting params for saving to ",paramf)
+    self.hide()
+    print(self)
+
+  def addtabs (self): pass
+
+  def initUI (self):
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    self.addtabs()
+  
 
 # widget to specify ongoing input params (proximal, distal)
 class NetworkParamDialog (QDialog):
-  def __init__ (self, parent):
+  def __init__ (self, parent, ind = None):
     super(NetworkParamDialog, self).__init__(parent)
     self.initd()
     self.initUI()
@@ -384,7 +495,6 @@ class NetworkParamDialog (QDialog):
 
     self.setGeometry(150, 150, 400, 300)
     self.setWindowTitle('Set Network Parameters')
-    # self.show()
 
 
 # base widget for specifying params (contains buttons to create other widgets
@@ -397,24 +507,14 @@ class BaseParamDialog (QDialog):
     self.netparamwin = NetworkParamDialog(self)    
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
+    self.evproxparamwin = EvokedInputParamDialog(self,'Proximal')
+    self.evdistparamwin = EvokedInputParamDialog(self,'Distal')
 
-  def setnetparam (self):
-    if self.netparamwin:
-      self.netparamwin.show()
-    else:
-      self.netparamwin = NetworkParamDialog(self)
-
-  def setproxparam (self):
-    if self.proxparamwin:
-      self.proxparamwin.show()
-    else:
-      self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
-
-  def setdistparam (self):
-    if self.distparamwin:
-      self.distparamwin.show()
-    else:
-      self.distparamwin = OngoingInputParamDialog(self,'Distal')
+  def setnetparam (self): self.netparamwin.show()
+  def setproxparam (self): self.proxparamwin.show()
+  def setdistparam (self): self.distparamwin.show()
+  def setevproxparam (self): self.evproxparamwin.show()
+  def setevdistparam (self): self.evdistparamwin.show()
 
   def onChangeSimName(self, text):        
     self.lbl.setText(text)
@@ -437,20 +537,30 @@ class BaseParamDialog (QDialog):
     grid.addWidget(self.qle, row, 1)
     row+=1
 
-    self.btnnet = QPushButton('Set Network Params',self)
+    self.btnnet = QPushButton('Set Network Parameters',self)
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.clicked.connect(self.setnetparam)
     grid.addWidget(self.btnnet, row, 0, 1, 2); row+=1
 
-    self.btnprox = QPushButton('Set Proximal Inputs',self)
+    self.btnprox = QPushButton('Set Ongoing Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.setproxparam)
     grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
-    self.btndist = QPushButton('Set Distal Inputs',self)
+    self.btndist = QPushButton('Set Ongoing Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
+
+    self.btnevprox = QPushButton('Set Evoked Proximal Inputs',self)
+    self.btnevprox.resize(self.btnevprox.sizeHint())
+    self.btnevprox.clicked.connect(self.setevproxparam)
+    grid.addWidget(self.btnevprox, row, 0, 1, 2); row+=1
+
+    self.btnevdist = QPushButton('Set Evoked Distal Inputs',self)
+    self.btnevdist.resize(self.btnevdist.sizeHint())
+    self.btnevdist.clicked.connect(self.setevdistparam)
+    grid.addWidget(self.btnevdist, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
