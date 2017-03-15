@@ -298,7 +298,31 @@ class EvokedInputParamDialog (DictDialog):
     self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
     self.stitle = 'Set Evoked Inputs'
 
-# widget to specify ongoing input params (proximal, distal)
+# widget to specify run params (tstop, dt, etc.) -- not many params here
+class RunParamDialog (DictDialog):
+  def __init__ (self, parent, din = None):
+    super(RunParamDialog, self).__init__(parent,din)
+
+  def initd (self):
+
+    self.drun = {        
+        'tstop': 250., # simulation end time (ms)
+        'dt': 0.025 # timestep
+        # cvode - not currently used by simulation
+        # ncores - add
+    }
+    # analysis    
+    self.danalysis = {
+      'save_spec_data': 0,
+      'f_max_spec': 40.
+    }
+
+    self.ldict = [self.drun, self.danalysis]
+    self.ltitle = ['Run', 'Analysis']
+    self.stitle = 'Set Run Parameters'
+
+
+# widget to specify network parameters (number cells, weights, etc.)
 class NetworkParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
     super(NetworkParamDialog, self).__init__(parent,din)
@@ -350,11 +374,12 @@ class BaseParamDialog (QDialog):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = None
     self.initUI()
+    self.runparamwin = RunParamDialog(self)
     self.netparamwin = NetworkParamDialog(self)    
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
-    self.lsubwin = [self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin]
+    self.lsubwin = [self.runparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin]
     self.updateDispParam()
 
   def updateDispParam (self):
@@ -368,6 +393,7 @@ class BaseParamDialog (QDialog):
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
   def setevparam (self): self.evparamwin.show()
+  def setrunparam (self): self.runparamwin.show()
 
   def initUI (self):
 
@@ -384,6 +410,11 @@ class BaseParamDialog (QDialog):
     self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
     grid.addWidget(self.qle, row, 1)
     row+=1
+
+    self.btnrun = QPushButton('Set Run Parameters',self)
+    self.btnrun.resize(self.btnrun.sizeHint())
+    self.btnrun.clicked.connect(self.setrunparam)
+    grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
 
     self.btnnet = QPushButton('Set Network Parameters',self)
     self.btnnet.resize(self.btnnet.sizeHint())
