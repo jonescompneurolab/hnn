@@ -473,7 +473,7 @@ class BaseParamDialog (QDialog):
 
   def __str__ (self):
     s = 'sim_prefix: ' + self.qle.text() + '\n'
-    s += 'expmt_groups: ' + self.qle.text() + '\n'
+    s += 'expmt_groups: {' + self.qle.text() + '}\n'
     for win in self.lsubwin: s += str(win)
     return s
 
