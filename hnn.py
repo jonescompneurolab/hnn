@@ -162,9 +162,7 @@ class DictDialog (QDialog):
     for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + '\n'
     return s
 
-  def saveparams (self):
-    print("Setting params for saving to ",paramf)
-    self.hide()
+  def saveparams (self): self.hide()
 
   def initd (self): pass # implemented in subclass
 
@@ -244,13 +242,13 @@ class OngoingInputParamDialog (DictDialog):
                     'f_stdev' + self.postfix: 20.,
                     'events_per_cycle' + self.postfix: 2}
 
-    self.dL2 = {self.prefix + 'L2Pyr_ampa': 0.,
-                self.prefix + 'L2Pyr_nmda': 0.,
+    self.dL2 = {self.prefix + 'weight_L2Pyr_ampa': 0.,
+                self.prefix + 'weight_L2Pyr_nmda': 0.,
                 self.prefix + 'delay_L2': 0.1}
 
     self.dL5 = {
-        self.prefix + 'L5Pyr_ampa': 0.,
-        self.prefix + 'L5Pyr_nmda': 0.,
+        self.prefix + 'weight_L5Pyr_ampa': 0.,
+        self.prefix + 'weight_L5Pyr_nmda': 0.,
         self.prefix + 'delay_L5': 0.1}
 
     self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
@@ -431,7 +429,7 @@ class BaseParamDialog (QDialog):
       oktosave = False
       msg = QMessageBox()
       msg.setIcon(QMessageBox.Warning)
-      msg.setText(paramf + ' already exists. Over-write?')
+      msg.setText(tmpf + ' already exists. Over-write?')
       msg.setWindowTitle('Over-write file?')
       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
       if msg.exec_() == QMessageBox.Ok: oktosave = True
