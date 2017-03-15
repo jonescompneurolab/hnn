@@ -322,7 +322,7 @@ class ExpParams():
 
         return key_dict
 
-# reads params from a generated file and returns gid dict and p dict
+# reads params from a generated txt file and returns gid dict and p dict 
 def read(fparam):
     lines = fio.clean_lines(fparam)
     p = {}

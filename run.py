@@ -20,6 +20,7 @@ import paramrw as paramrw
 import plotfn as plotfn
 import specfn as specfn
 import pickle
+from dipolefn import Dipole
 
 # data directory - ./data
 dproj = fio.return_data_dir()
@@ -63,20 +64,24 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
-    # write the dipole
-    """
-    ddpl = {}
-    ddpl['t_vec'] = t_vec.to_python()
-    ddpl['L2'] = dp_rec_L2.to_python()
-    ddpl['agg'] = list(np.array(dp_rec_L2.to_python())+np.array(dp_rec_L5.to_python()))
-    ddpl['L5'] = dp_rec_L5.to_python()
-    """
+
+    # write params to the file
+    paramrw.write(doutf['file_param'], p, net.gid_dict)
+
+    # write the raw dipole
     with open(doutf['file_dpl'], 'w') as f:
       for k in range(int(t_vec.size())):
         f.write("%03.3f\t" % t_vec.x[k])
         f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
         f.write("%5.4f\t" % dp_rec_L2.x[k])
         f.write("%5.4f\n" % dp_rec_L5.x[k])
+
+    # renormalize the dipole and save
+    dpl = Dipole(doutf['file_dpl']) # fix to allow init from data rather than file
+    dpl.baseline_renormalize(doutf['file_param'])
+    dpl.convert_fAm_to_nAm()
+    dpl.write(doutf['file_dpl_norm'])
+
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic
     with open(doutf['file_current'], 'w') as fc:
@@ -85,8 +90,7 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
         # fc.write("%5.4f\t" % (i_L2 + i_L5))
         fc.write("%5.4f\t" % i_L2)
         fc.write("%5.4f\n" % i_L5)
-    # write params to the file
-    paramrw.write(doutf['file_param'], p, net.gid_dict)
+
     if debug:
       with open(doutf['filename_debug'], 'w+') as file_debug:
         for m in range(int(t_vec.size())):
