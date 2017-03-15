@@ -78,7 +78,7 @@ def pallsimp (datdir, ddir, p_exp, xlim=None, ylim=None):
   expmt_group = ddir.expmt_groups[0]
   # these should be equivalent lengths
   param_list = ddir.file_match(expmt_group, 'param')
-  dpl_list = [os.path.join(datdir,'dpl.txt')] #dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
+  dpl_list = [os.path.join(datdir,'rawdpl.txt')] #dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
   spec_list = [os.path.join(datdir,'rawspec.npz')] # spec_list.extend(ddir.file_match(expmt_group, 'rawspec'))
   spk_list = [os.path.join(datdir,'spk.txt')] # spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
   print('param_list:',param_list,'dpl_list:',dpl_list,'spec_list:',spec_list,'spk_list:',spk_list)

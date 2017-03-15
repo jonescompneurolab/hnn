@@ -138,7 +138,6 @@ class Dipole():
     # ext function to renormalize
     # this function changes in place but does NOT write the new values to the file
     def baseline_renormalize(self, f_param):
-        print('baseline_renormalize')
         # only baseline renormalize if the units are fAm
         if self.units == 'fAm':
             N_pyr_x = paramrw.find_param(f_param, 'N_pyr_x')
