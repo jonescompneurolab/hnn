@@ -306,20 +306,28 @@ class RunParamDialog (DictDialog):
 
   def initd (self):
 
-    self.drun = {        
-        'tstop': 250., # simulation end time (ms)
-        'dt': 0.025 # timestep
-        # cvode - not currently used by simulation
-        # ncores - add
-    }
-    # analysis    
-    self.danalysis = {
-      'save_spec_data': 0,
-      'f_max_spec': 40.
+    self.drun = {'tstop': 250., # simulation end time (ms)
+                 'dt': 0.025 # timestep
+                 # cvode - not currently used by simulation
+                 # ncores - add
     }
 
-    self.ldict = [self.drun, self.danalysis]
-    self.ltitle = ['Run', 'Analysis']
+    self.drand = {'prng_seedcore_input_prox': 0,
+                  'prng_seedcore_input_dist': 0,
+                  'prng_seedcore_extpois': 0,
+                  'prng_seedcore_extgauss': 0,
+                  'prng_seedcore_evprox_early': 0,
+                  'prng_seedcore_evdist': 0,
+                  'prng_seedcore_evprox_late': 0,
+    }
+
+    # analysis    
+    self.danalysis = {'save_spec_data': 0,
+                      'f_max_spec': 40.
+    }
+
+    self.ldict = [self.drun, self.drand, self.danalysis]
+    self.ltitle = ['Run', 'Randomization','Analysis']
     self.stitle = 'Set Run Parameters'
 
 
