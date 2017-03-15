@@ -19,7 +19,7 @@ class SimulationPaths ():
     # add new directories here to be automatically created for every simulation
     self.__datatypes = {
       'rawspk': 'spk.txt',
-      'rawdpl': 'dpl.txt',
+      'rawdpl': 'rawdpl.txt',
       'normdpl': 'dpl.txt', # same output name - do not need both raw and normalized dipole - unless debugging
       'rawcurrent': 'i.txt',
       'rawspec': 'spec.npz',
