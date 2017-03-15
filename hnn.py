@@ -22,6 +22,7 @@ import random
 from math import ceil
 import spikefn
 import params_default
+from paramrw import quickreadprm
 
 ncore = multiprocessing.cpu_count()
 
@@ -476,18 +477,6 @@ class BaseParamDialog (QDialog):
     s += 'expmt_groups: {' + self.qle.text() + '}\n'
     for win in self.lsubwin: s += str(win)
     return s
-
-def quickreadprm (fn):
-  d = {}
-  with open(fn,'r') as fp:
-    ln = fp.readlines()
-    for l in ln:
-      s = l.strip()
-      if s.startswith('#'): continue
-      sp = s.split(':')
-      if len(sp) > 1:
-        d[sp[0]]=str(sp[1])
-  return d
 
 class HNNGUI (QMainWindow):
 
