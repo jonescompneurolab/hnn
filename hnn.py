@@ -650,15 +650,15 @@ class PlotCanvas (FigureCanvas):
       except:
         pass
       hist = {}
-      axprox = self.figure.add_subplot(self.G[0,0]); axprox.cla() # proximal inputs
-      axdist = self.figure.add_subplot(self.G[1,0]); axdist.cla() # distal inputs
+      axdist = self.figure.add_subplot(self.G[0,0]); axdist.cla() # distal inputs
+      axprox = self.figure.add_subplot(self.G[1,0]); axprox.cla() # proximal inputs
       if extinputs is not None: # only valid param.txt file after sim was run
-        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='red')
         hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='green')
-        for ax in [axprox,axdist]:
-          if not self.invertedhistax: # only need to invert axes 1X
-            ax.invert_yaxis()
-            self.invertedhistax = True
+        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='red')
+        if not self.invertedhistax:# only need to invert axis 1X
+          axdist.invert_yaxis()
+          self.invertedhistax = True
+        for ax in [axdist,axprox]:
           ax.set_xlim(xlim_new)
           ax.legend()          
 
