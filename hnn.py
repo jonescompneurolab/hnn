@@ -171,7 +171,7 @@ class DictDialog (QDialog):
     for k1,v1 in din.items():
       for k in self.dqline.keys():
         if k1 == k:
-          self.dqline[k].setText(str(v1))
+          self.dqline[k].setText(str(v1).strip())
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
