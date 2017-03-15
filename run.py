@@ -145,6 +145,7 @@ def setoutfiles (ddir):
   doutf['file_spikes'] = getfname(ddir, 'rawspk')
   doutf['file_spec'] = getfname(ddir, 'rawspec')
   doutf['filename_debug'] = 'debug.dat'
+  doutf['file_dpl_norm'] = getfname(ddir,'normdpl')
   return doutf
 
 # All units for time: ms

@@ -18,6 +18,7 @@ class SimulationPaths ():
     # fig extensions are not currently being used as well as they could be
     # add new directories here to be automatically created for every simulation
     self.__datatypes = {
+      'normdpl': 'normdpl.txt',
       'rawspk': 'spk.txt',
       'rawdpl': 'dpl.txt',
       'rawcurrent': 'i.txt',
