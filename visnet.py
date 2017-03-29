@@ -59,10 +59,11 @@ def setcolor (ls,clr):
 
 def onpick (event):
   thisline = event.artist
+  c = thisline.get_color()
   idx = -1
 
   setcolor(shapelines,defclr)
-
+    
   for idx,l in enumerate(shapelines):
     if l == thisline:
       break
@@ -73,8 +74,12 @@ def onpick (event):
   ind = event.ind
   points = tuple(zip(xdata[ind], ydata[ind]))
   print('onpick points:', points)
-  c = thisline.get_color()
-  thisline.set_color(selclr)
+
+  if c == defclr:
+    thisline.set_color(selclr)
+  else:
+    thisline.set_color(defclr)
+
   print(ind)
   #print(dir(thisline))
 
