@@ -5,18 +5,20 @@ from neuron import h
 from L5_pyramidal import L5Pyr
 from L2_pyramidal import L2Pyr
 
-h('dp_total_L5=dp_total_L2=0')
+h('dp_total_L5=dp_total_L2=0') # required to instantiate cells
 
 lcell2 =  []
 lcell5 =  []
 
-ncell = 1
+ncell = 1 # only need 1 cell to specify prox vs distal
 
 for i in range(ncell): lcell2.append(L2Pyr((0,(i+1)*300)))
 for i in range(ncell): lcell5.append(L5Pyr((i,0)))
 
 ls = list(h.allsec())
 print('len(ls) = ',len(ls))
+
+for s in ls: s.nseg=1
 
 h.define_shape()
 plt.ion()
