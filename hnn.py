@@ -4,7 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
 import multiprocessing
@@ -263,6 +263,25 @@ class OngoingInputParamDialog (DictDialog):
 class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(EvokedInputParamDialog, self).__init__(parent,din)
+
+  """
+  def initUI (self):
+
+    
+    hbox = QHBoxLayout(self)
+
+    pixmap = QPixmap("res/distd.png")
+
+    lbl = QLabel(self)
+    lbl.setPixmap(pixmap)
+
+    #self.ltabs[1].addWidget(lbl)
+
+    hbox.addWidget(lbl)
+    self.setLayout(hbox)
+
+    super().initUI()
+  """
 
   def initd (self):
     # times and stdevs for evoked responses
