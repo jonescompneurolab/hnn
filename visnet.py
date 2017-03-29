@@ -9,16 +9,24 @@ from L2_pyramidal import L2Pyr
 
 h('dp_total_L5=dp_total_L2=0')
 
-cell5 = L5Pyr((0,0))
-cell2 = L2Pyr((0,1))
+lcell2 =  []
+lcell5 =  []
+
+ncell = 1
+
+for i in range(ncell): lcell2.append(L2Pyr((0,i)))
+for i in range(ncell): lcell5.append(L5Pyr((i,0)))
 
 ls = list(h.allsec())
-len(ls) # 25
+print('len(ls) = ',len(ls))
 
 h.define_shape()
 plt.ion()
 plt.figure(figsize=(6,6))
 
+allseg = sum([s.nseg for s in ls])
+
 shapeax = plt.subplot(111, projection='3d')
-shapeplot(h,shapeax,lw=4)
+shapeax.view_init(75,66)
+shapelines = shapeplot(h,shapeax,lw=8,cvals=['r' for i in range(allseg)])
 
