@@ -11,6 +11,7 @@ except ImportError:
 def_config = """
 [params]
 [run]
+dorun = 1
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -64,7 +65,7 @@ def writeconf (fn,sec,opt,val):
 def str2bool (v): return v.lower() in ("true", "t", "1")
 
 # read config file
-def readconf (fn="netcfg.cfg"):
+def readconf (fn="hnn.cfg"):
   config = ConfigParser()
   config.optionxform = str
   #config.read(fn)
@@ -130,6 +131,8 @@ def readconf (fn="netcfg.cfg"):
   #d['dlg'] = getlparam('dialog', dlgparam)
   #d['tab'] = getlparam('tab', tabparam)
   #d['param'] = getlparam('param', param)
+
+  d['dorun'] = confint("run","dorun",1)
 
   """
   recstr = confstr('run','recordV','')

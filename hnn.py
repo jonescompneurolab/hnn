@@ -24,6 +24,21 @@ import spikefn
 import params_default
 from paramrw import quickreadprm
 
+#from PyNeuronToolbox.morphology import shapeplot
+from mpl_toolkits.mplot3d import Axes3D
+
+""" (/u/samn/hnn/PyNeuron-Toolbox-master/index.ipynb:121)
+    "from PyNeuronToolbox.morphology import shapeplot\n",
+    "from mpl_toolkits.mplot3d import Axes3D\n",
+    "\n",
+    "# Plot shapeplot\n",
+    "plt.figure(figsize=(6,6))\n",
+    "shapeax = plt.subplot(111, projection='3d')\n",
+    "shapeplot(h,shapeax,lw=4)\n",
+    "\n",
+    "plt.show()"
+"""
+
 ncore = multiprocessing.cpu_count()
 
 """
@@ -667,6 +682,7 @@ class PlotCanvas (FigureCanvas):
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
       ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1])) # right ylim??
+      print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
       # truncate tvec and dpl data using logical indexing
       #t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
       #dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]

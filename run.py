@@ -21,6 +21,9 @@ import plotfn as plotfn
 import specfn as specfn
 import pickle
 from dipolefn import Dipole
+from conf import readconf
+
+dconf = readconf()
 
 # data directory - ./data
 dproj = fio.return_data_dir()
@@ -204,31 +207,34 @@ def runsim (f_psim):
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
-  h.fcurrent()  
-  h.frecord_init() # set state variables if they have been changed since h.finitialize
-  pc.psolve(h.tstop) # actual simulation - run the solver
-  pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
-  net.aggregate_currents() # aggregate the currents independently on each proc
-  # combine net.current{} variables on each proc
-  pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
+  if dconf['dorun']:
+    h.fcurrent()  
+    h.frecord_init() # set state variables if they have been changed since h.finitialize
+    pc.psolve(h.tstop) # actual simulation - run the solver
+    pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
+    net.aggregate_currents() # aggregate the currents independently on each proc
+    # combine net.current{} variables on each proc
+    pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
 
-  # write time and calculated dipole to data file only if on the first proc
-  # only execute this statement on one proc
-  savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
+    # write time and calculated dipole to data file only if on the first proc
+    # only execute this statement on one proc
+    savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
 
   if pc.nhost() > 1:
-    pc.runworker()
-    pc.done()
-    t1 = time.time()
-    if pcID == 0:
-      print("Simulation run time: %4.4f s" % (t1-t0))
-      print("Simulation directory is: %s" % ddir.dsim)
+    if dconf['dorun']:
+      pc.runworker()
+      pc.done()
+      t1 = time.time()
+      if pcID == 0:
+        print("Simulation run time: %4.4f s" % (t1-t0))
+        print("Simulation directory is: %s" % ddir.dsim)    
   else:    
     t1 = time.time() # end clock time
-    print("Simulation run time: %4.4f s" % (t1-t0))
+    if dconf['dorun']: print("Simulation run time: %4.4f s" % (t1-t0))
 
-  runanalysis(ddir,p) # run spectral analysis
-  savefigs(ddir,p,p_exp) # save output figures
+  if dconf['dorun']:
+    runanalysis(ddir,p) # run spectral analysis
+    savefigs(ddir,p,p_exp) # save output figures
 
   if pc.nhost() > 1: h.quit()
 
