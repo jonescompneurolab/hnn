@@ -40,7 +40,7 @@ def onclick(event):
   except:
     pass
 
-cid = fig.canvas.mpl_connect('button_press_event', onclick)
+# cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
 def onpick(event):
   thisline = event.artist
@@ -49,6 +49,9 @@ def onpick(event):
   ind = event.ind
   points = tuple(zip(xdata[ind], ydata[ind]))
   print('onpick points:', points)
+  c = thisline.get_color()
+  thisline.set_color('b')
+  #print(dir(thisline))
 
 cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
