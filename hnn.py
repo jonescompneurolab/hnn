@@ -24,21 +24,6 @@ import spikefn
 import params_default
 from paramrw import quickreadprm
 
-#from PyNeuronToolbox.morphology import shapeplot
-from mpl_toolkits.mplot3d import Axes3D
-
-""" (/u/samn/hnn/PyNeuron-Toolbox-master/index.ipynb:121)
-    "from PyNeuronToolbox.morphology import shapeplot\n",
-    "from mpl_toolkits.mplot3d import Axes3D\n",
-    "\n",
-    "# Plot shapeplot\n",
-    "plt.figure(figsize=(6,6))\n",
-    "shapeax = plt.subplot(111, projection='3d')\n",
-    "shapeplot(h,shapeax,lw=4)\n",
-    "\n",
-    "plt.show()"
-"""
-
 ncore = multiprocessing.cpu_count()
 
 """
