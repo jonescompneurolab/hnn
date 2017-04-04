@@ -270,7 +270,7 @@ class EvokedInputParamDialog (DictDialog):
     
     hbox = QHBoxLayout(self)
 
-    pixmap = QPixmap("res/distd.png")
+    pixmap = QPixmap("res/distfig.png")
 
     lbl = QLabel(self)
     lbl.setPixmap(pixmap)
@@ -554,9 +554,11 @@ class HNNGUI (QMainWindow):
     QToolTip.setFont(QFont('SansSerif', 10))        
 
     grid = QGridLayout()
-    grid.setSpacing(10)
+    #grid.setSpacing(10)
 
-    self.pbtn = pbtn = QPushButton('Set Parameters', self)
+    # addWidget(QWidget *widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment())
+
+    self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
     pbtn.setToolTip('Set parameters')
     pbtn.resize(pbtn.sizeHint())
     pbtn.clicked.connect(self.setparams)
@@ -582,8 +584,65 @@ class HNNGUI (QMainWindow):
     self.setGeometry(300, 300, 1200, 1100)
     self.setWindowTitle('HNN')
 
-    self.m = m = PlotCanvas(self, width=10, height=8)
-    grid.addWidget(self.m, 2, 0, 1, 4)
+    self.mnelabel = QLabel()
+    self.mnelabel.setText('MNE Viewer')
+    grid.addWidget(self.mnelabel, 2, 0, 1, 2)
+
+    self.mne = mne = QLabel() 
+    self.mne.setText('MNE (To Be Added)')
+    grid.addWidget(self.mne, 3, 0, 1, 2)
+
+    self.simlabel = QLabel()
+    self.simlabel.setText('Simulation Viewer')
+    grid.addWidget(self.simlabel, 2, 2, 1, 2)
+
+    self.m = m = SIMCanvas(self, width=10, height=1)
+    grid.addWidget(self.m, 3, 2, 1, 2)
+
+    self.netlabel = QLabel()
+    self.netlabel.setText('Network Viewer')
+    self.netlabel.resize(self.netlabel.sizeHint())
+    grid.addWidget(self.netlabel,3,2,1,4)
+
+    gRow = 4
+
+    self.loclabel = QLabel()
+    self.loclabel.setText('Local Network\nConnections')
+    grid.addWidget(self.loclabel,gRow,0,1,4)
+
+    self.proxlabel = QLabel()
+    self.proxlabel.setText('Proximal Drive\nThalamus')
+    grid.addWidget(self.proxlabel,gRow,1,1,1)
+
+    self.distlabel = QLabel()
+    self.distlabel.setText('Distal Drive\nNonLemn. Thal')
+    grid.addWidget(self.distlabel,gRow,2,1,1)
+
+    self.netlabel = QLabel()
+    self.netlabel.setText('Network Connections')
+    grid.addWidget(self.netlabel,gRow,3,1,1)
+
+    gRow += 1
+
+    self.pixConn = QPixmap("res/connfig.png")
+    self.pixConnlbl = QLabel(self)
+    self.pixConnlbl.setPixmap(self.pixConn)
+    grid.addWidget(self.pixConnlbl,gRow,0,1,1)
+
+    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDistlbl = QLabel(self)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    grid.addWidget(self.pixDistlbl,gRow,1,1,1)
+
+    self.pixProx = QPixmap("res/proxfig.png")
+    self.pixProxlbl = QLabel(self)
+    self.pixProxlbl.setPixmap(self.pixProx)
+    grid.addWidget(self.pixProxlbl,gRow,2,1,1)
+
+    self.pixNet = QPixmap("res/connfig.png")
+    self.pixNetlbl = QLabel(self)
+    self.pixNetlbl.setPixmap(self.pixNet)
+    grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
@@ -639,10 +698,11 @@ class HNNGUI (QMainWindow):
 
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
-class PlotCanvas (FigureCanvas): 
+class SIMCanvas (FigureCanvas): 
 
-  def __init__ (self, parent=None, width=5, height=4, dpi=100):
+  def __init__ (self, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
     self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
+    self.title = title
     FigureCanvas.__init__(self, fig)
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
