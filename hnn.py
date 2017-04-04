@@ -647,7 +647,7 @@ class HNNGUI (QMainWindow):
     self.pixProxlbl.setPixmap(self.pixProx)
     grid.addWidget(self.pixProxlbl,gRow,2,1,1)
 
-    self.pixNet = QPixmap("res/connfig.png")
+    self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = QLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
     grid.addWidget(self.pixNetlbl,gRow,3,1,1)
