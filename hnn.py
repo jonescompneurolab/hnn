@@ -558,53 +558,61 @@ class HNNGUI (QMainWindow):
 
     # addWidget(QWidget *widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment())
 
+    gRow = 0
+
     self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
     pbtn.setToolTip('Set parameters')
     pbtn.resize(pbtn.sizeHint())
     pbtn.clicked.connect(self.setparams)
-    grid.addWidget(self.pbtn, 1, 0, 1, 1)
+    grid.addWidget(self.pbtn, gRow, 0, 1, 1)
 
     self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
     pfbtn.setToolTip('Set Parameters From File')
     pfbtn.resize(pfbtn.sizeHint())
     pfbtn.clicked.connect(self.selParamFileDialog)
-    grid.addWidget(self.pfbtn, 1, 1, 1, 1)
+    grid.addWidget(self.pfbtn, gRow, 1, 1, 1)
 
     self.btnsim = btn = QPushButton('Run Simulation', self)
     btn.setToolTip('Run simulation')
     btn.resize(btn.sizeHint())
     btn.clicked.connect(self.controlsim)
-    grid.addWidget(self.btnsim, 1, 2, 1, 1)
+    grid.addWidget(self.btnsim, gRow, 2, 1, 1)
 
     self.qbtn = qbtn = QPushButton('Quit', self)
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
-    grid.addWidget(self.qbtn, 1, 3, 1, 1)
+    grid.addWidget(self.qbtn, gRow, 3, 1, 1)
 
     self.setGeometry(300, 300, 1200, 1100)
     self.setWindowTitle('HNN')
 
+    gRow += 1
+
     self.mnelabel = QLabel()
     self.mnelabel.setText('MNE Viewer')
-    grid.addWidget(self.mnelabel, 2, 0, 1, 2)
-
-    self.mne = mne = QLabel() 
-    self.mne.setText('MNE (To Be Added)')
-    grid.addWidget(self.mne, 3, 0, 1, 2)
+    grid.addWidget(self.mnelabel, gRow, 0, 1, 2)
 
     self.simlabel = QLabel()
     self.simlabel.setText('Simulation Viewer')
-    grid.addWidget(self.simlabel, 2, 2, 1, 2)
+    grid.addWidget(self.simlabel, gRow, 2, 1, 2)
+
+    gRow += 1
+
+    self.mne = mne = QLabel() 
+    self.mne.setText('MNE (To Be Added)')
+    grid.addWidget(self.mne, gRow, 0, 1, 2)
 
     self.m = m = SIMCanvas(self, width=10, height=1)
-    grid.addWidget(self.m, 3, 2, 1, 2)
+    grid.addWidget(self.m, gRow, 2, 1, 2)
+
+    gRow += 1
 
     self.netlabel = QLabel()
     self.netlabel.setText('Network Viewer')
     self.netlabel.resize(self.netlabel.sizeHint())
-    grid.addWidget(self.netlabel,3,2,1,4)
+    grid.addWidget(self.netlabel,gRow,2,1,4)
 
-    gRow = 4
+    gRow += 1
 
     self.loclabel = QLabel()
     self.loclabel.setText('Local Network\nConnections')
@@ -643,6 +651,8 @@ class HNNGUI (QMainWindow):
     self.pixNetlbl = QLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
     grid.addWidget(self.pixNetlbl,gRow,3,1,1)
+
+    gRow += 1
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
