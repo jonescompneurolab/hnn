@@ -654,6 +654,11 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
+    self.prmlabel = QLabel()
+    self.prmlabel.setText('Parameters')
+    self.prmlabel.resize(self.netlabel.sizeHint())
+    grid.addWidget(self.prmlabel,gRow,2,1,4)
+
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
 
