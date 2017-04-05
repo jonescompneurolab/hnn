@@ -509,7 +509,7 @@ class BaseParamDialog (QDialog):
 class ClickLabel (QLabel):
   clicked = pyqtSignal()
   def mousePressEvent(self, event):
-    #print("clicked")
+    print("clicked")
     self.clicked.emit()
 
 # main GUI class
@@ -599,22 +599,22 @@ class HNNGUI (QMainWindow):
 
   def addParamImages (self,gRow):
     self.pixConn = QPixmap("res/connfig.png")
-    self.pixConnlbl = QLabel(self)
+    self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setPixmap(self.pixConn)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
     self.pixDist = QPixmap("res/distfig.png")
-    self.pixDistlbl = QLabel(self)
+    self.pixDistlbl = ClickLabel(self)
     self.pixDistlbl.setPixmap(self.pixDist)
     self.grid.addWidget(self.pixDistlbl,gRow,1,1,1)
 
     self.pixProx = QPixmap("res/proxfig.png")
-    self.pixProxlbl = QLabel(self)
+    self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setPixmap(self.pixProx)
     self.grid.addWidget(self.pixProxlbl,gRow,2,1,1)
 
     self.pixNet = QPixmap("res/netfig.png")
-    self.pixNetlbl = QLabel(self)
+    self.pixNetlbl = ClickLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
