@@ -27,11 +27,26 @@ dconf = readconf()
 
 # data directory - ./data
 dproj = fio.return_data_dir()
-simstr = ''
-datdir = ''
 debug = False 
 pc = h.ParallelContext()
 pcID = int(pc.id())
+f_psim = ''
+
+# reads the specified param file
+foundprm = False
+for i in range(len(sys.argv)):
+  if sys.argv[i].endswith('.param'):
+    f_psim = sys.argv[i]
+    foundprm = True
+    if pcID==0: print('using ',f_psim,' param file.')
+    break
+
+if not foundprm:
+  f_psim = os.path.join('param','default.param')
+  if pcID==0: print(f_psim)
+
+simstr = f_psim.split(os.path.sep)[-1].split('.param')[0]
+datdir = os.path.join(dproj,simstr)
 
 # spike write function
 def spikes_write (net, filename_spikes):
@@ -155,22 +170,36 @@ def setoutfiles (ddir):
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl')
   return doutf
 
+
+rank = pcID
+p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
+ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
+# core iterator through experimental groups
+expmt_group = p_exp.expmt_groups[0]
+
+p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
+
+pc.barrier() # get all nodes to this place before continuing
+pc.gid_clear()
+
+# global variables, should be node-independent
+h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
+
+# Set tstop before instantiating any classes
+h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
+# spike file needs to be known by all nodes
+file_spikes_tmp = fio.file_spike_tmp(dproj)  
+net = network.NetworkOnNode(p) # create node-specific network
+if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
+else: v_debug = None
+
+t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
+dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
+dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
+
 # All units for time: ms
 def runsim (f_psim):
   t0 = time.time() # clock start time
-  rank = pcID
-  p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
-  ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
-  # core iterator through experimental groups
-  expmt_group = p_exp.expmt_groups[0]
-
-  p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
-
-  pc.barrier() # get all nodes to this place before continuing
-  pc.gid_clear()
-  
-  # global variables, should be node-independent
-  h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
   # if there are N_trials, then randomize the seed
   # establishes random seed for the seed seeder (yeah.)
@@ -192,64 +221,40 @@ def runsim (f_psim):
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
 
-  # Set tstop before instantiating any classes
-  h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
-  # spike file needs to be known by all nodes
-  file_spikes_tmp = fio.file_spike_tmp(dproj)  
-  net = network.NetworkOnNode(p) # create node-specific network
-  if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
-  else: v_debug = None
-
-  t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
-  dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
-  dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
-  if dconf['dorun']:
-    h.fcurrent()  
-    h.frecord_init() # set state variables if they have been changed since h.finitialize
-    pc.psolve(h.tstop) # actual simulation - run the solver
-    pc.allreduce(dp_rec_L2, 1); pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
-    net.aggregate_currents() # aggregate the currents independently on each proc
-    # combine net.current{} variables on each proc
-    pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
 
-    # write time and calculated dipole to data file only if on the first proc
-    # only execute this statement on one proc
-    savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
+  h.fcurrent()  
+  h.frecord_init() # set state variables if they have been changed since h.finitialize
+  pc.psolve(h.tstop) # actual simulation - run the solver
+  pc.allreduce(dp_rec_L2, 1); 
+  pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
+  net.aggregate_currents() # aggregate the currents independently on each proc
+  # combine net.current{} variables on each proc
+  pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
+
+  # write time and calculated dipole to data file only if on the first proc
+  # only execute this statement on one proc
+  savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
 
   if pc.nhost() > 1:
-    if dconf['dorun']:
-      pc.runworker()
-      pc.done()
-      t1 = time.time()
-      if pcID == 0:
-        print("Simulation run time: %4.4f s" % (t1-t0))
-        print("Simulation directory is: %s" % ddir.dsim)    
+    pc.runworker()
+    pc.done()
+    t1 = time.time()
+    if pcID == 0:
+      print("Simulation run time: %4.4f s" % (t1-t0))
+      print("Simulation directory is: %s" % ddir.dsim)    
   else:    
     t1 = time.time() # end clock time
     if dconf['dorun']: print("Simulation run time: %4.4f s" % (t1-t0))
 
-  if dconf['dorun']:
-    runanalysis(ddir,p) # run spectral analysis
-    savefigs(ddir,p,p_exp) # save output figures
+  runanalysis(ddir,p) # run spectral analysis
+  savefigs(ddir,p,p_exp) # save output figures
 
-  if pc.nhost() > 1: h.quit()
+  # h.topology() # only have access within runsim function
 
 if __name__ == "__main__":
-  # reads the specified param file
-  foundprm = False
-  for i in range(len(sys.argv)):
-    if sys.argv[i].endswith('.param'):
-      f_psim = sys.argv[i]
-      foundprm = True
-      if pcID==0: print('using ',f_psim,' param file.')
-      break
-  if not foundprm:
-    f_psim = os.path.join('param','default.param')
-    if pcID==0: print(f_psim)
-  simstr = f_psim.split(os.path.sep)[-1].split('.param')[0]
-  datdir = os.path.join(dproj,simstr)
-  runsim(f_psim)
+  if dconf['dorun']: runsim(f_psim)
+  if pc.nhost() > 1: h.quit()
