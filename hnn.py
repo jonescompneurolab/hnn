@@ -505,6 +505,14 @@ class BaseParamDialog (QDialog):
     for win in self.lsubwin: s += str(win)
     return s
 
+# clickable label
+class ClickLabel (QLabel):
+  clicked = pyqtSignal()
+  def mousePressEvent(self, event):
+    #print("clicked")
+    self.clicked.emit()
+
+# main GUI class
 class HNNGUI (QMainWindow):
 
   def __init__ (self):
@@ -572,6 +580,45 @@ class HNNGUI (QMainWindow):
     qbtn.resize(qbtn.sizeHint())
     self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
 
+  def addParamLabels(self,gRow):
+    self.loclabel = QLabel()
+    self.loclabel.setText('Local Network\nConnections')
+    self.grid.addWidget(self.loclabel,gRow,0,1,4)
+
+    self.proxlabel = QLabel()
+    self.proxlabel.setText('Proximal Drive\nThalamus')
+    self.grid.addWidget(self.proxlabel,gRow,1,1,1)
+
+    self.distlabel = QLabel()
+    self.distlabel.setText('Distal Drive\nNonLemn. Thal')
+    self.grid.addWidget(self.distlabel,gRow,2,1,1)
+
+    self.netlabel = QLabel()
+    self.netlabel.setText('Network Connections')
+    self.grid.addWidget(self.netlabel,gRow,3,1,1)
+
+  def addParamImages (self,gRow):
+    self.pixConn = QPixmap("res/connfig.png")
+    self.pixConnlbl = QLabel(self)
+    self.pixConnlbl.setPixmap(self.pixConn)
+    self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
+
+    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDistlbl = QLabel(self)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    self.grid.addWidget(self.pixDistlbl,gRow,1,1,1)
+
+    self.pixProx = QPixmap("res/proxfig.png")
+    self.pixProxlbl = QLabel(self)
+    self.pixProxlbl.setPixmap(self.pixProx)
+    self.grid.addWidget(self.pixProxlbl,gRow,2,1,1)
+
+    self.pixNet = QPixmap("res/netfig.png")
+    self.pixNetlbl = QLabel(self)
+    self.pixNetlbl.setPixmap(self.pixNet)
+    self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
+
+
   def initUI (self):       
 
     self.initMenu()
@@ -605,7 +652,7 @@ class HNNGUI (QMainWindow):
     self.mne.setText('MNE (To Be Added)')
     grid.addWidget(self.mne, gRow, 0, 1, 2)
 
-    self.m = m = SIMCanvas(self, width=10, height=1)
+    self.m = SIMCanvas(self, width=10, height=1)
     grid.addWidget(self.m, gRow, 2, 1, 2)
 
     gRow += 1
@@ -617,50 +664,20 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    self.loclabel = QLabel()
-    self.loclabel.setText('Local Network\nConnections')
-    grid.addWidget(self.loclabel,gRow,0,1,4)
-
-    self.proxlabel = QLabel()
-    self.proxlabel.setText('Proximal Drive\nThalamus')
-    grid.addWidget(self.proxlabel,gRow,1,1,1)
-
-    self.distlabel = QLabel()
-    self.distlabel.setText('Distal Drive\nNonLemn. Thal')
-    grid.addWidget(self.distlabel,gRow,2,1,1)
-
-    self.netlabel = QLabel()
-    self.netlabel.setText('Network Connections')
-    grid.addWidget(self.netlabel,gRow,3,1,1)
+    self.addParamLabels(gRow)
 
     gRow += 1
 
-    self.pixConn = QPixmap("res/connfig.png")
-    self.pixConnlbl = QLabel(self)
-    self.pixConnlbl.setPixmap(self.pixConn)
-    grid.addWidget(self.pixConnlbl,gRow,0,1,1)
-
-    self.pixDist = QPixmap("res/distfig.png")
-    self.pixDistlbl = QLabel(self)
-    self.pixDistlbl.setPixmap(self.pixDist)
-    grid.addWidget(self.pixDistlbl,gRow,1,1,1)
-
-    self.pixProx = QPixmap("res/proxfig.png")
-    self.pixProxlbl = QLabel(self)
-    self.pixProxlbl.setPixmap(self.pixProx)
-    grid.addWidget(self.pixProxlbl,gRow,2,1,1)
-
-    self.pixNet = QPixmap("res/netfig.png")
-    self.pixNetlbl = QLabel(self)
-    self.pixNetlbl.setPixmap(self.pixNet)
-    grid.addWidget(self.pixNetlbl,gRow,3,1,1)
+    self.addParamImages(gRow)
 
     gRow += 1
 
+    """
     self.prmlabel = QLabel()
     self.prmlabel.setText('Parameters')
     self.prmlabel.resize(self.netlabel.sizeHint())
     grid.addWidget(self.prmlabel,gRow,2,1,4)
+    """
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
