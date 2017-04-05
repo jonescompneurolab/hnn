@@ -264,25 +264,6 @@ class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(EvokedInputParamDialog, self).__init__(parent,din)
 
-  """
-  def initUI (self):
-
-    
-    hbox = QHBoxLayout(self)
-
-    pixmap = QPixmap("res/distfig.png")
-
-    lbl = QLabel(self)
-    lbl.setPixmap(pixmap)
-
-    #self.ltabs[1].addWidget(lbl)
-
-    hbox.addWidget(lbl)
-    self.setLayout(hbox)
-
-    super().initUI()
-  """
-
   def initd (self):
     # times and stdevs for evoked responses
     self.dtiming = {'t_evprox_early': 2000.,
@@ -352,7 +333,7 @@ class RunParamDialog (DictDialog):
 
 # widget to specify network parameters (number cells, weights, etc.)
 class NetworkParamDialog (DictDialog):
-  def __init__ (self, parent, din = None):
+  def __init__ (self, parent = None, din = None):
     super(NetworkParamDialog, self).__init__(parent,din)
 
   def initd (self):
@@ -400,6 +381,7 @@ class BaseParamDialog (QDialog):
 
   def __init__ (self, parent):
     super(BaseParamDialog, self).__init__(parent)
+    global netparamwin, proxparamwin, di
     self.proxparamwin = self.distparamwin = self.netparamwin = None
     self.initUI()
     self.runparamwin = RunParamDialog(self)
@@ -509,7 +491,6 @@ class BaseParamDialog (QDialog):
 class ClickLabel (QLabel):
   clicked = pyqtSignal()
   def mousePressEvent(self, event):
-    print("clicked")
     self.clicked.emit()
 
 # main GUI class
@@ -582,40 +563,48 @@ class HNNGUI (QMainWindow):
 
   def addParamLabels(self,gRow):
     self.loclabel = QLabel()
-    self.loclabel.setText('Local Network\nConnections')
+    self.loclabel.setText('Set Local Network\nConnections')
     self.grid.addWidget(self.loclabel,gRow,0,1,4)
 
     self.proxlabel = QLabel()
-    self.proxlabel.setText('Proximal Drive\nThalamus')
+    self.proxlabel.setText('Set Proximal Drive\nThalamus')
     self.grid.addWidget(self.proxlabel,gRow,1,1,1)
 
     self.distlabel = QLabel()
-    self.distlabel.setText('Distal Drive\nNonLemn. Thal')
+    self.distlabel.setText('Set Distal Drive\nNonLemn. Thal')
     self.grid.addWidget(self.distlabel,gRow,2,1,1)
 
     self.netlabel = QLabel()
-    self.netlabel.setText('Network Connections')
+    self.netlabel.setText('Set Network Connections')
     self.grid.addWidget(self.netlabel,gRow,3,1,1)
+
+  def shownetparamwin (self): self.baseparamwin.netparamwin.show()
+  def showdistparamwin (self): self.baseparamwin.distparamwin.show()
+  def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
 
   def addParamImages (self,gRow):
     self.pixConn = QPixmap("res/connfig.png")
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setPixmap(self.pixConn)
+    self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
     self.pixDist = QPixmap("res/distfig.png")
     self.pixDistlbl = ClickLabel(self)
     self.pixDistlbl.setPixmap(self.pixDist)
+    self.pixDistlbl.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.pixDistlbl,gRow,1,1,1)
 
     self.pixProx = QPixmap("res/proxfig.png")
     self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setPixmap(self.pixProx)
+    self.pixProxlbl.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.pixProxlbl,gRow,2,1,1)
 
     self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = ClickLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
+    self.pixNetlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
 
@@ -658,7 +647,7 @@ class HNNGUI (QMainWindow):
     gRow += 1
 
     self.netlabel = QLabel()
-    self.netlabel.setText('Network Viewer')
+    self.netlabel.setText('Simulation Parameters')
     self.netlabel.resize(self.netlabel.sizeHint())
     grid.addWidget(self.netlabel,gRow,2,1,4)
 
