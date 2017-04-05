@@ -537,7 +537,7 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(exitAction)
 
-  def addButtons (self,gRow):
+  def addButtons (self, gRow):
     self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
     pbtn.setToolTip('Set parameters')
     pbtn.resize(pbtn.sizeHint())
@@ -561,28 +561,35 @@ class HNNGUI (QMainWindow):
     qbtn.resize(qbtn.sizeHint())
     self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
 
-  def addParamLabels(self,gRow):
-    self.loclabel = QLabel()
-    self.loclabel.setText('Set Local Network\nConnections')
-    self.grid.addWidget(self.loclabel,gRow,0,1,4)
-
-    self.proxlabel = QLabel()
-    self.proxlabel.setText('Set Proximal Drive\nThalamus')
-    self.grid.addWidget(self.proxlabel,gRow,1,1,1)
-
-    self.distlabel = QLabel()
-    self.distlabel.setText('Set Distal Drive\nNonLemn. Thal')
-    self.grid.addWidget(self.distlabel,gRow,2,1,1)
-
-    self.netlabel = QLabel()
-    self.netlabel.setText('Set Network Connections')
-    self.grid.addWidget(self.netlabel,gRow,3,1,1)
-
+    
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
   def showdistparamwin (self): self.baseparamwin.distparamwin.show()
   def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
 
-  def addParamImages (self,gRow):
+  def addParamImageButtons (self,gRow):
+
+    self.locbtn = QPushButton('Local Network\nConnections',self)
+    self.locbtn.setIcon(QIcon("res/connfig.png"))
+    self.locbtn.clicked.connect(self.shownetparamwin)
+    self.grid.addWidget(self.locbtn,gRow,0,1,1)
+
+    self.proxbtn = QPushButton('Proximal Drive\nThalamus',self)
+    self.proxbtn.setIcon(QIcon("res/proxfig.png"))
+    self.proxbtn.clicked.connect(self.showproxparamwin)
+    self.grid.addWidget(self.proxbtn,gRow,1,1,1)
+
+    self.distbtn = QPushButton('Distal Drive\nNonLemn. Thal',self)
+    self.distbtn.setIcon(QIcon("res/distfig.png"))
+    self.distbtn.clicked.connect(self.showdistparamwin)
+    self.grid.addWidget(self.distbtn,gRow,2,1,1)
+
+    self.netbtn = QPushButton('Network Connections\n',self)
+    self.netbtn.setIcon(QIcon("res/netfig.png"))
+    self.netbtn.clicked.connect(self.shownetparamwin)
+    self.grid.addWidget(self.netbtn,gRow,3,1,1)
+
+    gRow += 1
+
     self.pixConn = QPixmap("res/connfig.png")
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setPixmap(self.pixConn)
@@ -632,7 +639,7 @@ class HNNGUI (QMainWindow):
     grid.addWidget(self.mnelabel, gRow, 0, 1, 2)
 
     self.simlabel = QLabel()
-    self.simlabel.setText('Simulation Viewer')
+    self.simlabel.setText('Simulation Output Viewer')
     grid.addWidget(self.simlabel, gRow, 2, 1, 2)
 
     gRow += 1
@@ -653,20 +660,7 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    self.addParamLabels(gRow)
-
-    gRow += 1
-
-    self.addParamImages(gRow)
-
-    gRow += 1
-
-    """
-    self.prmlabel = QLabel()
-    self.prmlabel.setText('Parameters')
-    self.prmlabel.resize(self.netlabel.sizeHint())
-    grid.addWidget(self.prmlabel,gRow,2,1,4)
-    """
+    self.addParamImageButtons(gRow)
 
     self.c = Communicate()
     self.c.finishSim.connect(self.done)
