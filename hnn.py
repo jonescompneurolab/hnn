@@ -589,17 +589,17 @@ class HNNGUI (QMainWindow):
     self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
-    self.pixDist = QPixmap("res/distfig.png")
-    self.pixDistlbl = ClickLabel(self)
-    self.pixDistlbl.setPixmap(self.pixDist)
-    self.pixDistlbl.clicked.connect(self.showdistparamwin)
-    self.grid.addWidget(self.pixDistlbl,gRow,1,1,1)
-
     self.pixProx = QPixmap("res/proxfig.png")
     self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setPixmap(self.pixProx)
     self.pixProxlbl.clicked.connect(self.showproxparamwin)
-    self.grid.addWidget(self.pixProxlbl,gRow,2,1,1)
+    self.grid.addWidget(self.pixProxlbl,gRow,1,1,1)
+
+    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDistlbl = ClickLabel(self)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    self.pixDistlbl.clicked.connect(self.showdistparamwin)
+    self.grid.addWidget(self.pixDistlbl,gRow,2,1,1)
 
     self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = ClickLabel(self)
