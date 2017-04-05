@@ -1,0 +1,7 @@
+Python 3
+PyQt5
+Matplotlib
+Numpy
+Scipy
+MPI
+NEURON compiled with MPI, Python support - PYTHONPATH must be set to point to Python 3
