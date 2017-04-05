@@ -4,6 +4,7 @@ import pylab as plt
 from neuron import h
 from L5_pyramidal import L5Pyr
 from L2_pyramidal import L2Pyr
+from run import *
 
 h('dp_total_L5=dp_total_L2=0') # required to instantiate cells
 
@@ -12,8 +13,8 @@ lcell5 =  []
 
 ncell = 1 # only need 1 cell to specify prox vs distal
 
-for i in range(ncell): lcell2.append(L2Pyr((0,(i+1)*300)))
-for i in range(ncell): lcell5.append(L5Pyr((i,0)))
+#for i in range(ncell): lcell2.append(L2Pyr((0,(i+1)*300)))
+#for i in range(ncell): lcell5.append(L5Pyr((i,0)))
 
 L2Pyrsecnames =  ['L2Pyr_soma', 'L2Pyr_basal_1', 'L2Pyr_apical_trunk', 'L2Pyr_basal_3', 'L2Pyr_basal_2', 'L2Pyr_apical_oblique', 'L2Pyr_apical_1', 'L2Pyr_apical_tuft']
 
@@ -36,11 +37,11 @@ fig = plt.figure()#figsize=(6,6))
 allseg = sum([s.nseg for s in ls])
 
 shapeax = plt.subplot(111, projection='3d')
-shapeax.view_init(75,66)
+#shapeax.view_init(75,66)
 
-shapeax.set_xlim3d((-425.11876526,  1890.3420929))
-shapeax.set_ylim3d((-173.77793655,  736.48745499))
-shapeax.set_zlim3d((0,100))
+#shapeax.set_xlim3d((-425.11876526,  1890.3420929))
+#shapeax.set_ylim3d((-173.77793655,  736.48745499))
+#shapeax.set_zlim3d((0,100))
 
 defclr = 'k'; selclr = 'r'
 shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
@@ -67,21 +68,25 @@ def onpick (event):
   for idx,l in enumerate(shapelines):
     if l == thisline:
       break
-  print('idx is ', idx, 'selected',lsecnames[idx])
 
-  xdata = thisline.get_xdata()
-  ydata = thisline.get_ydata()
-  ind = event.ind
-  points = tuple(zip(xdata[ind], ydata[ind]))
-  print('onpick points:', points)
+  try:
+    print('idx is ', idx, 'selected',lsecnames[idx])
 
-  if c == defclr:
-    thisline.set_color(selclr)
-  else:
-    thisline.set_color(defclr)
+    xdata = thisline.get_xdata()
+    ydata = thisline.get_ydata()
+    ind = event.ind
+    points = tuple(zip(xdata[ind], ydata[ind]))
+    print('onpick points:', points)
 
-  print(ind)
-  #print(dir(thisline))
+    if c == defclr:
+      thisline.set_color(selclr)
+    else:
+      thisline.set_color(defclr)
+
+    print(ind)
+    #print(dir(thisline))
+  except:
+    pass
 
 cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
