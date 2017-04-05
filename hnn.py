@@ -531,8 +531,7 @@ class HNNGUI (QMainWindow):
     if self.baseparamwin:
       self.baseparamwin.show()
 
-  def initUI (self):       
-
+  def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
     exitAction.setStatusTip('Exit HNN application.')
@@ -543,48 +542,52 @@ class HNNGUI (QMainWindow):
     selParamFile.setStatusTip('Set parameter file.')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
-    self.statusBar()
-
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(exitAction)
 
+  def addButtons (self,gRow):
+    self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
+    pbtn.setToolTip('Set parameters')
+    pbtn.resize(pbtn.sizeHint())
+    pbtn.clicked.connect(self.setparams)
+    self.grid.addWidget(self.pbtn, gRow, 0, 1, 1)
+
+    self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
+    pfbtn.setToolTip('Set Parameters From File')
+    pfbtn.resize(pfbtn.sizeHint())
+    pfbtn.clicked.connect(self.selParamFileDialog)
+    self.grid.addWidget(self.pfbtn, gRow, 1, 1, 1)
+
+    self.btnsim = btn = QPushButton('Run Simulation', self)
+    btn.setToolTip('Run simulation')
+    btn.resize(btn.sizeHint())
+    btn.clicked.connect(self.controlsim)
+    self.grid.addWidget(self.btnsim, gRow, 2, 1, 1)
+
+    self.qbtn = qbtn = QPushButton('Quit', self)
+    qbtn.clicked.connect(QCoreApplication.instance().quit)
+    qbtn.resize(qbtn.sizeHint())
+    self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
+
+  def initUI (self):       
+
+    self.initMenu()
+    self.statusBar()
+    self.setGeometry(300, 300, 1200, 1100)
+    self.setWindowTitle('HNN')
     QToolTip.setFont(QFont('SansSerif', 10))        
 
-    grid = QGridLayout()
+    self.grid = grid = QGridLayout()
     #grid.setSpacing(10)
 
     # addWidget(QWidget *widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment())
 
     gRow = 0
 
-    self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
-    pbtn.setToolTip('Set parameters')
-    pbtn.resize(pbtn.sizeHint())
-    pbtn.clicked.connect(self.setparams)
-    grid.addWidget(self.pbtn, gRow, 0, 1, 1)
-
-    self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
-    pfbtn.setToolTip('Set Parameters From File')
-    pfbtn.resize(pfbtn.sizeHint())
-    pfbtn.clicked.connect(self.selParamFileDialog)
-    grid.addWidget(self.pfbtn, gRow, 1, 1, 1)
-
-    self.btnsim = btn = QPushButton('Run Simulation', self)
-    btn.setToolTip('Run simulation')
-    btn.resize(btn.sizeHint())
-    btn.clicked.connect(self.controlsim)
-    grid.addWidget(self.btnsim, gRow, 2, 1, 1)
-
-    self.qbtn = qbtn = QPushButton('Quit', self)
-    qbtn.clicked.connect(QCoreApplication.instance().quit)
-    qbtn.resize(qbtn.sizeHint())
-    grid.addWidget(self.qbtn, gRow, 3, 1, 1)
-
-    self.setGeometry(300, 300, 1200, 1100)
-    self.setWindowTitle('HNN')
+    self.addButtons(gRow)
 
     gRow += 1
 
