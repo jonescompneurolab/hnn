@@ -1,4 +1,4 @@
-from PyNeuronToolbox.morphology import shapeplot
+from morphology import shapeplot, morphology_to_dict
 from mpl_toolkits.mplot3d import Axes3D
 import pylab as plt
 from neuron import h
@@ -44,6 +44,10 @@ def onclick(event):
 
 # cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
+# net has cells - net.pos_dict has locations
+# net.pos_dict.keys()
+# dict_keys(['L2_basket', 'evdist', 'extgauss', 'L5_pyramidal', 'extpois', 'extinput', 'L5_basket', 'evprox1', 'evprox0', 'L2_pyramidal'])
+
 def setcolor (ls,clr):
   for l in ls: l.set_color(clr)
 
@@ -77,5 +81,5 @@ def onpick (event):
   except:
     pass
 
-cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+#cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
