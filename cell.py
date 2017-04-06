@@ -45,6 +45,8 @@ class Cell ():
         self.ncfrom_extpois = []
         self.ncfrom_ev = []
 
+    def get_sections (self): return [self.soma]
+
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
@@ -354,3 +356,10 @@ class Pyr (Cell):
                 # make dend.nseg odd for all sections
                 if not self.dends[key].nseg % 2:
                     self.dends[key].nseg += 1
+
+    def get_sections (self):
+      ls = [self.soma]
+      for key in self.dends:
+        ls.append(self.dends[key])
+      return ls
+
