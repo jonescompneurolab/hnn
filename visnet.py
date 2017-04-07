@@ -17,19 +17,17 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
   for s in l:
     lsecnames.append(s)
 
-ls = list(h.allsec())
+#ls = list(h.allsec())
 
-"""
 ls = []
 for c in net.cells_list:
   if type(c) == L5Pyr: # L2Pyr: # L5Basket: # L2Basket:
     lss = c.get_sections()
     for s in lss: ls.append(s)
     break
-"""
 
 print('len(ls) = ',len(ls))
-#for s in ls: s.nseg=1
+for s in ls: s.nseg=1
 
 h.define_shape()
 plt.ion()
@@ -45,9 +43,9 @@ shapeax = plt.subplot(111, projection='3d')
 #shapeax.set_zlim3d((0,100))
 
 defclr = 'k'; selclr = 'r'
-shapelines = shapeplot(h,shapeax,lw=8)
+#shapelines = shapeplot(h,shapeax,lw=8)
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-#shapelines = shapeplot(h,shapeax,sections=ls,lw=8)
+shapelines = shapeplot(h,shapeax,sections=ls,lw=8)
 
 """
 def onclick(event):
