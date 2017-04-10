@@ -17,7 +17,7 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
   for s in l:
     lsecnames.append(s)
 
-#ls = list(h.allsec())
+# ls = list(h.allsec())
 
 ls = []
 for c in net.cells_list:
@@ -30,21 +30,11 @@ print('len(ls) = ',len(ls))
 #for s in ls: s.nseg=1
 
 cell = net.cells_list[200]
-# cell.pos # position used for wiring
-
-h.define_shape()
 
 llx,lly,llz,lldiam = [],[],[],[]
 for i in range(200,202,1):
   lx,ly,lz,ldiam = cell.get3dinfo()
   llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
-
-# pt3dchange(i, x, y, z, diam)
-
-for cell in net.cells_list:  
-  cell.translateto(cell.pos[0],cell.pos[1],cell.pos[2])
-
-h.define_shape()
 
 plt.ion()
 fig = plt.figure()
@@ -62,9 +52,9 @@ shapeax.set_zlabel('Z',fontsize=24)
 #shapeax.set_zlim3d((0,100))
 
 defclr = 'k'; selclr = 'r'
-shapelines = shapeplot(h,shapeax,lw=8)
+#shapelines = shapeplot(h,shapeax,lw=8)
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-#shapelines = shapeplot(h,shapeax,sections=ls,lw=8)
+shapelines = shapeplot(h,shapeax,sections=ls,lw=8)
 
 """
 def onclick(event):
