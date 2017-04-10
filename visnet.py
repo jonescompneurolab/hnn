@@ -19,7 +19,7 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
 
 # ls = list(h.allsec())
 
-#h.define_shape()
+# h.define_shape()
 
 ls = []
 for c in net.cells_list:
@@ -27,11 +27,11 @@ for c in net.cells_list:
     lss = c.get_sections()
     #c._L5Pyr__set_3Dshape()#__set_3Dshape()
     for s in lss: ls.append(s)
-    if len(ls) > 3*len(lss): break
-    #break
+    #if len(ls) > 3*len(lss): break
+    break
 
 print('len(ls) = ',len(ls))
-#for s in ls: s.nseg=1
+for s in ls: s.nseg=1
 
 def get3dinfo (sidx,eidx):
   llx,lly,llz,lldiam = [],[],[],[]
@@ -68,16 +68,14 @@ shapeax.set_zlabel('Z',fontsize=24)
 defclr = 'k'; selclr = 'r'
 #shapelines = shapeplot(h,shapeax,lw=8)
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-shapelines = shapeplot(h,shapeax,sections=ls,lw=3)
+shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
 
-"""
 def onclick(event):
   try:
     print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
           (event.button, event.x, event.y, event.xdata, event.ydata))
   except:
     pass
-"""
 
 # cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
@@ -85,11 +83,11 @@ def onclick(event):
 # net.pos_dict.keys()
 # dict_keys(['L2_basket', 'evdist', 'extgauss', 'L5_pyramidal', 'extpois', 'extinput', 'L5_basket', 'evprox1', 'evprox0', 'L2_pyramidal'])
 
-"""
 def setcolor (ls,clr):
   for l in ls: l.set_color(clr)
 
 def onpick (event):
+  print('onpick')
   thisline = event.artist
   c = thisline.get_color()
   idx = -1
@@ -112,6 +110,6 @@ def onpick (event):
     #print(dir(thisline))
   except:
     pass
-"""
-#cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+
+cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
