@@ -47,6 +47,16 @@ class Cell ():
 
     def get_sections (self): return [self.soma]
 
+    def get3dpos (self):
+      ls = self.get_sections()
+      lx,ly,lz=[],[],[]
+      for s in ls:
+        for i in range(s.n3d()):
+          lx.append(s.x3d(i))
+          ly.append(s.y3d(i))
+          lz.append(s.z3d(i))
+      return lx,ly,lz
+
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1

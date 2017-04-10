@@ -27,15 +27,29 @@ for c in net.cells_list:
     break
 
 print('len(ls) = ',len(ls))
-for s in ls: s.nseg=1
+#for s in ls: s.nseg=1
+
+cell = net.cells_list[200]
+# cell.pos # position used for wiring?
 
 h.define_shape()
+
+llx,lly,llz = [],[],[]
+for i in range(200,202,1):
+  lx,ly,lz = cell.get3dpos()
+  llx.append(lx); lly.append(ly); llz.append(lz)
+
+llx[0]==llx[1]
+
 plt.ion()
 fig = plt.figure()#figsize=(6,6))
 
 allseg = sum([s.nseg for s in ls])
 
 shapeax = plt.subplot(111, projection='3d')
+shapeax.set_xlabel('X',fontsize=24)
+shapeax.set_ylabel('Y',fontsize=24)
+shapeax.set_zlabel('Z',fontsize=24)
 #shapeax.view_init(75,66)
 
 #shapeax.set_xlim3d((-425.11876526,  1890.3420929))
