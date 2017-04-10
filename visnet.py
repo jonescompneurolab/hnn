@@ -19,7 +19,7 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
 
 # ls = list(h.allsec())
 
-h.define_shape()
+#h.define_shape()
 
 ls = []
 for c in net.cells_list:
@@ -44,7 +44,7 @@ def get3dinfo (sidx,eidx):
 
 llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
 
-net.movecellstopos()
+#net.movecellstopos()
 
 llx1,lly1,llz1,lldiam1 = get3dinfo(200,210)
 

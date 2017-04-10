@@ -41,7 +41,7 @@ class L5Pyr(Pyr):
         self.create_dends_new(p_dend)
         self.__connect_sections()
         #self.create_dends(dend_names, dend_props, soma_props)
-        #self.__set_3Dshape()
+        self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
@@ -628,6 +628,10 @@ class L5Pyr(Pyr):
         x_distal = 0
         y_distal = self.soma.L
 
+        # apical: 0--4
+        # basal: 5--7
+        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']]
+
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis
         # the way this is assigning variables is ugly/lazy right now
@@ -636,14 +640,15 @@ class L5Pyr(Pyr):
 
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
-            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            sec=self.list_dend[i]
+            nrn.pt3dadd(0, y_distal, 0, sec.diam, sec=sec)
 
             # update x_distal and y_distal after setting them
             # x_distal += dend_dx[i]
-            y_distal += self.dend_L[i]
+            y_distal += sec.L
 
             # add next point
-            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            nrn.pt3dadd(0, y_distal, 0, sec.diam, sec=sec)
 
         # now deal with dend 4
         # dend 4 will ALWAYS be positioned at the end of dend[0]
@@ -653,35 +658,39 @@ class L5Pyr(Pyr):
         x_start = nrn.x3d(1, sec=self.list_dend[0])
         y_start = nrn.y3d(1, sec=self.list_dend[0])
 
-        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
+        sec=self.list_dend[4]
+        nrn.pt3dadd(x_start, y_start, 0, sec.diam, sec=sec)
         # self.dend_L[4] is subtracted because lengths always positive,
         # and this goes to negative x
-        nrn.pt3dadd(x_start-self.dend_L[4], y_start, 0, self.dend_diam[4], sec=self.list_dend[4])
+        nrn.pt3dadd(x_start-sec.L, y_start, 0, sec.diam, sec=sec)
 
         # now deal with proximal dends
         for i in range(5, 8):
             nrn.pt3dclear(sec=self.list_dend[i])
 
         # deal with dend 5, ugly. sorry.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[5])
-        y_prox += -self.dend_L[5]
+        sec=self.list_dend[5]
+        nrn.pt3dadd(x_prox, y_prox, 0, sec.diam, sec=sec)
+        y_prox += -sec.L
 
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5],sec=self.list_dend[5])
+        nrn.pt3dadd(x_prox, y_prox, 0, sec.diam,sec=sec)
 
         # x_prox, y_prox are now the starting points for BOTH of last 2 sections
         # dend 6
         # Calculate x-coordinate for end of dend
-        dend6_x = -self.dend_L[6] * np.sqrt(2) / 2.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2) / 2.,
-                    0, self.dend_diam[6], sec=self.list_dend[6])
+        sec=self.list_dend[6]
+        dend6_x = -sec.L * np.sqrt(2) / 2.
+        nrn.pt3dadd(x_prox, y_prox, 0, sec.diam, sec=sec)
+        nrn.pt3dadd(dend6_x, y_prox-sec.L * np.sqrt(2) / 2.,
+                    0, sec.diam, sec=sec)
 
         # dend 7
         # Calculate x-coordinate for end of dend
-        dend7_x = self.dend_L[7] * np.sqrt(2) / 2.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[7], sec=self.list_dend[7])
-        nrn.pt3dadd(dend7_x, y_prox-self.dend_L[7] * np.sqrt(2) / 2.,
-                    0, self.dend_diam[7], sec=self.list_dend[7])
+        sec=self.list_dend[7]
+        dend7_x = sec.L * np.sqrt(2) / 2.
+        nrn.pt3dadd(x_prox, y_prox, 0, sec.diam, sec=sec)
+        nrn.pt3dadd(dend7_x, y_prox-sec.L * np.sqrt(2) / 2.,
+                    0, sec.diam, sec=sec)
 
         # set 3D position
         # z grid position used as y coordinate in nrn.pt3dchange() to satisfy
