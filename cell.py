@@ -47,16 +47,32 @@ class Cell ():
 
     def get_sections (self): return [self.soma]
 
-    def get3dpos (self):
+    def get3dinfo (self):
       ls = self.get_sections()
-      lx,ly,lz=[],[],[]
+      lx,ly,lz,ldiam=[],[],[],[]
       for s in ls:
         for i in range(s.n3d()):
           lx.append(s.x3d(i))
           ly.append(s.y3d(i))
           lz.append(s.z3d(i))
-      return lx,ly,lz
+          ldiam.append(s.diam3d(i))
+      return lx,ly,lz,ldiam
 
+    def translate3d (self, dx, dy, dz):
+      from neuron import h
+      for s in self.get_sections():
+        for i in range(s.n3d()):          
+          h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
+
+    def translateto (self, x, y, z):      
+      x0 = self.soma.x3d(0)
+      y0 = self.soma.y3d(0)
+      z0 = self.soma.z3d(0)
+      dx = x - x0
+      dy = y - y0
+      dz = z - z0
+      self.translate3d(dx,dy,dz)
+      
     # two things need to happen here for nrn:
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
