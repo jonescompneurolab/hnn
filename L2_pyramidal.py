@@ -37,7 +37,7 @@ class L2Pyr(Pyr):
         # creates dict of dends: self.dends
         self.create_dends_new(p_dend)
         self.__connect_sections()
-        # self.__set_3Dshape()
+        # self.__set_3Dshape() # was commented out
 
         # biophysics
         self.__biophys_soma()

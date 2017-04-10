@@ -29,12 +29,22 @@ for c in net.cells_list:
 print('len(ls) = ',len(ls))
 #for s in ls: s.nseg=1
 
-cell = net.cells_list[200]
+def get3dinfo (sidx,eidx):
+  llx,lly,llz,lldiam = [],[],[],[]
+  for i in range(sidx,eidx,1):
+    lx,ly,lz,ldiam = net.cells_list[i].get3dinfo()
+    llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
+  return llx,lly,llz,lldiam
 
-llx,lly,llz,lldiam = [],[],[],[]
-for i in range(200,205,1):
-  lx,ly,lz,ldiam = net.cells_list[i].get3dinfo()
-  llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
+h.define_shape()
+
+llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
+
+net.movecellstopos()
+
+llx1,lly1,llz1,lldiam1 = get3dinfo(200,210)
+
+cell = net.cells_list[200]
 
 plt.ion()
 fig = plt.figure()

@@ -61,16 +61,19 @@ class Cell ():
     def translate3d (self, dx, dy, dz):
       for s in self.get_sections():
         for i in range(s.n3d()):          
+          #print(s,i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i))
           h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
 
     def translateto (self, x, y, z):      
+      from numpy import random
       x0 = self.soma.x3d(0)
       y0 = self.soma.y3d(0)
       z0 = self.soma.z3d(0)
       dx = x - x0
       dy = y - y0
       dz = z - z0
-      self.translate3d(dx,dy,dz)
+      # print('dx:',dx,'dy:',dy,'dz:',dz)
+      self.translate3d(dx*random.standard_normal()*100,dy*random.standard_normal()*100,dz*random.standard_normal()*100)
       
     # two things need to happen here for h:
     # 1. dipole needs to be inserted into each section
