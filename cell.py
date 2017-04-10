@@ -5,7 +5,7 @@
 # last rev: (SL: added list_IClamp as a pre-defined variable)
 
 import numpy as np
-from neuron import h as nrn
+from neuron import h as h
 
 # Units for e: mV
 # Units for gbar: S/cm^2
@@ -14,7 +14,7 @@ from neuron import h as nrn
 class Cell ():
     def __init__ (self, soma_props):
         # Parallel methods
-        self.pc = nrn.ParallelContext()
+        self.pc = h.ParallelContext()
 
         # make L_soma and diam_soma elements of self
         # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam
@@ -23,7 +23,7 @@ class Cell ():
         self.pos = soma_props['pos']
 
         # create soma and set geometry
-        self.soma = nrn.Section(cell=self, name=soma_props['name']+'_soma')
+        self.soma = h.Section(cell=self, name=soma_props['name']+'_soma')
         self.soma.L = soma_props['L']
         self.soma.diam = soma_props['diam']
         self.soma.Ra = soma_props['Ra']
@@ -59,7 +59,6 @@ class Cell ():
       return lx,ly,lz,ldiam
 
     def translate3d (self, dx, dy, dz):
-      from neuron import h
       for s in self.get_sections():
         for i in range(s.n3d()):          
           h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
@@ -73,7 +72,7 @@ class Cell ():
       dz = z - z0
       self.translate3d(dx,dy,dz)
       
-    # two things need to happen here for nrn:
+    # two things need to happen here for h:
     # 1. dipole needs to be inserted into each section
     # 2. a list needs to be created with a Dipole (Point Process) in each section at position 1
     # In Cell() and not Pyr() for future possibilities
@@ -81,7 +80,7 @@ class Cell ():
         # insert dipole into each section of this cell
         # dends must have already been created!!
         # it's easier to use wholetree here, this includes soma
-        seclist = nrn.SectionList()
+        seclist = h.SectionList()
         seclist.wholetree(sec=self.soma)
 
         # create a python section list list_all
@@ -91,21 +90,21 @@ class Cell ():
             sect.insert('dipole')
 
         # Dipole is defined in dipole_pp.mod
-        self.dipole_pp = [nrn.Dipole(1, sec=sect) for sect in self.list_all]
+        self.dipole_pp = [h.Dipole(1, sec=sect) for sect in self.list_all]
 
         # setting pointers and ztan values
         for sect, dpp in zip(self.list_all, self.dipole_pp):
             # assign internal resistance values to dipole point process (dpp)
-            dpp.ri = nrn.ri(1, sec=sect)
+            dpp.ri = h.ri(1, sec=sect)
 
             # sets pointers in dipole mod file to the correct locations
-            # nrn.setpointer(ref, ptr, obj)
-            nrn.setpointer(sect(0.99)._ref_v, 'pv', dpp)
+            # h.setpointer(ref, ptr, obj)
+            h.setpointer(sect(0.99)._ref_v, 'pv', dpp)
             if self.celltype.startswith('L2'):
-                nrn.setpointer(nrn._ref_dp_total_L2, 'Qtotal', dpp)
+                h.setpointer(h._ref_dp_total_L2, 'Qtotal', dpp)
 
             elif self.celltype.startswith('L5'):
-                nrn.setpointer(nrn._ref_dp_total_L5, 'Qtotal', dpp)
+                h.setpointer(h._ref_dp_total_L5, 'Qtotal', dpp)
 
             # gives INTERNAL segments of the section, non-endpoints
             # creating this because need multiple values simultaneously
@@ -116,7 +115,7 @@ class Cell ():
 
             # diff in yvals, scaled against the pos np.array. y_long as in longitudinal
             y_scale = (yscale[sect.name()] * sect.L) * pos
-            # y_long = (nrn.y3d(1, sec=sect) - nrn.y3d(0, sec=sect)) * pos
+            # y_long = (h.y3d(1, sec=sect) - h.y3d(0, sec=sect)) * pos
 
             # diff values calculate length between successive section points
             y_diff = np.diff(y_scale)
@@ -125,24 +124,24 @@ class Cell ():
             # doing range to index multiple values of the same np.array simultaneously
             for i in range(len(loc)):
                 # assign the ri value to the dipole
-                sect(loc[i]).dipole.ri = nrn.ri(loc[i], sec=sect)
+                sect(loc[i]).dipole.ri = h.ri(loc[i], sec=sect)
 
                 # range variable 'dipole'
                 # set pointers to previous segment's voltage, with boundary condition
                 if i:
-                    nrn.setpointer(sect(loc[i-1])._ref_v, 'pv', sect(loc[i]).dipole)
+                    h.setpointer(sect(loc[i-1])._ref_v, 'pv', sect(loc[i]).dipole)
 
                 else:
-                    nrn.setpointer(sect(0)._ref_v, 'pv', sect(loc[i]).dipole)
+                    h.setpointer(sect(0)._ref_v, 'pv', sect(loc[i]).dipole)
 
                 # set aggregate pointers
-                nrn.setpointer(dpp._ref_Qsum, 'Qsum', sect(loc[i]).dipole)
+                h.setpointer(dpp._ref_Qsum, 'Qsum', sect(loc[i]).dipole)
 
                 if self.celltype.startswith('L2'):
-                    nrn.setpointer(nrn._ref_dp_total_L2, 'Qtotal', sect(loc[i]).dipole)
+                    h.setpointer(h._ref_dp_total_L2, 'Qtotal', sect(loc[i]).dipole)
 
                 elif self.celltype.startswith('L5'):
-                    nrn.setpointer(nrn._ref_dp_total_L5, 'Qtotal', sect(loc[i]).dipole)
+                    h.setpointer(h._ref_dp_total_L5, 'Qtotal', sect(loc[i]).dipole)
 
                 # add ztan values
                 sect(loc[i]).dipole.ztan = y_diff[i]
@@ -154,18 +153,18 @@ class Cell ():
     def insert_IClamp (self, sect_name, props_IClamp):
         # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
         # gather list of all sections
-        seclist = nrn.SectionList()
+        seclist = h.SectionList()
         seclist.wholetree(sec=self.soma)
 
         # find specified sect in section list, insert IClamp, set props
         for sect in seclist:
             if sect_name in sect.name():
-                stim = nrn.IClamp(sect(props_IClamp['loc']))
+                stim = h.IClamp(sect(props_IClamp['loc']))
                 stim.delay = props_IClamp['delay']
                 stim.dur = props_IClamp['dur']
                 stim.amp = props_IClamp['amp']
                 # stim.dur = tstop - tstart
-                # stim = nrn.IClamp(sect(seg_loc))
+                # stim = h.IClamp(sect(seg_loc))
 
         # object must exist for NEURON somewhere and needs to be saved
         return stim
@@ -174,7 +173,7 @@ class Cell ():
     # for now only at the soma
     def record_current_soma (self):
         # a soma exists at self.soma
-        self.rec_i = nrn.Vector()
+        self.rec_i = h.Vector()
 
         try:
             # assumes that self.synapses is a dict that exists
@@ -185,7 +184,7 @@ class Cell ():
 
             # iterate through keys and record currents appropriately
             for key in self.dict_currents:
-                self.dict_currents[key] = nrn.Vector()
+                self.dict_currents[key] = h.Vector()
                 self.dict_currents[key].record(self.synapses[key]._ref_i)
 
         except:
@@ -195,7 +194,7 @@ class Cell ():
     # General fn that creates any Exp2Syn synapse type
     # requires dictionary of synapse properties
     def syn_create (self, secloc, p):
-        syn = nrn.Exp2Syn(secloc)
+        syn = h.Exp2Syn(secloc)
         syn.e = p['e']
         syn.tau1 = p['tau1']
         syn.tau2 = p['tau2']
@@ -206,7 +205,7 @@ class Cell ():
     # for clarity, even though they are (right now) always 0.5. Might change in future
     # creates a RECEIVING inhibitory synapse at secloc
     def syn_gabaa_create (self, secloc):
-        syn_gabaa = nrn.Exp2Syn(secloc)
+        syn_gabaa = h.Exp2Syn(secloc)
         syn_gabaa.e = -80
         syn_gabaa.tau1 = 0.5
         syn_gabaa.tau2 = 5.
@@ -216,7 +215,7 @@ class Cell ():
     # creates a RECEIVING slow inhibitory synapse at secloc
     # called: self.soma_gabab = syn_gabab_create(self.soma(0.5))
     def syn_gabab_create (self, secloc):
-        syn_gabab = nrn.Exp2Syn(secloc)
+        syn_gabab = h.Exp2Syn(secloc)
         syn_gabab.e = -80
         syn_gabab.tau1 = 1
         syn_gabab.tau2 = 20.
@@ -226,7 +225,7 @@ class Cell ():
     # creates a RECEIVING excitatory synapse at secloc
     # def syn_ampa_create(self, secloc, tau_decay, prng_obj):
     def syn_ampa_create (self, secloc):
-        syn_ampa = nrn.Exp2Syn(secloc)
+        syn_ampa = h.Exp2Syn(secloc)
         syn_ampa.e = 0.
         syn_ampa.tau1 = 0.5
         syn_ampa.tau2 = 5.
@@ -236,7 +235,7 @@ class Cell ():
     # creates a RECEIVING nmda synapse at secloc
     # this is a pretty fast NMDA, no?
     def syn_nmda_create (self, secloc):
-        syn_nmda = nrn.Exp2Syn(secloc)
+        syn_nmda = h.Exp2Syn(secloc)
         syn_nmda.e = 0.
         syn_nmda.tau1 = 1.
         syn_nmda.tau2 = 20.
@@ -246,7 +245,7 @@ class Cell ():
     # connect_to_target created for pc, used in Network()
     # these are SOURCES of spikes
     def connect_to_target (self, target):
-        nc = nrn.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
+        nc = h.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
         nc.threshold = 0
 
         return nc
@@ -277,14 +276,14 @@ class Cell ():
         return np.sqrt(dx**2 + dy**2)
 
     # Define 3D shape of soma -- is needed for gui representation of cell
-    # DO NOT need to call nrn.define_shape() explicitly!!
+    # DO NOT need to call h.define_shape() explicitly!!
     def shape_soma (self):
-        nrn.pt3dclear(sec=self.soma)
+        h.pt3dclear(sec=self.soma)
 
-        # nrn.ptdadd(x, y, z, diam) -- if this function is run, clobbers
+        # h.ptdadd(x, y, z, diam) -- if this function is run, clobbers
         # self.soma.diam set above
-        nrn.pt3dadd(0, 0, 0, self.diam, sec=self.soma)
-        nrn.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
+        h.pt3dadd(0, 0, 0, self.diam, sec=self.soma)
+        h.pt3dadd(0, self.L, 0, self.diam, sec=self.soma)
 
 # Inhibitory cell class
 class BasketSingle (Cell):
@@ -317,11 +316,11 @@ class BasketSingle (Cell):
         self.shape_soma()
 
         self.soma.push()
-        for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), -self.pos[2] + nrn.y3d(i),
-                self.pos[1] * 100 + nrn.z3d(i), nrn.diam3d(i))
+        for i in range(0, int(h.n3d())):
+            h.pt3dchange(i, self.pos[0]*100 + h.x3d(i), -self.pos[2] + h.y3d(i),
+                self.pos[1] * 100 + h.z3d(i), h.diam3d(i))
 
-        nrn.pop_section()
+        h.pop_section()
 
 # General Pyramidal cell class
 class Pyr (Cell):
@@ -339,7 +338,7 @@ class Pyr (Cell):
 
     # Create dictionary of section names with entries to scale section lengths to length along z-axis
     def get_sectnames (self):
-        seclist = nrn.SectionList()
+        seclist = h.SectionList()
         seclist.wholetree(sec=self.soma)
 
         d = dict((sect.name(), 1.) for sect in seclist)
@@ -367,7 +366,7 @@ class Pyr (Cell):
         # iterate over keys in p_dend_props. Create dend for each key.
         for key in p_dend_props:
             # create dend
-            self.dends[key] = nrn.Section(name=self.name+'_'+key)
+            self.dends[key] = h.Section(name=self.name+'_'+key)
 
             # set dend props
             self.dends[key].L = p_dend_props[key]['L']

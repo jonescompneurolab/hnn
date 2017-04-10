@@ -24,7 +24,7 @@ for c in net.cells_list:
   if type(c) == L5Pyr: # L2Pyr: # L5Basket: # L2Basket:
     lss = c.get_sections()
     for s in lss: ls.append(s)
-    break
+    #break
 
 print('len(ls) = ',len(ls))
 #for s in ls: s.nseg=1
@@ -32,8 +32,8 @@ print('len(ls) = ',len(ls))
 cell = net.cells_list[200]
 
 llx,lly,llz,lldiam = [],[],[],[]
-for i in range(200,202,1):
-  lx,ly,lz,ldiam = cell.get3dinfo()
+for i in range(200,205,1):
+  lx,ly,lz,ldiam = net.cells_list[i].get3dinfo()
   llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
 
 plt.ion()
