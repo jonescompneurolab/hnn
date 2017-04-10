@@ -19,11 +19,15 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
 
 # ls = list(h.allsec())
 
+h.define_shape()
+
 ls = []
 for c in net.cells_list:
   if type(c) == L5Pyr: # L2Pyr: # L5Basket: # L2Basket:
     lss = c.get_sections()
+    #c._L5Pyr__set_3Dshape()#__set_3Dshape()
     for s in lss: ls.append(s)
+    if len(ls) > 3*len(lss): break
     #break
 
 print('len(ls) = ',len(ls))
@@ -36,7 +40,7 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-h.define_shape()
+#h.define_shape()
 
 llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
 
@@ -64,7 +68,7 @@ shapeax.set_zlabel('Z',fontsize=24)
 defclr = 'k'; selclr = 'r'
 #shapelines = shapeplot(h,shapeax,lw=8)
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-shapelines = shapeplot(h,shapeax,sections=ls,lw=8)
+shapelines = shapeplot(h,shapeax,sections=ls,lw=3)
 
 """
 def onclick(event):

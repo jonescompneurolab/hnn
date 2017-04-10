@@ -433,5 +433,4 @@ class NetworkOnNode ():
 
     # move cells 3d positions to positions used for wiring
     def movecellstopos (self):
-      for cell in self.cells_list:  
-        cell.translateto(cell.pos[0],cell.pos[1],cell.pos[2])
+      for cell in self.cells_list: cell.movetopos()

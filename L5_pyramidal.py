@@ -40,8 +40,8 @@ class L5Pyr(Pyr):
         # dend Cm and dend Ra set using soma Cm and soma Ra
         self.create_dends_new(p_dend)
         self.__connect_sections()
-        # self.create_dends(dend_names, dend_props, soma_props)
-        # self.__set_3Dshape()
+        #self.create_dends(dend_names, dend_props, soma_props)
+        #self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
