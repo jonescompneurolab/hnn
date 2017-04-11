@@ -225,6 +225,15 @@ class L5Pyr(Pyr):
 
     # connects sections of this cell together
     def __connect_sections(self):
+
+        """ original topol
+        connect dend(0), soma(1) // dend[0] is apical trunk
+        for i = 1, 2 connect dend[i](0), dend(1) // dend[1] is oblique, dend[2] is apic1
+        for i = 3, 4 connect dend[i](0), dend[i-1](1) // dend[3],dend[4] are apic2,apic tuft
+        connect dend[5](0), soma(0) //was soma(1)this is correct! 
+        for i = 6, 7 connect dend[i](0), dend[5](1)
+        """
+
         # child.connect(parent, parent_end, {child_start=0})
         # Distal (apical)
         self.dends['apical_trunk'].connect(self.soma, 1, 0)

@@ -394,12 +394,19 @@ class Pyr (Cell):
 
         # apical: 0--4
         # basal: 5--7
-        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
+        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_oblique', 'apical_1', 'apical_2', 'apical_tuft', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
 
 
     def get_sections (self):
       ls = [self.soma]
-      for key in self.dends:
-        ls.append(self.dends[key])
+      for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']:
+        if key in self.dends:
+          ls.append(self.dends[key])
       return ls
 
+    def get_section_names (self):      
+      ls = ['soma']
+      for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']:
+        if key in self.dends:
+          ls.append(key)
+      return ls
