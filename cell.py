@@ -336,13 +336,10 @@ class BasketSingle (Cell):
 class Pyr (Cell):
     def __init__ (self, soma_props):
         Cell.__init__(self, soma_props)
-
         # store cell_name as self variable for later use
         self.name = soma_props['name']
-
         # preallocate dict to store dends
         self.dends = {}
-
         # for legacy use with L5Pyr
         self.list_dend = []
 
@@ -350,26 +347,40 @@ class Pyr (Cell):
     def get_sectnames (self):
         seclist = h.SectionList()
         seclist.wholetree(sec=self.soma)
-
         d = dict((sect.name(), 1.) for sect in seclist)
-
         for key in d.keys():
             # basal_2 and basal_3 at 45 degree angle to z-axis.
             if 'basal_2' in key:
                 d[key] = np.sqrt(2) / 2.
-
             elif 'basal_3' in key:
                 d[key] = np.sqrt(2) / 2.
-
             # apical_oblique at 90 perpendicular to z-axis
             elif 'apical_oblique' in key:
                 d[key] = 0.
-
             # All basalar dendrites extend along negative z-axis
             if 'basal' in key:
                 d[key] = -d[key]
-
         return d
+
+    def create_dends (self, p_dend_props):
+      for key in p_dend_props: self.dends[key] = h.Section(name=self.name+'_'+key) # create dend
+      # apical: 0--4; basal: 5--7
+      self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_oblique', 'apical_1', 'apical_2', 'apical_tuft', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
+
+    def set_dend_props (self, p_dend_props):
+      # iterate over keys in p_dend_props. Create dend for each key.
+      for key in p_dend_props:
+          # set dend props
+          self.dends[key].L = p_dend_props[key]['L']
+          self.dends[key].diam = p_dend_props[key]['diam']
+          self.dends[key].Ra = p_dend_props[key]['Ra']
+          self.dends[key].cm = p_dend_props[key]['cm']
+          # set dend nseg
+          if p_dend_props[key]['L'] > 100.:
+              self.dends[key].nseg = int(p_dend_props[key]['L'] / 50.)
+              # make dend.nseg odd for all sections
+              if not self.dends[key].nseg % 2:
+                  self.dends[key].nseg += 1
 
     # Creates dendritic sections based only on dictionary of dendrite props
     def create_dends_new (self, p_dend_props):

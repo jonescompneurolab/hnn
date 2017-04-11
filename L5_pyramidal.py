@@ -75,9 +75,10 @@ class L5Pyr(Pyr):
 
         # Geometry
         # dend Cm and dend Ra set using soma Cm and soma Ra
-        self.create_dends_new(p_dend)
+        self.create_dends(p_dend)
         self.topol()
         self.geom() # adjusted after translation from original hoc (2009 model)
+        self.set_dend_props(p_dend) # resets length,diam,etc. based on param specification
 
         # biophysics
         self.__biophys_soma()
