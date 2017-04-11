@@ -190,7 +190,6 @@ h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
 # spike file needs to be known by all nodes
 file_spikes_tmp = fio.file_spike_tmp(dproj)  
 net = network.NetworkOnNode(p) # create node-specific network
-#h.define_shape()
 #net.movecellstopos()
 if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
 else: v_debug = None

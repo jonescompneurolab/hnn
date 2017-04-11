@@ -8,8 +8,8 @@ from L2_basket import L2Basket
 from L5_basket import L5Basket
 from run import *
 
-drawallcells = True
-
+drawallcells = True # False # True
+ndraw = 100
 cell = net.cells[200]
 
 def getdrawsec (ncells=1,ct=L2Pyr):
@@ -26,7 +26,7 @@ def getdrawsec (ncells=1,ct=L2Pyr):
       if nfound >= ncells: break
   return ls
 
-ls = getdrawsec()
+ls = getdrawsec(ncells=ndraw)
 
 lsecnames = cell.get_section_names()
 
@@ -40,13 +40,12 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
+llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
+
+net.movecellstopos()
 # h.define_shape()
 
-#llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
-
-# net.movecellstopos()
-
-#llx1,lly1,llz1,lldiam1 = get3dinfo(200,210)
+llx1,lly1,llz1,lldiam1 = get3dinfo(200,210)
 
 plt.ion(); fig = plt.figure()
 
@@ -63,7 +62,7 @@ shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapea
 defclr = 'k'; selclr = 'r'
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
 if drawallcells:
-  shapelines = shapeplot(h,shapeax,lw=3,picker=5)
+  shapelines = shapeplot(h,shapeax,lw=3)
 else:
   shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
 
@@ -104,6 +103,5 @@ def onpick (event):
   except:
     pass
 
-if not drawallcells:
-  cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+if not drawallcells and ndraw==1: cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 

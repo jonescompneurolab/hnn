@@ -59,15 +59,13 @@ class Cell ():
       return lx,ly,lz,ldiam
 
     def translate3d (self, dx, dy, dz):
-      s = self.soma
-      for i in range(s.n3d()):          
-        h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
-      """
+      #s = self.soma
+      #for i in range(s.n3d()):          
+      #  h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
       for s in self.get_sections():
         for i in range(s.n3d()):          
           #print(s,i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i))
           h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
-      """
 
     def translateto (self, x, y, z):      
       x0 = self.soma.x3d(0)
@@ -80,7 +78,7 @@ class Cell ():
       self.translate3d(dx,dy,dz)
 
     def movetopos (self):
-      self.translateto(self.pos[0],self.pos[1],self.pos[2])
+      self.translateto(self.pos[0]*100,self.pos[2],self.pos[1]*100)
       
     # two things need to happen here for h:
     # 1. dipole needs to be inserted into each section
