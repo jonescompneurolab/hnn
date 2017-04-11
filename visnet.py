@@ -10,15 +10,17 @@ from run import *
 
 # ls = list(h.allsec())
 
+cell = net.cells[200]
+
 ls = []
 for c in net.cells:
-  if type(c) == L5Pyr: # L2Pyr: # L5Basket: # L2Basket:
+  if type(c) == L2Pyr: # L5Pyr: # L5Basket: # L2Basket:
+    cell = c
     lss = c.get_sections()
     for s in lss: ls.append(s)
     #if len(ls) > 3*len(lss): break
     break
 
-cell = net.cells[200]
 lsecnames = cell.get_section_names()
 
 print('len(ls) = ',len(ls))

@@ -19,17 +19,17 @@ import params_default as p_default
 class L5Pyr(Pyr):
 
     def basic_shape (self):
-        # THESE AND LENGHTHS MUST CHANGE TOGETHER!!!
-        pt3dclear=h.pt3dclear; pt3dadd=h.pt3dadd; dend = self.list_dend
-        pt3dclear(sec=self.soma); pt3dadd(0, 0, 0, 1, sec=self.soma); pt3dadd(0, 23, 0, 1, sec=self.soma)
-        pt3dclear(sec=dend[0]); pt3dadd(0, 23, 0, 1,sec=dend[0]); pt3dadd(0, 83, 0, 1,sec=dend[0])
-        pt3dclear(sec=dend[1]); pt3dadd(0, 83, 0, 1,sec=dend[1]); pt3dadd(-150, 83, 0, 1,sec=dend[1])
-        pt3dclear(sec=dend[2]); pt3dadd(0, 83, 0, 1,sec=dend[2]); pt3dadd(0, 483, 0, 1,sec=dend[2])
-        pt3dclear(sec=dend[3]); pt3dadd(0, 483, 0, 1,sec=dend[3]); pt3dadd(0, 883, 0, 1,sec=dend[3])
-        pt3dclear(sec=dend[4]); pt3dadd(0, 883, 0, 1,sec=dend[4]); pt3dadd(0, 1133, 0, 1,sec=dend[4])
-        pt3dclear(sec=dend[5]); pt3dadd(0, 0, 0, 1,sec=dend[5]); pt3dadd(0, -50, 0, 1,sec=dend[5])
-        pt3dclear(sec=dend[6]); pt3dadd(0, -50, 0, 1,sec=dend[6]); pt3dadd(-106, -156, 0, 1,sec=dend[6])
-        pt3dclear(sec=dend[7]); pt3dadd(0, -50, 0, 1,sec=dend[7]); pt3dadd(106, -156, 0, 1,sec=dend[7])
+      # THESE AND LENGHTHS MUST CHANGE TOGETHER!!!
+      pt3dclear=h.pt3dclear; pt3dadd=h.pt3dadd; dend = self.list_dend
+      pt3dclear(sec=self.soma); pt3dadd(0, 0, 0, 1, sec=self.soma); pt3dadd(0, 23, 0, 1, sec=self.soma)
+      pt3dclear(sec=dend[0]); pt3dadd(0, 23, 0, 1,sec=dend[0]); pt3dadd(0, 83, 0, 1,sec=dend[0])
+      pt3dclear(sec=dend[1]); pt3dadd(0, 83, 0, 1,sec=dend[1]); pt3dadd(-150, 83, 0, 1,sec=dend[1])
+      pt3dclear(sec=dend[2]); pt3dadd(0, 83, 0, 1,sec=dend[2]); pt3dadd(0, 483, 0, 1,sec=dend[2])
+      pt3dclear(sec=dend[3]); pt3dadd(0, 483, 0, 1,sec=dend[3]); pt3dadd(0, 883, 0, 1,sec=dend[3])
+      pt3dclear(sec=dend[4]); pt3dadd(0, 883, 0, 1,sec=dend[4]); pt3dadd(0, 1133, 0, 1,sec=dend[4])
+      pt3dclear(sec=dend[5]); pt3dadd(0, 0, 0, 1,sec=dend[5]); pt3dadd(0, -50, 0, 1,sec=dend[5])
+      pt3dclear(sec=dend[6]); pt3dadd(0, -50, 0, 1,sec=dend[6]); pt3dadd(-106, -156, 0, 1,sec=dend[6])
+      pt3dclear(sec=dend[7]); pt3dadd(0, -50, 0, 1,sec=dend[7]); pt3dadd(106, -156, 0, 1,sec=dend[7])
 
     def geom (self, p_dend):
       soma = self.soma; dend = self.list_dend;
@@ -65,12 +65,6 @@ class L5Pyr(Pyr):
         p_dend = self.__get_dend_props()
         p_syn = self.__get_syn_props()
 
-        # Set morphology properties
-        # p_soma_props = self.__get_soma_props(pos)
-        # p_dend_props = self.__get_dend_props()
-        # dend_props, dend_names = self.__set_dend_props()
-
-        # Pyr.__init__(self, soma_props)
         Pyr.__init__(self, p_soma)
         self.celltype = 'L5_pyramidal'
 
@@ -102,9 +96,7 @@ class L5Pyr(Pyr):
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
         # list of sections for this celltype
-        sect_list_IClamp = [
-            'soma',
-        ]
+        sect_list_IClamp = ['soma',]
 
         # some parameters
         t_delay = p['Itonic_t0_L5Pyr_soma']

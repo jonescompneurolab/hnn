@@ -8,7 +8,7 @@ import sys
 import os
 import numpy as np
 
-from neuron import h as nrn
+from neuron import h
 from cell import Pyr
 import paramrw
 import params_default as p_default
@@ -18,6 +18,19 @@ import params_default as p_default
 
 # Layer 2 pyramidal cell class
 class L2Pyr(Pyr):
+
+    def basic_shape (self):
+      # THESE AND LENGHTHS MUST CHANGE TOGETHER!!!
+      pt3dclear=h.pt3dclear; pt3dadd=h.pt3dadd; soma = self.soma; dend = self.list_dend
+      pt3dclear(sec=soma); pt3dadd(-50, 765, 0, 1,sec=soma); pt3dadd(-50, 778, 0, 1,sec=soma)
+      pt3dclear(sec=dend[0]); pt3dadd(-50, 778, 0, 1,sec=dend[0]); pt3dadd(-50, 813, 0, 1,sec=dend[0])
+      pt3dclear(sec=dend[1]); pt3dadd(-50, 813, 0, 1,sec=dend[1]); pt3dadd(-250, 813, 0, 1,sec=dend[1])
+      pt3dclear(sec=dend[2]); pt3dadd(-50, 813, 0, 1,sec=dend[2]); pt3dadd(-50, 993, 0, 1,sec=dend[2])
+      pt3dclear(sec=dend[3]); pt3dadd(-50, 993, 0, 1,sec=dend[3]); pt3dadd(-50, 1133, 0, 1,sec=dend[3])
+      pt3dclear(sec=dend[4]); pt3dadd(-50, 765, 0, 1,sec=dend[4]); pt3dadd(-50, 715, 0, 1,sec=dend[4])
+      pt3dclear(sec=dend[5]); pt3dadd(-50, 715, 0, 1,sec=dend[5]); pt3dadd(-156, 609, 0, 1,sec=dend[5])
+      pt3dclear(sec=dend[6]); pt3dadd(-50, 715, 0, 1,sec=dend[6]); pt3dadd(56, 609, 0, 1,sec=dend[6])
+
     def __init__(self, pos, p={}):
         # Get default L2Pyr params and update them with any corresponding params in p
         p_all_default = p_default.get_L2Pyr_params_default()
@@ -35,9 +48,9 @@ class L2Pyr(Pyr):
 
         # geometry
         # creates dict of dends: self.dends
-        self.create_dends_new(p_dend)
-        self.__connect_sections()
-        # self.__set_3Dshape() # was commented out
+        self.create_dends(p_dend)
+        self.topol() # sets the connectivity between sections
+        self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
 
         # biophysics
         self.__biophys_soma()
@@ -65,10 +78,10 @@ class L2Pyr(Pyr):
         # some parameters
         t_delay = p['Itonic_t0_L2Pyr_soma']
 
-        # T = -1 means use nrn.tstop
+        # T = -1 means use h.tstop
         if p['Itonic_T_L2Pyr_soma'] == -1:
             # t_delay = 50.
-            t_dur = nrn.tstop - t_delay
+            t_dur = h.tstop - t_delay
 
         else:
             t_dur = p['Itonic_T_L2Pyr_soma'] - t_delay
@@ -178,8 +191,38 @@ class L2Pyr(Pyr):
             }
         }
 
+    def geom (self, p_dend):
+      soma = self.soma; dend = self.list_dend;
+      # increased by 70% for human
+      soma.L = 22.1
+      dend[0].L = 59.5
+      dend[1].L = 340
+      dend[2].L = 306
+      dend[3].L = 238
+      dend[4].L = 85
+      dend[5].L = 255
+      dend[6].L = 255
+      soma.diam = 23.4
+      dend[0].diam = 4.25
+      dend[1].diam = 3.91
+      dend[2].diam = 4.08
+      dend[3].diam = 3.4
+      dend[4].diam = 4.25
+      dend[5].diam = 2.72
+      dend[6].diam = 2.72
+      self.set_dend_props(p_dend) # resets length,diam,etc. based on param specification
+
     # Connects sections of THIS cell together
-    def __connect_sections(self):
+    def topol (self):
+        """ original topol
+        connect dend(0), soma(1)
+        for i = 1, 2 connect dend[i](0), dend(1)
+        connect dend[3](0), dend[2](1)
+        connect dend[4](0), soma(0) //was soma(1), 0 is correct!
+        for i = 5, 6 connect dend[i](0), dend[4](1)
+
+        """
+
         # child.connect(parent, parent_end, {child_start=0})
         # Distal (Apical)
         self.dends['apical_trunk'].connect(self.soma, 1, 0)
@@ -193,6 +236,8 @@ class L2Pyr(Pyr):
         self.dends['basal_1'].connect(self.soma, 0, 0)
         self.dends['basal_2'].connect(self.dends['basal_1'], 1, 0)
         self.dends['basal_3'].connect(self.dends['basal_1'], 1, 0)
+
+        self.basic_shape() # translated from original hoc (2009 model)
 
     # Adds biophysics to soma
     def __biophys_soma(self):
@@ -489,71 +534,71 @@ class L2Pyr(Pyr):
         # deal with distal first along major cable axis
         # the way this is assigning variables is ugly/lazy right now
         for i in range(0, 3):
-            nrn.pt3dclear(sec=self.list_dend[i])
+            h.pt3dclear(sec=self.list_dend[i])
 
             # x_distal and y_distal are the starting points for each segment
             # these are updated at the end of the loop
-            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
             # update x_distal and y_distal after setting them
             # x_distal += dend_dx[i]
             y_distal += self.dend_L[i]
 
             # add next point
-            nrn.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
+            h.pt3dadd(0, y_distal, 0, self.dend_diam[i], sec=self.list_dend[i])
 
         # now deal with dend 3
         # dend 3 will ALWAYS be positioned at the end of dend[0]
-        nrn.pt3dclear(sec=self.list_dend[3])
+        h.pt3dclear(sec=self.list_dend[3])
 
         # activate this section with 'sec =' notation
         # self.list_dend[0].push()
-        x_start = nrn.x3d(1, sec = self.list_dend[0])
-        y_start = nrn.y3d(1, sec = self.list_dend[0])
-        # nrn.pop_section()
+        x_start = h.x3d(1, sec = self.list_dend[0])
+        y_start = h.y3d(1, sec = self.list_dend[0])
+        # h.pop_section()
 
-        nrn.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        h.pt3dadd(x_start, y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
         # self.dend_L[3] is subtracted because lengths always positive,
         # and this goes to negative x
-        nrn.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
+        h.pt3dadd(x_start-self.dend_L[3], y_start, 0, self.dend_diam[3], sec=self.list_dend[3])
 
         # now deal with proximal dends
         for i in range(4, 7):
-            nrn.pt3dclear(sec=self.list_dend[i])
+            h.pt3dclear(sec=self.list_dend[i])
 
         # deal with dend 4, ugly. sorry.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[i], sec=self.list_dend[4])
         y_prox += -self.dend_L[4]
 
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4], sec=self.list_dend[4])
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[4], sec=self.list_dend[4])
 
         # x_prox, y_prox are now the starting points for BOTH last 2 sections
 
         # dend 5
         # Calculate x-coordinate for end of dend
         dend5_x = -self.dend_L[5] * np.sqrt(2) / 2.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
-        nrn.pt3dadd(dend5_x, y_prox-self.dend_L[5] * np.sqrt(2) / 2.,
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[5], sec=self.list_dend[5])
+        h.pt3dadd(dend5_x, y_prox-self.dend_L[5] * np.sqrt(2) / 2.,
                     0, self.dend_diam[5], sec=self.list_dend[5])
 
         # dend 6
         # Calculate x-coordinate for end of dend
         dend6_x = self.dend_L[6] * np.sqrt(2) / 2.
-        nrn.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
-        nrn.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2) / 2.,
+        h.pt3dadd(x_prox, y_prox, 0, self.dend_diam[6], sec=self.list_dend[6])
+        h.pt3dadd(dend6_x, y_prox-self.dend_L[6] * np.sqrt(2) / 2.,
                     0, self.dend_diam[6], sec=self.list_dend[6])
 
         # set 3D position
-        # z grid position used as y coordinate in nrn.pt3dchange() to satisfy
-        # gui convention that y is height and z is depth. In nrn.pt3dchange()
+        # z grid position used as y coordinate in h.pt3dchange() to satisfy
+        # gui convention that y is height and z is depth. In h.pt3dchange()
         # x and z components are scaled by 100 for visualization clarity
         self.soma.push()
-        for i in range(0, int(nrn.n3d())):
-            nrn.pt3dchange(i, self.pos[0]*100 + nrn.x3d(i), self.pos[2] +
-                           nrn.y3d(i), self.pos[1] * 100 + nrn.z3d(i),
-                           nrn.diam3d(i))
+        for i in range(0, int(h.n3d())):
+            h.pt3dchange(i, self.pos[0]*100 + h.x3d(i), self.pos[2] +
+                           h.y3d(i), self.pos[1] * 100 + h.z3d(i),
+                           h.diam3d(i))
 
-        nrn.pop_section()
+        h.pop_section()
 
 if __name__ == '__main__':
     pass
