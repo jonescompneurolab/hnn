@@ -40,7 +40,7 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-h.define_shape()
+# h.define_shape()
 
 #llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
 

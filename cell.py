@@ -307,7 +307,7 @@ class BasketSingle (Cell):
         self.name = cell_name
 
         # set 3D shape - unused for now but a prototype
-        # self.__shape_change()
+        self.__shape_change()
 
     def __set_props (self, cell_name, pos):
         return {
