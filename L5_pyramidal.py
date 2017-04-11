@@ -31,6 +31,29 @@ class L5Pyr(Pyr):
         pt3dclear(sec=dend[6]); pt3dadd(0, -50, 0, 1,sec=dend[6]); pt3dadd(-106, -156, 0, 1,sec=dend[6])
         pt3dclear(sec=dend[7]); pt3dadd(0, -50, 0, 1,sec=dend[7]); pt3dadd(106, -156, 0, 1,sec=dend[7])
 
+    def geom (self):
+      soma = self.soma; dend = self.list_dend;
+      # soma.L = 13 # BUSH 1999 spike amp smaller
+      soma.L=39 # Bush 1993
+      dend[0].L = 102
+      dend[1].L = 255
+      dend[2].L = 680 # default 400
+      dend[3].L = 680 # default 400
+      dend[4].L = 425
+      dend[5].L = 85
+      dend[6].L = 255 #  default 150
+      dend[7].L = 255 #  default 150
+      # soma.diam = 18.95 # Bush 1999
+      soma.diam = 28.9 # Bush 1993
+      dend[0].diam = 10.2
+      dend[1].diam = 5.1
+      dend[2].diam = 7.48 # default 4.4
+      dend[3].diam = 4.93 # default 2.9
+      dend[4].diam = 3.4
+      dend[5].diam = 6.8
+      dend[6].diam = 8.5
+      dend[7].diam = 8.5
+
     def __init__(self, pos, p={}):
         # Get default L5Pyr params and update them with corresponding params in p
         p_all_default = p_default.get_L5Pyr_params_default()
@@ -56,7 +79,8 @@ class L5Pyr(Pyr):
         self.__connect_sections()
         #self.create_dends(dend_names, dend_props, soma_props)
         # self.__set_3Dshape()
-        self.basic_shape()
+        self.basic_shape() # translated from original hoc (2009 model)
+        self.geom() # adjusted after translation from original hoc (2009 model)
 
         # biophysics
         self.__biophys_soma()
