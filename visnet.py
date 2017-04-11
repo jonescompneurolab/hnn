@@ -75,7 +75,7 @@ plt.ion(); fig = plt.figure()
 shapeax = plt.subplot(111, projection='3d')
 shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
 #shapeax.view_init(75,66)
-shapeax.view_init(elev=120,azim=-90)
+shapeax.view_init(elev=105,azim=-71)
 
 def countseg (ls): return sum([s.nseg for s in ls])
 
