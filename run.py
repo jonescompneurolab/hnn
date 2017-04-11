@@ -190,13 +190,14 @@ h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
 # spike file needs to be known by all nodes
 file_spikes_tmp = fio.file_spike_tmp(dproj)  
 net = network.NetworkOnNode(p) # create node-specific network
-#net.movecellstopos()
 if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
 else: v_debug = None
 
 t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
 dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
 dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
+
+net.movecellstopos()
 
 # All units for time: ms
 def runsim (f_psim):

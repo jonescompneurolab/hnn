@@ -57,7 +57,7 @@ def get3dinfo (sidx,eidx):
 
 llx0,lly0,llz0,lldiam0 = get3dinfo(0,270)
 
-net.movecellstopos()
+#net.movecellstopos()
 # h.define_shape()
 
 dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
