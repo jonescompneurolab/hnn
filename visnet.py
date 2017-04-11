@@ -41,6 +41,7 @@ def getdrawsec (ncells=1,ct=L2Pyr):
 
 dsec = {}
 for ty in [L2Pyr, L5Pyr, L2Basket, L5Basket]: dsec[ty] = cellsecbytype(ty)
+dlw = {L2Pyr:1, L5Pyr:1,L2Basket:4,L5Basket:4}
 whichdraw = [L2Pyr, L2Basket, L5Pyr, L5Basket]
 
 lsecnames = cell.get_section_names()
@@ -59,9 +60,9 @@ llx0,lly0,llz0,lldiam0 = get3dinfo(0,270)
 net.movecellstopos()
 # h.define_shape()
 
-dyoff = {L2Pyr: 1800, 'L2_pyramidal' : 1800,
+dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
          L5Pyr: -1000, 'L5_pyramidal' : -1000,
-         L2Basket: 1800, 'L2_basket' : 1800,
+         L2Basket: 1000, 'L2_basket' : 1000,
          L5Basket: -1000, 'L5_basket' : -1000}
 for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
 
@@ -74,6 +75,7 @@ plt.ion(); fig = plt.figure()
 shapeax = plt.subplot(111, projection='3d')
 shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
 #shapeax.view_init(75,66)
+shapeax.view_init(elev=120,azim=-90)
 
 def countseg (ls): return sum([s.nseg for s in ls])
 
@@ -93,7 +95,7 @@ else:
 
 for ty in whichdraw:
   ls = dsec[ty]
-  shapelines = shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=3)
+  shapelines = shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=dlw[ty])
 
 def onclick(event):
   try:
