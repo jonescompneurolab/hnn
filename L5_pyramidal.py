@@ -76,10 +76,7 @@ class L5Pyr(Pyr):
         # Geometry
         # dend Cm and dend Ra set using soma Cm and soma Ra
         self.create_dends_new(p_dend)
-        self.__connect_sections()
-        #self.create_dends(dend_names, dend_props, soma_props)
-        # self.__set_3Dshape()
-        self.basic_shape() # translated from original hoc (2009 model)
+        self.topol()
         self.geom() # adjusted after translation from original hoc (2009 model)
 
         # biophysics
@@ -248,7 +245,7 @@ class L5Pyr(Pyr):
         }
 
     # connects sections of this cell together
-    def __connect_sections(self):
+    def topol (self):
 
         """ original topol
         connect dend(0), soma(1) // dend[0] is apical trunk
@@ -272,6 +269,8 @@ class L5Pyr(Pyr):
         self.dends['basal_1'].connect(self.soma, 0, 0)
         self.dends['basal_2'].connect(self.dends['basal_1'], 1, 0)
         self.dends['basal_3'].connect(self.dends['basal_1'], 1, 0)
+
+        self.basic_shape() # translated from original hoc (2009 model)
 
         # # Distal
         # self.list_dend[0].connect(self.soma, 1, 0)
