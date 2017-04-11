@@ -59,10 +59,15 @@ class Cell ():
       return lx,ly,lz,ldiam
 
     def translate3d (self, dx, dy, dz):
+      s = self.soma
+      for i in range(s.n3d()):          
+        h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
+      """
       for s in self.get_sections():
         for i in range(s.n3d()):          
           #print(s,i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i))
           h.pt3dchange(i,s.x3d(i)+dx,s.y3d(i)+dy,s.z3d(i)+dz,s.diam3d(i),sec=s)
+      """
 
     def translateto (self, x, y, z):      
       x0 = self.soma.x3d(0)

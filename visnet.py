@@ -19,10 +19,10 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
 
 # ls = list(h.allsec())
 
-# h.define_shape()
+h.define_shape()
 
 ls = []
-for c in net.cells_list:
+for c in net.cells:
   if type(c) == L5Pyr: # L2Pyr: # L5Basket: # L2Basket:
     lss = c.get_sections()
     #c._L5Pyr__set_3Dshape()#__set_3Dshape()
@@ -36,7 +36,7 @@ for s in ls: s.nseg=1
 def get3dinfo (sidx,eidx):
   llx,lly,llz,lldiam = [],[],[],[]
   for i in range(sidx,eidx,1):
-    lx,ly,lz,ldiam = net.cells_list[i].get3dinfo()
+    lx,ly,lz,ldiam = net.cells[i].get3dinfo()
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
@@ -44,11 +44,11 @@ def get3dinfo (sidx,eidx):
 
 llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
 
-#net.movecellstopos()
+# net.movecellstopos()
 
 llx1,lly1,llz1,lldiam1 = get3dinfo(200,210)
 
-cell = net.cells_list[200]
+cell = net.cells[200]
 
 plt.ion()
 fig = plt.figure()

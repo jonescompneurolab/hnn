@@ -100,7 +100,7 @@ class NetworkOnNode ():
         self.__gid_assign()
 
         # create cells (and create self.origin in create_cells_pyr())
-        self.cells_list = []
+        self.cells = []
         self.extinput_list = []
 
         # external unique input list dictionary
@@ -297,26 +297,26 @@ class NetworkOnNode ():
                 # create cells based on loc property
                 # creates a NetCon object internally to Neuron
                 if type == 'L2_pyramidal':
-                    self.cells_list.append(L2Pyr(pos, self.p))
-                    self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+                    self.cells.append(L2Pyr(pos, self.p))
+                    self.pc.cell(gid, self.cells[-1].connect_to_target(None))
                     # run the IClamp function here
                     # create_all_IClamp() is defined in L2Pyr (etc)
-                    self.cells_list[-1].create_all_IClamp(self.p)
+                    self.cells[-1].create_all_IClamp(self.p)
                 elif type == 'L5_pyramidal':
-                    self.cells_list.append(L5Pyr(pos, self.p))
-                    self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+                    self.cells.append(L5Pyr(pos, self.p))
+                    self.pc.cell(gid, self.cells[-1].connect_to_target(None))
                     # run the IClamp function here
-                    self.cells_list[-1].create_all_IClamp(self.p)
+                    self.cells[-1].create_all_IClamp(self.p)
                 elif type == 'L2_basket':
-                    self.cells_list.append(L2Basket(pos))
-                    self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+                    self.cells.append(L2Basket(pos))
+                    self.pc.cell(gid, self.cells[-1].connect_to_target(None))
                     # also run the IClamp for L2_basket
-                    self.cells_list[-1].create_all_IClamp(self.p)
+                    self.cells[-1].create_all_IClamp(self.p)
                 elif type == 'L5_basket':
-                    self.cells_list.append(L5Basket(pos))
-                    self.pc.cell(gid, self.cells_list[-1].connect_to_target(None))
+                    self.cells.append(L5Basket(pos))
+                    self.pc.cell(gid, self.cells[-1].connect_to_target(None))
                     # run the IClamp function here
-                    self.cells_list[-1].create_all_IClamp(self.p)
+                    self.cells[-1].create_all_IClamp(self.p)
                 elif type == 'extinput':
                     # to find param index, take difference between REAL gid
                     # here and gid start point of the items
@@ -346,14 +346,14 @@ class NetworkOnNode ():
     # Both for synapses AND for external inputs
     def __parnet_connect(self):
         # loop over target zipped gids and cells
-        # cells_list has NO extinputs anyway. also no extgausses
-        for gid, cell in zip(self.__gid_list, self.cells_list):
+        # cells has NO extinputs anyway. also no extgausses
+        for gid, cell in zip(self.__gid_list, self.cells):
             # ignore iteration over inputs, since they are NOT targets
             if self.pc.gid_exists(gid) and self.gid_to_type(gid) is not 'extinput':
                 # print("rank:", self.rank, "gid:", gid, cell, self.gid_to_type(gid))
 
                 # for each gid, find all the other cells connected to it, based on gid
-                # this MUST be defined in EACH class of cell in self.cells_list
+                # this MUST be defined in EACH class of cell in self.cells
                 # parconnect receives connections from other cells
                 # parreceive receives connections from external inputs
                 cell.parconnect(gid, self.gid_dict, self.pos_dict, self.p)
@@ -379,7 +379,7 @@ class NetworkOnNode ():
         """ this method must be run post-integration
         """
         # this is quite ugly
-        for cell in self.cells_list:
+        for cell in self.cells:
             # check for celltype
             if cell.celltype == 'L5_pyramidal':
                 # iterate over somatic currents, assumes this list exists
@@ -404,13 +404,13 @@ class NetworkOnNode ():
             if gid in self.__gid_list:
                 n = self.__gid_list.index(gid)
                 v = nrn.Vector()
-                v.record(self.cells_list[n].soma(0.5)._ref_v)
+                v.record(self.cells[n].soma(0.5)._ref_v)
 
                 return v
 
     # initializes the state closer to baseline
     def __state_init(self):
-        for cell in self.cells_list:
+        for cell in self.cells:
             seclist = nrn.SectionList()
             seclist.wholetree(sec=cell.soma)
             for sect in seclist:
@@ -433,4 +433,4 @@ class NetworkOnNode ():
 
     # move cells 3d positions to positions used for wiring
     def movecellstopos (self):
-      for cell in self.cells_list: cell.movetopos()
+      for cell in self.cells: cell.movetopos()

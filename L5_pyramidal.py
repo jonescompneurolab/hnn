@@ -41,7 +41,7 @@ class L5Pyr(Pyr):
         self.create_dends_new(p_dend)
         self.__connect_sections()
         #self.create_dends(dend_names, dend_props, soma_props)
-        self.__set_3Dshape()
+        #self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
