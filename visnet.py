@@ -59,6 +59,12 @@ llx0,lly0,llz0,lldiam0 = get3dinfo(0,270)
 net.movecellstopos()
 # h.define_shape()
 
+dyoff = {L2Pyr: 1800, 'L2_pyramidal' : 1800,
+         L5Pyr: -1000, 'L5_pyramidal' : -1000,
+         L2Basket: 1800, 'L2_basket' : 1800,
+         L5Basket: -1000, 'L5_basket' : -1000}
+for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
+
 llx1,lly1,llz1,lldiam1 = get3dinfo(0,270)
 
 plt.ion(); fig = plt.figure()
