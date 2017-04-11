@@ -8,18 +8,25 @@ from L2_basket import L2Basket
 from L5_basket import L5Basket
 from run import *
 
-# ls = list(h.allsec())
+drawallcells = True
 
 cell = net.cells[200]
 
-ls = []
-for c in net.cells:
-  if type(c) == L2Pyr: # L5Pyr: # L5Basket: # L2Basket:
-    cell = c
-    lss = c.get_sections()
-    for s in lss: ls.append(s)
-    #if len(ls) > 3*len(lss): break
-    break
+def getdrawsec (ncells=1,ct=L2Pyr):
+  global cell
+  if drawallcells: return list(h.allsec())
+  ls = []
+  nfound = 0
+  for c in net.cells:
+    if type(c) == ct: 
+      cell = c
+      lss = c.get_sections()
+      for s in lss: ls.append(s)
+      nfound += 1
+      if nfound >= ncells: break
+  return ls
+
+ls = getdrawsec()
 
 lsecnames = cell.get_section_names()
 
@@ -33,7 +40,7 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-#h.define_shape()
+h.define_shape()
 
 #llx0,lly0,llz0,lldiam0 = get3dinfo(200,210)
 
@@ -54,9 +61,11 @@ shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapea
 #shapeax.set_zlim3d((0,100))
 
 defclr = 'k'; selclr = 'r'
-#shapelines = shapeplot(h,shapeax,lw=8)
 #shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
+if drawallcells:
+  shapelines = shapeplot(h,shapeax,lw=3,picker=5)
+else:
+  shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
 
 def onclick(event):
   try:
@@ -66,10 +75,6 @@ def onclick(event):
     pass
 
 # cid = fig.canvas.mpl_connect('button_press_event', onclick)
-
-# net has cells - net.pos_dict has locations
-# net.pos_dict.keys()
-# dict_keys(['L2_basket', 'evdist', 'extgauss', 'L5_pyramidal', 'extpois', 'extinput', 'L5_basket', 'evprox1', 'evprox0', 'L2_pyramidal'])
 
 def setcolor (ls,clr):
   for l in ls: l.set_color(clr)
@@ -99,5 +104,6 @@ def onpick (event):
   except:
     pass
 
-cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+if not drawallcells:
+  cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
