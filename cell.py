@@ -394,7 +394,7 @@ class Pyr (Cell):
 
         # apical: 0--4
         # basal: 5--7
-        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']]
+        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
 
 
     def get_sections (self):
