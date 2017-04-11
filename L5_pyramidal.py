@@ -41,7 +41,7 @@ class L5Pyr(Pyr):
         self.create_dends_new(p_dend)
         self.__connect_sections()
         #self.create_dends(dend_names, dend_props, soma_props)
-        #self.__set_3Dshape()
+        # self.__set_3Dshape()
 
         # biophysics
         self.__biophys_soma()
@@ -627,10 +627,6 @@ class L5Pyr(Pyr):
         # soma distal coords
         x_distal = 0
         y_distal = self.soma.L
-
-        # apical: 0--4
-        # basal: 5--7
-        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']]
 
         # dend 0-3 are major axis, dend 4 is branch
         # deal with distal first along major cable axis

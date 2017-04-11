@@ -19,7 +19,7 @@ for l in [L2Pyrsecnames, L5Pyrsecnames]:
 
 # ls = list(h.allsec())
 
-h.define_shape()
+# h.define_shape()
 
 ls = []
 for c in net.cells:

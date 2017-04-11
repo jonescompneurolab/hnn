@@ -392,6 +392,11 @@ class Pyr (Cell):
                 if not self.dends[key].nseg % 2:
                     self.dends[key].nseg += 1
 
+        # apical: 0--4
+        # basal: 5--7
+        self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_1', 'apical_2', 'apical_tuft', 'apical_oblique', 'basal_1', 'basal_2', 'basal_3']]
+
+
     def get_sections (self):
       ls = [self.soma]
       for key in self.dends:
