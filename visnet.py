@@ -8,9 +8,10 @@ from L2_basket import L2Basket
 from L5_basket import L5Basket
 from run import *
 
-drawallcells = True # False # True
+drawallcells = True # False 
 cell = net.cells[200]
 
+# colors for the different cell types
 dclr = {'L2_pyramidal' : 'g', L2Pyr: 'g',
         'L5_pyramidal' : 'r', L5Pyr: 'r',
         'L2_basket' : 'k', L2Basket: 'k',
@@ -45,8 +46,6 @@ whichdraw = [L2Pyr, L2Basket, L5Pyr, L5Basket]
 
 lsecnames = cell.get_section_names()
 
-# for s in ls: s.nseg=1
-
 def get3dinfo (sidx,eidx):
   llx,lly,llz,lldiam = [],[],[],[]
   for i in range(sidx,eidx,1):
@@ -54,20 +53,19 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-llx0,lly0,llz0,lldiam0 = get3dinfo(0,270)
+def arrangelayers ():
+  # offsets for L2, L5 cells so that L5 below L2 in display
+  dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
+           L5Pyr: -1000, 'L5_pyramidal' : -1000,
+           L2Basket: 1000, 'L2_basket' : 1000,
+           L5Basket: -1000, 'L5_basket' : -1000}
+  for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
 
-# offsets for L2, L5 cells so that L5 below L2 in display
-dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
-         L5Pyr: -1000, 'L5_pyramidal' : -1000,
-         L2Basket: 1000, 'L2_basket' : 1000,
-         L5Basket: -1000, 'L5_basket' : -1000}
-for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
+arrangelayers()
 
-llx1,lly1,llz1,lldiam1 = get3dinfo(0,270)
+llx,lly,llz,lldiam = get3dinfo(0,270)
 
 plt.ion(); fig = plt.figure()
-
-# allseg = sum([s.nseg for s in ls])
 
 shapeax = plt.subplot(111, projection='3d')
 shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
@@ -85,9 +83,14 @@ else:
   shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
 """
 
-for ty in whichdraw:
-  ls = dsec[ty]
-  shapelines = shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=dlw[ty])
+def drawcells3d ():
+  lshapelines = []
+  for ty in whichdraw:
+    ls = dsec[ty]
+    lshapelines.append(shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=dlw[ty]))
+  return lshapelines
+
+drawcells3d()
 
 def onclick(event):
   try:
@@ -96,11 +99,10 @@ def onclick(event):
   except:
     pass
 
-# cid = fig.canvas.mpl_connect('button_press_event', onclick)
-
 def setcolor (ls,clr):
   for l in ls: l.set_color(clr)
 
+# click on section event handler - not used for network 
 def onpick (event):
   print('onpick')
   thisline = event.artist
@@ -126,5 +128,11 @@ def onpick (event):
   except:
     pass
 
-if not drawallcells: cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+def setcallbacks ():
+  lcid = []
+  if False: lcid.append(fig.canvas.mpl_connect('button_press_event', onclick))
+  if not drawallcells: lcid.append(fig.canvas.mpl_connect('pick_event', onpick))
+  return lcid
+
+lcid = setcallbacks()
 
