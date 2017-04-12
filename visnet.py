@@ -136,3 +136,34 @@ def setcallbacks ():
 
 lcid = setcallbacks()
 
+#
+def drawinputs (cell,clr,ax):
+  for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
+    for src in lsrc:
+      precell = src.precell()
+      ax.plot([precell.pos[0],cell.pos[0]],[precell.pos[1],cell.pos[1]],clr)
+
+#
+def drawconn2d ():
+  plt.figure()
+  ax = plt.gca()
+  """
+  loc = np.array(net.pos_dict['L2_basket'])
+  plot(loc[:,0],loc[:,1],'ko',markersize=14)
+  loc = np.array(net.pos_dict['L2_pyramidal'])
+  plot(loc[:,0],loc[:,1],'ro',markersize=14)
+  loc = np.array(net.pos_dict['L2_basket'])
+  plot(loc[:,0],loc[:,1],'bo',markersize=10)
+  """
+  lx = [cell.pos[0] for cell in net.cells]
+  ly = [cell.pos[1] for cell in net.cells]
+  ax.plot(lx,ly,'ko',markersize=14)
+  """
+  self.ncfrom_L2Pyr = []
+  self.ncfrom_L2Basket = []
+  self.ncfrom_L5Pyr = []
+  self.ncfrom_L5Basket = []
+  """
+  for cell in net.cells:
+    drawinputs(cell,'r',ax)
+    break
