@@ -1,4 +1,4 @@
-from morphology import shapeplot, morphology_to_dict
+from morphology import shapeplot
 from mpl_toolkits.mplot3d import Axes3D
 import pylab as plt
 from neuron import h
@@ -9,7 +9,6 @@ from L5_basket import L5Basket
 from run import *
 
 drawallcells = True # False # True
-ndraw = 100
 cell = net.cells[200]
 
 dclr = {'L2_pyramidal' : 'g', L2Pyr: 'g',
@@ -57,9 +56,7 @@ def get3dinfo (sidx,eidx):
 
 llx0,lly0,llz0,lldiam0 = get3dinfo(0,270)
 
-#net.movecellstopos()
-# h.define_shape()
-
+# offsets for L2, L5 cells so that L5 below L2 in display
 dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
          L5Pyr: -1000, 'L5_pyramidal' : -1000,
          L2Basket: 1000, 'L2_basket' : 1000,
@@ -74,14 +71,9 @@ plt.ion(); fig = plt.figure()
 
 shapeax = plt.subplot(111, projection='3d')
 shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
-#shapeax.view_init(75,66)
 shapeax.view_init(elev=105,azim=-71)
 
 def countseg (ls): return sum([s.nseg for s in ls])
-
-#shapeax.set_xlim3d((-425.11876526,  1890.3420929))
-#shapeax.set_ylim3d((-173.77793655,  736.48745499))
-#shapeax.set_zlim3d((0,100))
 
 defclr = 'k'; selclr = 'r'
 
@@ -134,5 +126,5 @@ def onpick (event):
   except:
     pass
 
-if not drawallcells and ndraw==1: cid2 = fig.canvas.mpl_connect('pick_event', onpick)
+if not drawallcells: cid2 = fig.canvas.mpl_connect('pick_event', onpick)
 
