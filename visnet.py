@@ -53,16 +53,6 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-def arrangelayers ():
-  # offsets for L2, L5 cells so that L5 below L2 in display
-  dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
-           L5Pyr: -1000, 'L5_pyramidal' : -1000,
-           L2Basket: 1000, 'L2_basket' : 1000,
-           L5Basket: -1000, 'L5_basket' : -1000}
-  for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
-
-arrangelayers()
-
 llx,lly,llz,lldiam = get3dinfo(0,270)
 
 plt.ion(); fig = plt.figure()

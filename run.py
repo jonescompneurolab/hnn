@@ -22,6 +22,10 @@ import specfn as specfn
 import pickle
 from dipolefn import Dipole
 from conf import readconf
+from L5_pyramidal import L5Pyr
+from L2_pyramidal import L2Pyr
+from L2_basket import L2Basket
+from L5_basket import L5Basket
 
 dconf = readconf()
 
@@ -197,7 +201,17 @@ t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
 dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
 dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recording  
 
-net.movecellstopos()
+net.movecellstopos() # position cells in 2D grid
+
+def arrangelayers ():
+  # offsets for L2, L5 cells so that L5 below L2 in display
+  dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
+           L5Pyr: -1000, 'L5_pyramidal' : -1000,
+           L2Basket: 1000, 'L2_basket' : 1000,
+           L5Basket: -1000, 'L5_basket' : -1000}
+  for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
+
+arrangelayers() # arrange cells in layers - for visualization purposes
 
 # All units for time: ms
 def runsim (f_psim):
