@@ -521,6 +521,12 @@ class HNNGUI (QMainWindow):
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
   def showdistparamwin (self): self.baseparamwin.distparamwin.show()
   def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
+  def showvisnet (self):
+    cmdargs = shlex.split('python -i visnet.py')
+    proc = Popen(cmdargs,cwd=os.getcwd())
+    while proc.poll() is None:
+      sleep(1)
+    proc.communicate()
 
   def addParamImageButtons (self,gRow):
 
@@ -539,9 +545,9 @@ class HNNGUI (QMainWindow):
     self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
-    self.netbtn = QPushButton('Network Connections\n',self)
+    self.netbtn = QPushButton('Network Visualization\n',self)
     self.netbtn.setIcon(QIcon("res/netfig.png"))
-    self.netbtn.clicked.connect(self.shownetparamwin)
+    self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
 
     gRow += 1
@@ -567,7 +573,7 @@ class HNNGUI (QMainWindow):
     self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = ClickLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
-    self.pixNetlbl.clicked.connect(self.shownetparamwin)
+    self.pixNetlbl.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
 
