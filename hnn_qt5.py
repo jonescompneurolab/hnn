@@ -522,7 +522,7 @@ class HNNGUI (QMainWindow):
   def showdistparamwin (self): self.baseparamwin.distparamwin.show()
   def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
   def showvisnet (self):
-    cmdargs = shlex.split('python -i visnet.py')
+    cmdargs = shlex.split('python visnet.py')
     proc = Popen(cmdargs,cwd=os.getcwd())
     while proc.poll() is None:
       sleep(1)
