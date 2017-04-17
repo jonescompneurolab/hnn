@@ -760,9 +760,8 @@ class SIMCanvas (FigureCanvas):
     except:
       print('ERR: in plot')
     self.draw()
-        
+          
 if __name__ == '__main__':    
   app = QApplication(sys.argv)
   ex = HNNGUI()
   sys.exit(app.exec_())  
-  
