@@ -117,7 +117,7 @@ defclr = 'k'; selclr = 'r'
 useGL = True
 fig = None
 
-def drawcells3d ():
+def drawcellspylab3d ():
   global shapeax,fig
   plt.ion(); fig = plt.figure()
   shapeax = plt.subplot(111, projection='3d')
@@ -131,7 +131,7 @@ def drawcells3d ():
     lshapelines.append(shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=dlw[ty]))
   return lshapelines
 
-if not useGL: drawcells3d()
+if not useGL: drawcellspylab3d()
 
 def onclick(event):
   try:
@@ -227,12 +227,19 @@ gz = gl.GLGridItem()
 w.addItem(gz)
 """
 
-for cell in net.cells:
-  ls = cell.get_sections()
-  lx,ly,lz = getshapecoords(h,ls)  
-  pts = np.vstack([lx,ly,lz]).transpose()
-  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=2.2, antialias=True, mode='lines')
-  w.addItem(plt)
+def drawcells3dgl (ty,width=2.2):
+  for cell in net.cells:
+    if type(cell) != ty: continue
+    ls = cell.get_sections()
+    lx,ly,lz = getshapecoords(h,ls)  
+    pts = np.vstack([lx,ly,lz]).transpose()
+    plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=width, antialias=True, mode='lines')
+    w.addItem(plt)
+
+drawcells3dgl(L5Pyr)
+drawcells3dgl(L2Pyr)
+drawcells3dgl(L5Basket,width=7.2)
+drawcells3dgl(L2Basket,width=7.2)
 
 w.opts['distance'] = 4320.9087386478195
 w.opts['elevation']=105
