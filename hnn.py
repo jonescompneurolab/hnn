@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE, call
 import shlex
 from time import time, clock, sleep
 import pickle, tempfile
-from conf import readconf
+from conf import readconf, setfcfg, fcfg, dconf
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -24,32 +24,10 @@ import spikefn
 import params_default
 from paramrw import quickreadprm
 
-ncore = multiprocessing.cpu_count()
-
-"""
-# backup the config file
-def backupcfg (simstr):
-  safemkdir('backupcfg')
-  fout = 'backupcfg/' + simstr + '.cfg'
-  if os.path.exists(fout):
-    print 'removing prior cfg file' , fout
-    os.system('rm ' + fout)  
-  os.system('cp ' + fcfg + ' ' + fout) # fcfg created in geom.py via conf.py
-"""
-
-# determine config file name
-def setfcfg ():
-  fcfg = "hnn.cfg" # default config file name
-  for i in range(len(sys.argv)):
-    if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
-      fcfg = sys.argv[i]
-  print("hnn config file is " , fcfg)
-  return fcfg
-
-fcfg = setfcfg() # config file name
-dconf = readconf(fcfg)
 simf = dconf['simf']
 paramf = dconf['paramf']
+
+ncore = multiprocessing.cpu_count()
 
 debug = True
 prtime = True

@@ -2,6 +2,8 @@ from configparser import ConfigParser
 import io
 import pickle
 import os
+import sys
+
 try:
   from StringIO import StringIO
 except ImportError:
@@ -159,4 +161,27 @@ def readconf (fn="hnn.cfg"):
   """
 
   return d
+
+# determine config file name
+def setfcfg ():
+  fcfg = "hnn.cfg" # default config file name
+  for i in range(len(sys.argv)):
+    if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
+      fcfg = sys.argv[i]
+  print("hnn config file is " , fcfg)
+  return fcfg
+
+"""
+# backup the config file
+def backupcfg (simstr):
+  safemkdir('backupcfg')
+  fout = 'backupcfg/' + simstr + '.cfg'
+  if os.path.exists(fout):
+    print 'removing prior cfg file' , fout
+    os.system('rm ' + fout)  
+  os.system('cp ' + fcfg + ' ' + fout) # fcfg created in geom.py via conf.py
+"""
+
+fcfg = setfcfg() # config file name
+dconf = readconf(fcfg)
 
