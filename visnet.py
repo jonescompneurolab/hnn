@@ -212,29 +212,34 @@ def drawconn2d ():
 
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
-w.opts['distance'] = 40
-w.show()
-w.setWindowTitle('Network Visualization')
 
+"""
 gx = gl.GLGridItem()
 gx.rotate(90, 0, 1, 0)
-gx.translate(-10, 0, 0)
+#gx.translate(-10, 0, 0)
 w.addItem(gx)
 gy = gl.GLGridItem()
 gy.rotate(90, 1, 0, 0)
-gy.translate(0, -10, 0)
+#gy.translate(0, -10, 0)
 w.addItem(gy)
 gz = gl.GLGridItem()
-gz.translate(0, 0, -10)
+#gz.translate(0, 0, -10)
 w.addItem(gz)
+"""
 
 for cell in net.cells:
   ls = cell.get_sections()
   lx,ly,lz = getshapecoords(h,ls)  
   pts = np.vstack([lx,ly,lz]).transpose()
-  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=5.2, antialias=True, mode='lines')
+  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=2.2, antialias=True, mode='lines')
   w.addItem(plt)
 
+w.opts['distance'] = 4320.9087386478195
+w.opts['elevation']=105
+w.opts['azimuth']=-71
+w.opts['fov'] = 90
+w.show()
+w.setWindowTitle('Network Visualization')
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
