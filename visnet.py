@@ -1,4 +1,60 @@
-from morphology import shapeplot
+## make this version of pyqtgraph importable before any others
+## we do this to make sure that, when running examples, the correct library
+## version is imported (if there are multiple versions present).
+import sys, os
+
+if not hasattr(sys, 'frozen'):
+    if __file__ == '<stdin>':
+        path = os.getcwd()
+    else:
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    path.rstrip(os.path.sep)
+    if 'pyqtgraph' in os.listdir(path):
+        sys.path.insert(0, path) ## examples adjacent to pyqtgraph (as in source tree)
+    else:
+        for p in sys.path:
+            if len(p) < 3:
+                continue
+            if path.startswith(p):  ## If the example is already in an importable location, promote that location
+                sys.path.remove(p)
+                sys.path.insert(0, p)
+
+## should force example to use PySide instead of PyQt
+if 'pyside' in sys.argv:  
+    from PySide import QtGui
+elif 'pyqt' in sys.argv: 
+    from PyQt4 import QtGui
+elif 'pyqt5' in sys.argv: 
+    from PyQt5 import QtGui
+else:
+    from pyqtgraph.Qt import QtGui
+
+import pyqtgraph as pg    
+    
+## Force use of a specific graphics system
+use_gs = 'default'
+for gs in ['raster', 'native', 'opengl']:
+    if gs in sys.argv:
+        use_gs = gs
+        QtGui.QApplication.setGraphicsSystem(gs)
+        break
+
+print("Using %s (%s graphics system)" % (pg.Qt.QT_LIB, use_gs))
+
+## Enable fault handling to give more helpful error messages on crash. 
+## Only available in python 3.3+
+try:
+    import faulthandler
+    faulthandler.enable()
+except ImportError:
+    pass
+
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.opengl as gl
+import pyqtgraph as pg
+import numpy as np
+
+from morphology import shapeplot, getshapecoords
 from mpl_toolkits.mplot3d import Axes3D
 import pylab as plt
 from neuron import h
@@ -55,34 +111,27 @@ def get3dinfo (sidx,eidx):
 
 llx,lly,llz,lldiam = get3dinfo(0,270)
 
-plt.ion(); fig = plt.figure()
-
-shapeax = plt.subplot(111, projection='3d')
-#shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
-shapeax.set_xticks([]); shapeax.set_yticks([]); shapeax.set_zticks([])
-shapeax.view_init(elev=105,azim=-71)
-shapeax.grid(False)
-
 def countseg (ls): return sum([s.nseg for s in ls])
 
 defclr = 'k'; selclr = 'r'
-
-"""
-#shapelines = shapeplot(h,shapeax,lw=8,cvals=[defclr for i in range(allseg)],picker=5)
-if drawallcells:
-  shapelines = shapeplot(h,shapeax,lw=3)
-else:
-  shapelines = shapeplot(h,shapeax,sections=ls,lw=3,picker=5)
-"""
+useGL = True
+fig = None
 
 def drawcells3d ():
+  global shapeax,fig
+  plt.ion(); fig = plt.figure()
+  shapeax = plt.subplot(111, projection='3d')
+  #shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
+  shapeax.set_xticks([]); shapeax.set_yticks([]); shapeax.set_zticks([])
+  shapeax.view_init(elev=105,azim=-71)
+  shapeax.grid(False)
   lshapelines = []
   for ty in whichdraw:
     ls = dsec[ty]
     lshapelines.append(shapeplot(h,shapeax,sections=ls,cvals=[dclr[ty] for i in range(countseg(ls))],lw=dlw[ty]))
   return lshapelines
 
-drawcells3d()
+if not useGL: drawcells3d()
 
 def onclick(event):
   try:
@@ -121,6 +170,7 @@ def onpick (event):
     pass
 
 def setcallbacks ():
+  if useGL: return []
   lcid = []
   if False: lcid.append(fig.canvas.mpl_connect('button_press_event', onclick))
   if not drawallcells: lcid.append(fig.canvas.mpl_connect('pick_event', onpick))
@@ -159,3 +209,54 @@ def drawconn2d ():
   for cell in net.cells:
     drawinputs(cell,'r',ax)
     break
+
+def getcells3d ():
+  lshapecoords = []
+  for ty in whichdraw:
+    ls = dsec[ty]
+    lshapecoords.append(getshapecoords(h,sections=ls))
+  return lshapecoords
+
+lshapecoords = getcells3d()
+
+app = QtGui.QApplication([])
+w = gl.GLViewWidget()
+w.opts['distance'] = 40
+w.show()
+w.setWindowTitle('pyqtgraph example: GLLinePlotItem')
+
+gx = gl.GLGridItem()
+gx.rotate(90, 0, 1, 0)
+gx.translate(-10, 0, 0)
+w.addItem(gx)
+gy = gl.GLGridItem()
+gy.rotate(90, 1, 0, 0)
+gy.translate(0, -10, 0)
+w.addItem(gy)
+gz = gl.GLGridItem()
+gz.translate(0, 0, -10)
+w.addItem(gz)
+
+def fn(x, y):
+    return np.cos((x**2 + y**2)**0.5)
+
+n = 51
+y = np.linspace(-10,10,n)
+x = np.linspace(-10,10,100)
+for i in range(n):
+    yi = np.array([y[i]]*100)
+    d = (x**2 + yi**2)**0.5
+    z = 10 * np.cos(d) / (d+1)
+    # pts = np.vstack([x,yi,z]).transpose()
+    pts = np.vstack(lshapecoords[0]).transpose()
+    plt = gl.GLLinePlotItem(pos=pts, color=pg.glColor((i,n*1.3)), width=(i+1)/10., antialias=True)
+    w.addItem(plt)
+    
+
+
+## Start Qt event loop unless running in interactive mode.
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
+
