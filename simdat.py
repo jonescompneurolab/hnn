@@ -56,28 +56,20 @@ class SIMCanvas (FigureCanvas):
     if len(ddat.keys()) == 0: return
     try:
       fig,ax = plt.subplots(); ax.cla()
-
       xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
-      print(xlim_new)
 
       # set number of bins (150 bins per 1000ms)
       bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
 
-      print('A')
-
       # plot histograms of inputs
       print(dfile['spk'],dfile['outparam'])
       extinputs = None
-
-      print('B')
 
       try:
         extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
         extinputs.add_delay_times()
       except:
         print('problem with extinputs')
-
-      print('C')
 
       hist = {}
       axdist = self.figure.add_subplot(self.G[0,0]); axdist.cla() # distal inputs
@@ -91,8 +83,6 @@ class SIMCanvas (FigureCanvas):
         for ax in [axdist,axprox]:
           ax.set_xlim(xlim_new)
           ax.legend()          
-
-      print('D')
 
       ax = self.figure.add_subplot(self.G[2:5,0]); ax.cla() # dipole
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')

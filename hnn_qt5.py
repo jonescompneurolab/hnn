@@ -25,6 +25,8 @@ import params_default
 from paramrw import quickreadprm
 from simdat import *
 
+prtime = True
+
 simf = dconf['simf']
 paramf = dconf['paramf']
 
