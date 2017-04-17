@@ -13,22 +13,22 @@ h.load_file('stdlib.hoc')
 h.load_file('import3d.hoc')
 
 class Cell:
-    def __init__(self,name='neuron',soma=None,apic=None,dend=None,axon=None):
-        self.soma = soma if soma is not None else []
-        self.apic = apic if apic is not None else []
-        self.dend = dend if dend is not None else []
-        self.axon = axon if axon is not None else []
-        self.all = self.soma + self.apic + self.dend + self.axon
+  def __init__(self,name='neuron',soma=None,apic=None,dend=None,axon=None):
+    self.soma = soma if soma is not None else []
+    self.apic = apic if apic is not None else []
+    self.dend = dend if dend is not None else []
+    self.axon = axon if axon is not None else []
+    self.all = self.soma + self.apic + self.dend + self.axon
 
-    def delete(self):
-        self.soma = None
-        self.apic = None
-        self.dend = None
-        self.axon = None
-        self.all = None
+  def delete(self):
+    self.soma = None
+    self.apic = None
+    self.dend = None
+    self.axon = None
+    self.all = None
 
-    def __str__(self):
-        return self.name
+  def __str__(self):
+    return self.name
 
 def load(filename, fileformat=None, cell=None, use_axon=True, xshift=0, yshift=0, zshift=0):
     """
@@ -313,6 +313,32 @@ def shapeplot(h,ax,sections=None,order='pre',cvals=None,\
             i += 1
 
     return lines
+
+def getshapecoords (h,sections=None,order='pre',**kwargs):    
+  if sections is None:
+    if order == 'pre':
+      sections = allsec_preorder(h) # Get sections in "pre-order"
+    else:
+      sections = list(h.allsec())    
+  i = 0
+  lx,ly,lz=[],[],[]
+  for sec in sections:
+    xyz = get_section_path(h,sec)
+    for i in range(len(xyz)):
+      lx.append(xyz[i][0])
+      ly.append(xyz[i][1])
+      lz.append(xyz[i][2])
+    """
+    seg_paths = interpolate_jagged(xyz,sec.nseg)
+    for (j,path) in enumerate(seg_paths):
+      for k in range(len(path.shape[0])):
+        lx.append(path[k,0]);
+        ly.append(path[k,1]);
+        lz.append(path[k,2]);
+      i += 1    
+    """
+  return lx,ly,lz
+
 
 def shapeplot_animate(v,lines,nframes=None,tscale='linear',\
                       clim=[-80,50],cmap=cm.YlOrBr_r):
