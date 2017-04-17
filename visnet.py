@@ -68,10 +68,10 @@ drawallcells = True # False
 cell = net.cells[200]
 
 # colors for the different cell types
-dclr = {'L2_pyramidal' : 'g', L2Pyr: 'g',
-        'L5_pyramidal' : 'r', L5Pyr: 'r',
-        'L2_basket' : 'k', L2Basket: 'k',
-        'L5_basket' : 'b', L5Basket: 'b'}
+dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,1.),
+        'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,1.),
+        'L2_basket' : 'k', L2Basket: (1.,1.,1.,1.),
+        'L5_basket' : 'b', L5Basket: (0.,0.,1.,1.)}
 
 def cellsecbytype (ty):
   lss = []
@@ -210,20 +210,11 @@ def drawconn2d ():
     drawinputs(cell,'r',ax)
     break
 
-def getcells3d ():
-  lshapecoords = []
-  for ty in whichdraw:
-    ls = dsec[ty]
-    lshapecoords.append(getshapecoords(h,sections=ls))
-  return lshapecoords
-
-lshapecoords = getcells3d()
-
 app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.opts['distance'] = 40
 w.show()
-w.setWindowTitle('pyqtgraph example: GLLinePlotItem')
+w.setWindowTitle('Network Visualization')
 
 gx = gl.GLGridItem()
 gx.rotate(90, 0, 1, 0)
@@ -237,26 +228,17 @@ gz = gl.GLGridItem()
 gz.translate(0, 0, -10)
 w.addItem(gz)
 
-def fn(x, y):
-    return np.cos((x**2 + y**2)**0.5)
-
-n = 51
-y = np.linspace(-10,10,n)
-x = np.linspace(-10,10,100)
-for i in range(n):
-    yi = np.array([y[i]]*100)
-    d = (x**2 + yi**2)**0.5
-    z = 10 * np.cos(d) / (d+1)
-    # pts = np.vstack([x,yi,z]).transpose()
-    pts = np.vstack(lshapecoords[0]).transpose()
-    plt = gl.GLLinePlotItem(pos=pts, color=pg.glColor((i,n*1.3)), width=(i+1)/10., antialias=True)
-    w.addItem(plt)
-    
+for cell in net.cells:
+  ls = cell.get_sections()
+  lx,ly,lz = getshapecoords(h,ls)  
+  pts = np.vstack([lx,ly,lz]).transpose()
+  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=5.2, antialias=True)
+  w.addItem(plt)
 
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    import sys
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+  import sys
+  if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+    QtGui.QApplication.instance().exec_()
 
