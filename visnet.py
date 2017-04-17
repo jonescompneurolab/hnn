@@ -58,8 +58,10 @@ llx,lly,llz,lldiam = get3dinfo(0,270)
 plt.ion(); fig = plt.figure()
 
 shapeax = plt.subplot(111, projection='3d')
-shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
+#shapeax.set_xlabel('X',fontsize=24); shapeax.set_ylabel('Y',fontsize=24); shapeax.set_zlabel('Z',fontsize=24)
+shapeax.set_xticks([]); shapeax.set_yticks([]); shapeax.set_zticks([])
 shapeax.view_init(elev=105,azim=-71)
+shapeax.grid(False)
 
 def countseg (ls): return sum([s.nseg for s in ls])
 
