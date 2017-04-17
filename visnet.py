@@ -232,7 +232,7 @@ for cell in net.cells:
   ls = cell.get_sections()
   lx,ly,lz = getshapecoords(h,ls)  
   pts = np.vstack([lx,ly,lz]).transpose()
-  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=5.2, antialias=True)
+  plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=5.2, antialias=True, mode='lines')
   w.addItem(plt)
 
 
