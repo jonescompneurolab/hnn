@@ -10,18 +10,17 @@ from hnn_qt5 import *
 
 #
 def runnrnui ():
-  lcmd = [os.path.join('NEURON-UI','NEURON-UI'), 'jupyter console --existing']
-  lproc = []
-  for cmd in lcmd:
-    cmdargs = shlex.split(cmd)
-    proc = Popen(cmdargs,cwd=os.getcwd())
-    lproc.append(proc)
-  """
-  import os
-  os.chdir('/u/samn/hnn/NEURON-UI/neuron_ui/models/hnn')
-  import hnn_nrnui
-  net=hnn_nrnui.HNN()
-  """
+  pnrnui = Popen(shlex.split(os.path.join('NEURON-UI','NEURON-UI')),cwd=os.getcwd())
+  pjup = Popen(shlex.split('jupyter console --existing'),cwd=os.getcwd(),stdin=PIPE,stdout=PIPE,stderr=PIPE)
+  sleep(5)
+  lproc = [pnrnui,pjup]
+  lns = ["import os\n","os.chdir('/u/samn/hnn/NEURON-UI/neuron_ui/models/hnn')\n","import hnn_nrnui\n","net=hnn_nrnui.HNN()\n"]
+  for s in lns:
+    pjup.stdin.write(s.encode())
+    pjup.stdin.flush()
+    sleep(1)
+    # print(pjup.communicate(input=s.encode())[0])
+  return lproc
 
 def runqt5 ():
   app = QApplication(sys.argv)
@@ -36,4 +35,5 @@ if __name__ == '__main__':
   if useqt5:
     runqt5()
   else:
-    runnrnui()
+    lproc = runnrnui()
+
