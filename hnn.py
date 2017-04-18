@@ -11,15 +11,18 @@ from hnn_qt5 import *
 #
 def runnrnui ():
   pnrnui = Popen(shlex.split(os.path.join('NEURON-UI','NEURON-UI')),cwd=os.getcwd())
-  pjup = Popen(shlex.split('jupyter console --existing'),cwd=os.getcwd(),stdin=PIPE,stdout=PIPE,stderr=PIPE)
+  sleep(7)
+  pjup = Popen(shlex.split('jupyter console --existing'),cwd=os.getcwd(),stdin=PIPE,stdout=PIPE,stderr=PIPE,shell=True)
   sleep(5)
   lproc = [pnrnui,pjup]
-  lns = ["import os\n","os.chdir('/u/samn/hnn/NEURON-UI/neuron_ui/models/hnn')\n","import hnn_nrnui\n","net=hnn_nrnui.HNN()\n"]
+  lns = ["import os\n","os.chdir('NEURON-UI/neuron_ui/models/hnn')\n","import hnn_nrnui\n","net=hnn_nrnui.HNN()\n"]
   for s in lns:
     pjup.stdin.write(s.encode())
+    sleep(1)
     pjup.stdin.flush()
     sleep(1)
-    # print(pjup.communicate(input=s.encode())[0])
+    #print(pjup.communicate(input=s.encode())[0])
+    while pjup.poll() is None: pass
   return lproc
 
 def runqt5 ():

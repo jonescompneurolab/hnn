@@ -1,10 +1,11 @@
 MPI
 Matplotlib
 MNE-Python
-NEURON compiled with MPI, Python support - PYTHONPATH must be set to point to Python 3
+NEURON compiled with MPI, Python support - PYTHONPATH must point to Python 3
 Numpy
-PyNeuronToolbox - for visnet.py
+PyOpenGL
 Python 3
 PyQt5
+pyqtgraph
 Scipy
 
