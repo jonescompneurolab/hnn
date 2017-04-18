@@ -26,3 +26,15 @@ class HNN:
 
     logging.debug('HNN loaded')
 
+""" 
+to start (first 2 commands from console)
+
+./NEURON-UI/NEURON-UI &
+jupyter console --existing
+import os
+os.chdir('/u/samn/hnn/NEURON-UI/neuron_ui/models/hnn')
+import hnn_nrnui
+net=hnn_nrnui.HNN()
+
+"""
+
