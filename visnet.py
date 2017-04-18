@@ -179,7 +179,7 @@ def setcallbacks ():
 lcid = setcallbacks()
 
 #
-def drawinputs (cell,clr,ax):
+def drawinputs2d (cell,clr,ax):
   for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
     for src in lsrc:
       precell = src.precell()
@@ -207,7 +207,7 @@ def drawconn2d ():
   self.ncfrom_L5Basket = []
   """
   for cell in net.cells:
-    drawinputs(cell,'r',ax)
+    drawinputs2d(cell,'r',ax)
     break
 
 app = QtGui.QApplication([])
@@ -227,13 +227,36 @@ gz = gl.GLGridItem()
 w.addItem(gz)
 """
 
+#
+def drawinputs3d (cell,clr,width=2.0):
+  for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
+    for src in lsrc:
+      precell = src.precell()
+      pts = np.vstack([[precell.pos[0],cell.pos[0]],[precell.pos[1],cell.pos[1]],[precell.pos[2],cell.pos[2]]]).transpose()
+      plt = gl.GLLinePlotItem(pos=pts, color=clr, width=width, antialias=True, mode='lines')
+      w.addItem(plt)
+
+"""
+#
+def drawconn3d (width=2.0):
+  lx = [cell.pos[0] for cell in net.cells]
+  ly = [cell.pos[1] for cell in net.cells]
+  lz = [cell.pos[1] for cell in net.cells]
+  ax.plot(lx,ly,'ko',markersize=14)
+  for cell in net.cells:
+    drawinputs3d(cell,(1.0,0.0,0.0,1.0),width)
+    break
+"""
+
 def drawcells3dgl (ty,width=2.2):
   for cell in net.cells:
     if type(cell) != ty: continue
-    ls = cell.get_sections()
-    lx,ly,lz = getshapecoords(h,ls)  
+    lx,ly,lz = getshapecoords(h,cell.get_sections())  
     pts = np.vstack([lx,ly,lz]).transpose()
     plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=width, antialias=True, mode='lines')
+    # plt.enableAutoRange('y',0.95)
+    #if cell == net.cells[0]:
+    #  print(dir(plt))
     w.addItem(plt)
 
 drawcells3dgl(L5Pyr)
