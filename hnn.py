@@ -5,17 +5,24 @@ import sys
 import os
 import shlex
 from subprocess import Popen, PIPE, call
+from time import sleep
 
 from hnn_qt5 import *
 
+from signal import signal, SIGPIPE, SIG_DFL
+
 #
 def runnrnui ():
+  signal(SIGPIPE,SIG_DFL) 
   pnrnui = Popen(shlex.split(os.path.join('NEURON-UI','NEURON-UI')),cwd=os.getcwd())
   sleep(7)
   pjup = Popen(shlex.split('jupyter console --existing'),cwd=os.getcwd(),stdin=PIPE,stdout=PIPE,stderr=PIPE,shell=True)
   sleep(5)
   lproc = [pnrnui,pjup]
-  lns = ["import os\n","os.chdir('NEURON-UI/neuron_ui/models/hnn')\n","import hnn_nrnui\n","net=hnn_nrnui.HNN()\n"]
+  lns = ["import os\n",
+         "os.chdir('NEURON-UI/neuron_ui/models/hnn')\n",
+         "import hnn_nrnui\n",
+         "net=hnn_nrnui.HNN()\n"]
   for s in lns:
     pjup.stdin.write(s.encode())
     sleep(1)
