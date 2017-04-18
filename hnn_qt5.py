@@ -522,11 +522,14 @@ class HNNGUI (QMainWindow):
   def showdistparamwin (self): self.baseparamwin.distparamwin.show()
   def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
   def showvisnet (self):
+    Popen(['python', 'visnet.py']) # nonblocking
+    """
     cmdargs = shlex.split('python visnet.py')
     proc = Popen(cmdargs,cwd=os.getcwd())
     while proc.poll() is None:
       sleep(1)
     proc.communicate()
+    """
 
   def addParamImageButtons (self,gRow):
 
