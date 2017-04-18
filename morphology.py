@@ -324,19 +324,12 @@ def getshapecoords (h,sections=None,order='pre',**kwargs):
   lx,ly,lz=[],[],[]
   for sec in sections:
     xyz = get_section_path(h,sec)
-    for i in range(len(xyz)):
-      lx.append(xyz[i][0])
-      ly.append(xyz[i][1])
-      lz.append(xyz[i][2])
-    """
     seg_paths = interpolate_jagged(xyz,sec.nseg)
-    for (j,path) in enumerate(seg_paths):
-      for k in range(len(path.shape[0])):
-        lx.append(path[k,0]);
-        ly.append(path[k,1]);
-        lz.append(path[k,2]);
-      i += 1    
-    """
+    for path in seg_paths:
+      for i in [0,1]:
+        lx.append(path[i][0])
+        ly.append(path[i][1])
+        lz.append(path[i][2])
   return lx,ly,lz
 
 
