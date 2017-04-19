@@ -11,7 +11,7 @@ from conf import fcfg,dconf
 from simdat import *
 
 class HNN:
-  def __init__(self):
+  def __init__ (self):
     logging.debug('Loading HNN')
     neuron_utils.createProject(name='HNN')
     import run
@@ -25,6 +25,17 @@ class HNN:
     neuron_geometries_utils.extractGeometries()
 
     logging.debug('HNN loaded')
+
+    self.RunSimButton = neuron_utils.add_button('Run', extraData={'commands':[]})
+    self.StopSimButton = neuron_utils.add_button('Stop',extraData={'commands':[]})
+    self.SetParams = neuron_utils.add_button('Set Parameters')
+    self.BasePanel = neuron_utils.add_panel('HNN Control', items=[self.RunSimButton,self.StopSimButton,self.SetParams],widget_id='hnnBasePanel')
+    self.BasePanel.on_close(self.close)
+    self.BasePanel.display()
+
+  def close (self):
+    self.BasePanel.close()
+    del self.BasePanel
 
 """ 
 to start (first 2 commands from console)
