@@ -455,7 +455,7 @@ class BaseParamDialog (QDialog):
     self.setWindowTitle('Set Sim Parameters')    
 
   def saveparams (self):
-    global paramf
+    global paramf,basedir
     tmpf = os.path.join('param',self.qle.text() + '.param')
     print('Saving params to ',  tmpf)
     self.hide()
@@ -472,6 +472,7 @@ class BaseParamDialog (QDialog):
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
         paramf = tmpf # success? update paramf
+        basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
       except:
         print('exception in saving param file ',tmpf)
 
