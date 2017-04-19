@@ -1,0 +1,20 @@
+make
+
+git clone https://github.com/pyqtgraph/pyqtgraph.git
+cd pyqtgraph
+git checkout pyqt5
+git pull
+python setup.py install
+
+cd ..
+git clone https://github.com/Neurosim-lab/netpyne.git
+cd netpyne
+git checkout py3
+git pull
+python setup.py install --prefix=$HOME/build/p3/local
+
+cd ..
+git clone https://github.com/MetaCell/NEURON-UI.git
+cd utilities
+python install.py
+
