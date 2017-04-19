@@ -68,10 +68,10 @@ drawallcells = True # False
 cell = net.cells[200]
 
 # colors for the different cell types
-dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,1.),
-        'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,1.),
-        'L2_basket' : 'k', L2Basket: (1.,1.,1.,1.),
-        'L5_basket' : 'b', L5Basket: (0.,0.,1.,1.)}
+dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,0.6),
+        'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,0.6),
+        'L2_basket' : 'k', L2Basket: (1.,1.,1.,0.6),
+        'L5_basket' : 'b', L5Basket: (0.,0.,1.,0.6)}
 
 def cellsecbytype (ty):
   lss = []
