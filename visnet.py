@@ -210,23 +210,6 @@ def drawconn2d ():
     drawinputs2d(cell,'r',ax)
     break
 
-app = QtGui.QApplication([])
-w = gl.GLViewWidget()
-
-"""
-gx = gl.GLGridItem()
-gx.rotate(90, 0, 1, 0)
-#gx.translate(-10, 0, 0)
-w.addItem(gx)
-gy = gl.GLGridItem()
-gy.rotate(90, 1, 0, 0)
-#gy.translate(0, -10, 0)
-w.addItem(gy)
-gz = gl.GLGridItem()
-#gz.translate(0, 0, -10)
-w.addItem(gz)
-"""
-
 #
 def drawinputs3d (cell,clr,widget,width=2.0):
   for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
@@ -259,17 +242,23 @@ def drawcells3dgl (ty,widget,width=2.2):
     #  print(dir(plt))
     widget.addItem(plt)
 
-drawcells3dgl(L5Pyr,w)
-drawcells3dgl(L2Pyr,w)
-drawcells3dgl(L5Basket,w,width=7.2)
-drawcells3dgl(L2Basket,w,width=7.2)
+app = QtGui.QApplication([])
 
-w.opts['distance'] = 4320.9087386478195
-w.opts['elevation']=105
-w.opts['azimuth']=-71
-w.opts['fov'] = 90
-w.show()
-w.setWindowTitle('Network Visualization')
+def drawallcells3dgl ():
+  wcells = gl.GLViewWidget()
+  drawcells3dgl(L5Pyr,wcells)
+  drawcells3dgl(L2Pyr,wcells)
+  drawcells3dgl(L5Basket,wcells,width=7.2)
+  drawcells3dgl(L2Basket,wcells,width=7.2)
+  wcells.opts['distance'] = 4320.9087386478195
+  wcells.opts['elevation']=105
+  wcells.opts['azimuth']=-71
+  wcells.opts['fov'] = 90
+  wcells.show()
+  wcells.setWindowTitle('Network Visualization')
+  return wcells
+
+wcells = drawallcells3dgl()
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
@@ -277,3 +266,17 @@ if __name__ == '__main__':
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()
 
+
+"""
+gx = gl.GLGridItem()
+gx.rotate(90, 0, 1, 0)
+#gx.translate(-10, 0, 0)
+w.addItem(gx)
+gy = gl.GLGridItem()
+gy.rotate(90, 1, 0, 0)
+#gy.translate(0, -10, 0)
+w.addItem(gy)
+gz = gl.GLGridItem()
+#gz.translate(0, 0, -10)
+w.addItem(gz)
+"""
