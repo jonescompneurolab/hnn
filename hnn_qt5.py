@@ -332,6 +332,44 @@ class NetworkParamDialog (DictDialog):
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
     self.stitle = 'Set Network Parameters'
 
+class VisnetDialog (QDialog):
+  def __init__ (self, parent):
+    super(VisnetDialog, self).__init__(parent)
+    self.initUI()
+
+  def showcells3D (self): Popen(['python', 'visnet.py', 'cells']) # nonblocking
+  def showEconn (self): Popen(['python', 'visnet.py', 'Econn']) # nonblocking
+  def showIconn (self): Popen(['python', 'visnet.py', 'Iconn']) # nonblocking
+
+  def initUI (self):
+
+    grid = QGridLayout()
+    grid.setSpacing(10)
+
+    row = 1
+
+    self.btncells = QPushButton('Cells in 3D',self)
+    self.btncells.resize(self.btncells.sizeHint())
+    self.btncells.clicked.connect(self.showcells3D)
+    grid.addWidget(self.btncells, row, 0, 1, 1); 
+
+    self.btnE = QPushButton('Excitatory Connections',self)
+    self.btnE.resize(self.btnE.sizeHint())
+    self.btnE.clicked.connect(self.showEconn)
+    grid.addWidget(self.btnE, row, 1, 1, 1); 
+
+    self.btnI = QPushButton('Inhibitory Connections',self)
+    self.btnI.resize(self.btnI.sizeHint())
+    self.btnI.clicked.connect(self.showIconn)
+    grid.addWidget(self.btnI, row, 2, 1, 1); 
+
+    self.setLayout(grid) 
+        
+    self.setGeometry(100, 100, 300, 100)
+    self.setWindowTitle('Visualize Model')
+
+
+
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
 
@@ -459,6 +497,8 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.runthread = None
     self.baseparamwin = BaseParamDialog(self)
+    self.visnetwin = VisnetDialog(self)
+    
 
   def selParamFileDialog (self):
     global paramf,dfile
@@ -521,15 +561,7 @@ class HNNGUI (QMainWindow):
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
   def showdistparamwin (self): self.baseparamwin.distparamwin.show()
   def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
-  def showvisnet (self):
-    Popen(['python', 'visnet.py']) # nonblocking
-    """
-    cmdargs = shlex.split('python visnet.py')
-    proc = Popen(cmdargs,cwd=os.getcwd())
-    while proc.poll() is None:
-      sleep(1)
-    proc.communicate()
-    """
+  def showvisnet (self): self.visnetwin.show() 
 
   def addParamImageButtons (self,gRow):
 

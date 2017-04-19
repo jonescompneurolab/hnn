@@ -170,17 +170,11 @@ def drawinputs3d (cell,clr,widget,width=2.0):
       plt = gl.GLLinePlotItem(pos=pts, color=clr, width=width, antialias=True, mode='lines')
       widget.addItem(plt)
 
-"""
 #
-def drawconn3d (width=2.0):
-  lx = [cell.pos[0] for cell in net.cells]
-  ly = [cell.pos[1] for cell in net.cells]
-  lz = [cell.pos[1] for cell in net.cells]
-  ax.plot(lx,ly,'ko',markersize=14)
+def drawconn3d (widg,width=2.0):
   for cell in net.cells:
-    drawinputs3d(cell,(1.0,0.0,0.0,1.0),width)
-    break
-"""
+    drawinputs3d(cell,(1.0,0.0,0.0,0.5),widg,width)
+  widg.show()
 
 def drawcells3dgl (ty,widget,width=2.2):
   for cell in net.cells:
@@ -188,15 +182,12 @@ def drawcells3dgl (ty,widget,width=2.2):
     lx,ly,lz = getshapecoords(h,cell.get_sections())  
     pts = np.vstack([lx,ly,lz]).transpose()
     plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=width, antialias=True, mode='lines')
-    # plt.enableAutoRange('y',0.95)
-    #if cell == net.cells[0]:
-    #  print(dir(plt))
     widget.addItem(plt)
 
 app = QtGui.QApplication([])
+widg = gl.GLViewWidget()
 
-def drawallcells3dgl ():
-  wcells = gl.GLViewWidget()
+def drawallcells3dgl (wcells):
   drawcells3dgl(L5Pyr,wcells)
   drawcells3dgl(L2Pyr,wcells)
   drawcells3dgl(L5Basket,wcells,width=7.2)
@@ -207,16 +198,17 @@ def drawallcells3dgl ():
   wcells.opts['fov'] = 90
   wcells.show()
   wcells.setWindowTitle('Network Visualization')
-  return wcells
 
-wcells = drawallcells3dgl()
-
-## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-  import sys
+  for s in sys.argv:
+    if s == 'cells':
+      drawallcells3dgl(widg)
+    if s == 'Econn':
+      drawconn3d(widg)
+    if s == 'Iconn':
+      drawconn3d(widg)
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()
-
 
 """
 gx = gl.GLGridItem()
