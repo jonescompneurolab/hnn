@@ -174,7 +174,6 @@ def drawinputs3d (cell,clr,widget,width=2.0):
 def drawconn3d (widg,width=2.0):
   for cell in net.cells:
     drawinputs3d(cell,(1.0,0.0,0.0,0.5),widg,width)
-  widg.show()
 
 def drawcells3dgl (ty,widget,width=2.2):
   for cell in net.cells:
@@ -183,9 +182,6 @@ def drawcells3dgl (ty,widget,width=2.2):
     pts = np.vstack([lx,ly,lz]).transpose()
     plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=width, antialias=True, mode='lines')
     widget.addItem(plt)
-
-app = QtGui.QApplication([])
-widg = gl.GLViewWidget()
 
 def drawallcells3dgl (wcells):
   drawcells3dgl(L5Pyr,wcells)
@@ -196,10 +192,11 @@ def drawallcells3dgl (wcells):
   wcells.opts['elevation']=105
   wcells.opts['azimuth']=-71
   wcells.opts['fov'] = 90
-  wcells.show()
   wcells.setWindowTitle('Network Visualization')
 
 if __name__ == '__main__':
+  app = QtGui.QApplication([])
+  widg = gl.GLViewWidget()
   for s in sys.argv:
     if s == 'cells':
       drawallcells3dgl(widg)
@@ -207,6 +204,7 @@ if __name__ == '__main__':
       drawconn3d(widg)
     if s == 'Iconn':
       drawconn3d(widg)
+  widg.show()
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()
 
