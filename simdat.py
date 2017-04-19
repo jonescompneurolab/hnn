@@ -18,8 +18,6 @@ paramf = dconf['paramf']
 ddat = {}
 dfile = {}
 
-debug = True
-
 def getinputfiles (paramf):
   global dfile,basedir
   dfile = {}
@@ -30,14 +28,13 @@ def getinputfiles (paramf):
   dfile['outparam'] = os.path.join(basedir,'param.txt')
   return dfile
 
-if debug:
-  try:
-    getinputfiles(paramf)
-    ddat['dpl'] = np.loadtxt(dfile['dpl']);
-    ddat['spec'] = np.load(dfile['spec']); 
-    ddat['spk'] = np.loadtxt(dfile['spk']); 
-  except:
-    print('exception in getting input files')
+try:
+  getinputfiles(paramf)
+  ddat['dpl'] = np.loadtxt(dfile['dpl']);
+  ddat['spec'] = np.load(dfile['spec']); 
+  ddat['spk'] = np.loadtxt(dfile['spk']); 
+except:
+  print('exception in getting input files')
 
 invertedhistax = False
 
