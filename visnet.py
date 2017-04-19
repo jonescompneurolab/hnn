@@ -228,13 +228,13 @@ w.addItem(gz)
 """
 
 #
-def drawinputs3d (cell,clr,width=2.0):
+def drawinputs3d (cell,clr,widget,width=2.0):
   for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
     for src in lsrc:
       precell = src.precell()
       pts = np.vstack([[precell.pos[0],cell.pos[0]],[precell.pos[1],cell.pos[1]],[precell.pos[2],cell.pos[2]]]).transpose()
       plt = gl.GLLinePlotItem(pos=pts, color=clr, width=width, antialias=True, mode='lines')
-      w.addItem(plt)
+      widget.addItem(plt)
 
 """
 #
@@ -248,7 +248,7 @@ def drawconn3d (width=2.0):
     break
 """
 
-def drawcells3dgl (ty,width=2.2):
+def drawcells3dgl (ty,widget,width=2.2):
   for cell in net.cells:
     if type(cell) != ty: continue
     lx,ly,lz = getshapecoords(h,cell.get_sections())  
@@ -257,12 +257,12 @@ def drawcells3dgl (ty,width=2.2):
     # plt.enableAutoRange('y',0.95)
     #if cell == net.cells[0]:
     #  print(dir(plt))
-    w.addItem(plt)
+    widget.addItem(plt)
 
-drawcells3dgl(L5Pyr)
-drawcells3dgl(L2Pyr)
-drawcells3dgl(L5Basket,width=7.2)
-drawcells3dgl(L2Basket,width=7.2)
+drawcells3dgl(L5Pyr,w)
+drawcells3dgl(L2Pyr,w)
+drawcells3dgl(L5Basket,w,width=7.2)
+drawcells3dgl(L2Basket,w,width=7.2)
 
 w.opts['distance'] = 4320.9087386478195
 w.opts['elevation']=105
