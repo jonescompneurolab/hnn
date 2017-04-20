@@ -75,7 +75,7 @@ def plotsimdat (figure,G,fig):
     ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
     ax.set_ylabel('dipole (nA m)')
     ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
-    ax.set_ylim(np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1])) # right ylim??
+    ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # right ylim??
     print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
     # truncate tvec and dpl data using logical indexing
     #t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]

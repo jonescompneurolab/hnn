@@ -12,11 +12,7 @@ from subprocess import Popen, PIPE, call
 import shlex
 from time import time, clock, sleep
 import pickle, tempfile
-from conf import readconf, setfcfg, fcfg, dconf
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+from conf import dconf
 import numpy as np
 import random
 from math import ceil
@@ -578,6 +574,9 @@ class HNNGUI (QMainWindow):
     if self.baseparamwin:
       self.baseparamwin.show()
 
+  def showAboutDialog (self):
+    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nFrom https://bitbucket.org/samnemo/hnn\n2017.")
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -594,6 +593,12 @@ class HNNGUI (QMainWindow):
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(exitAction)
+
+    aboutMenu = menubar.addMenu('&About')
+    aboutAction = QAction('About HNN.',self)
+    aboutAction.setStatusTip('About HNN.')
+    aboutAction.triggered.connect(self.showAboutDialog)
+    aboutMenu.addAction(aboutAction)
 
   def addButtons (self, gRow):
     self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
