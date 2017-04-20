@@ -117,7 +117,7 @@ class DictDialog (QDialog):
 
   def __str__ (self):
     s = ''
-    for k,v in self.dqline.items(): s += self.transvar(k) + ': ' + v.text().strip() + '\n'
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + '\n'
     return s
 
   def saveparams (self): self.hide()
@@ -453,6 +453,7 @@ class BaseParamDialog (QDialog):
     ddef = params_default.get_params_default()
     for dlg in self.lsubwin: dlg.setfromdin(ddef) # first set to default?
     for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
+    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
 
   def setnetparam (self): self.netparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
