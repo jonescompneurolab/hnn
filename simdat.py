@@ -58,6 +58,8 @@ def plotsimdat (figure,G,fig):
     except:
       print('problem with extinputs')
 
+    ds = ddat['spec'] # spectrogram
+
     gRow = 0
 
     hist = {}
@@ -66,14 +68,15 @@ def plotsimdat (figure,G,fig):
     if extinputs is not None: # only valid param.txt file after sim was run
       hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='r')
       hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='g')
-      if not invertedhistax:# only need to invert axis 1X
-        axdist.invert_yaxis()
-        invertedhistax = True
-      for ax in [axdist,axprox]:
-        ax.set_xlim(xlim_new)
-        ax.legend()          
-
-    ds = ddat['spec'] # spectrogram
+      if hist['feed_dist'] is None and hist['feed_prox'] is None:
+        gRow = 0
+      else:
+        if not invertedhistax:# only need to invert axis 1X
+          axdist.invert_yaxis()
+          invertedhistax = True
+        for ax in [axdist,axprox]:
+          ax.set_xlim(ds['time'][0],ds['time'][-1])
+          ax.legend()          
 
     ax = figure.add_subplot(G[gRow:5,0]); ax.cla() # dipole
     ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
