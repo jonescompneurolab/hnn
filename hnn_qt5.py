@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridL
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex

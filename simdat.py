@@ -1,16 +1,13 @@
 import os
 from PyQt5.QtWidgets import QMenu, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 from math import ceil
-from conf import readconf, setfcfg, fcfg, dconf
+from conf import dconf
 import spikefn
-import params_default
-from paramrw import quickreadprm
 
 simf = dconf['simf']
 paramf = dconf['paramf']
@@ -36,85 +33,75 @@ try:
 except:
   print('exception in getting input files')
 
-invertedhistax = False
+# based on https://pythonspot.com/en/pyqt5-matplotlib/
+class SIMCanvas (FigureCanvas): 
 
-def plotsimdat (figure,G,fig):
-  global invertedhistax
-  if len(ddat.keys()) == 0: return
-  try:
-    fig,ax = plt.subplots(); ax.cla()
+  def __init__ (self, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
+    FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
+    self.title = title
+    self.setParent(parent)
+    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+    FigureCanvas.updateGeometry(self)
+    self.invertedhistax = False
+    self.G = gridspec.GridSpec(10,1)
+    self.plot()
+
+  def plotinputhist (self,xl): # plot input histograms
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
-
     # set number of bins (150 bins per 1000ms)
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
-
-    # plot histograms of inputs
-    print(dfile['spk'],dfile['outparam'])
     extinputs = None
-
     try:
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
       extinputs.add_delay_times()
     except:
       print('problem with extinputs')
-
-    ds = ddat['spec'] # spectrogram
-
-    gRow = 0
-
-    hist = {}
-    axdist = figure.add_subplot(G[gRow,0]); axdist.cla(); gRow+=1 # distal inputs
-    axprox = figure.add_subplot(G[gRow,0]); axprox.cla(); gRow+=1 # proximal inputs
+    self.hist = hist = {}
+    axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
+    axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
       hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='r')
       hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='g')
       if hist['feed_dist'] is None and hist['feed_prox'] is None:
-        gRow = 0
+        self.invertedhistax = False
+        return False
       else:
-        if not invertedhistax:# only need to invert axis 1X
+        if not self.invertedhistax:# only need to invert axis 1X
           axdist.invert_yaxis()
-          invertedhistax = True
+          self.invertedhistax = True
         for ax in [axdist,axprox]:
-          ax.set_xlim(ds['time'][0],ds['time'][-1])
+          ax.set_xlim(xl)
           ax.legend()          
+        return True
 
-    ax = figure.add_subplot(G[gRow:5,0]); ax.cla() # dipole
-    ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
-    ax.set_ylabel('dipole (nA m)')
-    # ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
-    ax.set_xlim(ds['time'][0],ds['time'][-1])
-    ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # right ylim??
-    # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
-    # truncate tvec and dpl data using logical indexing
-    #t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
-    #dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]
+  def plotsimdat (self):
+    plt.close(self.figure); # self.figure.clear(); 
+    #print(dir(self.figure))
+    #print(dir(self.figure.canvas))
+    if len(ddat.keys()) == 0: return
+    try:
+      ds = ddat['spec'] # spectrogram
+      xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
+      gRow = 0
+      if self.plotinputhist(xl): gRow = 2
+      ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+      ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
+      ax.set_ylabel('dipole (nA m)')
+      ax.set_xlim(xl)
+      ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
+      # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
+      gRow = 6
+      ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
+      cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
+      ax.set_ylabel('Frequency (Hz)')
+      ax.set_xlabel('Time (ms)')
+      ax.set_xlim(xl)
+      ax.set_ylim(ds['freq'][-1],ds['freq'][0])
+      cbaxes = self.figure.add_axes([0.915, 0.125, 0.03, 0.2]) 
+      cb = plt.colorbar(cax, cax = cbaxes)  
+    except:
+      print('ERR: in plotsimdat')
 
-    gRow = 6
-
-    ax = figure.add_subplot(G[gRow:10,0]); ax.cla() # specgram
-    cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
-    ax.set_ylabel('Frequency (Hz)')
-    ax.set_xlabel('Time (ms)')
-    ax.set_xlim(ds['time'][0],ds['time'][-1])
-    ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-    cbaxes = figure.add_axes([0.915, 0.125, 0.03, 0.2]) 
-    cb = plt.colorbar(cax, cax = cbaxes)  
-
-    # print(ds['time'][0],ds['time'][-1],ddat['dpl'][0,0],ddat['dpl'][-1,0])
-  except:
-    print('ERR: in plot')
-
-# based on https://pythonspot.com/en/pyqt5-matplotlib/
-class SIMCanvas (FigureCanvas): 
-  def __init__ (self, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
-    self.fig = fig = Figure(figsize=(width, height), dpi=dpi)
-    self.title = title
-    FigureCanvas.__init__(self, fig)
-    self.setParent(parent)
-    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
-    FigureCanvas.updateGeometry(self)
-    self.G = gridspec.GridSpec(10,1)
-    self.plot()
   def plot (self):
-    plotsimdat(self.figure,self.G,self.fig)
+    self.plotsimdat()
     self.draw()
