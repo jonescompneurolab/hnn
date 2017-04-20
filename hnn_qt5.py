@@ -221,7 +221,22 @@ class OngoingInputParamDialog (DictDialog):
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
     self.ltitle = ['Timing', 'Layer2', 'Layer5', 'Inhib']
-    self.stitle = 'Set '+self.inty+' Inputs'
+    self.stitle = 'Set Ongoing '+self.inty+' Inputs'
+
+    for d in [self.dL2, self.dL5, self.dInhib]:
+      for k in d.keys():
+        lk = k.split('_')
+        if k.count('weight') > 0:
+          self.addtransvar(k, lk[-2]+' '+lk[-1].upper()+' weight (nS)')
+        else:
+          self.addtransvar(k, 'Delay (ms)')
+
+    self.addtransvar('distribution'+self.postfix,'Distribution')
+    self.addtransvar('t0_input'+self.postfix,'Start time (ms)')
+    self.addtransvar('tstop_input'+self.postfix,'Stop time (ms)')
+    self.addtransvar('f_input'+self.postfix,'Frequency (Hz)')
+    self.addtransvar('f_stdev'+self.postfix,'Freq. stdev (Hz)')
+    self.addtransvar('events_per_cycle'+self.postfix,'Events/cycle')
 
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
