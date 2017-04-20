@@ -150,7 +150,7 @@ class DictDialog (QDialog):
 
     for i in range(len(self.ldict)): self.ltabs.append(QWidget())
 
-    self.tabs.resize(400,200) 
+    self.tabs.resize(425,200) 
 
     # create tabs and their layouts
     for tab,s in zip(self.ltabs,self.ltitle):
@@ -184,7 +184,7 @@ class DictDialog (QDialog):
 
     self.layout.addLayout(self.button_box)
 
-    self.setGeometry(150, 150, 450, 300)
+    self.setGeometry(150, 150, 475, 300)
     self.setWindowTitle(self.stitle)  
 
 # widget to specify ongoing input params (proximal, distal)
