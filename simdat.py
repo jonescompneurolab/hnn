@@ -58,9 +58,11 @@ def plotsimdat (figure,G,fig):
     except:
       print('problem with extinputs')
 
+    gRow = 0
+
     hist = {}
-    axdist = figure.add_subplot(G[0,0]); axdist.cla() # distal inputs
-    axprox = figure.add_subplot(G[1,0]); axprox.cla() # proximal inputs
+    axdist = figure.add_subplot(G[gRow,0]); axdist.cla(); gRow+=1 # distal inputs
+    axprox = figure.add_subplot(G[gRow,0]); axprox.cla(); gRow+=1 # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
       hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='r')
       hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='g')
@@ -71,26 +73,31 @@ def plotsimdat (figure,G,fig):
         ax.set_xlim(xlim_new)
         ax.legend()          
 
-    ax = figure.add_subplot(G[2:5,0]); ax.cla() # dipole
+    ds = ddat['spec'] # spectrogram
+
+    ax = figure.add_subplot(G[gRow:5,0]); ax.cla() # dipole
     ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
     ax.set_ylabel('dipole (nA m)')
-    ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
+    # ax.set_xlim(ddat['dpl'][0,0],ddat['dpl'][-1,0])
+    ax.set_xlim(ds['time'][0],ds['time'][-1])
     ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # right ylim??
-    print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
+    # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
     # truncate tvec and dpl data using logical indexing
     #t_range = dpl.t[(dpl.t >= xmin) & (dpl.t <= xmax)]
     #dpl_range = dpl.dpl['agg'][(dpl.t >= xmin) & (dpl.t <= xmax)]
 
-    ax = figure.add_subplot(G[6:10,0]); ax.cla() # specgram
-    ds = ddat['spec']
+    gRow = 6
+
+    ax = figure.add_subplot(G[gRow:10,0]); ax.cla() # specgram
     cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
     ax.set_ylabel('Frequency (Hz)')
     ax.set_xlabel('Time (ms)')
     ax.set_xlim(ds['time'][0],ds['time'][-1])
     ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-    cbaxes = fig.add_axes([0.915, 0.125, 0.03, 0.2]) 
+    cbaxes = figure.add_axes([0.915, 0.125, 0.03, 0.2]) 
     cb = plt.colorbar(cax, cax = cbaxes)  
-    #self.fig.tight_layout() # tight_layout will mess up colorbar location
+
+    # print(ds['time'][0],ds['time'][-1],ddat['dpl'][0,0],ddat['dpl'][-1,0])
   except:
     print('ERR: in plot')
 
