@@ -562,8 +562,12 @@ class HNNGUI (QMainWindow):
 
     
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
-  def showdistparamwin (self): self.baseparamwin.distparamwin.show()
-  def showproxparamwin (self): self.baseparamwin.proxparamwin.show()
+  def showdistparamwin (self):
+    self.baseparamwin.evparamwin.show()
+    self.baseparamwin.evparamwin.tabs.setCurrentIndex(2)
+  def showproxparamwin (self):
+    self.baseparamwin.evparamwin.show()
+    self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
   def showvisnet (self): self.visnetwin.show() 
 
   def addParamImageButtons (self,gRow):
