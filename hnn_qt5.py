@@ -125,10 +125,9 @@ class DictDialog (QDialog):
 
   def setfromdin (self,din):
     if not din: return
-    for k1,v1 in din.items():
-      for k in self.dqline.keys():
-        if k1 == k:
-          self.dqline[k].setText(str(v1).strip())
+    for k,v in din.items():
+      if k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
