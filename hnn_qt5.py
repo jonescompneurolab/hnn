@@ -109,6 +109,7 @@ class DictDialog (QDialog):
     super(DictDialog, self).__init__(parent)
     self.ldict = [] # subclasses should override
     self.ltitle = []
+    self.dtransvar = {} # for translating model variable name to more human-readable form
     self.stitle = ''
     self.initd()
     self.initUI()
@@ -116,7 +117,7 @@ class DictDialog (QDialog):
 
   def __str__ (self):
     s = ''
-    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + '\n'
+    for k,v in self.dqline.items(): s += self.transvar(k) + ': ' + v.text().strip() + '\n'
     return s
 
   def saveparams (self): self.hide()
@@ -128,6 +129,14 @@ class DictDialog (QDialog):
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
+
+  def transvar (self,k):
+    if k in self.dtransvar: return self.dtransvar[k]
+    return k
+
+  def addtransvar (self,k,strans):
+    self.dtransvar[k] = strans
+    self.dtransvar[strans] = k
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -149,12 +158,12 @@ class DictDialog (QDialog):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.dqline = {}
+    self.dqline = {} # QLineEdits dict; key is model variable
     for d,tab in zip(self.ldict, self.ltabs):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
         self.dqline[k].setText(str(v))
-        tab.layout.addRow(k,self.dqline[k])
+        tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab
 
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
@@ -246,10 +255,22 @@ class EvokedInputParamDialog (DictDialog):
                   'gbar_evdist_L2Basket': 0.
     }
 
+    for d in [self.dproxearly, self.dproxlate, self.ddist]:
+      for k in d.keys():
+        if k.startswith('gbar'):
+          self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
+        elif k.startswith('t'):
+          self.addtransvar(k,'start (ms)')
+        elif k.startswith('sigma'):
+          self.addtransvar(k,'sigma (ms)')
+
     # time between prox/distal inputs -1 means relative - not used by default
     self.dtiming = {'dt_evprox0_evdist': -1,
                     'dt_evprox0_evprox1': -1
     }
+
+    self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
+    self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
 
     self.ldict = [self.dproxearly, self.dproxlate, self.ddist, self.dtiming]
     self.ltitle = ['Proximal Early', 'Proximal Late', 'Distal', 'Timing']
