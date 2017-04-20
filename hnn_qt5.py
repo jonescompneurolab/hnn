@@ -73,7 +73,7 @@ class RunSimThread (QThread):
       self.proc = Popen(cmdargs,cwd=os.getcwd())
     else:
       self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd())
-    if debug: print("proc:",self.proc)
+    if False: print("proc:",self.proc)
     cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
       sleep(1)
@@ -640,7 +640,7 @@ class HNNGUI (QMainWindow):
     self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
-    self.distbtn = QPushButton('Distal Drive\nNonLemn. Thal',self)
+    self.distbtn = QPushButton('Distal Drive\nNonLemniscal Thalamus',self)
     self.distbtn.setIcon(QIcon("res/distfig.png"))
     self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
