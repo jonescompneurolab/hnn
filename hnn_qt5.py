@@ -221,39 +221,41 @@ class EvokedInputParamDialog (DictDialog):
     super(EvokedInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
-    # times and stdevs for evoked responses
-    self.dtiming = {'t_evprox_early': 2000.,
-                    'sigma_t_evprox_early': 2.5,
-                    'dt_evprox0_evdist': -1,
-                    't_evdist': 2000.,
-                    'sigma_t_evdist': 6.,
-                    'dt_evprox0_evprox1': -1,
-                    't_evprox_late': 2000.,
-                    'sigma_t_evprox_late': 7.}
-
     # evprox (early) feed strength
-    self.dproxearly = {'gbar_evprox_early_L2Pyr': 0.,
+    self.dproxearly = {'t_evprox_early': 2000., # times and stdevs for evoked responses
+                       'sigma_t_evprox_early': 2.5,
+                       'gbar_evprox_early_L2Pyr': 0.,
                        'gbar_evprox_early_L5Pyr': 0.,
                        'gbar_evprox_early_L2Basket': 0.,
-                       'gbar_evprox_early_L5Basket': 0.,
+                       'gbar_evprox_early_L5Basket': 0.
     }
 
     # evprox (late) feed strength
-    self.dproxlate = {'gbar_evprox_late_L2Pyr': 0.,
+    self.dproxlate = {'t_evprox_late': 2000.,
+                      'sigma_t_evprox_late': 7.,
+                      'gbar_evprox_late_L2Pyr': 0.,
                       'gbar_evprox_late_L5Pyr': 0.,
                       'gbar_evprox_late_L2Basket': 0.,
-                      'gbar_evprox_late_L5Basket': 0.,
+                      'gbar_evprox_late_L5Basket': 0.
     }
 
     # evdist feed strengths
-    self.ddist = {'gbar_evdist_L2Pyr': 0.,
+    self.ddist = {'t_evdist': 2000.,
+                  'sigma_t_evdist': 6.,
+                  'gbar_evdist_L2Pyr': 0.,
                   'gbar_evdist_L5Pyr': 0.,
-                  'gbar_evdist_L2Basket': 0.,
+                  'gbar_evdist_L2Basket': 0.
     }
 
-    self.ldict = [self.dtiming, self.dproxearly, self.dproxlate, self.ddist]
-    self.ltitle = ['Timing', 'Proximal Early', 'Proximal Late', 'Distal']
+    # time between prox/distal inputs -1 means relative - not used by default
+    self.dtiming = {'dt_evprox0_evdist': -1,
+                    'dt_evprox0_evprox1': -1
+    }
+
+    self.ldict = [self.dproxearly, self.dproxlate, self.ddist, self.dtiming]
+    self.ltitle = ['Proximal Early', 'Proximal Late', 'Distal', 'Timing']
     self.stitle = 'Set Evoked Inputs'
+
 
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
