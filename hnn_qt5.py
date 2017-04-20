@@ -638,16 +638,6 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    self.mnelabel = QLabel()
-    self.mnelabel.setText('MNE Viewer')
-    grid.addWidget(self.mnelabel, gRow, 0, 1, 2)
-
-    self.simlabel = QLabel()
-    self.simlabel.setText('Simulation Output Viewer')
-    grid.addWidget(self.simlabel, gRow, 2, 1, 2)
-
-    gRow += 1
-
     self.mne = mne = QLabel() 
     self.mne.setText('MNE (To Be Added)')
     grid.addWidget(self.mne, gRow, 0, 1, 2)
@@ -657,20 +647,8 @@ class HNNGUI (QMainWindow):
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
 
-    grid.addWidget(self.toolbar, gRow, 2, 1, 2)
-
-    gRow += 1
-
-    grid.addWidget(self.m, gRow, 2, 1, 2)
-
-    gRow += 1
-
-    self.netlabel = QLabel()
-    self.netlabel.setText('Simulation Parameters')
-    self.netlabel.resize(self.netlabel.sizeHint())
-    grid.addWidget(self.netlabel,gRow,2,1,4)
-
-    gRow += 1
+    grid.addWidget(self.toolbar, gRow, 2, 1, 2); gRow += 1
+    grid.addWidget(self.m, gRow, 2, 1, 2); gRow += 1
 
     self.addParamImageButtons(gRow)
 
