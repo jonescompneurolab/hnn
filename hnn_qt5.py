@@ -305,8 +305,21 @@ class RunParamDialog (DictDialog):
     }
 
     self.ldict = [self.drun, self.drand, self.danalysis]
-    self.ltitle = ['Run', 'Randomization','Analysis']
+    self.ltitle = ['Run', 'Randomization Seeds','Analysis']
     self.stitle = 'Set Run Parameters'
+
+    self.addtransvar('tstop','Simulation duration (ms)')
+    self.addtransvar('dt','Simulation timestep (ms)')
+    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
+    self.addtransvar('save_spec_data','Save spectral data')
+    self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
+    self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
+    self.addtransvar('prng_seedcore_extpois','External Poisson')
+    self.addtransvar('prng_seedcore_extgauss','External Gaussian')
+    self.addtransvar('prng_seedcore_evprox_early','Evoked Proximal Early')
+    self.addtransvar('prng_seedcore_evdist','Evoked Distal')
+    self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
+
 
 
 # widget to specify network parameters (number cells, weights, etc.)
