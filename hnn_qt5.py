@@ -367,6 +367,17 @@ class NetworkParamDialog (DictDialog):
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
     self.stitle = 'Set Network Parameters'
 
+    self.addtransvar('N_pyr_x', 'Num Pyr Cells (X direction)')
+    self.addtransvar('N_pyr_y', 'Num Pyr Cells (Z direction)')
+
+    for d in [self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]:
+      for k in d.keys():
+        lk = k.split('_')
+        if len(lk) == 3:
+          self.addtransvar(k,lk[1]+'->'+lk[2]+' weight (nS)')
+        else:
+          self.addtransvar(k,lk[1]+'->'+lk[2]+' '+lk[3].upper()+' weight (nS)')
+
 class VisnetDialog (QDialog):
   def __init__ (self, parent):
     super(VisnetDialog, self).__init__(parent)
