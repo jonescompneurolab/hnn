@@ -502,7 +502,6 @@ class HNNGUI (QMainWindow):
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
     
-
   def selParamFileDialog (self):
     global paramf,dfile
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'param')
@@ -623,7 +622,7 @@ class HNNGUI (QMainWindow):
 
     self.initMenu()
     self.statusBar()
-    self.setGeometry(300, 300, 1200, 1100)
+    self.setGeometry(300, 300, 1300, 1100)
     self.setWindowTitle('HNN')
     QToolTip.setFont(QFont('SansSerif', 10))        
 
