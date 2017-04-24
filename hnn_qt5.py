@@ -730,7 +730,11 @@ class HNNGUI (QMainWindow):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
       self.grid.removeWidget(self.toolbar)
+      self.m.setParent(None)
+      self.toolbar.setParent(None)
+      self.m = self.toolbar = None
     except:
+      print('except')
       pass
       # print('Could not remove canvas widgets.')
     self.m = SIMCanvas(self, width=10, height=1)
