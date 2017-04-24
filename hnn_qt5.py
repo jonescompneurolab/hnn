@@ -4,6 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
+from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
@@ -385,34 +386,51 @@ class VisnetDialog (QDialog):
   def showEconn (self): Popen(['python', 'visnet.py', 'Econn', paramf]) # nonblocking
   def showIconn (self): Popen(['python', 'visnet.py', 'Iconn', paramf]) # nonblocking
 
+  def runvisnet (self):
+    lcmd = ['python', 'visnet.py']
+    if self.chkcells.isChecked(): lcmd.append('cells')
+    if self.chkE.isChecked(): lcmd.append('Econn')
+    if self.chkI.isChecked(): lcmd.append('Iconn')
+    lcmd.append(paramf)
+    Popen(lcmd) # nonblocking
+
   def initUI (self):
 
-    grid = QGridLayout()
-    grid.setSpacing(10)
+    self.layout = QVBoxLayout(self)
 
-    row = 1
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
 
-    self.btncells = QPushButton('Cells in 3D',self)
-    self.btncells.resize(self.btncells.sizeHint())
-    self.btncells.clicked.connect(self.showcells3D)
-    grid.addWidget(self.btncells, row, 0, 1, 1); 
+    self.chkcells = QCheckBox('Cells in 3D',self)
+    self.chkcells.resize(self.chkcells.sizeHint())
+    self.chkcells.setChecked(True)
+    self.layout.addWidget(self.chkcells)
 
-    self.btnE = QPushButton('Excitatory Connections',self)
-    self.btnE.resize(self.btnE.sizeHint())
-    self.btnE.clicked.connect(self.showEconn)
-    grid.addWidget(self.btnE, row, 1, 1, 1); 
+    self.chkE = QCheckBox('Excitatory Connections',self)
+    self.chkE.resize(self.chkE.sizeHint())
+    self.layout.addWidget(self.chkE)
 
-    self.btnI = QPushButton('Inhibitory Connections',self)
-    self.btnI.resize(self.btnI.sizeHint())
-    self.btnI.clicked.connect(self.showIconn)
-    grid.addWidget(self.btnI, row, 2, 1, 1); 
+    self.chkI = QCheckBox('Inhibitory Connections',self)
+    self.chkI.resize(self.chkI.sizeHint())
+    self.layout.addWidget(self.chkI)
 
-    self.setLayout(grid) 
+    # Create a horizontal box layout to hold the buttons
+    self.button_box = QHBoxLayout()
+ 
+    self.btnok = QPushButton('Visualize',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.runvisnet)
+    self.button_box.addWidget(self.btnok)
+
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
+    self.button_box.addWidget(self.btncancel)
+
+    self.layout.addLayout(self.button_box)
         
     self.setGeometry(100, 100, 300, 100)
     self.setWindowTitle('Visualize Model')
-
-
 
 # base widget for specifying params (contains buttons to create other widgets
 class BaseParamDialog (QDialog):
@@ -638,7 +656,7 @@ class HNNGUI (QMainWindow):
     self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
-    self.netbtn = QPushButton('Network Visualization\n',self)
+    self.netbtn = QPushButton('Model Visualization\n',self)
     self.netbtn.setIcon(QIcon("res/netfig.png"))
     self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
