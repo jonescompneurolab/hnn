@@ -709,6 +709,12 @@ class HNNGUI (QMainWindow):
     self.show()
 
   def initSimCanvas (self,gRow=1):
+    try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
+      self.grid.removeWidget(self.m)
+      self.grid.removeWidget(self.toolbar)
+    except:
+      pass
+      # print('Could not remove canvas widgets.')
     self.m = SIMCanvas(self, width=10, height=1)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
