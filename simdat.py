@@ -113,6 +113,8 @@ class SIMCanvas (FigureCanvas):
       cb = plt.colorbar(cax, cax = cbaxes)  
     except:
       print('ERR: in plotsimdat')
+    xedge = 0.1 # reduce padding
+    self.figure.subplots_adjust(left=xedge,right=1.0-xedge,bottom=0.08,top=0.99)
 
   def plot (self):
     self.plotsimdat()
