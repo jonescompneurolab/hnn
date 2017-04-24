@@ -54,11 +54,13 @@ class SIMCanvas (FigureCanvas):
     try:
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
       extinputs.add_delay_times()
+      if len(extinputs.inputs['dist']) <= 0 and len(extinputs.inputs['prox']) <= 0:
+        return False
     except:
       print('problem with extinputs')
     self.hist = hist = {}
-    axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
-    axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
+    self.axdist = axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
+    self.axprox = axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
       hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='r')
       hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='g')
@@ -74,7 +76,17 @@ class SIMCanvas (FigureCanvas):
           ax.legend()          
         return True
 
+  def clearaxes (self):
+    try:
+      self.axdist.cla()
+      self.axprox.cla()
+      self.axdipole.cla()
+      self.axspec.cla()
+    except:
+      pass
+
   def plotsimdat (self):
+    self.clearaxes()
     plt.close(self.figure); # self.figure.clear(); 
     #print(dir(self.figure))
     #print(dir(self.figure.canvas))
@@ -84,14 +96,14 @@ class SIMCanvas (FigureCanvas):
       xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
       if self.plotinputhist(xl): gRow = 2
-      ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+      self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(xl)
       ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
       # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
       gRow = 6
-      ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
+      self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
       cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_ylabel('Frequency (Hz)')
       ax.set_xlabel('Time (ms)')

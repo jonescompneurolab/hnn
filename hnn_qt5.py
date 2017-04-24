@@ -693,13 +693,8 @@ class HNNGUI (QMainWindow):
     self.mne.setText('MNE (To Be Added)')
     grid.addWidget(self.mne, gRow, 0, 1, 2)
 
-    self.m = SIMCanvas(self, width=10, height=1)
-    # this is the Navigation widget
-    # it takes the Canvas widget and a parent
-    self.toolbar = NavigationToolbar(self.m, self)
-
-    grid.addWidget(self.toolbar, gRow, 2, 1, 2); gRow += 1
-    grid.addWidget(self.m, gRow, 2, 1, 2); gRow += 1
+    self.initSimCanvas(gRow)
+    gRow += 2
 
     self.addParamImageButtons(gRow)
 
@@ -712,6 +707,15 @@ class HNNGUI (QMainWindow):
     self.setCentralWidget(widget);
 
     self.show()
+
+  def initSimCanvas (self,gRow=1):
+    self.m = SIMCanvas(self, width=10, height=1)
+    # this is the Navigation widget
+    # it takes the Canvas widget and a parent
+    self.toolbar = NavigationToolbar(self.m, self)
+    self.grid.addWidget(self.toolbar, gRow, 2, 1, 2); 
+    self.grid.addWidget(self.m, gRow + 1, 2, 1, 2); 
+
 
   def controlsim (self):
     if self.runningsim:
@@ -752,7 +756,9 @@ class HNNGUI (QMainWindow):
     self.statusBar().showMessage("")
     self.btnsim.setText("Start Simulation")
     self.qbtn.setEnabled(True)
+    self.initSimCanvas() # recreate canvas to avoid incorrect axes
     self.m.plot()
+
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
 
 if __name__ == '__main__':    
