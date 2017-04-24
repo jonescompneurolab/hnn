@@ -166,14 +166,17 @@ def drawinputs3d (cell,clr,widget,width=2.0):
   for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
     for src in lsrc:
       precell = src.precell()
-      pts = np.vstack([[precell.pos[0],cell.pos[0]],[precell.pos[1],cell.pos[1]],[precell.pos[2],cell.pos[2]]]).transpose()
+      pts = np.vstack([[precell.pos[0]*100,cell.pos[0]*100],[precell.pos[2],cell.pos[2]],[precell.pos[1]*100,cell.pos[1]*100]]).transpose()
       plt = gl.GLLinePlotItem(pos=pts, color=clr, width=width, antialias=True, mode='lines')
       widget.addItem(plt)
 
 #
-def drawconn3d (widg,width=2.0):
+def drawconn3d (widg,width=2.0,clr=(1.0,0.0,0.0,0.5)):
+  i = 0
   for cell in net.cells:
-    drawinputs3d(cell,(1.0,0.0,0.0,0.5),widg,width)
+    drawinputs3d(cell,clr,widg,width)
+    i += 1
+    #if i > 20: break
 
 def drawcells3dgl (ty,widget,width=2.2):
   for cell in net.cells:
@@ -201,23 +204,10 @@ if __name__ == '__main__':
     if s == 'cells':
       drawallcells3dgl(widg)
     if s == 'Econn':
-      drawconn3d(widg)
+      drawconn3d(widg,clr=(1.0,0.0,0.0,0.25))
     if s == 'Iconn':
-      drawconn3d(widg)
+      drawconn3d(widg,clr=(0.0,0.0,1.0,0.25))
   widg.show()
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()
 
-"""
-gx = gl.GLGridItem()
-gx.rotate(90, 0, 1, 0)
-#gx.translate(-10, 0, 0)
-w.addItem(gx)
-gy = gl.GLGridItem()
-gy.rotate(90, 1, 0, 0)
-#gy.translate(0, -10, 0)
-w.addItem(gy)
-gz = gl.GLGridItem()
-#gz.translate(0, 0, -10)
-w.addItem(gz)
-"""
