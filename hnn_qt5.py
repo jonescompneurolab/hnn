@@ -11,6 +11,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
+from collections import OrderedDict
 from time import time, clock, sleep
 import pickle, tempfile
 from conf import dconf
@@ -155,7 +156,7 @@ class DictDialog (QDialog):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.dqline = {} # QLineEdits dict; key is model variable
+    self.dqline = OrderedDict() # QLineEdits dict; key is model variable
     for d,tab in zip(self.ldict, self.ltabs):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
@@ -197,24 +198,23 @@ class OngoingInputParamDialog (DictDialog):
     super(OngoingInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
-    self.dtiming = {'distribution' + self.postfix: 'normal',
-                    't0_input' + self.postfix: 1000.,
-                    'tstop_input' + self.postfix: 250.,
-                    'f_input' + self.postfix: 10.,
-                    'f_stdev' + self.postfix: 20.,
-                    'events_per_cycle' + self.postfix: 2}
+    self.dtiming = OrderedDict([('distribution' + self.postfix, 'normal'),
+                                ('t0_input' + self.postfix, 1000.),
+                                ('tstop_input' + self.postfix, 250.),
+                                ('f_input' + self.postfix, 10.),
+                                ('f_stdev' + self.postfix, 20.),
+                                ('events_per_cycle' + self.postfix, 2)])
 
-    self.dL2 = {self.prefix + 'weight_L2Pyr_ampa': 0.,
-                self.prefix + 'weight_L2Pyr_nmda': 0.,
-                self.prefix + 'delay_L2': 0.1}
+    self.dL2 = OrderedDict([(self.prefix + 'weight_L2Pyr_ampa', 0.),
+                            (self.prefix + 'weight_L2Pyr_nmda', 0.),
+                            (self.prefix + 'delay_L2', 0.1)])
 
-    self.dL5 = {
-        self.prefix + 'weight_L5Pyr_ampa': 0.,
-        self.prefix + 'weight_L5Pyr_nmda': 0.,
-        self.prefix + 'delay_L5': 0.1}
+    self.dL5 = OrderedDict([(self.prefix + 'weight_L5Pyr_ampa', 0.),
+                            (self.prefix + 'weight_L5Pyr_nmda', 0.),
+                            (self.prefix + 'delay_L5', 0.1)])
 
-    self.dInhib = {self.prefix + 'weight_inh_ampa': 0.,
-                   self.prefix + 'weight_inh_nmda': 0.}
+    self.dInhib = OrderedDict([(self.prefix + 'weight_inh_ampa', 0.),
+                               (self.prefix + 'weight_inh_nmda', 0.)])
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
     self.ltitle = ['Timing', 'Layer2', 'Layer5', 'Inhib']
@@ -242,30 +242,27 @@ class EvokedInputParamDialog (DictDialog):
 
   def initd (self):
     # evprox (early) feed strength
-    self.dproxearly = {'t_evprox_early': 2000., # times and stdevs for evoked responses
-                       'sigma_t_evprox_early': 2.5,
-                       'gbar_evprox_early_L2Pyr': 0.,
-                       'gbar_evprox_early_L5Pyr': 0.,
-                       'gbar_evprox_early_L2Basket': 0.,
-                       'gbar_evprox_early_L5Basket': 0.
-    }
+    self.dproxearly = OrderedDict([('t_evprox_early', 2000.), # times and stdevs for evoked responses
+                                   ('sigma_t_evprox_early', 2.5),
+                                   ('gbar_evprox_early_L2Pyr', 0.),
+                                   ('gbar_evprox_early_L5Pyr', 0.),
+                                   ('gbar_evprox_early_L2Basket', 0.),
+                                   ('gbar_evprox_early_L5Basket', 0.)])
 
     # evprox (late) feed strength
-    self.dproxlate = {'t_evprox_late': 2000.,
-                      'sigma_t_evprox_late': 7.,
-                      'gbar_evprox_late_L2Pyr': 0.,
-                      'gbar_evprox_late_L5Pyr': 0.,
-                      'gbar_evprox_late_L2Basket': 0.,
-                      'gbar_evprox_late_L5Basket': 0.
-    }
+    self.dproxlate = OrderedDict([('t_evprox_late', 2000.),
+                                  ('sigma_t_evprox_late', 7.),
+                                  ('gbar_evprox_late_L2Pyr', 0.),
+                                  ('gbar_evprox_late_L5Pyr', 0.),
+                                  ('gbar_evprox_late_L2Basket', 0.),
+                                  ('gbar_evprox_late_L5Basket', 0.)])
 
     # evdist feed strengths
-    self.ddist = {'t_evdist': 2000.,
-                  'sigma_t_evdist': 6.,
-                  'gbar_evdist_L2Pyr': 0.,
-                  'gbar_evdist_L5Pyr': 0.,
-                  'gbar_evdist_L2Basket': 0.
-    }
+    self.ddist = OrderedDict([('t_evdist', 2000.),
+                              ('sigma_t_evdist', 6.),
+                              ('gbar_evdist_L2Pyr', 0.),
+                              ('gbar_evdist_L5Pyr', 0.),
+                              ('gbar_evdist_L2Basket', 0.)])
 
     for d in [self.dproxearly, self.dproxlate, self.ddist]:
       for k in d.keys():
@@ -296,25 +293,22 @@ class RunParamDialog (DictDialog):
 
   def initd (self):
 
-    self.drun = {'tstop': 250., # simulation end time (ms)
-                 'dt': 0.025 # timestep
-                 # cvode - not currently used by simulation
-                 # ncores - add
-    }
+    self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
+                             ('dt', 0.025)]) # timestep
+                             # cvode - not currently used by simulation
+                             # ncores - add
 
-    self.drand = {'prng_seedcore_input_prox': 0,
-                  'prng_seedcore_input_dist': 0,
-                  'prng_seedcore_extpois': 0,
-                  'prng_seedcore_extgauss': 0,
-                  'prng_seedcore_evprox_early': 0,
-                  'prng_seedcore_evdist': 0,
-                  'prng_seedcore_evprox_late': 0,
-    }
+    self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
+                              ('prng_seedcore_input_dist', 0),
+                              ('prng_seedcore_extpois', 0),
+                              ('prng_seedcore_extgauss', 0),
+                              ('prng_seedcore_evprox_early', 0),
+                              ('prng_seedcore_evdist', 0),
+                              ('prng_seedcore_evprox_late', 0)])
 
     # analysis    
-    self.danalysis = {'save_spec_data': 0,
-                      'f_max_spec': 40.
-    }
+    self.danalysis = OrderedDict([('save_spec_data', 0),
+                                  ('f_max_spec', 40)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
@@ -341,39 +335,31 @@ class NetworkParamDialog (DictDialog):
 
   def initd (self):
     # number of cells
-    self.dcells = {'N_pyr_x': 10,
-                   'N_pyr_y': 10}
+    self.dcells = OrderedDict([('N_pyr_x', 10),
+                               ('N_pyr_y', 10)])
 
     # max conductances TO L2Pyr
-    self.dL2Pyr = {
-      'gbar_L2Pyr_L2Pyr_ampa': 0.,
-      'gbar_L2Pyr_L2Pyr_nmda': 0.,
-      'gbar_L2Basket_L2Pyr_gabaa': 0.,
-      'gbar_L2Basket_L2Pyr_gabab': 0.
-    }
+    self.dL2Pyr = OrderedDict([('gbar_L2Pyr_L2Pyr_ampa', 0.),
+                               ('gbar_L2Pyr_L2Pyr_nmda', 0.),
+                               ('gbar_L2Basket_L2Pyr_gabaa', 0.),
+                               ('gbar_L2Basket_L2Pyr_gabab', 0.)])
 
     # max conductances TO L2Baskets
-    self.dL2Bas = {
-      'gbar_L2Pyr_L2Basket': 0.,
-      'gbar_L2Basket_L2Basket': 0.
-    }
+    self.dL2Bas = OrderedDict([('gbar_L2Pyr_L2Basket', 0.),
+                               ('gbar_L2Basket_L2Basket', 0.)])
 
     # max conductances TO L5Pyr
-    self.dL5Pyr = {
-      'gbar_L5Pyr_L5Pyr_ampa': 0.,
-      'gbar_L5Pyr_L5Pyr_nmda': 0.,
-      'gbar_L2Pyr_L5Pyr': 0.,
-      'gbar_L2Basket_L5Pyr': 0.,
-      'gbar_L5Basket_L5Pyr_gabaa': 0.,
-      'gbar_L5Basket_L5Pyr_gabab': 0.
-    }
+    self.dL5Pyr = OrderedDict([('gbar_L5Pyr_L5Pyr_ampa', 0.),
+                               ('gbar_L5Pyr_L5Pyr_nmda', 0.),
+                               ('gbar_L2Pyr_L5Pyr', 0.),
+                               ('gbar_L2Basket_L5Pyr', 0.),
+                               ('gbar_L5Basket_L5Pyr_gabaa', 0.),
+                               ('gbar_L5Basket_L5Pyr_gabab', 0.)])
 
     # max conductances TO L5Baskets
-    self.dL5Bas = {
-      'gbar_L5Basket_L5Basket': 0.,
-      'gbar_L5Pyr_L5Basket': 0.,
-      'gbar_L2Pyr_L5Basket': 0.,
-    }  
+    self.dL5Bas = OrderedDict([('gbar_L5Basket_L5Basket', 0.),
+                               ('gbar_L5Pyr_L5Basket', 0.),
+                               ('gbar_L2Pyr_L5Basket', 0.)])
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
