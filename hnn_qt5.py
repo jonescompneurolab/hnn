@@ -734,9 +734,7 @@ class HNNGUI (QMainWindow):
       self.toolbar.setParent(None)
       self.m = self.toolbar = None
     except:
-      print('except')
       pass
-      # print('Could not remove canvas widgets.')
     self.m = SIMCanvas(self, width=10, height=1)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent

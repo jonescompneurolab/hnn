@@ -109,12 +109,11 @@ class SIMCanvas (FigureCanvas):
       ax.set_xlabel('Time (ms)')
       ax.set_xlim(xl)
       ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-      cbaxes = self.figure.add_axes([0.915, 0.125, 0.03, 0.2]) 
-      cb = plt.colorbar(cax, cax = cbaxes)  
+      cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
+      cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
     except:
       print('ERR: in plotsimdat')
-    xedge = 0.1 # reduce padding
-    self.figure.subplots_adjust(left=xedge,right=1.0-xedge,bottom=0.08,top=0.99)
+    self.figure.subplots_adjust(left=0.1,right=1.0-0.02,bottom=0.08,top=0.99) # reduce padding
 
   def plot (self):
     self.plotsimdat()
