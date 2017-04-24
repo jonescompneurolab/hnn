@@ -353,45 +353,35 @@ def read(fparam):
 
 # write the params to a filename
 def write(fparam, p, gid_list):
-    """ now sorting
-    """
-    # sort the items in the dict by key
-    # p_sorted = [item for item in p.items()]
-    p_keys = [key for key, val in p.items()]
-    p_sorted = [(key, p[key]) for key in p_keys]
-
-    # for some reason this is now crashing in python/mpi
-    # specifically, lambda sorting in place?
-    # p_sorted = [item for item in p.items()]
-    # p_sorted.sort(key=lambda x: x[0])
-
-    # open the file for appending
-    with open(fparam, 'a') as f:
-        pstring = '%26s: '
-
-        # write the gid info first
-        for key in gid_list.keys():
-            f.write(pstring % key)
-
-            if len(gid_list[key]):
-                f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
-
-            else:
-                f.write('[]')
-
-            f.write('\n')
-
-        # do the params in p_sorted
-        for param in p_sorted:
-            key, val = param
-
-            f.write(pstring % key)
-
-            if key.startswith('N_'):
-                f.write('%i\n' % val)
-
-            else:
-                f.write(str(val)+'\n')
+  """ now sorting
+  """
+  # sort the items in the dict by key
+  # p_sorted = [item for item in p.items()]
+  p_keys = [key for key, val in p.items()]
+  p_sorted = [(key, p[key]) for key in p_keys]
+  # for some reason this is now crashing in python/mpi
+  # specifically, lambda sorting in place?
+  # p_sorted = [item for item in p.items()]
+  # p_sorted.sort(key=lambda x: x[0])
+  # open the file for writing
+  with open(fparam, 'w') as f:
+    pstring = '%26s: '
+    # write the gid info first
+    for key in gid_list.keys():
+      f.write(pstring % key)
+      if len(gid_list[key]):
+        f.write('[%4i, %4i] ' % (gid_list[key][0], gid_list[key][-1]))
+      else:
+        f.write('[]')
+      f.write('\n')
+    # do the params in p_sorted
+    for param in p_sorted:
+      key, val = param
+      f.write(pstring % key)
+      if key.startswith('N_'):
+        f.write('%i\n' % val)
+      else:
+        f.write(str(val)+'\n')
 
 # Searches f_param for any match of p
 def find_param(fparam, param_key):
