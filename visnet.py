@@ -13,10 +13,10 @@ from L5_pyramidal import L5Pyr
 from L2_pyramidal import L2Pyr
 from L2_basket import L2Basket
 from L5_basket import L5Basket
-from run import *
+from run import net
 
 drawallcells = True # False 
-cell = net.cells[200]
+cell = net.cells[-1]
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,0.6),
@@ -60,7 +60,7 @@ def get3dinfo (sidx,eidx):
     llx.append(lx); lly.append(ly); llz.append(lz); lldiam.append(ldiam)
   return llx,lly,llz,lldiam
 
-llx,lly,llz,lldiam = get3dinfo(0,270)
+llx,lly,llz,lldiam = get3dinfo(0,len(net.cells))
 
 def countseg (ls): return sum([s.nseg for s in ls])
 

@@ -381,9 +381,9 @@ class VisnetDialog (QDialog):
     super(VisnetDialog, self).__init__(parent)
     self.initUI()
 
-  def showcells3D (self): Popen(['python', 'visnet.py', 'cells']) # nonblocking
-  def showEconn (self): Popen(['python', 'visnet.py', 'Econn']) # nonblocking
-  def showIconn (self): Popen(['python', 'visnet.py', 'Iconn']) # nonblocking
+  def showcells3D (self): Popen(['python', 'visnet.py', 'cells', paramf]) # nonblocking
+  def showEconn (self): Popen(['python', 'visnet.py', 'Econn', paramf]) # nonblocking
+  def showIconn (self): Popen(['python', 'visnet.py', 'Iconn', paramf]) # nonblocking
 
   def initUI (self):
 
