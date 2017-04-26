@@ -86,10 +86,8 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
-
     # write params to the file
     paramrw.write(doutf['file_param'], p, net.gid_dict)
-
     # write the raw dipole
     with open(doutf['file_dpl'], 'w') as f:
       for k in range(int(t_vec.size())):
@@ -97,13 +95,11 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
         f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
         f.write("%5.4f\t" % dp_rec_L2.x[k])
         f.write("%5.4f\n" % dp_rec_L5.x[k])
-
     # renormalize the dipole and save
     dpl = Dipole(doutf['file_dpl']) # fix to allow init from data rather than file
     dpl.baseline_renormalize(doutf['file_param'])
     dpl.convert_fAm_to_nAm()
     dpl.write(doutf['file_dpl_norm'])
-
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic
     with open(doutf['file_current'], 'w') as fc:
@@ -112,7 +108,6 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
         # fc.write("%5.4f\t" % (i_L2 + i_L5))
         fc.write("%5.4f\t" % i_L2)
         fc.write("%5.4f\n" % i_L5)
-
     if debug:
       with open(doutf['filename_debug'], 'w+') as file_debug:
         for m in range(int(t_vec.size())):
@@ -123,8 +118,7 @@ def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   file_spikes_tmp = fio.file_spike_tmp(dproj)
   spikes_write(net, file_spikes_tmp)
   # move the spike file to the spike dir
-  if rank == 0:
-    shutil.move(file_spikes_tmp, doutf['file_spikes'])
+  if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
 
 #
 def runanalysis (ddir,p):
@@ -173,7 +167,6 @@ def setoutfiles (ddir):
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl')
   return doutf
-
 
 rank = pcID
 p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures

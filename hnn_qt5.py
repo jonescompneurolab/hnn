@@ -707,10 +707,11 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
+    """
     self.mne = mne = QLabel() 
     self.mne.setText('MNE (To Be Added)')
     grid.addWidget(self.mne, gRow, 0, 1, 2)
-
+    """
     self.initSimCanvas(gRow)
     gRow += 2
 
@@ -738,9 +739,11 @@ class HNNGUI (QMainWindow):
     self.m = SIMCanvas(self, width=10, height=1)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
+    gCol = 0 # 2
+    gWidth = 4 # 2
     self.toolbar = NavigationToolbar(self.m, self)
-    self.grid.addWidget(self.toolbar, gRow, 2, 1, 2); 
-    self.grid.addWidget(self.m, gRow + 1, 2, 1, 2); 
+    self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
+    self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
 
 
   def controlsim (self):
