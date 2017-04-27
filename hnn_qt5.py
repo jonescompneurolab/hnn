@@ -112,6 +112,7 @@ class DictDialog (QDialog):
     self.stitle = ''
     self.initd()
     self.initUI()
+    self.initExtra()
     self.setfromdin(din) # set values from input dictionary
 
   def __str__ (self):
@@ -136,6 +137,8 @@ class DictDialog (QDialog):
   def addtransvar (self,k,strans):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
+
+  def initExtra (self): self.dqextra = OrderedDict() # extra items not written to param file
 
   def initUI (self):         
     self.layout = QVBoxLayout(self)
@@ -327,6 +330,12 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evdist','Evoked Distal')
     self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
 
+  def initExtra (self):
+    DictDialog.initExtra(self)
+    self.dqextra['NumTrials'] = QLineEdit(self)
+    self.dqextra['NumTrials'].setText('0')
+    self.addtransvar('NumTrials','Number Trials')
+    self.ltabs[0].layout.addRow('NumTrials',self.dqextra['NumTrials'])
 
 # widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
 class CellParamDialog (DictDialog):
@@ -463,6 +472,12 @@ class CellParamDialog (DictDialog):
           self.addtransvar(k,lk[1].upper() + ' ' + ' rise time (ms)')
         elif k.endswith('tau2'):
           self.addtransvar(k,lk[1].upper() + ' ' + ' decay time (ms)')
+
+    """
+    for d in [self.dL2PyrBiophys, self.dL5PyrBiophys]:
+      for k in d.keys():
+        lk = k.split('_')
+    """
 
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
