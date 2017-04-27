@@ -454,10 +454,20 @@ class CellParamDialog (DictDialog):
         elif lk[-1] == 'Ra':
           self.addtransvar(k,lk[1] + ' ' + r'resistivity ($ohm-cm')
 
+    for d in [self.dL2PyrSyn, self.dL5PyrSyn]:
+      for k in d.keys():
+        lk = k.split('_')
+        if k.endswith('e'):
+          self.addtransvar(k,lk[1].upper() + ' ' + ' reversal (mV)')
+        elif k.endswith('tau1'):
+          self.addtransvar(k,lk[1].upper() + ' ' + ' rise time (ms)')
+        elif k.endswith('tau2'):
+          self.addtransvar(k,lk[1].upper() + ' ' + ' decay time (ms)')
+
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
-    self.ltitle = [ 'L2 Pyr Geom', 'L2 Pyr Syn', 'L2 Pyr Biophys',\
-                    'L5 Pyr Geom', 'L5 Pyr Syn', 'L5 Pyr Biophys']
+    self.ltitle = [ 'L2Pyr Geometry', 'L2Pyr Synapses', 'L2Pyr Biophysics',\
+                    'L5Pyr Geometry', 'L5Pyr Synapses', 'L5Pyr Biophysics']
     self.stitle = 'Set Cell Parameters'
 
 
