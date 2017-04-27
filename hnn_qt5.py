@@ -575,6 +575,11 @@ class HNNGUI (QMainWindow):
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
 
+  def loadDataFileDialog (self):
+    fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
+    if fn[0]:
+      self.dataf = fn[0]
+
   def setparams (self):
     if self.baseparamwin:
       self.baseparamwin.show()
@@ -593,10 +598,16 @@ class HNNGUI (QMainWindow):
     selParamFile.setStatusTip('Set parameter file.')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
+    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
+    loadDataFile.setShortcut('Ctrl+D')
+    loadDataFile.setStatusTip('Load (experimental) data file.')
+    loadDataFile.triggered.connect(self.loadDataFileDialog)
+
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(selParamFile)
+    fileMenu.addAction(loadDataFile)
     fileMenu.addAction(exitAction)
 
     aboutMenu = menubar.addMenu('&About')
