@@ -442,6 +442,18 @@ class CellParamDialog (DictDialog):
                                        ('L5Pyr_dend_gbar_cat', 2e-4),
                                        ('L5Pyr_dend_gbar_ar', 1e-6)])
 
+    for d in [self.dL2PyrGeom, self.dL5PyrGeom]:
+      for k in d.keys():
+        lk = k.split('_')
+        if lk[-1] == 'L':
+          self.addtransvar(k,lk[1] + ' ' + r'length (micron)')
+        elif lk[-1] == 'diam':
+          self.addtransvar(k,lk[1] + ' ' + r'diameter (micron)')
+        elif lk[-1] == 'cm':
+          self.addtransvar(k,lk[1] + ' ' + r'cm (F/cm^2)')
+        elif lk[-1] == 'Ra':
+          self.addtransvar(k,lk[1] + ' ' + r'resistivity ($ohm-cm')
+
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
     self.ltitle = [ 'L2 Pyr Geom', 'L2 Pyr Syn', 'L2 Pyr Biophys',\
