@@ -157,21 +157,40 @@ def setupsimdir (f_psim,p_exp,rank):
     copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
   return ddir
 
-def getfname (ddir,key): return os.path.join(datdir,ddir._SimulationPaths__datatypes[key])
+def getfname (ddir,key,trial=0,ntrial=0):
+  datatypes = {'rawspk': ('spk','.txt'),
+               'rawdpl': ('rawdpl','.txt'),
+               'normdpl': ('dpl','.txt'), # same output name - do not need both raw and normalized dipole - unless debugging
+               'rawcurrent': ('i','.txt'),
+               'rawspec': ('spec','.npz'),
+               'rawspeccurrent': ('speci','.npz'),
+               'avgdpl': ('dplavg','.txt'),
+               'avgspec': ('specavg','.npz'),
+               'figavgdpl': ('dplavg','.png'),
+               'figavgspec': ('specavg','.png'),
+               'figdpl': ('dpl','.png'),
+               'figspec': ('spec','.png'),
+               'figspk': ('spk','.png'),
+               'param': ('param','.txt'),
+             }
+  if ntrial == 0:
+    return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
+  else:
+    return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + '_' + datatypes[key][1])
+    
 
 # create file names
 def setoutfiles (ddir,trial=0,ntrial=0):
+  print('setoutfiles:',trial,ntrial)
   doutf = {}
-  doutf['file_dpl'] = getfname(ddir,'rawdpl')
-  doutf['file_current'] = getfname(ddir,'rawcurrent')
-  doutf['file_param'] = getfname(ddir, 'param')
-  doutf['file_spikes'] = getfname(ddir, 'rawspk')
-  doutf['file_spec'] = getfname(ddir, 'rawspec')
+  doutf['file_dpl'] = getfname(ddir,'rawdpl',trial,ntrial)
+  doutf['file_current'] = getfname(ddir,'rawcurrent',trial,ntrial)
+  doutf['file_param'] = getfname(ddir, 'param',trial,ntrial)
+  doutf['file_spikes'] = getfname(ddir, 'rawspk',trial,ntrial)
+  doutf['file_spec'] = getfname(ddir, 'rawspec',trial,ntrial)
   doutf['filename_debug'] = 'debug.dat'
-  doutf['file_dpl_norm'] = getfname(ddir,'normdpl')
-  #if ntrial > 0:
-  #  for k in doutf.keys():
-  #    k.split('.')
+  doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
+  print(doutf)
   return doutf
 
 rank = pcID
@@ -214,13 +233,21 @@ def arrangelayers ():
 
 arrangelayers() # arrange cells in layers - for visualization purposes
 
-def runtrials (f_psim, ntrial):
+pc.barrier()
+
+def cattrialoutput ():
+  pass
+
+def runtrials (ntrial):
   global doutf
   if pcID==0: print('running ', ntrial, 'trials.')
   for i in range(ntrial):
+    if pcID==0: print('running trial',i)
     doutf = setoutfiles(ddir,i+1,ntrial)
-    initrands(ntrial+i**ntrial) # reinit for each trial
-    runsim(f_psim)
+    # initrands(ntrial+i**ntrial) # reinit for each trial
+    runsim()
+  doutf = setoutfiles(ddir,0,0)
+  cattrialoutput()
 
 def initrands (s=0): # fix to use s
   # if there are N_trials, then randomize the seed
@@ -243,20 +270,27 @@ def initrands (s=0): # fix to use s
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
 
-initrands(0) # init once
+#initrands(0) # init once
 
 # All units for time: ms
 def runsim ():
   t0 = time.time() # clock start time
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
+
+  initrands()
+
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
 
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
+
   pc.psolve(h.tstop) # actual simulation - run the solver
+
+  pc.barrier()
+
   pc.allreduce(dp_rec_L2, 1); 
   pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
   net.aggregate_currents() # aggregate the currents independently on each proc
@@ -267,19 +301,21 @@ def runsim ():
   # only execute this statement on one proc
   savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
-  pc.runworker()
-  pc.done()
   if pcID == 0:
     print("Simulation run time: %4.4f s" % (time.time()-t0))
     print("Simulation directory is: %s" % ddir.dsim)    
 
-  runanalysis(ddir,p) # run spectral analysis
-  savefigs(ddir,p,p_exp) # save output figures
+    runanalysis(ddir,p) # run spectral analysis
+    savefigs(ddir,p,p_exp) # save output figures
+
+  pc.barrier()
 
 if __name__ == "__main__":
   if dconf['dorun']:
     if ntrial > 1:
-      runtrials(f_psim, ntrial)
+      runtrials(ntrial)
     else:
       runsim()
+    pc.runworker()
+    pc.done()
   if dconf['doquit']: h.quit()
