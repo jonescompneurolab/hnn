@@ -84,7 +84,7 @@ def prsimtime ():
   sys.stdout.flush()
 
 #
-def savedat (p,f_psim,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
+def savedat (p,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   global doutf
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
@@ -246,7 +246,7 @@ def initrands (s=0): # fix to use s
 initrands(0) # init once
 
 # All units for time: ms
-def runsim (f_psim):
+def runsim ():
   t0 = time.time() # clock start time
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
@@ -265,16 +265,13 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p, f_psim, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
+  savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
-  if pc.nhost() > 1:
-    pc.runworker()
-    pc.done()
-    if pcID == 0:
-      print("Simulation run time: %4.4f s" % (time.time()-t0))
-      print("Simulation directory is: %s" % ddir.dsim)    
-  else:    
-    if dconf['dorun']: print("Simulation run time: %4.4f s" % (time.time()-t0))
+  pc.runworker()
+  pc.done()
+  if pcID == 0:
+    print("Simulation run time: %4.4f s" % (time.time()-t0))
+    print("Simulation directory is: %s" % ddir.dsim)    
 
   runanalysis(ddir,p) # run spectral analysis
   savefigs(ddir,p,p_exp) # save output figures
@@ -284,5 +281,5 @@ if __name__ == "__main__":
     if ntrial > 1:
       runtrials(f_psim, ntrial)
     else:
-      runsim(f_psim)
-  if pc.nhost() > 1: h.quit()
+      runsim()
+  if dconf['doquit']: h.quit()

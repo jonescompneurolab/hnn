@@ -14,6 +14,7 @@ def_config = """
 [params]
 [run]
 dorun = 1
+doquit = 1
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -135,6 +136,7 @@ def readconf (fn="hnn.cfg"):
   #d['param'] = getlparam('param', param)
 
   d['dorun'] = confint("run","dorun",1)
+  d['doquit'] = confint("run","doquit",1)
 
   """
   recstr = confstr('run','recordV','')
