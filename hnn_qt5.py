@@ -29,15 +29,17 @@ prtime = True
 simf = dconf['simf']
 paramf = dconf['paramf']
 
-ncore = multiprocessing.cpu_count()
+defncore = multiprocessing.cpu_count()
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c):
+  def __init__ (self,c,ntrial,ncore):
     QThread.__init__(self)
     self.c = c
     self.killed = False
     self.proc = None
+    self.ntrial = ntrial
+    self.ncore = ncore
 
   def stop (self): self.killed = True
 
@@ -62,8 +64,8 @@ class RunSimThread (QThread):
   def runsim (self):
     global ddat,dfile
     self.killed = False
-    print("Running simulation using",ncore,"cores.")
-    cmd = 'mpiexec -np ' + str(ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf
+    print("Running simulation using",self.ncore,"cores.")
+    cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
     dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd)
@@ -300,7 +302,6 @@ class RunParamDialog (DictDialog):
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
                              ('dt', 0.025)]) # timestep
                              # cvode - not currently used by simulation
-                             # ncores - add
 
     self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
@@ -332,10 +333,20 @@ class RunParamDialog (DictDialog):
 
   def initExtra (self):
     DictDialog.initExtra(self)
+
     self.dqextra['NumTrials'] = QLineEdit(self)
     self.dqextra['NumTrials'].setText('0')
     self.addtransvar('NumTrials','Number Trials')
     self.ltabs[0].layout.addRow('NumTrials',self.dqextra['NumTrials'])
+
+    self.dqextra['NumCores'] = QLineEdit(self)
+    self.dqextra['NumCores'].setText(str(defncore))
+    self.addtransvar('NumCores','Number Cores')
+    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores']) 
+
+  def getntrial (self): return int(self.dqextra['NumTrials'].text().strip())
+
+  def getncore (self): return int(self.dqextra['NumCores'].text().strip())
 
 # widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
 class CellParamDialog (DictDialog):
@@ -920,12 +931,11 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
 
-
   def controlsim (self):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
-      self.startsim()
+      self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def stopsim (self):
     if self.runningsim:
@@ -937,13 +947,13 @@ class HNNGUI (QMainWindow):
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
 
-  def startsim (self):
+  def startsim (self, ntrial, ncore):
     print('Starting simulation. . .')
     self.runningsim = True
 
     self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread = RunSimThread(self.c)
+    self.runthread = RunSimThread(self.c, ntrial, ncore)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()

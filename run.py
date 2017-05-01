@@ -35,6 +35,7 @@ debug = False
 pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
+ntrial = 0
 
 # reads the specified param file
 foundprm = False
@@ -43,7 +44,10 @@ for i in range(len(sys.argv)):
     f_psim = sys.argv[i]
     foundprm = True
     if pcID==0: print('using ',f_psim,' param file.')
-    break
+  elif sys.argv[i] == 'ntrial' and i+1<len(sys.argv):
+    ntrial = int(sys.argv[i+1])
+    if ntrial == 1: ntrial = 0
+    if pcID==0: print('ntrial:',ntrial)
 
 if not foundprm:
   f_psim = os.path.join('param','default.param')
@@ -80,9 +84,8 @@ def prsimtime ():
   sys.stdout.flush()
 
 #
-def savedat (p,f_psim,ddir,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
-  # create rotating data files and dirs on ONE central node
-  doutf = setoutfiles(ddir)
+def savedat (p,f_psim,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
+  global doutf
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -157,7 +160,7 @@ def setupsimdir (f_psim,p_exp,rank):
 def getfname (ddir,key): return os.path.join(datdir,ddir._SimulationPaths__datatypes[key])
 
 # create file names
-def setoutfiles (ddir):
+def setoutfiles (ddir,trial=0,ntrial=0):
   doutf = {}
   doutf['file_dpl'] = getfname(ddir,'rawdpl')
   doutf['file_current'] = getfname(ddir,'rawcurrent')
@@ -166,11 +169,16 @@ def setoutfiles (ddir):
   doutf['file_spec'] = getfname(ddir, 'rawspec')
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl')
+  #if ntrial > 0:
+  #  for k in doutf.keys():
+  #    k.split('.')
   return doutf
 
 rank = pcID
 p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
 ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
+# create rotating data files
+doutf = setoutfiles(ddir)
 # core iterator through experimental groups
 expmt_group = p_exp.expmt_groups[0]
 
@@ -206,10 +214,15 @@ def arrangelayers ():
 
 arrangelayers() # arrange cells in layers - for visualization purposes
 
-# All units for time: ms
-def runsim (f_psim):
-  t0 = time.time() # clock start time
+def runtrials (f_psim, ntrial):
+  global doutf
+  if pcID==0: print('running ', ntrial, 'trials.')
+  for i in range(ntrial):
+    doutf = setoutfiles(ddir,i+1,ntrial)
+    initrands(ntrial+i**ntrial) # reinit for each trial
+    runsim(f_psim)
 
+def initrands (s=0): # fix to use s
   # if there are N_trials, then randomize the seed
   # establishes random seed for the seed seeder (yeah.)
   # this creates a prng_tmp on each, but only the value from 0 will be used
@@ -230,6 +243,12 @@ def runsim (f_psim):
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
 
+initrands(0) # init once
+
+# All units for time: ms
+def runsim (f_psim):
+  t0 = time.time() # clock start time
+
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
@@ -246,24 +265,24 @@ def runsim (f_psim):
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
-  savedat(p,f_psim,ddir,pcID,t_vec,dp_rec_L2,dp_rec_L5,net)
+  savedat(p, f_psim, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
   if pc.nhost() > 1:
     pc.runworker()
     pc.done()
-    t1 = time.time()
     if pcID == 0:
-      print("Simulation run time: %4.4f s" % (t1-t0))
+      print("Simulation run time: %4.4f s" % (time.time()-t0))
       print("Simulation directory is: %s" % ddir.dsim)    
   else:    
-    t1 = time.time() # end clock time
-    if dconf['dorun']: print("Simulation run time: %4.4f s" % (t1-t0))
+    if dconf['dorun']: print("Simulation run time: %4.4f s" % (time.time()-t0))
 
   runanalysis(ddir,p) # run spectral analysis
   savefigs(ddir,p,p_exp) # save output figures
 
-  # h.topology() # only have access within runsim function
-
 if __name__ == "__main__":
-  if dconf['dorun']: runsim(f_psim)
+  if dconf['dorun']:
+    if ntrial > 1:
+      runtrials(f_psim, ntrial)
+    else:
+      runsim(f_psim)
   if pc.nhost() > 1: h.quit()
