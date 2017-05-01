@@ -145,7 +145,7 @@ def savefigs (ddir,p,p_exp):
   # spec results is passed as an argument here
   # because it's not necessarily saved
   xlim_plot = (0., p['tstop'])
-  plotfn.pallsimp(datdir, ddir, p_exp, xlim_plot)
+  plotfn.pallsimp(datdir, ddir, p_exp, doutf, xlim_plot)
   print("time: %4.4f s" % (time.time() - plot_start))
 
 #
@@ -162,7 +162,7 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'rawdpl': ('rawdpl','.txt'),
                'normdpl': ('dpl','.txt'), # same output name - do not need both raw and normalized dipole - unless debugging
                'rawcurrent': ('i','.txt'),
-               'rawspec': ('spec','.npz'),
+               'rawspec': ('rawspec','.npz'),
                'rawspeccurrent': ('speci','.npz'),
                'avgdpl': ('dplavg','.txt'),
                'avgspec': ('specavg','.npz'),
@@ -176,12 +176,12 @@ def getfname (ddir,key,trial=0,ntrial=0):
   if ntrial == 0:
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
   else:
-    return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + '_' + datatypes[key][1])
+    return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + datatypes[key][1])
     
 
 # create file names
 def setoutfiles (ddir,trial=0,ntrial=0):
-  print('setoutfiles:',trial,ntrial)
+  if pcID==0: print('setoutfiles:',trial,ntrial)
   doutf = {}
   doutf['file_dpl'] = getfname(ddir,'rawdpl',trial,ntrial)
   doutf['file_current'] = getfname(ddir,'rawcurrent',trial,ntrial)
@@ -190,10 +190,9 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   doutf['file_spec'] = getfname(ddir, 'rawspec',trial,ntrial)
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
-  print(doutf)
+  if pcID==0: print(doutf)
   return doutf
 
-rank = pcID
 p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
 ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
 # create rotating data files
@@ -235,9 +234,40 @@ arrangelayers() # arrange cells in layers - for visualization purposes
 
 pc.barrier()
 
-def cattrialoutput ():
-  pass
+def catspks ():
+  lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
+  lspk = [np.loadtxt(f) for f in lf]
+  fout = os.path.join(datdir,'spk.txt')
+  with open(fout, 'ab') as fspkout:
+    for spk in lspk: np.savetxt(fout,spk)
 
+def catdpl ():
+  lf = [os.path.join(datdir,'dpl_'+str(i+1)+'.txt') for i in range(ntrial)]
+  dpl = np.mean([np.loadtxt(f) for f in lf])
+  with open(os.path.join(datdir,'rawdpl.txt'), 'w') as fdpl:
+    np.savetxt(fdpl,dpl)
+
+#
+def catspec ():
+  lf = [os.path.join(datdir,'rawspec_'+str(i+1)+'.npz') for i in range(ntrial)]
+  dspecin = {}
+  dout = {}
+  for f in lf: dspecin[f] = np.load(f)
+  for k in ['t_L5', 'f_L5', 't_L2', 'f_L2', 'time', 'freq']: dout[k] = dspecin[lf[0]][k]
+  dout['time'] = dspecin[lf[0]]['time']
+  for k in ['TFR', 'TFR_L5', 'TFR_L2']: dout[k] = np.mean(np.array([np.load(f)[k] for f in lf]),axis=0)
+  with open(os.path.join(datdir,'rawspec.npz'), 'wb') as fdpl:
+    np.savez_compressed(fdpl,t_L5=dout['t_L5'],f_L5=dout['f_L5'],t_L2=dout['t_L2'],f_L2=dout['f_L2'],time=dout['time'],freq=dout['freq'],TFR=dout['TFR'],TFR_L5=dout['TFR_L5'],TFR_L2=dout['TFR_L2'])
+  return dout
+
+# gather trial outputs via either raw concatenation or averaging
+def cattrialoutput ():
+  global doutf
+  catspks() # concatenate spikes from different trials to a single file
+  catdpl()
+  catspec()
+
+# run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
   global doutf
   if pcID==0: print('running ', ntrial, 'trials.')
@@ -245,9 +275,9 @@ def runtrials (ntrial):
     if pcID==0: print('running trial',i)
     doutf = setoutfiles(ddir,i+1,ntrial)
     # initrands(ntrial+i**ntrial) # reinit for each trial
-    runsim()
-  doutf = setoutfiles(ddir,0,0)
-  cattrialoutput()
+    runsim() # run the simulation
+  doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
+  if pcID==0: cattrialoutput() # get/save the averages
 
 def initrands (s=0): # fix to use s
   # if there are N_trials, then randomize the seed

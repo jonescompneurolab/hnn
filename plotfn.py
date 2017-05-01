@@ -65,7 +65,7 @@ def cb(r): pass
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pallsimp (datdir, ddir, p_exp, xlim=None, ylim=None):
+def pallsimp (datdir, ddir, p_exp, doutf, xlim=None, ylim=None):
   # def pall(ddir, p_exp, spec_results, xlim=[0., 'tstop']):
   dsim = ddir.dsim
   key_types = p_exp.get_key_types()
@@ -78,10 +78,10 @@ def pallsimp (datdir, ddir, p_exp, xlim=None, ylim=None):
   expmt_group = ddir.expmt_groups[0]
   # these should be equivalent lengths
   param_list = ddir.file_match(expmt_group, 'param')
-  dpl_list = [os.path.join(datdir,'rawdpl.txt')] #dpl_list.extend(ddir.file_match(expmt_group, 'rawdpl'))
-  spec_list = [os.path.join(datdir,'rawspec.npz')] # spec_list.extend(ddir.file_match(expmt_group, 'rawspec'))
-  spk_list = [os.path.join(datdir,'spk.txt')] # spk_list.extend(ddir.file_match(expmt_group, 'rawspk'))
-  print('param_list:',param_list,'dpl_list:',dpl_list,'spec_list:',spec_list,'spk_list:',spk_list)
+  dpl_list = [doutf['file_dpl']] 
+  spec_list = [doutf['file_spec']]
+  spk_list = [doutf['file_spikes']]
+  # print('param_list:',param_list,'dpl_list:',dpl_list,'spec_list:',spec_list,'spk_list:',spk_list)
   for i in range(len(ddir.file_match(expmt_group, 'param'))):
     dfig_list.append(ddir.dfig[expmt_group])
   for dfig, f_param, f_spk, f_dpl, f_spec in zip(dfig_list, param_list, spk_list, dpl_list, spec_list):
