@@ -17,22 +17,21 @@ class SimulationPaths ():
     # hard coded data types
     # fig extensions are not currently being used as well as they could be
     # add new directories here to be automatically created for every simulation
-    self.__datatypes = {
-      'rawspk': 'spk.txt',
-      'rawdpl': 'rawdpl.txt',
-      'normdpl': 'dpl.txt', # same output name - do not need both raw and normalized dipole - unless debugging
-      'rawcurrent': 'i.txt',
-      'rawspec': 'spec.npz',
-      'rawspeccurrent': 'speci.npz',
-      'avgdpl': 'dplavg.txt',
-      'avgspec': 'specavg.npz',
-      'figavgdpl': 'dplavg.png',
-      'figavgspec': 'specavg.png',
-      'figdpl': 'dpl.png',
-      'figspec': 'spec.png',
-      'figspk': 'spk.png',
-      'param': 'param.txt',
-    }
+    self.__datatypes = {'rawspk': 'spk.txt',
+                        'rawdpl': 'rawdpl.txt',
+                        'normdpl': 'dpl.txt', # same output name - do not need both raw and normalized dipole - unless debugging
+                        'rawcurrent': 'i.txt',
+                        'rawspec': 'spec.npz',
+                        'rawspeccurrent': 'speci.npz',
+                        'avgdpl': 'dplavg.txt',
+                        'avgspec': 'specavg.npz',
+                        'figavgdpl': 'dplavg.png',
+                        'figavgspec': 'specavg.png',
+                        'figdpl': 'dpl.png',
+                        'figspec': 'spec.png',
+                        'figspk': 'spk.png',
+                        'param': 'param.txt',
+                      }
     # empty until a sim is created or read
     self.fparam = None
     self.sim_prefix = None

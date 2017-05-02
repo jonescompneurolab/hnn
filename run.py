@@ -124,27 +124,25 @@ def savedat (p,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
 
 #
-def runanalysis (ddir,p):
-  if pcID==0: print("Analysis ...",)
+def runanalysis (prm, fparam, fdpl, fspec):
+  if pcID==0: print("Running spectral analysis...",)
+  spec_opts = {'type': 'dpl_laminar',
+               'f_max': prm['f_max_spec'],
+               'save_data': 0,
+               'runtype': 'parallel',
+             }
   t_start_analysis = time.time()
-  # run the spectral analysis
-  spec_opts = {
-    'type': 'dpl_laminar',
-    'f_max': p['f_max_spec'],
-    'save_data': 0,
-    'runtype': 'parallel',
-  }
-  specfn.analysis_simp(datdir, ddir, spec_opts)
+  specfn.analysis_simp(spec_opts, fparam, fdpl, fspec) # run the spectral analysis
   if pcID==0: print("time: %4.4f s" % (time.time() - t_start_analysis))
 
 #
-def savefigs (ddir,p,p_exp):
+def savefigs (ddir, prm, p_exp):
   print("Plot ...",)
   plot_start = time.time()
   # run plots and epscompress function
   # spec results is passed as an argument here
   # because it's not necessarily saved
-  xlim_plot = (0., p['tstop'])
+  xlim_plot = (0., prm['tstop'])
   plotfn.pallsimp(datdir, ddir, p_exp, doutf, xlim_plot)
   print("time: %4.4f s" % (time.time() - plot_start))
 
@@ -173,7 +171,7 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'figspk': ('spk','.png'),
                'param': ('param','.txt'),
              }
-  if ntrial == 0:
+  if ntrial == 0:# or key == 'param':
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
   else:
     return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + datatypes[key][1])
@@ -334,18 +332,15 @@ def runsim ():
   if pcID == 0:
     print("Simulation run time: %4.4f s" % (time.time()-t0))
     print("Simulation directory is: %s" % ddir.dsim)    
-
-    runanalysis(ddir,p) # run spectral analysis
+    runanalysis(p, doutf['file_param'], doutf['file_dpl'], doutf['file_spec']) # run spectral analysis
     savefigs(ddir,p,p_exp) # save output figures
 
   pc.barrier()
 
 if __name__ == "__main__":
   if dconf['dorun']:
-    if ntrial > 1:
-      runtrials(ntrial)
-    else:
-      runsim()
+    if ntrial > 1: runtrials(ntrial)
+    else: runsim()
     pc.runworker()
     pc.done()
   if dconf['doquit']: h.quit()

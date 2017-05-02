@@ -894,24 +894,16 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
 
-def analysis_simp (datdir, ddata, opts):
-  opts_run = {
-    'type': 'dpl_laminar',
-    'f_max': 100.,
-    'save_data': 0,
-    'runtype': 'parallel',
-  }
+def analysis_simp (opts, fparam, fdpl, fspec):
+  opts_run = {'type': 'dpl_laminar',
+              'f_max': 100.,
+              'save_data': 0,
+              'runtype': 'parallel',
+            }
   if opts:
     for key, val in opts.items():
-      if key in opts_run.keys():
-        opts_run[key] = val
-  expmt_group = ddata.expmt_groups[0]
-  fparam  = ddata.file_match(expmt_group, 'param')[0]
-  print('fparam:',fparam)
-  fts = os.path.join(datdir,'dpl.txt')
-  fspec = os.path.join(datdir,'rawspec.npz')
-  #spec_current_kernel(fparam, fts, fspec, opts_run['f_max'])
-  spec_dpl_kernel(fparam, fts, fspec, opts_run['f_max'])
+      if key in opts_run.keys(): opts_run[key] = val
+  spec_dpl_kernel(fparam, fdpl, fspec, opts_run['f_max'])
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
