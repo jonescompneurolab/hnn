@@ -179,7 +179,7 @@ def getfname (ddir,key,trial=0,ntrial=0):
 
 # create file names
 def setoutfiles (ddir,trial=0,ntrial=0):
-  if pcID==0: print('setoutfiles:',trial,ntrial)
+  # if pcID==0: print('setoutfiles:',trial,ntrial)
   doutf = {}
   doutf['file_dpl'] = getfname(ddir,'rawdpl',trial,ntrial)
   doutf['file_current'] = getfname(ddir,'rawcurrent',trial,ntrial)
@@ -188,7 +188,7 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   doutf['file_spec'] = getfname(ddir, 'rawspec',trial,ntrial)
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
-  if pcID==0: print(doutf)
+  # if pcID==0: print(doutf)
   return doutf
 
 p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
@@ -243,10 +243,13 @@ def catspks ():
 
 #
 def catdpl ():
-  lf = [os.path.join(datdir,'dpl_'+str(i+1)+'.txt') for i in range(ntrial)]
-  dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
-  with open(os.path.join(datdir,'rawdpl.txt'), 'wb') as fdpl: np.savetxt(fdpl,dpl)
-  return dpl
+  ldpl = []
+  for pre in ['dpl','rawdpl']:
+    lf = [os.path.join(datdir,pre+'_'+str(i+1)+'.txt') for i in range(ntrial)]
+    dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
+    with open(os.path.join(datdir,pre+'.txt'), 'wb') as fdpl: np.savetxt(fdpl,dpl)
+    ldpl.append(dpl)
+  return ldpl
 
 #
 def catspec ():
@@ -265,16 +268,16 @@ def catspec ():
 def cattrialoutput ():
   global doutf
   lspk = catspks() # concatenate spikes from different trials to a single file
-  ddpl = catdpl()
+  ldpl = catdpl()
   dspec = catspec()
-  del lspk,ddpl,dspec # do not need these variables; returned for testing
+  del lspk,ldpl,dspec # do not need these variables; returned for testing
 
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
   global doutf
   if pcID==0: print('running ', ntrial, 'trials.')
   for i in range(ntrial):
-    if pcID==0: print('running trial',i)
+    if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)
     # initrands(ntrial+i**ntrial) # reinit for each trial
     runsim() # run the simulation

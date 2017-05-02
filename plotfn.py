@@ -72,7 +72,7 @@ def pallsimp (datdir, p_exp, doutf, xlim=None, ylim=None):
   spec_list = [doutf['file_spec']]
   spk_list = [doutf['file_spikes']]
   dfig_list = [{'figavgdpl': None, 'avgspec': None, 'param': None, 'normdpl': None, 'rawspk': None, 'rawspec': None, 'figavgspec': None, 'rawdpl': None, 'figdpl': None, 'rawcurrent': None, 'avgdpl': None, 'figspk': None, 'rawspeccurrent': None, 'figspec': None}]
-  print('dfig_list:',dfig_list)
+  # print('dfig_list:',dfig_list)
   for dfig, f_param, f_spk, f_dpl, f_spec in zip(dfig_list, param_list, spk_list, dpl_list, spec_list):
     pkernel_with_hist(datdir, dfig, f_param, f_spk, f_dpl, f_spec, key_types, xlim, ylim)
 
