@@ -257,9 +257,9 @@ def catdpl ():
     with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
       for i in range(dpl.shape[0]):
         fp.write("%03.3f\t" % dpl[i,0])
-        fp.write("%5.4f\t" % dpl[i,1])
-        fp.write("%5.4f\t" % dpl[i,2])
-        fp.write("%5.4f\n" % dpl[i,3])
+        fp.write("%5.8f\t" % dpl[i,1])
+        fp.write("%5.8f\t" % dpl[i,2])
+        fp.write("%5.8f\n" % dpl[i,3])
     ldpl.append(dpl)
   return ldpl
 
@@ -291,7 +291,7 @@ def runtrials (ntrial):
   for i in range(ntrial):
     if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)
-    # initrands(ntrial+i**ntrial) # reinit for each trial
+    initrands(ntrial+i**ntrial) # reinit for each trial
     runsim() # run the simulation
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
@@ -317,7 +317,7 @@ def initrands (s=0): # fix to use s
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
 
-#initrands(0) # init once
+initrands(0) # init once
 
 # All units for time: ms
 def runsim ():
@@ -325,7 +325,7 @@ def runsim ():
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
 
-  initrands()
+  # initrands()
 
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
