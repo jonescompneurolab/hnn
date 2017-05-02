@@ -137,13 +137,13 @@ def runanalysis (prm, fparam, fdpl, fspec):
 
 #
 def savefigs (ddir, prm, p_exp):
-  print("Plot ...",)
+  print("Saving figures...",)
   plot_start = time.time()
   # run plots and epscompress function
   # spec results is passed as an argument here
   # because it's not necessarily saved
   xlim_plot = (0., prm['tstop'])
-  plotfn.pallsimp(datdir, ddir, p_exp, doutf, xlim_plot)
+  plotfn.pallsimp(datdir, p_exp, doutf, xlim_plot)
   print("time: %4.4f s" % (time.time() - plot_start))
 
 #

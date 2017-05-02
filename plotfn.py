@@ -65,24 +65,12 @@ def cb(r): pass
 
 # plot function - this is sort of a stop-gap and shouldn't live here, really
 # reads all data except spec and gid_dict from files
-def pallsimp (datdir, ddir, p_exp, doutf, xlim=None, ylim=None):
+def pallsimp (datdir, p_exp, doutf, xlim=None, ylim=None):
   key_types = p_exp.get_key_types()
-  # preallocate lists for use below
-  param_list = []
-  dpl_list = []
-  spec_list = []
-  spk_list = []
-  dfig_list = []
-  #expmt_group = ddir.expmt_groups[0]
-  #print('expmt_group:',expmt_group)
-  # these should be equivalent lengths
   param_list = [doutf['file_param']]
   dpl_list = [doutf['file_dpl']] 
   spec_list = [doutf['file_spec']]
   spk_list = [doutf['file_spikes']]
-  # print('param_list:',param_list,'dpl_list:',dpl_list,'spec_list:',spec_list,'spk_list:',spk_list)
-  #for i in range(len(ddir.file_match(expmt_group, 'param'))):
-  #  dfig_list.append(ddir.dfig[expmt_group])
   dfig_list = [{'figavgdpl': None, 'avgspec': None, 'param': None, 'normdpl': None, 'rawspk': None, 'rawspec': None, 'figavgspec': None, 'rawdpl': None, 'figdpl': None, 'rawcurrent': None, 'avgdpl': None, 'figspk': None, 'rawspeccurrent': None, 'figspec': None}]
   print('dfig_list:',dfig_list)
   for dfig, f_param, f_spk, f_dpl, f_spec in zip(dfig_list, param_list, spk_list, dpl_list, spec_list):
