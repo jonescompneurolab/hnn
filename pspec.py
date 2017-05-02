@@ -89,11 +89,11 @@ def pspec_dpl(f_spec, f_dpl, dfig, p_dict, key_types, xlim=None, ylim=None, f_pa
 # Spectral plotting kernel with alpha feed histogram for ONE simulation run
 def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, ylim=None):
   # Generate file prefix
-  print('f_spec:',f_spec)
+  # print('f_spec:',f_spec)
   fprefix = f_spec.split('/')[-1].split('.')[0]
   # Create the fig name
   fig_name = os.path.join(dfig, fprefix+'.png')
-  print('fig_name:',fig_name)
+  # print('fig_name:',fig_name)
   # load param dict
   _, p_dict = paramrw.read(f_param)
   f = ac.FigSpecWithHist()
