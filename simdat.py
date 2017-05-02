@@ -15,6 +15,17 @@ paramf = dconf['paramf']
 ddat = {}
 dfile = {}
 
+def readdpltrials (basedir):
+  ldpl = []
+  i = 1
+  while True:
+    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
+    if not os.path.exists(fn): break    
+    ldpl.append(np.loadtxt(fn))
+    # print('loaded ', fn)
+    i += 1
+  return ldpl
+
 def getinputfiles (paramf):
   global dfile,basedir
   dfile = {}
@@ -30,6 +41,7 @@ try:
   ddat['dpl'] = np.loadtxt(dfile['dpl']);
   ddat['spec'] = np.load(dfile['spec']); 
   ddat['spk'] = np.loadtxt(dfile['spk']); 
+  ddat['dpltrials'] = readdpltrials(basedir)
 except:
   print('exception in getting input files')
 
@@ -97,11 +109,16 @@ class SIMCanvas (FigureCanvas):
       xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
       if self.plotinputhist(xl): gRow = 2
+
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
-      ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'b')
+      if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+        for dpltrial in ddat['dpltrials']:
+          ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
+      ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       ax.set_ylabel('dipole (nA m)')
       ax.set_xlim(xl)
       ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
+
       # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
       gRow = 6
       self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram

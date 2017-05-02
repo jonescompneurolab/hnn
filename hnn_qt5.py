@@ -91,6 +91,7 @@ class RunSimThread (QThread):
         ddat['dpl'] = np.loadtxt(dfile['dpl'])
         ddat['spec'] = np.load(dfile['spec'])
         ddat['spk'] = np.loadtxt(dfile['spk'])
+        ddat['dpltrials'] = readdpltrials(os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0]))
         print("Read simulation outputs:",dfile.values())
       except:
         print('WARN: could not read simulation outputs:',dfile.values())
