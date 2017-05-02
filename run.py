@@ -171,7 +171,7 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'figspk': ('spk','.png'),
                'param': ('param','.txt'),
              }
-  if ntrial == 0:# or key == 'param':
+  if ntrial == 0 or key == 'param': # param file currently identical for all trials
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
   else:
     return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + datatypes[key][1])

@@ -323,32 +323,26 @@ class ExpParams():
         return key_dict
 
 # reads params from a generated txt file and returns gid dict and p dict 
-def read(fparam):
+def read (fparam):
     lines = fio.clean_lines(fparam)
     p = {}
     gid_dict = {}
-
     for line in lines:
         keystring, val = line.split(": ")
         key = keystring.strip()
-
         if val[0] is '[':
             val_range = val[1:-1].split(', ')
-
             if len(val_range) is 2:
                 ind_start = int(val_range[0])
                 ind_end = int(val_range[1]) + 1
                 gid_dict[key] = np.arange(ind_start, ind_end)
-
             else:
                 gid_dict[key] = np.array([])
-
         else:
             try:
                 p[key] = float(val)
             except ValueError:
                 p[key] = str(val)
-
     return gid_dict, p
 
 # write the params to a filename
