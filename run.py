@@ -232,18 +232,21 @@ arrangelayers() # arrange cells in layers - for visualization purposes
 
 pc.barrier()
 
+#
 def catspks ():
   lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
   lspk = [np.loadtxt(f) for f in lf]
   fout = os.path.join(datdir,'spk.txt')
   with open(fout, 'ab') as fspkout:
     for spk in lspk: np.savetxt(fout,spk)
+  return lspk
 
+#
 def catdpl ():
   lf = [os.path.join(datdir,'dpl_'+str(i+1)+'.txt') for i in range(ntrial)]
-  dpl = np.mean([np.loadtxt(f) for f in lf])
-  with open(os.path.join(datdir,'rawdpl.txt'), 'w') as fdpl:
-    np.savetxt(fdpl,dpl)
+  dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
+  with open(os.path.join(datdir,'rawdpl.txt'), 'wb') as fdpl: np.savetxt(fdpl,dpl)
+  return dpl
 
 #
 def catspec ():
@@ -261,9 +264,10 @@ def catspec ():
 # gather trial outputs via either raw concatenation or averaging
 def cattrialoutput ():
   global doutf
-  catspks() # concatenate spikes from different trials to a single file
-  catdpl()
-  catspec()
+  lspk = catspks() # concatenate spikes from different trials to a single file
+  ddpl = catdpl()
+  dspec = catspec()
+  del lspk,ddpl,dspec # do not need these variables; returned for testing
 
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
