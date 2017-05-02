@@ -235,10 +235,17 @@ pc.barrier()
 #
 def catspks ():
   lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
-  lspk = [np.loadtxt(f) for f in lf]
+  lspk = [[],[]]
+  for f in lf:
+    xarr = np.loadtxt(f)
+    for i in range(2):
+      lspk[i].extend(xarr[:,i])
+  lspk = np.array(lspk).T
+  lspk.sort(axis=0)
   fout = os.path.join(datdir,'spk.txt')
-  with open(fout, 'ab') as fspkout:
-    for spk in lspk: np.savetxt(fout,spk)
+  with open(fout, 'w') as fspkout:
+    for i in range(lspk.shape[0]):
+      fspkout.write('%3.2f\t%d\n' % (lspk[i,0], lspk[i,1]))
   return lspk
 
 #
@@ -247,7 +254,12 @@ def catdpl ():
   for pre in ['dpl','rawdpl']:
     lf = [os.path.join(datdir,pre+'_'+str(i+1)+'.txt') for i in range(ntrial)]
     dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
-    with open(os.path.join(datdir,pre+'.txt'), 'wb') as fdpl: np.savetxt(fdpl,dpl)
+    with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
+      for i in range(dpl.shape[0]):
+        fp.write("%03.3f\t" % dpl[i,0])
+        fp.write("%5.4f\t" % dpl[i,1])
+        fp.write("%5.4f\t" % dpl[i,2])
+        fp.write("%5.4f\n" % dpl[i,3])
     ldpl.append(dpl)
   return ldpl
 
@@ -275,7 +287,7 @@ def cattrialoutput ():
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
   global doutf
-  if pcID==0: print('running ', ntrial, 'trials.')
+  if pcID==0: print('Running', ntrial, 'trials.')
   for i in range(ntrial):
     if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)

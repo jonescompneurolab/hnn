@@ -52,6 +52,7 @@ class SIMCanvas (FigureCanvas):
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
     extinputs = None
     try:
+      # print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
       extinputs.add_delay_times()
       if len(extinputs.inputs['dist']) <= 0 and len(extinputs.inputs['prox']) <= 0:
