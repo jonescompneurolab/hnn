@@ -9,6 +9,8 @@ from math import ceil
 from conf import dconf
 import spikefn
 
+#plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
+
 simf = dconf['simf']
 paramf = dconf['paramf']
 
