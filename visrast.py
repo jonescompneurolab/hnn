@@ -45,7 +45,12 @@ for (t,gid) in ddat['spk']:
   else:
     dspk['Input'][0].append(t)
     dspk['Input'][1].append(gid)
-    dspk['Input'][2].append('w')
+    if gid == ncell:
+      dspk['Input'][2].append('g')
+    elif gid == ncell+1:
+      dspk['Input'][2].append('r')
+    else:
+      dsp['Input'][2].append('w')
     haveinputs = True
 
 def handle_close (evt): quit()
@@ -59,11 +64,15 @@ if __name__ == '__main__':
   if haveinputs:
     lk.append('Input')
     gdx = 211
-  for i,k in enumerate(lk):
+  for i,k in enumerate(['Input','Cell']):
     ax=fig.add_subplot(gdx)
     ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=8**2)
     plt.xlabel('Time (ms)');
-    plt.ylabel(k + ' ID')
+    if k == 'Input':
+      plt.ylabel('Ongoing Input')
+      ax.set_yticks([])
+    else:
+      plt.ylabel(k + ' ID')
     ax.set_facecolor('k')
     ax.grid(True)
     if i ==0: ax.set_title('Raster Plot')
