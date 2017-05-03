@@ -45,6 +45,16 @@ try:
 except:
   print('exception in getting input files')
 
+# draw raster to standalone matplotlib figure
+def drawraster ():  
+  if 'spk' in ddat:
+    # print('spk shape:',ddat['spk'].shape)
+    plt.ion()
+    plt.figure()
+    for pair in ddat['spk']:
+      plt.plot([pair[0]],[pair[1]],'ko',markersize=10)
+    plt.xlabel('Time (ms)'); plt.ylabel('ID')
+
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class SIMCanvas (FigureCanvas): 
 

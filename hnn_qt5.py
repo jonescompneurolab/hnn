@@ -761,7 +761,10 @@ class HNNGUI (QMainWindow):
       self.baseparamwin.show()
 
   def showAboutDialog (self):
-    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nFrom https://bitbucket.org/samnemo/hnn\n2017.")
+    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
+
+  def showRasterPlot (self):
+    drawraster() # draws to new pylab figure
 
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
@@ -785,6 +788,12 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(exitAction)
+
+    viewMenu = menubar.addMenu('&View')
+    viewRasterAction = QAction('View Raster Plot.',self)
+    viewRasterAction.setStatusTip('View Simulation Raster Plot.')
+    viewRasterAction.triggered.connect(self.showRasterPlot)
+    viewMenu.addAction(viewRasterAction)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN.',self)
