@@ -36,12 +36,17 @@ for pair in ddat['spk']:
   else:
     clr.append('w')
 
-plt.ion()
-plt.figure()
-ax=plt.gca()
-ax.scatter(t,gid,c=clr,s=8**2)
-plt.xlabel('Time (ms)'); plt.ylabel('ID')
-ax.set_facecolor('k')
-ax.grid(True)
-ax.set_title('Raster Plot')
+def handle_close (evt):
+  quit()
+
+if __name__ == '__main__':
+  plt.ion()
+  fig = plt.figure()
+  fig.canvas.mpl_connect('close_event', handle_close)
+  ax=plt.gca()
+  ax.scatter(t,gid,c=clr,s=8**2)
+  plt.xlabel('Time (ms)'); plt.ylabel('ID')
+  ax.set_facecolor('k')
+  ax.grid(True)
+  ax.set_title('Raster Plot')
 

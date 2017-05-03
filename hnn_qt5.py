@@ -764,7 +764,8 @@ class HNNGUI (QMainWindow):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
 
   def showRasterPlot (self):
-    drawraster() # draws to new pylab figure
+    lcmd = ['python', '-i','visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+    Popen(lcmd) # nonblocking
 
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
