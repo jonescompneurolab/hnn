@@ -45,9 +45,9 @@ if __name__ == '__main__':
 
     if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
       for dpltrial in ddat['dpltrials']:
-        ax.plot(dpltrial[:,0],dpltrial[:,i+1],color='gray',linewidth=1)
+        ax.plot(dpltrial[:,0],dpltrial[:,i+1],color='gray',linewidth=2)
 
-    ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i+1],'w',linewidth=3)
+    ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i+1],'w',linewidth=5)
     ax.set_ylabel('dipole (nA m)')
 
     if i == 0 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
