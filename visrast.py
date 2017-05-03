@@ -12,10 +12,10 @@ from run import net
 cell = net.cells[-1]
 
 # colors for the different cell types
-dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,0.6),
-        'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,0.6),
-        'L2_basket' : 'k', L2Basket: (1.,1.,1.,0.6),
-        'L5_basket' : 'b', L5Basket: (0.,0.,1.,0.6)}
+dclr = {'L2_pyramidal' : 'g',
+        'L5_pyramidal' : 'r',
+        'L2_basket' : 'k', 
+        'L5_basket' : 'b'}
 
 spkpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -26,15 +26,20 @@ for i in range(len(sys.argv)):
 
 ddat = {}
 ddat['spk'] = np.loadtxt(spkpath)
-t,gid=[],[]
+t,gid,clr=[],[],[]
 for pair in ddat['spk']:
   t.append(pair[0])
-  gid.append(pair[1])
+  gid.append(pair[1])  
+  ty = net.gid_to_type(gid[-1])
+  if ty in dclr:
+    clr.append(dclr[ty])
+  else:
+    clr.append('w')
 
 plt.ion()
 plt.figure()
 ax=plt.gca()
-ax.plot(t,gid,'o',color='white',markersize=10)
+ax.scatter(t,gid,c=clr,s=8**2)
 plt.xlabel('Time (ms)'); plt.ylabel('ID')
 ax.set_facecolor('k')
 ax.grid(True)
