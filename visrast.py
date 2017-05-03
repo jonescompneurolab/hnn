@@ -1,12 +1,6 @@
 import sys, os
-import pyqtgraph as pg        
-from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph.opengl as gl
-import pyqtgraph as pg
 import numpy as np
-
-from morphology import shapeplot, getshapecoords
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 import pylab as plt
 from neuron import h
 from L5_pyramidal import L5Pyr
@@ -37,19 +31,12 @@ for pair in ddat['spk']:
   t.append(pair[0])
   gid.append(pair[1])
 
-## Start Qt event loop unless running in interactive mode.
-if __name__ == '__main__':
-  app = QtGui.QApplication([])
-  view = pg.GraphicsView()
-  l = pg.GraphicsLayout(border=(100,100,100))
-  view.setCentralItem(l)
-  myplot = l.addPlot(row=1,col=1)
+plt.ion()
+plt.figure()
+ax=plt.gca()
+ax.plot(t,gid,'o',color='white',markersize=10)
+plt.xlabel('Time (ms)'); plt.ylabel('ID')
+ax.set_facecolor('k')
+ax.grid(True)
+ax.set_title('Raster Plot')
 
-  # myplot.plot(t,gid,pen=None,symbol='o')
-  # sp = pg.ScatterPlotItem(t,gid)
-
-  view.show()
-  view.setWindowTitle('Spike Raster')
-  view.resize(800,600)
-  if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-    QtGui.QApplication.instance().exec_()
