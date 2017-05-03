@@ -232,7 +232,7 @@ arrangelayers() # arrange cells in layers - for visualization purposes
 
 pc.barrier()
 
-#
+# save spikes from the individual trials in a single file
 def catspks ():
   lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
   lspk = [[],[]]
@@ -248,7 +248,7 @@ def catspks ():
       fspkout.write('%3.2f\t%d\n' % (lspk[i,0], lspk[i,1]))
   return lspk
 
-#
+# save average dipole from individual trials in a single file
 def catdpl ():
   ldpl = []
   for pre in ['dpl','rawdpl']:
@@ -263,7 +263,7 @@ def catdpl ():
     ldpl.append(dpl)
   return ldpl
 
-#
+# save average spectrogram from individual trials in a single file
 def catspec ():
   lf = [os.path.join(datdir,'rawspec_'+str(i+1)+'.npz') for i in range(ntrial)]
   dspecin = {}
@@ -291,7 +291,7 @@ def runtrials (ntrial):
   for i in range(ntrial):
     if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)
-    initrands(ntrial+i**ntrial) # reinit for each trial
+    initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     runsim() # run the simulation
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
@@ -303,12 +303,13 @@ def initrands (s=0): # fix to use s
   prng_tmp = np.random.RandomState()
   if pcID == 0:
     r = h.Vector(1, s) # initialize vector to 1 element, with a 0
-    prng_base = np.random.RandomState(pcID + s)
-  else:
-    # create the vector 'r' but don't change its init value
-    r = h.Vector(1, 0)
-  # broadcast random seed value in r to everyone
-  pc.broadcast(r, 0)
+    if ntrial == 0:
+      prng_base = np.random.RandomState(pcID + s)
+    else:
+      # Create a random seed value
+      r.x[0] = prng_tmp.randint(1e9)
+  else: r = h.Vector(1, s) # create the vector 'r' but don't change its init value
+  pc.broadcast(r, 0) # broadcast random seed value in r to everyone
   # set object prngbase to random state for the seed value
   # other random seeds here will then be based on the gid
   prng_base = np.random.RandomState(int(r.x[0]))
@@ -325,17 +326,13 @@ def runsim ():
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
 
-  # initrands()
-
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
 
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
-
   pc.psolve(h.tstop) # actual simulation - run the solver
-
   pc.barrier()
 
   pc.allreduce(dp_rec_L2, 1); 
@@ -354,7 +351,7 @@ def runsim ():
     runanalysis(p, doutf['file_param'], doutf['file_dpl'], doutf['file_spec']) # run spectral analysis
     savefigs(ddir,p,p_exp) # save output figures
 
-  pc.barrier()
+  pc.barrier() # make sure all done in case multiple trials
 
 if __name__ == "__main__":
   if dconf['dorun']:
