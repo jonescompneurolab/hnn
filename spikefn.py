@@ -74,10 +74,11 @@ class ExtInputs (Spikes):
       return self.gid_dict['extinput']
     # Otherwise, only one feed exists in this sim
     # Must use param file to figure out which one...
-    elif self.p_dict['t0_input_prox'] <= self.p_dict['tstop']:
-      return self.gid_dict['extinput'][0], None
-    elif self.p_dict['t0_input_dist'] <= self.p_dict['tstop']:
-      return None, self.gid_dict['extinput'][0]
+    elif len(self.gid_dict['extinput']) > 0:
+      if self.p_dict['t0_input_prox'] <= self.p_dict['tstop']:
+        return self.gid_dict['extinput'][0], None
+      elif self.p_dict['t0_input_dist'] <= self.p_dict['tstop']:
+        return None, self.gid_dict['extinput'][0]
     else:
       return None, None
 
