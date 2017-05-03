@@ -18,6 +18,8 @@ doquit = 1
 [sim]
 simf = run.py
 paramf = param/default.param
+[draw]
+drawindivdpl
 """
 
 class baseparam:
@@ -137,6 +139,8 @@ def readconf (fn="hnn.cfg"):
 
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)
+
+  d['drawindivdpl'] = confint("draw","drawindivdpl",1)
 
   """
   recstr = confstr('run','recordV','')

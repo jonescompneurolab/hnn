@@ -111,7 +111,7 @@ class SIMCanvas (FigureCanvas):
       if self.plotinputhist(xl): gRow = 2
 
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
-      if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+      if dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
