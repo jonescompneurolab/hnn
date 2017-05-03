@@ -1,6 +1,7 @@
 import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import pylab as plt
 from neuron import h
 from L5_pyramidal import L5Pyr
@@ -50,7 +51,7 @@ for (t,gid) in ddat['spk']:
     elif gid == ncell+1:
       dspk['Input'][2].append('r')
     else:
-      dsp['Input'][2].append('w')
+      dspk['Input'][2].append('w')
     haveinputs = True
 
 def handle_close (evt): quit()
@@ -71,8 +72,18 @@ if __name__ == '__main__':
     if k == 'Input':
       plt.ylabel('Ongoing Input')
       ax.set_yticks([])
+      red_patch = mpatches.Patch(color='red', label='dist')
+      green_patch = mpatches.Patch(color='green', label='prox')
+      plt.legend(handles=[red_patch,green_patch])
     else:
       plt.ylabel(k + ' ID')
+      white_patch = mpatches.Patch(color='white', label='L2Basket')
+      green_patch = mpatches.Patch(color='green', label='L2Pyr')
+      red_patch = mpatches.Patch(color='red', label='L5Pyr')
+      blue_patch = mpatches.Patch(color='blue', label='L5Basket')
+      plt.legend(handles=[white_patch,green_patch,red_patch,blue_patch])
+      ax.set_ylim((-1,ncell+1))
+      ax.invert_yaxis()
     ax.set_facecolor('k')
     ax.grid(True)
     if i ==0: ax.set_title('Raster Plot')
