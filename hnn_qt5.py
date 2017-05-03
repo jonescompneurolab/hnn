@@ -767,6 +767,10 @@ class HNNGUI (QMainWindow):
     lcmd = ['python', '-i','visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     Popen(lcmd) # nonblocking
 
+  def showDipolePlot (self):
+    lcmd = ['python', '-i','visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+    Popen(lcmd) # nonblocking    
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -790,11 +794,20 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(exitAction)
 
+    # view menu - drawing/visualization
     viewMenu = menubar.addMenu('&View')
     viewRasterAction = QAction('View Raster Plot.',self)
     viewRasterAction.setStatusTip('View Simulation Raster Plot.')
     viewRasterAction.triggered.connect(self.showRasterPlot)
     viewMenu.addAction(viewRasterAction)
+    viewDipoleAction = QAction('View Dipoles.',self)
+    viewDipoleAction.setStatusTip('View Simulation Dipoles.')
+    viewDipoleAction.triggered.connect(self.showDipolePlot)
+    viewMenu.addAction(viewDipoleAction)
+    viewNetAction = QAction('View Network.',self)
+    viewNetAction.setStatusTip('View Model Network.')
+    viewNetAction.triggered.connect(self.showvisnet)
+    viewMenu.addAction(viewNetAction)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN.',self)

@@ -81,7 +81,7 @@ if __name__ == '__main__':
       green_patch = mpatches.Patch(color='green', label='L2Pyr')
       red_patch = mpatches.Patch(color='red', label='L5Pyr')
       blue_patch = mpatches.Patch(color='blue', label='L5Basket')
-      plt.legend(handles=[white_patch,green_patch,red_patch,blue_patch])
+      plt.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
       ax.set_ylim((-1,ncell+1))
       ax.invert_yaxis()
     ax.set_facecolor('k')
