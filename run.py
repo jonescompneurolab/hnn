@@ -302,8 +302,8 @@ def initrands (s=0): # fix to use s
   # this creates a prng_tmp on each, but only the value from 0 will be used
   prng_tmp = np.random.RandomState()
   if pcID == 0:
-    r = h.Vector(1, 0) # initialize vector to 1 element, with a 0
-    prng_base = np.random.RandomState(pcID)
+    r = h.Vector(1, s) # initialize vector to 1 element, with a 0
+    prng_base = np.random.RandomState(pcID + s)
   else:
     # create the vector 'r' but don't change its init value
     r = h.Vector(1, 0)
