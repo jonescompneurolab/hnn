@@ -15,14 +15,13 @@ from L2_basket import L2Basket
 from L5_basket import L5Basket
 from run import net
 
-app = QtGui.QApplication([])
+cell = net.cells[-1]
 
-view = pg.GraphicsView()
-l = pg.GraphicsLayout(border=(100,100,100))
-view.setCentralItem(l)
-view.show()
-view.setWindowTitle('Spike Raster')
-view.resize(800,600)
+# colors for the different cell types
+dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,0.6),
+        'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,0.6),
+        'L2_basket' : 'k', L2Basket: (1.,1.,1.,0.6),
+        'L5_basket' : 'b', L5Basket: (0.,0.,1.,0.6)}
 
 def plotsimdatgl (figure,G,fig):
   global invertedhistax
@@ -83,6 +82,12 @@ def plotsimdatgl (figure,G,fig):
 
 ## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-  import sys
+  app = QtGui.QApplication([])
+  view = pg.GraphicsView()
+  l = pg.GraphicsLayout(border=(100,100,100))
+  view.setCentralItem(l)
+  view.show()
+  view.setWindowTitle('Spike Raster')
+  view.resize(800,600)
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()
