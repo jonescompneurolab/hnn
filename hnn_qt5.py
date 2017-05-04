@@ -289,7 +289,7 @@ class EvokedInputParamDialog (DictDialog):
     self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
 
     self.ldict = [self.dproxearly, self.ddist, self.dproxlate, self.dtiming]
-    self.ltitle = ['Proximal Early', 'Proximal Late', 'Distal', 'Timing']
+    self.ltitle = ['Proximal Early', 'Distal', 'Proximal Late', 'Timing']
     self.stitle = 'Set Evoked Inputs'
 
 
