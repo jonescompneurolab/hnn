@@ -84,7 +84,8 @@ def prsimtime ():
   sys.stdout.flush()
 
 def haveongoing (fparam):
-  tstop = paramrw.find_param(fparam,'tstop')
+  d = quickreadprm(fparam)
+  tstop = d['tstop']
   pass
 
 def haveERP (fparam):
@@ -110,9 +111,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
     dpl = Dipole(doutf['file_dpl']) # fix to allow init from data rather than file
     dpl.baseline_renormalize(doutf['file_param'])
     dpl.convert_fAm_to_nAm()
-    npyr = net.N['L2_pyramidal'] + net.N['L5_pyramidal']
-    fctr = 6e6 / npyr
-    dpl.scale(fctr)
+    dconf['dipole_scalefctr'] = dpl.scale(paramrw.find_param(doutf['file_param'],'dipole_scalefctr'))
     dpl.write(doutf['file_dpl_norm'])
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic

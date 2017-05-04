@@ -314,7 +314,8 @@ class RunParamDialog (DictDialog):
 
     # analysis    
     self.danalysis = OrderedDict([('save_spec_data', 0),
-                                  ('f_max_spec', 40)])
+                                  ('f_max_spec', 40),
+                                  ('dipole_scalefctr',30e3)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
@@ -322,8 +323,6 @@ class RunParamDialog (DictDialog):
 
     self.addtransvar('tstop','Simulation duration (ms)')
     self.addtransvar('dt','Simulation timestep (ms)')
-    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
-    self.addtransvar('save_spec_data','Save spectral data')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
@@ -331,6 +330,9 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evprox_early','Evoked Proximal Early')
     self.addtransvar('prng_seedcore_evdist','Evoked Distal')
     self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
+    self.addtransvar('save_spec_data','Save spectral data')
+    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
+    self.addtransvar('dipole_scalefctr','Dipole Scaling')
 
   def initExtra (self):
     DictDialog.initExtra(self)

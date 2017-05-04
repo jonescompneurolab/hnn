@@ -16,6 +16,10 @@ def get_params_default ():
     p = {
         'sim_prefix': 'default',
 
+        'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
+        #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
+        # for ongoing rhythms + ERPs ... use ... ?
+
         # simulation end time (ms)
         'tstop': 250.,
 

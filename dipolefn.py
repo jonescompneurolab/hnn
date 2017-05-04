@@ -68,6 +68,7 @@ class Dipole():
 
     def scale (self, fctr):
       for key in self.dpl.keys(): self.dpl[key] *= fctr
+      return fctr
 
     # average stationary dipole over a time window
     def mean_stationary(self, opts_input={}):

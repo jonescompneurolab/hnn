@@ -127,7 +127,9 @@ class SIMCanvas (FigureCanvas):
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
-      ax.set_ylabel('dipole (nA m)')
+      if 'dipole_scalefctr' in dconf: scalefctr = dconf['dipole_scalefctr']
+      else: scalefctr = 30e3
+      ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
       ax.set_xlim(xl)
       ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
 
