@@ -316,7 +316,7 @@ class RunParamDialog (DictDialog):
     self.danalysis = OrderedDict([('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
-                                  ('dipole_smooth_win',15.0)])
+                                  ('dipole_smooth_win',5.0)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
