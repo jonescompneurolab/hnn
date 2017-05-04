@@ -147,7 +147,8 @@ def get_params_default ():
         'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
         #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
         # for ongoing rhythms + ERPs ... use ... ?
-        'dipole_smooth_win': 15.0, # 15 ms window for smoothing (box filter) - default from jones 2009
+        'dipole_smooth_win': 5.0, # window for smoothing (box filter) - 15 ms from jones 2009; keep shorter here,
+        # in case want to look at higher frequency activity
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,
