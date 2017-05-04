@@ -112,6 +112,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
     dpl.baseline_renormalize(doutf['file_param'])
     dpl.convert_fAm_to_nAm()
     dconf['dipole_scalefctr'] = dpl.scale(paramrw.find_param(doutf['file_param'],'dipole_scalefctr'))
+    dpl.smooth(paramrw.find_param(doutf['file_param'],'dipole_smooth_win')/h.dt)
     dpl.write(doutf['file_dpl_norm'])
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic

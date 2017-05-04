@@ -16,10 +16,6 @@ def get_params_default ():
     p = {
         'sim_prefix': 'default',
 
-        'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
-        #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
-        # for ongoing rhythms + ERPs ... use ... ?
-
         # simulation end time (ms)
         'tstop': 250.,
 
@@ -148,6 +144,10 @@ def get_params_default ():
         # analysis
         'save_spec_data': 0,
         'f_max_spec': 40.,
+        'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
+        #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
+        # for ongoing rhythms + ERPs ... use ... ?
+        'dipole_smooth_win': 15.0, # 15 ms window for smoothing (box filter) - default from jones 2009
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,

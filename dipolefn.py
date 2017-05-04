@@ -15,6 +15,12 @@ import matplotlib.pyplot as plt
 #from neuron import h as nrn
 import axes_create as ac
 from math import ceil
+from pylab import convolve
+
+# box filter
+def boxfilt (x, winsz):
+  win = [1.0/winsz for i in range(int(winsz))]
+  return convolve(x,win,'same')
 
 # class Dipole() is for a single set of f_dpl and f_param
 class Dipole():
@@ -69,6 +75,10 @@ class Dipole():
     def scale (self, fctr):
       for key in self.dpl.keys(): self.dpl[key] *= fctr
       return fctr
+
+    def smooth (self, winsz):
+      if winsz <= 1: return 
+      for key in self.dpl.keys(): self.dpl[key] = boxfilt(self.dpl[key],winsz)
 
     # average stationary dipole over a time window
     def mean_stationary(self, opts_input={}):

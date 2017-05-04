@@ -315,7 +315,8 @@ class RunParamDialog (DictDialog):
     # analysis    
     self.danalysis = OrderedDict([('save_spec_data', 0),
                                   ('f_max_spec', 40),
-                                  ('dipole_scalefctr',30e3)])
+                                  ('dipole_scalefctr',30e3),
+                                  ('dipole_smooth_win',15.0)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
@@ -333,6 +334,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('save_spec_data','Save spectral data')
     self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
+    self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
 
   def initExtra (self):
     DictDialog.initExtra(self)
