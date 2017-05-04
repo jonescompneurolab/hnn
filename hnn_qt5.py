@@ -252,24 +252,24 @@ class EvokedInputParamDialog (DictDialog):
     self.dproxearly = OrderedDict([('t_evprox_early', 2000.), # times and stdevs for evoked responses
                                    ('sigma_t_evprox_early', 2.5),
                                    ('gbar_evprox_early_L2Pyr', 0.),
-                                   ('gbar_evprox_early_L5Pyr', 0.),
                                    ('gbar_evprox_early_L2Basket', 0.),
+                                   ('gbar_evprox_early_L5Pyr', 0.),                                   
                                    ('gbar_evprox_early_L5Basket', 0.)])
 
     # evprox (late) feed strength
     self.dproxlate = OrderedDict([('t_evprox_late', 2000.),
                                   ('sigma_t_evprox_late', 7.),
                                   ('gbar_evprox_late_L2Pyr', 0.),
-                                  ('gbar_evprox_late_L5Pyr', 0.),
                                   ('gbar_evprox_late_L2Basket', 0.),
+                                  ('gbar_evprox_late_L5Pyr', 0.),                                  
                                   ('gbar_evprox_late_L5Basket', 0.)])
 
     # evdist feed strengths
     self.ddist = OrderedDict([('t_evdist', 2000.),
                               ('sigma_t_evdist', 6.),
                               ('gbar_evdist_L2Pyr', 0.),
-                              ('gbar_evdist_L5Pyr', 0.),
-                              ('gbar_evdist_L2Basket', 0.)])
+                              ('gbar_evdist_L2Basket', 0.),
+                              ('gbar_evdist_L5Pyr', 0.)])
 
     for d in [self.dproxearly, self.dproxlate, self.ddist]:
       for k in d.keys():
@@ -288,7 +288,7 @@ class EvokedInputParamDialog (DictDialog):
     self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
     self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
 
-    self.ldict = [self.dproxearly, self.dproxlate, self.ddist, self.dtiming]
+    self.ldict = [self.dproxearly, self.ddist, self.dproxlate, self.dtiming]
     self.ltitle = ['Proximal Early', 'Proximal Late', 'Distal', 'Timing']
     self.stitle = 'Set Evoked Inputs'
 
