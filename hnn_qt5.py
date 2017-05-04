@@ -523,17 +523,17 @@ class NetworkParamDialog (DictDialog):
                                ('gbar_L2Basket_L2Basket', 0.)])
 
     # max conductances TO L5Pyr
-    self.dL5Pyr = OrderedDict([('gbar_L5Pyr_L5Pyr_ampa', 0.),
-                               ('gbar_L5Pyr_L5Pyr_nmda', 0.),
-                               ('gbar_L2Pyr_L5Pyr', 0.),
+    self.dL5Pyr = OrderedDict([('gbar_L2Pyr_L5Pyr', 0.),
                                ('gbar_L2Basket_L5Pyr', 0.),
+                               ('gbar_L5Pyr_L5Pyr_ampa', 0.),
+                               ('gbar_L5Pyr_L5Pyr_nmda', 0.),
                                ('gbar_L5Basket_L5Pyr_gabaa', 0.),
                                ('gbar_L5Basket_L5Pyr_gabab', 0.)])
 
     # max conductances TO L5Baskets
-    self.dL5Bas = OrderedDict([('gbar_L5Basket_L5Basket', 0.),
+    self.dL5Bas = OrderedDict([('gbar_L2Pyr_L5Basket', 0.),
                                ('gbar_L5Pyr_L5Basket', 0.),
-                               ('gbar_L2Pyr_L5Basket', 0.)])
+                               ('gbar_L5Basket_L5Basket', 0.)])
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
