@@ -59,12 +59,15 @@ class Dipole():
         return t_truncated, dpl_truncated
 
     # conversion from fAm to nAm
-    def convert_fAm_to_nAm(self):
+    def convert_fAm_to_nAm (self):
         """ must be run after baseline_renormalization()
         """
         for key in self.dpl.keys(): self.dpl[key] *= 1e-6
         # change the units string
         self.units = 'nAm'
+
+    def scale (self, fctr):
+      for key in self.dpl.keys(): self.dpl[key] *= fctr
 
     # average stationary dipole over a time window
     def mean_stationary(self, opts_input={}):

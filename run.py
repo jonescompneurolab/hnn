@@ -84,7 +84,7 @@ def prsimtime ():
   sys.stdout.flush()
 
 #
-def savedat (p,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
+def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   global doutf
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
@@ -102,6 +102,7 @@ def savedat (p,rank,t_vec,dp_rec_L2,dp_rec_L5,net):
     dpl = Dipole(doutf['file_dpl']) # fix to allow init from data rather than file
     dpl.baseline_renormalize(doutf['file_param'])
     dpl.convert_fAm_to_nAm()
+    # dpl.scale(30000.0)
     dpl.write(doutf['file_dpl_norm'])
     # write the somatic current to the file
     # for now does not write the total but just L2 somatic and L5 somatic
