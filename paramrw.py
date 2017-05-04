@@ -641,7 +641,7 @@ def quickreadprm (fn):
       if s.startswith('#'): continue
       sp = s.split(':')
       if len(sp) > 1:
-        d[sp[0]]=str(sp[1])
+        d[sp[0]]=str(sp[1]).strip()
   return d
 
 # get diff on 2 dictionaries
