@@ -18,12 +18,15 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'k', 
         'L5_basket' : 'b'}
 
-spkpath = ''; paramf = ''
+tstop = -1; spkpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     spkpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
+    import paramrw
+    tstop = paramrw.find_param(paramf,'tstop')
+
 
 ddat = {}
 try:
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=8**2)
     plt.xlabel('Time (ms)');
     if k == 'Input':
-      plt.ylabel('Ongoing Input')
+      plt.ylabel('Input')
       ax.set_yticks([])
       red_patch = mpatches.Patch(color='red', label='dist')
       green_patch = mpatches.Patch(color='green', label='prox')
@@ -86,6 +89,7 @@ if __name__ == '__main__':
       ax.invert_yaxis()
     ax.set_facecolor('k')
     ax.grid(True)
+    if tstop != -1: ax.set_xlim((0,tstop))
     if i ==0: ax.set_title('Raster Plot')
     gdx += 1
 

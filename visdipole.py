@@ -5,7 +5,7 @@ import matplotlib.patches as mpatches
 import pylab as plt
 from simdat import readdpltrials
 
-scalefctr = 30e3; dplpath = ''; paramf = ''
+tstop = -1; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     dplpath = sys.argv[i]
@@ -13,6 +13,7 @@ for i in range(len(sys.argv)):
     paramf = sys.argv[i]
     import paramrw
     scalefctr = paramrw.find_param(paramf,'dipole_scalefctr')
+    tstop = paramrw.find_param(paramf,'tstop')
         
 basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
 
@@ -51,6 +52,7 @@ if __name__ == '__main__':
 
     ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5)
     ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
+    if tstop != -1: ax.set_xlim((0,tstop))
 
     if i == 2 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
 
