@@ -41,6 +41,18 @@ if __name__ == '__main__':
   lpatch = []
   if len(ddat['dpltrials']) > 0: lpatch = [white_patch,gray_patch]
 
+  yl = [1e9,-1e9]
+
+  for i in [2,3,1]:
+    yl[0] = min(yl[0],ddat['dpl'][:,i].min())
+    yl[1] = max(yl[1],ddat['dpl'][:,i].max())
+    if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+      for dpltrial in ddat['dpltrials']:
+        yl[0] = min(yl[0],dpltrial[:,i].min())
+        yl[1] = max(yl[1],dpltrial[:,i].max())
+
+  yl = tuple(yl)
+
   for i,title in zip([2, 3, 1],ltitle):
     ax = fig.add_subplot(gdx)
 
@@ -53,6 +65,7 @@ if __name__ == '__main__':
     ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5)
     ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
     if tstop != -1: ax.set_xlim((0,tstop))
+    ax.set_ylim(yl)
 
     if i == 2 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
 
