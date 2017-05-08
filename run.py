@@ -271,7 +271,10 @@ def catspec ():
   lf = [os.path.join(datdir,'rawspec_'+str(i+1)+'.npz') for i in range(ntrial)]
   dspecin = {}
   dout = {}
-  for f in lf: dspecin[f] = np.load(f)
+  try:
+    for f in lf: dspecin[f] = np.load(f)
+  except:
+    return None
   for k in ['t_L5', 'f_L5', 't_L2', 'f_L2', 'time', 'freq']: dout[k] = dspecin[lf[0]][k]
   dout['time'] = dspecin[lf[0]]['time']
   for k in ['TFR', 'TFR_L5', 'TFR_L2']: dout[k] = np.mean(np.array([np.load(f)[k] for f in lf]),axis=0)

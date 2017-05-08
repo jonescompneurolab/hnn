@@ -172,5 +172,5 @@ gbar_evprox_late_L2Pyr: 0.08
 gbar_evprox_late_L2Basket: 0.08
 gbar_evprox_late_L5Pyr: 0.04
 gbar_evprox_late_L5Basket: 0.04
-dt_evprox0_evdist: 45
 dt_evprox0_evprox1: 110
+dt_evprox0_evdist: 45
