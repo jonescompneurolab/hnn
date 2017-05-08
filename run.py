@@ -17,6 +17,7 @@ h.load_file("stdrun.hoc")
 import network
 import fileio as fio
 import paramrw as paramrw
+from paramrw import usingOngoingInputs
 import plotfn as plotfn
 import specfn as specfn
 import pickle
@@ -350,8 +351,9 @@ def runsim ():
   if pcID == 0:
     print("Simulation run time: %4.4f s" % (time.time()-t0))
     print("Simulation directory is: %s" % ddir.dsim)    
-    runanalysis(p, doutf['file_param'], doutf['file_dpl'], doutf['file_spec']) # run spectral analysis
-    savefigs(ddir,p,p_exp) # save output figures
+    if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
+      runanalysis(p, doutf['file_param'], doutf['file_dpl'], doutf['file_spec']) # run spectral analysis
+    if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures
 
   pc.barrier() # make sure all done in case multiple trials
 

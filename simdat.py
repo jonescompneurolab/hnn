@@ -42,7 +42,10 @@ def getinputfiles (paramf):
 try:
   getinputfiles(paramf)
   ddat['dpl'] = np.loadtxt(dfile['dpl']);
-  ddat['spec'] = np.load(dfile['spec']); 
+  if os.path.isfile(dfile['spec']):
+    ddat['spec'] = np.load(dfile['spec'])
+  else:
+    ddat['spec'] = None
   ddat['spk'] = np.loadtxt(dfile['spk']); 
   ddat['dpltrials'] = readdpltrials(basedir)
 except:
@@ -127,12 +130,12 @@ class SIMCanvas (FigureCanvas):
     plt.close(self.figure); 
     if len(ddat.keys()) == 0: return
     try:
-      if 'spec' in ddat and OngoingInputs:
-        ds = ddat['spec'] # spectrogram
-        xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
-      else:
-        ds = None
-        xl = (0,find_param(dfile['outparam'],'tstop'))
+      ds = None
+      xl = (0,find_param(dfile['outparam'],'tstop'))
+      if 'spec' in ddat:
+        if ddat['spec'] is not None:
+          ds = ddat['spec'] # spectrogram
+          xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
 
       if OngoingInputs:

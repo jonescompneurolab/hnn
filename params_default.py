@@ -152,6 +152,7 @@ def get_params_default ():
         # for ongoing rhythms + ERPs ... use ... ?
         'dipole_smooth_win': 5.0, # window for smoothing (box filter) - 15 ms from jones 2009; keep shorter here,
         # in case want to look at higher frequency activity
+        'save_figs': 0,
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,

@@ -21,7 +21,7 @@ import random
 from math import ceil
 import spikefn
 import params_default
-from paramrw import quickreadprm
+from paramrw import quickreadprm, usingOngoingInputs
 from simdat import *
 
 prtime = True
@@ -89,7 +89,10 @@ class RunSimThread (QThread):
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
         ddat['dpl'] = np.loadtxt(dfile['dpl'])
-        ddat['spec'] = np.load(dfile['spec'])
+        if os.path.isfile(dfile['spec']):
+          ddat['spec'] = np.load(dfile['spec'])
+        else:
+          ddat['spec'] = None
         ddat['spk'] = np.loadtxt(dfile['spk'])
         ddat['dpltrials'] = readdpltrials(os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0]))
         print("Read simulation outputs:",dfile.values())
@@ -312,7 +315,8 @@ class RunParamDialog (DictDialog):
                               ('prng_seedcore_evprox_late', 0)])
 
     # analysis    
-    self.danalysis = OrderedDict([('save_spec_data', 0),
+    self.danalysis = OrderedDict([('save_figs',0),
+                                  ('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
                                   ('dipole_smooth_win',5.0)])
@@ -331,6 +335,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evdist','Evoked Distal')
     self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
     self.addtransvar('save_spec_data','Save spectral data')
+    self.addtransvar('save_figs','Save figures')
     self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')

@@ -9,7 +9,8 @@ prng_seedcore_extgauss: 4
 prng_seedcore_evprox_early: 4
 prng_seedcore_evdist: 4
 prng_seedcore_evprox_late: 4
-save_spec_data: 1
+save_figs: 0
+save_spec_data: 0
 f_max_spec: 100
 dipole_scalefctr: 3000
 dipole_smooth_win: 1.0
