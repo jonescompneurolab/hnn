@@ -303,7 +303,8 @@ class RunParamDialog (DictDialog):
   def initd (self):
 
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
-                             ('dt', 0.025)]) # timestep
+                             ('dt', 0.025), # timestep
+                             ('N_trials',0)]) # number of trials
                              # cvode - not currently used by simulation
 
     self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
@@ -327,6 +328,7 @@ class RunParamDialog (DictDialog):
 
     self.addtransvar('tstop','Simulation duration (ms)')
     self.addtransvar('dt','Simulation timestep (ms)')
+    self.addtransvar('N_trials','Trials')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
@@ -342,18 +344,12 @@ class RunParamDialog (DictDialog):
 
   def initExtra (self):
     DictDialog.initExtra(self)
-
-    self.dqextra['NumTrials'] = QLineEdit(self)
-    self.dqextra['NumTrials'].setText('0')
-    self.addtransvar('NumTrials','Number Trials')
-    self.ltabs[0].layout.addRow('NumTrials',self.dqextra['NumTrials'])
-
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores']) 
 
-  def getntrial (self): return int(self.dqextra['NumTrials'].text().strip())
+  def getntrial (self): return int(self.dqline['N_trials'].text().strip())
 
   def getncore (self): return int(self.dqextra['NumCores'].text().strip())
 
