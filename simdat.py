@@ -8,7 +8,7 @@ import numpy as np
 from math import ceil
 from conf import dconf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs
+from paramrw import usingOngoingInputs, usingEvokedInputs, find_param
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
@@ -115,20 +115,22 @@ class SIMCanvas (FigureCanvas):
 
     EvokedInputs = usingEvokedInputs(dfile['outparam'])
     OngoingInputs = usingOngoingInputs(dfile['outparam'])
-    print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+    # print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
 
     self.clearaxes()
-    plt.close(self.figure); # self.figure.clear(); 
-    #print(dir(self.figure))
-    #print(dir(self.figure.canvas))
+    plt.close(self.figure); 
     if len(ddat.keys()) == 0: return
     try:
-      ds = ddat['spec'] # spectrogram
-      xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
+      if 'spec' in ddat and OngoingInputs:
+        ds = ddat['spec'] # spectrogram
+        xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
+      else:
+        ds = None
+        xl = (0,find_param(dfile['outparam'],'tstop'))
       gRow = 0
-      if OngoingInputs and self.plotinputhist(xl): gRow = 2
 
       if OngoingInputs:
+        if self.plotinputhist(xl): gRow = 2
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
