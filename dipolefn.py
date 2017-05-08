@@ -198,9 +198,9 @@ class Dipole():
         with open(f_dpl, 'w') as f:
             for t, x_agg, x_L2, x_L5 in zip(self.t, self.dpl['agg'], self.dpl['L2'], self.dpl['L5']):
                 f.write("%03.3f\t" % t)
-                f.write("%.4e\t" % x_agg)
-                f.write("%.4e\t" % x_L2)
-                f.write("%.4e\n" % x_L5)
+                f.write("%5.4f\t" % x_agg)
+                f.write("%5.4f\t" % x_L2)
+                f.write("%5.4f\n" % x_L5)
 
 # throwaway save method for now - see note
 def dpl_convert_and_save(ddata, i=0, j=0):

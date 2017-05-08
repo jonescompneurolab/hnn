@@ -2,7 +2,7 @@ sim_prefix: SRJ_2007_Fig5A_Super
 expmt_groups: {SRJ_2007_Fig5A_Super}
 tstop: 170
 dt: 0.025
-N_trials: 0
+N_trials: 5
 prng_seedcore_input_prox: 4
 prng_seedcore_input_dist: 4
 prng_seedcore_extpois: 4
@@ -14,7 +14,7 @@ save_figs: 0
 save_spec_data: 0
 f_max_spec: 100
 dipole_scalefctr: 3000
-dipole_smooth_win: 1.0
+dipole_smooth_win: 1
 L2Pyr_soma_L: 22.1
 L2Pyr_soma_diam: 23.4
 L2Pyr_soma_cm: 0.6195

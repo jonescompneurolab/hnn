@@ -94,7 +94,7 @@ class ParFeedAll ():
       self.eventvec.from_python([])
 
   def __create_extgauss (self):
-    #print("__create_extgauss")
+    # print("__create_extgauss")
     # assign the params
     mu = self.p_ext[self.celltype][2]
     sigma = self.p_ext[self.celltype][3]
@@ -107,6 +107,7 @@ class ParFeedAll ():
     val_gauss = val_gauss[val_gauss > 0]
     # sort values - critical for nrn
     val_gauss.sort()
+    # print('val_gauss:',val_gauss)
     # Convert array into nrn vector
     self.eventvec.from_python(val_gauss)
 
