@@ -47,6 +47,7 @@ try:
   ddat['dpltrials'] = readdpltrials(basedir)
 except:
   print('exception in getting input files')
+  print('paramf',paramf)
 
 # draw raster to standalone matplotlib figure
 def drawraster ():  
@@ -113,9 +114,14 @@ class SIMCanvas (FigureCanvas):
 
   def plotsimdat (self):
 
-    EvokedInputs = usingEvokedInputs(dfile['outparam'])
-    OngoingInputs = usingOngoingInputs(dfile['outparam'])
-    # print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+    EvokedInputs = OngoingInputs = False
+
+    try:
+      EvokedInputs = usingEvokedInputs(dfile['outparam'])
+      OngoingInputs = usingOngoingInputs(dfile['outparam'])
+      # print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+    except:
+      pass
 
     self.clearaxes()
     plt.close(self.figure); 
