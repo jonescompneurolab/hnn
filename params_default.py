@@ -112,6 +112,9 @@ def get_params_default ():
         'input_dist_A_delay_L2': 5.,
         'input_dist_A_delay_L5': 5.,
 
+        #'useEvokedInputs': 1., # whether to use evoked inputs
+        #'useOngoingInputs': 1., # whether to use ongoing inputs
+
         # evprox (early) feed strength
         'gbar_evprox_early_L2Pyr': 0.,
         'gbar_evprox_early_L5Pyr': 0.,

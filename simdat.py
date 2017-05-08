@@ -8,6 +8,7 @@ import numpy as np
 from math import ceil
 from conf import dconf
 import spikefn
+from paramrw import usingOngoingInputs, usingEvokedInputs
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
@@ -111,6 +112,11 @@ class SIMCanvas (FigureCanvas):
       pass
 
   def plotsimdat (self):
+
+    EvokedInputs = usingEvokedInputs(dfile['outparam'])
+    OngoingInputs = usingOngoingInputs(dfile['outparam'])
+    print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+
     self.clearaxes()
     plt.close(self.figure); # self.figure.clear(); 
     #print(dir(self.figure))
@@ -120,9 +126,12 @@ class SIMCanvas (FigureCanvas):
       ds = ddat['spec'] # spectrogram
       xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
-      if self.plotinputhist(xl): gRow = 2
+      if OngoingInputs and self.plotinputhist(xl): gRow = 2
 
-      self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+      if OngoingInputs:
+        self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+      else:
+        self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
       if dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
@@ -133,16 +142,17 @@ class SIMCanvas (FigureCanvas):
       ax.set_xlim(xl)
       ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
 
-      # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
-      gRow = 6
-      self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
-      cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
-      ax.set_ylabel('Frequency (Hz)')
-      ax.set_xlabel('Time (ms)')
-      ax.set_xlim(xl)
-      ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-      cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
-      cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
+      if OngoingInputs: # only draw specgram when have ongoing inputs
+        # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
+        gRow = 6
+        self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
+        cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
+        ax.set_ylabel('Frequency (Hz)')
+        ax.set_xlabel('Time (ms)')
+        ax.set_xlim(xl)
+        ax.set_ylim(ds['freq'][-1],ds['freq'][0])
+        cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
+        cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
     except:
       print('ERR: in plotsimdat')
     self.figure.subplots_adjust(left=0.1,right=1.0-0.02,bottom=0.08,top=0.99) # reduce padding

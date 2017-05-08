@@ -46,10 +46,8 @@ class NetworkOnNode ():
       # for key, val in self.p.items():
       #     if key.startswith('prng_seedcore_'):
       #         print("in net: %i, %s, %i" % (self.rank, key, val))
-      # numbers of sources
-      self.N = {}
-      # init self.N_cells
-      self.N_cells = 0
+      self.N = {} # numbers of sources
+      self.N_cells = 0 # init self.N_cells
       # zdiff is expressed as a positive DEPTH of L5 relative to L2
       # this is a deviation from the original, where L5 was defined at 0
       # this should not change interlaminar weight/delay calculations
@@ -230,11 +228,21 @@ class NetworkOnNode ():
         if gid in gids:
           return gidtype
 
+    """
+    def checkInputOn (self, type):
+      if type.startswith('ev'):
+        if self.p['useEvokedInputs']:
+          return True
+        else:
+          return False
+      return True
+    """
+
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
     # external inputs are not targets
     def __create_all_src (self):
-      # print('in __create_all_src')
+      #print('in __create_all_src')
       # loop through gids on this node
       for gid in self.__gid_list:
         # check existence of gid with Neuron
@@ -269,6 +277,7 @@ class NetworkOnNode ():
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
           elif type == 'extinput':
+            #print('type',type)
             # to find param index, take difference between REAL gid
             # here and gid start point of the items
             p_ind = gid - self.gid_dict['extinput'][0]
@@ -277,6 +286,10 @@ class NetworkOnNode ():
             self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
             self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
           elif type in self.p_unique.keys():
+            #print('type',type)
+            #if not self.checkInputOn(type): 
+            #  print('skipping',type)
+            #  continue
             gid_post = gid - self.gid_dict[type][0]
             cell_type = self.gid_to_type(gid_post)
             # create dictionary entry, append to list

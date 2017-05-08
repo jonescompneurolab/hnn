@@ -644,6 +644,34 @@ def quickreadprm (fn):
         d[sp[0]]=str(sp[1]).strip()
   return d
 
+# check if using ongoing inputs
+def usingOngoingInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
+  for postfix in ['_prox','_dist']:    
+    if float(d['t0_input'+postfix])<= tstop and \
+       float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
+       float(d['f_input'+postfix])>0.:
+      for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
+                'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
+                'weight_inh_ampa','weight_inh_nmda']:
+        if float(d[dpref[postfix]+k])>0.: return True
+  return False
+
+# check if using any evoked inputs 
+def usingEvokedInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop']) 
+  for k1 in ['t_evprox_early', 't_evprox_late', 't_evdist']:
+    if float(d[k1]) <= tstop:
+      for k2 in d.keys():
+        if (k1=='t_evprox_early' and k2.startswith('gbar_evprox_early') and float(d[k2])>0.) or \
+           (k1=='t_evprox_late' and k2.startswith('gbar_evprox_late') and float(d[k2])>0.) or \
+           (k1=='t_evdist' and k2.startswith('gbar_evdist') and float(d[k2])>0.):
+          return True
+  return False
+
 # get diff on 2 dictionaries
 def diffdict (d1, d2):
   print('d1,d2 num keys - ', len(d1.keys()), len(d2.keys()))

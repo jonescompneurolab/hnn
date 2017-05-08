@@ -282,8 +282,7 @@ class EvokedInputParamDialog (DictDialog):
 
     # time between prox/distal inputs -1 means relative - not used by default
     self.dtiming = {'dt_evprox0_evdist': -1,
-                    'dt_evprox0_evprox1': -1
-    }
+                    'dt_evprox0_evprox1': -1}
 
     self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
     self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')

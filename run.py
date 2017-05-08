@@ -83,15 +83,6 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
-def haveongoing (fparam):
-  d = quickreadprm(fparam)
-  tstop = d['tstop']
-  pass
-
-def haveERP (fparam):
-  tstop = paramrw.find_param(fparam,'tstop')
-  pass
-
 #
 def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   global doutf
