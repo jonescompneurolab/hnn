@@ -123,12 +123,13 @@ if __name__ == '__main__':
   fig = plt.figure()
   fig.canvas.mpl_connect('close_event', handle_close)
   if ntrial > 0:
-    spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_1.txt')
-    dspk,haveinputs,dhist = getdspk(spkpathtrial)
+    spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_1.txt') 
+    dspk,haveinputs,dhist = getdspk(spkpathtrial) # show first trial and histogram across trials
     lax = drawrast(dspk)
     dspk,haveinputs,dhist = getdspk(spkpath)
     drawhist(dhist,lax[-1])
     print('spkpath',spkpath,'spkpathtrial',spkpathtrial)
   else:
+    dspk,haveinputs,dhist = getdspk(spkpath)
     lax = drawrast(dspk)
 
