@@ -9,24 +9,27 @@ from L2_pyramidal import L2Pyr
 from L2_basket import L2Basket
 from L5_basket import L5Basket
 from run import net
+import paramrw
 
 cell = net.cells[-1]
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
         'L5_pyramidal' : 'r',
-        'L2_basket' : 'k', 
+        'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-tstop = -1; spkpath = ''; paramf = ''
+ntrial = 0; tstop = -1; spkpath = ''; paramf = ''; EvokedInputs = OngoingInputs = False;
+
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     spkpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    import paramrw
     tstop = paramrw.find_param(paramf,'tstop')
-
+    ntrial = paramrw.find_param(paramf,'N_trials')
+    EvokedInputs = paramrw.usingEvokedInputs(paramf)
+    OngoingInputs = paramrw.usingOngoingInputs(paramf)
 
 ddat = {}
 try:
@@ -36,6 +39,9 @@ except:
   quit()
 
 dspk = {'Cell':([],[],[]),'Input':([],[],[])}
+# dhist = {'Cell':([],[],[],[]), 'Input':([],[],[])}
+dhist = {}
+for ty in dclr.keys(): dhist[ty] = []
 
 lt,lgid,lclr=[],[],[]
 ncell = len(net.cells)
@@ -46,6 +52,7 @@ for (t,gid) in ddat['spk']:
     dspk['Cell'][0].append(t)
     dspk['Cell'][1].append(gid)
     dspk['Cell'][2].append(dclr[ty])
+    dhist[ty].append(t)
   else:
     dspk['Input'][0].append(t)
     dspk['Input'][1].append(gid)
@@ -57,10 +64,23 @@ for (t,gid) in ddat['spk']:
       dspk['Input'][2].append('w')
     haveinputs = True
 
+binsz = 10.0
+for ty in dhist.keys():
+  dhist[ty].sort()
+  dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
+
 def handle_close (evt): quit()
 
-if __name__ == '__main__':
-  plt.ion()
+def drawhist (dhist):
+  fig = plt.figure()
+  fig.canvas.mpl_connect('close_event', handle_close)
+  for ty in dhist.keys():
+    plt.plot(np.arange(0,tstop,binsz),dhist[ty][0],dclr[ty],linewidth=3)
+  ax = plt.gca()
+  ax.set_facecolor('k')
+  ax.set_xlim((0,tstop))
+
+def drawrast ():
   fig = plt.figure()
   fig.canvas.mpl_connect('close_event', handle_close)
   lk = ['Cell']
@@ -93,3 +113,9 @@ if __name__ == '__main__':
     if i ==0: ax.set_title('Raster Plot')
     gdx += 1
 
+if __name__ == '__main__':
+  plt.ion()
+  if ntrial > 0:
+    drawhist(dhist)
+  else:
+    drawrast()
