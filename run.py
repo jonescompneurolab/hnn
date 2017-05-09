@@ -244,7 +244,7 @@ def catspks ():
     for i in range(2):
       lspk[i].extend(xarr[:,i])
   lspk = np.array(lspk).T
-  lspk.sort(axis=0)
+  lspk.sort(axis=1)
   fout = os.path.join(datdir,'spk.txt')
   with open(fout, 'w') as fspkout:
     for i in range(lspk.shape[0]):
