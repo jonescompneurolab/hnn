@@ -216,7 +216,7 @@ class ExpParams():
         self.exp_prefix_str = self.sim_prefix+"-%03d"
         self.trial_prefix_str = self.exp_prefix_str+"-T%02d"
 
-        self.N_trials = int(self.p_all.pop('N_trials'))
+        # self.N_trials = int(self.p_all.pop('N_trials'))
         # self.prng_state = self.p_all.pop('prng_state')[1:-1]
 
         # Save alpha distribution types in dict for later use

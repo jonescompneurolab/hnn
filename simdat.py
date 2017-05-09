@@ -129,6 +129,7 @@ class SIMCanvas (FigureCanvas):
     self.clearaxes()
     plt.close(self.figure); 
     if len(ddat.keys()) == 0: return
+
     try:
       ds = None
       xl = (0,find_param(dfile['outparam'],'tstop'))
@@ -143,9 +144,18 @@ class SIMCanvas (FigureCanvas):
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
-      if dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+
+      N_trials = 0
+      try:
+        xx = find_param(dfile['outparam'],'N_trials')
+        if type(xx) == int: N_trials = xx
+      except:
+        pass
+
+      if N_trials>0 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
+
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       if 'dipole_scalefctr' in dconf: scalefctr = dconf['dipole_scalefctr']
       else: scalefctr = 30e3
