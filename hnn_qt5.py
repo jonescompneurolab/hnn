@@ -854,7 +854,7 @@ class HNNGUI (QMainWindow):
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
   def showdistparamwin (self):
     self.baseparamwin.evparamwin.show()
-    self.baseparamwin.evparamwin.tabs.setCurrentIndex(2)
+    self.baseparamwin.evparamwin.tabs.setCurrentIndex(1)
   def showproxparamwin (self):
     self.baseparamwin.evparamwin.show()
     self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
