@@ -3,7 +3,6 @@
 # v 1.10.0-py35
 # rev 2016-05-01 (SL: itertools and return data dir)
 # last major: (SL: toward python3)
-
 import fileio as fio
 import numpy as np
 import ast
@@ -12,15 +11,9 @@ import paramrw
 import spikefn
 import specfn
 import matplotlib.pyplot as plt
-#from neuron import h as nrn
 import axes_create as ac
 from math import ceil
-from pylab import convolve
-
-# box filter
-def boxfilt (x, winsz):
-  win = [1.0/winsz for i in range(int(winsz))]
-  return convolve(x,win,'same')
+from filt import boxfilt
 
 # class Dipole() is for a single set of f_dpl and f_param
 class Dipole():

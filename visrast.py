@@ -57,10 +57,7 @@ def getdspk (fn):
       else:
         dspk['Input'][2].append('w')
       haveinputs = True
-  for ty in dhist.keys():
-    # print('ty:',ty)
-    # dhist[ty].sort()
-    dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
+  for ty in dhist.keys(): dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
   return dspk,haveinputs,dhist
 
 def handle_close (evt): quit()

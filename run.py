@@ -238,7 +238,7 @@ def catspks ():
       lspk[i].extend(xarr[:,i])
     if debug: print('xarr.shape:',xarr.shape)
   lspk = np.array(lspk).T
-  # lspk.sort(axis=1)
+  # lspk.sort(axis=1) # not multidim sort - can fix if want spikes across trials in temporal order
   fout = os.path.join(datdir,'spk.txt')
   with open(fout, 'w') as fspkout:
     for i in range(lspk.shape[0]):
