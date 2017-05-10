@@ -17,15 +17,13 @@ debug = dconf['debug']
 ddat = {}
 dfile = {}
 
-def readdpltrials (basedir):
+def readdpltrials (basedir,ntrial):
   ldpl = []
-  i = 1
-  while True:
-    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
+  for i in range(ntrial):
+    fn = os.path.join(basedir,'dpl_'+str(i+1)+'.txt')
     if not os.path.exists(fn): break    
     ldpl.append(np.loadtxt(fn))
     if debug: print('loaded ', fn)
-    i += 1
   return ldpl
 
 def getinputfiles (paramf):
@@ -48,7 +46,7 @@ def updatedat (paramf):
     else:
       ddat['spec'] = None
     ddat['spk'] = np.loadtxt(dfile['spk']); 
-    ddat['dpltrials'] = readdpltrials(basedir)
+    ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
   except:
     print('updatedat ERR: exception in getting input files. paramf:',paramf)
 

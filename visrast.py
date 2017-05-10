@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pylab as plt
 from neuron import h
-from L5_pyramidal import L5Pyr
-from L2_pyramidal import L2Pyr
-from L2_basket import L2Basket
-from L5_basket import L5Basket
 from run import net
 import paramrw
 
@@ -17,7 +13,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; spkpath = ''; paramf = ''; EvokedInputs = OngoingInputs = False;
+ntrial = 0; tstop = -1; spkpath = paramf = ''; EvokedInputs = OngoingInputs = False;
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
@@ -25,7 +21,7 @@ for i in range(len(sys.argv)):
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
     tstop = paramrw.find_param(paramf,'tstop')
-    ntrial = paramrw.find_param(paramf,'N_trials')
+    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
 
@@ -33,12 +29,12 @@ ncell = len(net.cells)
 
 binsz = 5.0
 
-def getdspk (spkpath):
+def getdspk (fn):
   ddat = {}
   try:
-    ddat['spk'] = np.loadtxt(spkpath)
+    ddat['spk'] = np.loadtxt(fn)
   except:
-    print('Could not load',spkpath)
+    print('Could not load',fn)
     quit()
   dspk = {'Cell':([],[],[]),'Input':([],[],[])}
   dhist = {}
@@ -65,8 +61,6 @@ def getdspk (spkpath):
     dhist[ty].sort()
     dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
   return dspk,haveinputs,dhist
-
-dspk,haveinputs,dhist = getdspk(spkpath)
 
 def handle_close (evt): quit()
 
@@ -124,11 +118,14 @@ if __name__ == '__main__':
   fig.canvas.mpl_connect('close_event', handle_close)
   if ntrial > 0:
     spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_1.txt') 
-    dspk,haveinputs,dhist = getdspk(spkpathtrial) # show first trial and histogram across trials
-    lax = drawrast(dspk)
-    dspk,haveinputs,dhist = getdspk(spkpath)
-    drawhist(dhist,lax[-1])
     print('spkpath',spkpath,'spkpathtrial',spkpathtrial)
+
+    dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+    dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
+
+    lax = drawrast(dspkall)
+
+    drawhist(dhistall,lax[-1])
   else:
     dspk,haveinputs,dhist = getdspk(spkpath)
     lax = drawrast(dspk)

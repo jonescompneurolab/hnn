@@ -774,12 +774,14 @@ class HNNGUI (QMainWindow):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python', '-i','visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+    if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showDipolePlot (self):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python', '-i','visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+    if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
   def initMenu (self):

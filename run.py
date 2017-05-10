@@ -32,7 +32,7 @@ dconf = readconf()
 
 # data directory - ./data
 dproj = fio.return_data_dir()
-debug = False 
+debug = dconf['debug']
 pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
@@ -114,12 +114,6 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
         # fc.write("%5.4f\t" % (i_L2 + i_L5))
         fc.write("%5.4f\t" % i_L2)
         fc.write("%5.4f\n" % i_L5)
-    if debug:
-      with open(doutf['filename_debug'], 'w+') as file_debug:
-        for m in range(int(t_vec.size())):
-          file_debug.write("%03.3f\t%5.4f\n" % (t_vec.x[m], v_debug.x[m]))
-      # also create a debug plot
-      pdipole(doutf['filename_debug'], os.getcwd())
   # write output spikes
   file_spikes_tmp = fio.file_spike_tmp(dproj)
   spikes_write(net, file_spikes_tmp)
@@ -214,8 +208,6 @@ h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
 # spike file needs to be known by all nodes
 file_spikes_tmp = fio.file_spike_tmp(dproj)  
 net = network.NetworkOnNode(p) # create node-specific network
-if debug: v_debug = net.rec_debug(0, 8) # net's method rec_debug(pcID, gid)
-else: v_debug = None
 
 t_vec = h.Vector(); t_vec.record(h._ref_t) # time recording
 dp_rec_L2 = h.Vector(); dp_rec_L2.record(h._ref_dp_total_L2) # L2 dipole recording
@@ -238,6 +230,7 @@ pc.barrier()
 # save spikes from the individual trials in a single file
 def catspks ():
   lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
+  if debug: print('catspk lf:',lf)
   lspk = [[],[]]
   for f in lf:
     xarr = np.loadtxt(f)

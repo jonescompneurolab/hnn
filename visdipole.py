@@ -4,21 +4,22 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pylab as plt
 from simdat import readdpltrials
+import paramrw
 
-tstop = -1; scalefctr = 30e3; dplpath = ''; paramf = ''
+tstop = -1; ntrial = 0; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     dplpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    import paramrw
     scalefctr = paramrw.find_param(paramf,'dipole_scalefctr')
     tstop = paramrw.find_param(paramf,'tstop')
+    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
         
 basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
 
 ddat = {}
-ddat['dpltrials'] = readdpltrials(basedir)
+ddat['dpltrials'] = readdpltrials(basedir,ntrial)
 try:
   ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
 except:
