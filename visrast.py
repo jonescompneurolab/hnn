@@ -6,6 +6,7 @@ import pylab as plt
 from neuron import h
 from run import net
 import paramrw
+from filt import boxfilt
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -28,6 +29,7 @@ for i in range(len(sys.argv)):
 ncell = len(net.cells)
 
 binsz = 5.0
+smoothsz = 0 # no smoothing
 
 def getdspk (fn):
   ddat = {}
@@ -57,7 +59,12 @@ def getdspk (fn):
       else:
         dspk['Input'][2].append('w')
       haveinputs = True
-  for ty in dhist.keys(): dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
+  for ty in dhist.keys():
+    dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
+    if smoothsz > 0:
+      dhist[ty] = boxfilt(dhist[ty][0],smoothsz)
+    else:
+      dhist[ty] = dhist[ty][0]
   return dspk,haveinputs,dhist
 
 def handle_close (evt): quit()
@@ -68,8 +75,8 @@ def drawhist (dhist,ax):
   if ntrial > 0:
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
-    plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty][0]*fctr,dclr[ty],linewidth=3,linestyle='--')
-    #plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),((dhist[ty][0])/np.amax(dhist[ty][0])),dclr[ty],linewidth=3,linestyle='--')
+    plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
+    #plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),((dhist[ty])/np.amax(dhist[ty][0])),dclr[ty],linewidth=3,linestyle='--')
     #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/amax(dhist[ty][0])-ncell)*ncell,dclr[ty],linewidth=3)
     #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/np.amax(dhist[ty][0]))*-ncell + ncell,dclr[ty],linewidth=3)
   ax2.set_xlim((0,tstop))
