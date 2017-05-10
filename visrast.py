@@ -58,7 +58,8 @@ def getdspk (fn):
         dspk['Input'][2].append('w')
       haveinputs = True
   for ty in dhist.keys():
-    dhist[ty].sort()
+    # print('ty:',ty)
+    # dhist[ty].sort()
     dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
   return dspk,haveinputs,dhist
 
@@ -70,14 +71,14 @@ def drawhist (dhist,ax):
   if ntrial > 0:
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
-    plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),((dhist[ty][0]*fctr)),dclr[ty],linewidth=3,linestyle='--')
+    plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty][0]*fctr,dclr[ty],linewidth=3,linestyle='--')
     #plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),((dhist[ty][0])/np.amax(dhist[ty][0])),dclr[ty],linewidth=3,linestyle='--')
     #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/amax(dhist[ty][0])-ncell)*ncell,dclr[ty],linewidth=3)
     #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/np.amax(dhist[ty][0]))*-ncell + ncell,dclr[ty],linewidth=3)
   ax2.set_xlim((0,tstop))
   ax2.set_ylabel('Spikes')
 
-def drawrast (dspk):
+def drawrast (dspk, sz=8):
   lax = []
   lk = ['Cell']
   gdx = 111
@@ -88,7 +89,7 @@ def drawrast (dspk):
   for i,k in enumerate(lk):
     ax = fig.add_subplot(gdx)
     lax.append(ax)
-    ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=8**2)
+    ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2)
     plt.xlabel('Time (ms)');
     if k == 'Input':
       plt.ylabel('Input')
@@ -123,10 +124,10 @@ if __name__ == '__main__':
     dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
     dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
 
-    lax = drawrast(dspkall)
+    lax = drawrast(dspkall,5)
 
     drawhist(dhistall,lax[-1])
   else:
     dspk,haveinputs,dhist = getdspk(spkpath)
-    lax = drawrast(dspk)
+    lax = drawrast(dspk,8)
 

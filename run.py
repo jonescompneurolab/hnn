@@ -236,12 +236,14 @@ def catspks ():
     xarr = np.loadtxt(f)
     for i in range(2):
       lspk[i].extend(xarr[:,i])
+    if debug: print('xarr.shape:',xarr.shape)
   lspk = np.array(lspk).T
-  lspk.sort(axis=1)
+  # lspk.sort(axis=1)
   fout = os.path.join(datdir,'spk.txt')
   with open(fout, 'w') as fspkout:
     for i in range(lspk.shape[0]):
       fspkout.write('%3.2f\t%d\n' % (lspk[i,0], lspk[i,1]))
+  if debug: print('lspk.shape:',lspk.shape)
   return lspk
 
 # save average dipole from individual trials in a single file

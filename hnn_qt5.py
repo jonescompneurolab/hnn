@@ -1010,7 +1010,8 @@ class HNNGUI (QMainWindow):
     self.qbtn.setEnabled(True)
     self.initSimCanvas() # recreate canvas to avoid incorrect axes
     self.m.plot()
-
+    global basedir
+    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
 
 if __name__ == '__main__':    
