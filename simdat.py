@@ -116,18 +116,28 @@ class SIMCanvas (FigureCanvas):
     except:
       pass
 
-  def plotsimdat (self):
+  def getNTrials (self):
+    N_trials = 0
+    try:
+      xx = quickgetprm(self.paramf,'N_trials',int)
+      if type(xx) == int: N_trials = xx
+    except:
+      pass
+    return N_trials
 
-    updatedat(self.paramf)
-
+  def getInputs (self):
     EvokedInputs = OngoingInputs = False
-
     try:
       EvokedInputs = usingEvokedInputs(dfile['outparam'])
       OngoingInputs = usingOngoingInputs(dfile['outparam'])
       if debug: print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
     except:
       pass
+    return EvokedInputs, OngoingInputs
+
+  def plotsimdat (self):
+
+    updatedat(self.paramf)
 
     self.clearaxes()
     plt.close(self.figure); 
@@ -142,29 +152,29 @@ class SIMCanvas (FigureCanvas):
           xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
 
+      EvokedInputs, OngoingInputs = self.getInputs()
+
       if OngoingInputs:
         if self.plotinputhist(xl): gRow = 2
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
 
-      N_trials = 0
-      try:
-        xx = quickgetprm(self.paramf,'N_trials',int)
-        if type(xx) == int: N_trials = xx
-      except:
-        pass
+      N_trials = self.getNTrials()
+
+      yl = [np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])]
 
       if N_trials>0 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
+          yl[0] = min(yl[0],dpltrial[:,1].min())
+          yl[1] = max(yl[1],dpltrial[:,1].max())
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       if 'dipole_scalefctr' in dconf: scalefctr = dconf['dipole_scalefctr']
       else: scalefctr = 30e3
       ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
-      ax.set_xlim(xl)
-      ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
+      ax.set_xlim(xl); ax.set_ylim(yl)
 
       if OngoingInputs: # only draw specgram when have ongoing inputs
         if debug: print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))

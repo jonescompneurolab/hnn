@@ -2,7 +2,7 @@ sim_prefix: SRJ_2007_Fig5A_Super
 expmt_groups: {SRJ_2007_Fig5A_Super}
 tstop: 170
 dt: 0.025
-N_trials: 0
+N_trials: 10
 prng_seedcore_input_prox: 4
 prng_seedcore_input_dist: 4
 prng_seedcore_extpois: 4
