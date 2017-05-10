@@ -91,8 +91,8 @@ class SIMCanvas (FigureCanvas):
     self.axdist = axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
     self.axprox = axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
-      hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='r')
-      hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='g')
+      hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
+      hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
       if hist['feed_dist'] is None and hist['feed_prox'] is None:
         self.invertedhistax = False
         return False
