@@ -123,6 +123,26 @@ class SIMCanvas (FigureCanvas):
       pass
     return N_trials
 
+  def getEVInputTimes (self):
+    t_evprox_early,t_evdist,t_evprox_late=-1,-1,-1
+    try:
+      xx = quickgetprm(self.paramf,'t_evprox_early',float)
+      if type(xx)==float: t_evprox_early=xx
+      xx = quickgetprm(self.paramf,'t_evprox_late',float)
+      if type(xx)==float: t_evprox_late = xx
+      xx = quickgetprm(self.paramf,'t_evdist',float)
+      if type(xx)==float: t_evdist = xx
+    except:
+      print('except in getEVInputTimes')
+      pass
+    return t_evprox_early,t_evdist,t_evprox_late
+
+  def drawEVInputTimes (self, ax, yl, h=30, w=15):
+    t_evprox_early,t_evdist,t_evprox_late = self.getEVInputTimes()
+    ax.arrow(t_evprox_early,yl[0],0,h,head_width=w, head_length=w, fc='r', ec='r')
+    ax.arrow(t_evdist,yl[1],0,-h,head_width=w, head_length=w, fc='g', ec='g')
+    ax.arrow(t_evprox_late,yl[0],0,h,head_width=w, head_length=w, fc='r', ec='r')
+
   def getInputs (self):
     EvokedInputs = OngoingInputs = False
     try:
@@ -167,6 +187,8 @@ class SIMCanvas (FigureCanvas):
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
           yl[0] = min(yl[0],dpltrial[:,1].min())
           yl[1] = max(yl[1],dpltrial[:,1].max())
+
+      if EvokedInputs: self.drawEVInputTimes(ax,yl,30,15)
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       if 'dipole_scalefctr' in dconf: scalefctr = dconf['dipole_scalefctr']
