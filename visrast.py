@@ -97,9 +97,10 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
     if k == 'Input':
       plt.ylabel('Input')
       ax.set_yticks([])
-      red_patch = mpatches.Patch(color='red', label='dist')
-      green_patch = mpatches.Patch(color='green', label='prox')
-      plt.legend(handles=[red_patch,green_patch])
+      if OngoingInputs:
+        red_patch = mpatches.Patch(color='red', label='dist')
+        green_patch = mpatches.Patch(color='green', label='prox')
+        plt.legend(handles=[red_patch,green_patch])
     else:
       plt.ylabel(k + ' ID')
       white_patch = mpatches.Patch(color='white', label='L2Basket')
@@ -125,7 +126,7 @@ if __name__ == '__main__':
         spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(i+1)+'.txt') 
         dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
         fig = plt.figure(); 
-        lax=drawrast(dspktrial,fig, 8, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
+        lax=drawrast(dspktrial,fig, 5, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
 
     fig = plt.figure(); fig.canvas.mpl_connect('close_event', handle_close)
     dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
@@ -135,5 +136,5 @@ if __name__ == '__main__':
     fig = plt.figure()
     fig.canvas.mpl_connect('close_event', handle_close)
     dspk,haveinputs,dhist = getdspk(spkpath)
-    lax = drawrast(dspk,fig, 8)
+    lax = drawrast(dspk,fig, 5)
 
