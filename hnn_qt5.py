@@ -771,10 +771,14 @@ class HNNGUI (QMainWindow):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
 
   def showRasterPlot (self):
+    global basedir
+    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python', '-i','visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     Popen(lcmd) # nonblocking
 
   def showDipolePlot (self):
+    global basedir
+    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python', '-i','visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     Popen(lcmd) # nonblocking    
 
