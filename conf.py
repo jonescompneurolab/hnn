@@ -20,7 +20,8 @@ debug = 0
 simf = run.py
 paramf = param/default.param
 [draw]
-drawindivdpl
+drawindivdpl = 1
+drawindivrast = 1
 """
 
 class baseparam:
@@ -143,6 +144,7 @@ def readconf (fn="hnn.cfg"):
   d['debug'] = confint("run","debug",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
+  d['drawindivrast'] = confint("draw","drawindivrast",1)
 
   """
   recstr = confstr('run','recordV','')

@@ -14,7 +14,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; spkpath = paramf = ''; EvokedInputs = OngoingInputs = False;
+ntrial = 0; tstop = -1; spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; drawindivrast = False
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
@@ -25,6 +25,8 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
+  elif sys.argv[i] == 'indiv':
+    drawindivrast = True
 
 ncell = len(net.cells)
 
@@ -76,13 +78,10 @@ def drawhist (dhist,ax):
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
     plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
-    #plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),((dhist[ty])/np.amax(dhist[ty][0])),dclr[ty],linewidth=3,linestyle='--')
-    #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/amax(dhist[ty][0])-ncell)*ncell,dclr[ty],linewidth=3)
-    #plt.plot(np.arange(0,tstop,binsz),((dhist[ty][0])/np.amax(dhist[ty][0]))*-ncell + ncell,dclr[ty],linewidth=3)
   ax2.set_xlim((0,tstop))
   ax2.set_ylabel('Spikes')
 
-def drawrast (dspk, sz=8):
+def drawrast (dspk, fig, sz=8, ltextra=''):
   lax = []
   lk = ['Cell']
   gdx = 111
@@ -113,25 +112,28 @@ def drawrast (dspk, sz=8):
     ax.set_facecolor('k')
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
-    if i ==0: ax.set_title('Raster Plot')
+    if i ==0: ax.set_title('Raster Plot' + ' ' + ltextra)
     gdx += 1
   return lax
 
 if __name__ == '__main__':
   plt.ion()
-  fig = plt.figure()
-  fig.canvas.mpl_connect('close_event', handle_close)
   if ntrial > 0:
-    spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_1.txt') 
-    print('spkpath',spkpath,'spkpathtrial',spkpathtrial)
 
-    dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+    if drawindivrast:
+      for i in range(ntrial):
+        spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(i+1)+'.txt') 
+        dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+        fig = plt.figure(); 
+        lax=drawrast(dspktrial,fig, 8, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
+
+    fig = plt.figure(); fig.canvas.mpl_connect('close_event', handle_close)
     dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
-
-    lax = drawrast(dspkall,5)
-
+    lax = drawrast(dspkall,fig, 5, ltextra='All Trials')
     drawhist(dhistall,lax[-1])
   else:
+    fig = plt.figure()
+    fig.canvas.mpl_connect('close_event', handle_close)
     dspk,haveinputs,dhist = getdspk(spkpath)
-    lax = drawrast(dspk,8)
+    lax = drawrast(dspk,fig, 8)
 
