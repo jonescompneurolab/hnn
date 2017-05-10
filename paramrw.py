@@ -670,7 +670,6 @@ def usingOngoingInputs (fparam):
 # check if using any evoked inputs 
 def usingEvokedInputs (fparam):
   d = quickreadprm(fparam)
-  print(d)
   tstop = float(d['tstop']) 
   for k1 in ['t_evprox_early', 't_evprox_late', 't_evdist']:
     if k1 not in d: continue
