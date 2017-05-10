@@ -8,12 +8,11 @@ import numpy as np
 from math import ceil
 from conf import dconf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, find_param
+from paramrw import usingOngoingInputs, usingEvokedInputs, find_param, quickgetprm
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
-simf = dconf['simf']
-paramf = dconf['paramf']
+debug = dconf['debug']
 
 ddat = {}
 dfile = {}
@@ -25,7 +24,7 @@ def readdpltrials (basedir):
     fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
     if not os.path.exists(fn): break    
     ldpl.append(np.loadtxt(fn))
-    # print('loaded ', fn)
+    if debug: print('loaded ', fn)
     i += 1
   return ldpl
 
@@ -39,18 +38,19 @@ def getinputfiles (paramf):
   dfile['outparam'] = os.path.join(basedir,'param.txt')
   return dfile
 
-try:
-  getinputfiles(paramf)
-  ddat['dpl'] = np.loadtxt(dfile['dpl']);
-  if os.path.isfile(dfile['spec']):
-    ddat['spec'] = np.load(dfile['spec'])
-  else:
-    ddat['spec'] = None
-  ddat['spk'] = np.loadtxt(dfile['spk']); 
-  ddat['dpltrials'] = readdpltrials(basedir)
-except:
-  print('exception in getting input files')
-  print('paramf',paramf)
+def updatedat (paramf):
+  if debug: print('paramf:',paramf)
+  try:
+    getinputfiles(paramf)
+    ddat['dpl'] = np.loadtxt(dfile['dpl']);
+    if os.path.isfile(dfile['spec']):
+      ddat['spec'] = np.load(dfile['spec'])
+    else:
+      ddat['spec'] = None
+    ddat['spk'] = np.loadtxt(dfile['spk']); 
+    ddat['dpltrials'] = readdpltrials(basedir)
+  except:
+    print('updatedat ERR: exception in getting input files. paramf:',paramf)
 
 # draw raster to standalone matplotlib figure
 def drawraster ():  
@@ -65,12 +65,13 @@ def drawraster ():
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class SIMCanvas (FigureCanvas): 
 
-  def __init__ (self, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
+  def __init__ (self, paramf, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
+    self.paramf = paramf
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
     self.plot()
@@ -87,7 +88,7 @@ class SIMCanvas (FigureCanvas):
       if len(extinputs.inputs['dist']) <= 0 and len(extinputs.inputs['prox']) <= 0:
         return False
     except:
-      print('problem with extinputs')
+      print('plotinputhist ERR: problem with extinputs')
     self.hist = hist = {}
     self.axdist = axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
     self.axprox = axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
@@ -117,12 +118,14 @@ class SIMCanvas (FigureCanvas):
 
   def plotsimdat (self):
 
+    updatedat(self.paramf)
+
     EvokedInputs = OngoingInputs = False
 
     try:
       EvokedInputs = usingEvokedInputs(dfile['outparam'])
       OngoingInputs = usingOngoingInputs(dfile['outparam'])
-      # print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+      if debug: print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
     except:
       pass
 
@@ -147,7 +150,7 @@ class SIMCanvas (FigureCanvas):
 
       N_trials = 0
       try:
-        xx = find_param(dfile['outparam'],'N_trials')
+        xx = quickgetprm(self.paramf,'N_trials',int)
         if type(xx) == int: N_trials = xx
       except:
         pass
@@ -164,7 +167,7 @@ class SIMCanvas (FigureCanvas):
       ax.set_ylim(np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])) # fix ylim
 
       if OngoingInputs: # only draw specgram when have ongoing inputs
-        # print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
+        if debug: print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
         cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))

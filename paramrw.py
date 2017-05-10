@@ -644,6 +644,19 @@ def quickreadprm (fn):
         d[sp[0]]=str(sp[1]).strip()
   return d
 
+# get dict of ':' separated params from fn; ignore lines starting with #
+def quickgetprm (fn,k,ty):
+  d = {}
+  with open(fn,'r') as fp:
+    ln = fp.readlines()
+    for l in ln:
+      s = l.strip()
+      if s.startswith('#'): continue
+      sp = s.split(':')
+      if len(sp) > 1:
+        d[sp[0]]=str(sp[1]).strip()
+  return ty(d[k])
+
 # check if using ongoing inputs
 def usingOngoingInputs (fparam):
   d = quickreadprm(fparam)

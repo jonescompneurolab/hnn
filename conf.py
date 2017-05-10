@@ -15,6 +15,7 @@ def_config = """
 [run]
 dorun = 1
 doquit = 1
+debug = 0
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -139,6 +140,7 @@ def readconf (fn="hnn.cfg"):
 
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)
+  d['debug'] = confint("run","debug",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
 

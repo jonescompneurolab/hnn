@@ -22,12 +22,13 @@ from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs
-from simdat import *
+from simdat import SIMCanvas, getinputfiles
 
 prtime = True
 
 simf = dconf['simf']
 paramf = dconf['paramf']
+debug = dconf['debug']
 
 defncore = multiprocessing.cpu_count()
 
@@ -714,7 +715,7 @@ class BaseParamDialog (QDialog):
     if oktosave:
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
-        paramf = tmpf # success? update paramf
+        paramf = dconf['paramf'] = tmpf # success? update paramf
         basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
       except:
         print('exception in saving param file ',tmpf)
@@ -754,6 +755,8 @@ class HNNGUI (QMainWindow):
         pass
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
+      self.initSimCanvas() # recreate canvas 
+      self.m.plot() # replot data
 
   def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
@@ -950,7 +953,8 @@ class HNNGUI (QMainWindow):
       self.m = self.toolbar = None
     except:
       pass
-    self.m = SIMCanvas(self, width=10, height=1)
+    if debug: print('paramf in initSimCanvas:',paramf)
+    self.m = SIMCanvas(paramf, parent = self, width=10, height=1)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     gCol = 0 # 2
