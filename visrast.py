@@ -21,7 +21,7 @@ for i in range(len(sys.argv)):
     spkpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    tstop = paramrw.find_param(paramf,'tstop')
+    tstop = paramrw.quickgetprm(paramf,'tstop',float)
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
@@ -74,7 +74,7 @@ def handle_close (evt): quit()
 def drawhist (dhist,ax):
   ax2 = ax.twinx()
   fctr = 1.0
-  if ntrial > 0:
+  if ntrial > 1:
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
     plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
@@ -119,7 +119,7 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
 
 if __name__ == '__main__':
   plt.ion()
-  if ntrial > 0:
+  if ntrial > 1:
 
     if drawindivrast:
       for i in range(ntrial):

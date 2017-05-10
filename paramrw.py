@@ -641,20 +641,12 @@ def quickreadprm (fn):
       if s.startswith('#'): continue
       sp = s.split(':')
       if len(sp) > 1:
-        d[sp[0]]=str(sp[1]).strip()
+        d[sp[0].strip()]=str(sp[1]).strip()
   return d
 
 # get dict of ':' separated params from fn; ignore lines starting with #
 def quickgetprm (fn,k,ty):
-  d = {}
-  with open(fn,'r') as fp:
-    ln = fp.readlines()
-    for l in ln:
-      s = l.strip()
-      if s.startswith('#'): continue
-      sp = s.split(':')
-      if len(sp) > 1:
-        d[sp[0]]=str(sp[1]).strip()
+  d = quickreadprm(fn)
   return ty(d[k])
 
 # check if using ongoing inputs
@@ -662,21 +654,26 @@ def usingOngoingInputs (fparam):
   d = quickreadprm(fparam)
   tstop = float(d['tstop'])
   dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
-  for postfix in ['_prox','_dist']:    
-    if float(d['t0_input'+postfix])<= tstop and \
-       float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
-       float(d['f_input'+postfix])>0.:
-      for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
-                'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
-                'weight_inh_ampa','weight_inh_nmda']:
-        if float(d[dpref[postfix]+k])>0.: return True
+  try:
+    for postfix in ['_prox','_dist']:    
+      if float(d['t0_input'+postfix])<= tstop and \
+         float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
+         float(d['f_input'+postfix])>0.:
+        for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
+                  'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
+                  'weight_inh_ampa','weight_inh_nmda']:
+          if float(d[dpref[postfix]+k])>0.: return True
+  except: 
+    return False
   return False
 
 # check if using any evoked inputs 
 def usingEvokedInputs (fparam):
   d = quickreadprm(fparam)
+  print(d)
   tstop = float(d['tstop']) 
   for k1 in ['t_evprox_early', 't_evprox_late', 't_evdist']:
+    if k1 not in d: continue
     if float(d[k1]) <= tstop:
       for k2 in d.keys():
         if (k1=='t_evprox_early' and k2.startswith('gbar_evprox_early') and float(d[k2])>0.) or \
