@@ -18,6 +18,7 @@ import paramrw as paramrw
 
 # create Network class
 class NetworkOnNode ():
+
     def __init__ (self, p):
       # set the params internally for this net
       # better than passing it around like ...

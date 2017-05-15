@@ -195,7 +195,7 @@ doutf = setoutfiles(ddir)
 # core iterator through experimental groups
 expmt_group = p_exp.expmt_groups[0]
 
-p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
+simparams = p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
 
 pc.barrier() # get all nodes to this place before continuing
 pc.gid_clear()
@@ -285,6 +285,20 @@ def cattrialoutput ():
   dspec = catspec()
   del lspk,ldpl,dspec # do not need these variables; returned for testing
 
+def incrands ():
+  for k in simparams.keys():
+    if k.startswith('prng_seedcore'):
+      simparams[k] += 1
+  """
+  for k in ['prng_seedcore_evprox_early',
+            'prng_seedcore_extpois',
+            'prng_seedcore_extgauss',
+            'prng_seedcore_input_prox',
+            'prng_seedcore_evprox_late',
+            'prng_seedcore_evdist',
+            'prng_seedcore_input_dist']:
+  """
+
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
   global doutf
@@ -294,6 +308,7 @@ def runtrials (ntrial):
     doutf = setoutfiles(ddir,i+1,ntrial)
     initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     runsim() # run the simulation
+    incrands()
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
 
@@ -317,7 +332,11 @@ def initrands (s=0): # fix to use s
   # seed list is now a list of seeds to be changed on each run
   # otherwise, its originally set value will remain
   # give a random int seed from [0, 1e9]
-  for param in p_exp.prng_seed_list: p[param] = prng_base.randint(1e9)
+  for param in p_exp.prng_seed_list: # this list empty for single experiment/trial
+    p[param] = prng_base.randint(1e9)
+    print('param:',param,'p[param]:',p[param])
+  # print('simparams[prng_seedcore]:',simparams['prng_seedcore'])
+  
 
 initrands(0) # init once
 

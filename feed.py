@@ -8,6 +8,8 @@ import numpy as np
 import itertools as it
 from neuron import h
 
+create_evoked_call = 0
+
 class ParFeedAll ():
   # p_ext has a different structure for the extinput
   # usually, p_ext is a dict of cell types
@@ -25,9 +27,12 @@ class ParFeedAll ():
     if type.startswith(('evprox', 'evdist')):
       self.seed = self.p_ext['prng_seedcore']
       self.prng = np.random.RandomState(self.seed)
+      print('type,seed:',type,self.seed)
     else:
       self.seed = self.p_ext['prng_seedcore'] + gid
-      self.prng = np.random.RandomState(self.seed)
+      self.prng = np.random.RandomState(self.seed)    
+      print('type,seed:',type,self.seed)
+    # print('self.p_ext:',self.p_ext)
     # each of these methods creates self.eventvec for playback
     if type == 'extpois':
       self.__create_extpois()
@@ -74,7 +79,9 @@ class ParFeedAll ():
 
   # mu and sigma vals come from p
   def __create_evoked (self):
-    #print("__create_evoked")
+    global create_evoked_call
+    # print("__create_evoked",create_evoked_call)
+    create_evoked_call += 1
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0']
@@ -88,6 +95,7 @@ class ParFeedAll ():
       val_evoked = val_evoked[val_evoked > 0]
       # vals must be sorted
       val_evoked.sort()
+      print("__create_evoked",create_evoked_call,'val_evoked:',val_evoked)
       self.eventvec.from_python(val_evoked)
     else:
       # return an empty eventvec list

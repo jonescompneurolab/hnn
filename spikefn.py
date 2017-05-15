@@ -128,6 +128,7 @@ class ExtInputs (Spikes):
     self.inputs['env'] = env
     self.inputs['t'] = t
 
+  # extinput is either 'dist' or 'prox'
   def plot_hist (self, ax, extinput, tvec, bins=150, xlim=None, color='green'):
     if not xlim:
       xlim = (0., p_dict['tstop'])
