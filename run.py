@@ -298,6 +298,7 @@ def incrands ():
             'prng_seedcore_evdist',
             'prng_seedcore_input_dist']:
   """
+  net.reset_src_input_times() # net uses prngs
 
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):

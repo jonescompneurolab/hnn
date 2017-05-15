@@ -239,6 +239,52 @@ class NetworkOnNode ():
       return True
     """
 
+    def reset_src_input_times (self):
+      #print('in __create_all_src')
+      # loop through gids on this node
+      """
+      for l in self.ext_list
+      """
+      for gid in self.__gid_list:
+        # check existence of gid with Neuron
+        if self.pc.gid_exists(gid):
+          # get type of cell and pos via gid
+          # now should be valid for ext inputs
+          type = self.gid_to_type(gid)
+          type_pos_ind = gid - self.gid_dict[type][0]
+          pos = self.pos_dict[type][type_pos_ind]
+          # figure out which cell type is assoc with the gid
+          # create cells based on loc property
+          # creates a NetCon object internally to Neuron
+          if type == 'L2_pyramidal' or type == 'L5_pyramidal' or \
+             type == 'L2_basket' or type == 'L5_basket':
+            continue
+          elif type == 'extinput':
+            #print('type',type)
+            # to find param index, take difference between REAL gid
+            # here and gid start point of the items
+            p_ind = gid - self.gid_dict['extinput'][0]
+            # now use the param index in the params and create
+            # the cell and artificial NetCon
+            self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
+            self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
+          elif type in self.p_unique.keys():
+            #print('type',type)
+            #if not self.checkInputOn(type): 
+            #  print('skipping',type)
+            #  continue
+            gid_post = gid - self.gid_dict[type][0]
+            cell_type = self.gid_to_type(gid_post)
+            # create dictionary entry, append to list
+            self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type], gid))
+            self.pc.cell(gid, self.ext_list[type][-1].connect_to_target())
+          else:
+            print("None of these types in Net()")
+            exit()
+        else:
+          print("GID does not exist. See Cell()")
+          exit()
+
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
     # external inputs are not targets
