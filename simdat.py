@@ -74,17 +74,18 @@ class SIMCanvas (FigureCanvas):
     self.G = gridspec.GridSpec(10,1)
     self.plot()
 
-  def plotinputhist (self,xl,evoked): # plot input histograms
+  def plotinputhist (self,xl): # plot input histograms
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
     # set number of bins (150 bins per 1000ms)
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
     extinputs = None
     try:
       # print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
-      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'], evoked)
-      if not evoked:
-        extinputs.add_delay_times()
-      if len(extinputs.inputs['dist']) <= 0 and len(extinputs.inputs['prox']) <= 0:
+      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
+      extinputs.add_delay_times()
+      dinput = extinputs.inputs
+      if len(dinput['dist']) <= 0 and len(dinput['prox']) <= 0 and \
+         len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0:
         return False
     except:
       print('plotinputhist ERR: problem with extinputs')
@@ -94,7 +95,10 @@ class SIMCanvas (FigureCanvas):
     if extinputs is not None: # only valid param.txt file after sim was run
       hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
       hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
-      if hist['feed_dist'] is None and hist['feed_prox'] is None:
+      hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g')
+      hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r')
+      if hist['feed_dist'] is None and hist['feed_prox'] is None and \
+         hist['feed_evdist'] is None and hist['feed_evprox'] is None:
         self.invertedhistax = False
         return False
       else:
@@ -173,8 +177,9 @@ class SIMCanvas (FigureCanvas):
 
       EvokedInputs, OngoingInputs = self.getInputs()
 
-      if OngoingInputs or True:
-        if self.plotinputhist(xl,EvokedInputs): gRow = 2
+      if OngoingInputs or EvokedInputs:
+        if self.plotinputhist(xl): gRow = 2
+      if OngoingInputs:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
