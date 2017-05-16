@@ -810,7 +810,7 @@ class HNNGUI (QMainWindow):
 
     # view menu - drawing/visualization
     viewMenu = menubar.addMenu('&View')
-    viewRasterAction = QAction('View Raster Plot.',self)
+    viewRasterAction = QAction('View Spiking Activity.',self)
     viewRasterAction.setStatusTip('View Simulation Raster Plot.')
     viewRasterAction.triggered.connect(self.showRasterPlot)
     viewMenu.addAction(viewRasterAction)

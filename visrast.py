@@ -147,6 +147,7 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
       # plt.legend(handles=[red_patch,green_patch])
 
     else:
+      ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2) 
       plt.ylabel(k + ' ID')
       white_patch = mpatches.Patch(color='white', label='L2Basket')
       green_patch = mpatches.Patch(color='green', label='L2Pyr')
@@ -158,7 +159,7 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
     ax.set_facecolor('k')
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
-    if i ==0: ax.set_title('Raster Plot' + ' ' + ltextra)
+    if i ==0: ax.set_title('Spiking Plot' + ' ' + ltextra)
     gdx += 1
   return lax
 
