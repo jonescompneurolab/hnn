@@ -96,6 +96,14 @@ class ExtInputs (Spikes):
     print(gid_prox.shape,gid_dist.shape,self.gid_dict['extinput'].shape)
     return gid_prox, gid_dist
 
+  def unique_times (self,s_all,lidx):
+    self.r = [x for x in lidx]
+    lfilttime = self.filter(s_all); ltime = []
+    for arr in lfilttime:
+      for time in arr:
+        ltime.append(time)
+    return np.array(list(set(ltime)))
+
   def __get_extinput_times (self, fspk):
     # load all spike times from file
     s_all = np.loadtxt(open(fspk, 'rb'))
@@ -116,17 +124,11 @@ class ExtInputs (Spikes):
     else:
       inputs['dist'] = np.array([])
 
-    if self.gid_evprox is not None:
-      self.r = [x for x in self.gid_evprox]
-      inputs['evprox'] = self.filter(s_all)[0]
-    else:
-      inputs['evprox'] = np.array([])
+    if self.gid_evprox is not None: inputs['evprox'] = self.unique_times(s_all, self.gid_evprox)
+    else: inputs['evprox'] = np.array([])
 
-    if self.gid_evdist is not None:
-      self.r = [x for x in self.gid_evdist]
-      inputs['evdist'] = self.filter(s_all)[0]
-    else:
-      inputs['evdist'] = np.array([])
+    if self.gid_evdist is not None: inputs['evdist'] = self.unique_times(s_all, self.gid_evdist)
+    else: inputs['evdist'] = np.array([])
 
     return inputs
 
