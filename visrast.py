@@ -39,6 +39,37 @@ ncell = len(net.cells)
 binsz = 5.0
 smoothsz = 0 # no smoothing
 
+def getEVInputTimes ():
+  t_evprox_early,t_evdist,t_evprox_late=-1,-1,-1
+  try:
+    xx = paramrw.quickgetprm(paramf,'t_evprox_early',float)
+    if type(xx)==float: t_evprox_early=xx
+    xx = paramrw.quickgetprm(paramf,'t_evprox_late',float)
+    if type(xx)==float: t_evprox_late = xx
+    xx = paramrw.quickgetprm(paramf,'t_evdist',float)
+    if type(xx)==float: t_evdist = xx
+  except:
+    print('except in getEVInputTimes')
+    pass
+  return t_evprox_early,t_evdist,t_evprox_late
+
+def drawProxEVInputTimes (ax, h=0.55, w=15):
+  t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
+  yl = ax.get_ylim(); yrange = yl[1] - yl[0]
+  # print('yl:',yl)
+  #ax.arrow(t_evprox_early,yl[0],0,2,head_width=w, head_length=w, fc='w', ec='w')
+  ax.plot([t_evprox_early,t_evprox_early],[yl[0],yl[1]],'r--',linewidth=8)
+  ax.plot([t_evprox_late,t_evprox_late],[yl[0],yl[1]],'r--',linewidth=8)
+  #ax.arrow(t_evprox_early,yl[0],0,h*yrange,head_width=w, head_length=w, fc='w', ec='w')
+  #ax.arrow(t_evprox_late,yl[0],0,h*yrange,head_width=w, head_length=w, fc='w', ec='w')
+
+def drawDistEVInputTimes (ax, h=0.55, w=15):
+  t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
+  yl = ax.get_ylim(); yrange = yl[1] - yl[0]
+  # print('yl:',yl)
+  ax.plot([t_evdist,t_evdist],[yl[0],yl[1]],'g--',linewidth=8)
+  #ax.arrow(t_evdist,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='w', ec='w')
+
 # adjust input gids for display purposes
 def adjustinputgid (extinputs, gid):
   if gid == extinputs.gid_prox:
@@ -49,13 +80,6 @@ def adjustinputgid (extinputs, gid):
     return 2
   elif extinputs.is_dist_gid(gid):
     return 3
-  """
-  if extinputs.is_evoked_gid(gid):
-    if extinputs.is_prox_gid(gid):
-      return extinputs.evprox_gid_range[0]
-    else:
-      return extinputs.evprox_gid_range[1] + 1 # evdist_gid_range[0]
-  """
   return gid
 
 def getdspk (fn):
@@ -104,7 +128,7 @@ def drawhist (dhist,ax):
   for ty in dhist.keys():
     plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
   ax2.set_xlim((0,tstop))
-  ax2.set_ylabel('Spikes')
+  ax2.set_ylabel('Cell Spikes')
 
 def drawrast (dspk, fig, sz=8, ltextra=''):
   lax = []
@@ -117,35 +141,25 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
   for i,k in enumerate(lk):
     ax = fig.add_subplot(gdx)
     lax.append(ax)
-    # ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2)
-    plt.xlabel('Time (ms)');
     if k == 'Input':
-
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
       extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
       extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
-      ax.set_yticks([])
       ax.invert_yaxis()
-      plt.ylabel('Distal Input')
+      if EvokedInputs: drawDistEVInputTimes(ax)
+      plt.ylabel('Distal Input (Spikes)')
 
       gdx += 1
       ax2 = fig.add_subplot(gdx)
       lax.append(ax2)
       extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
       extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r')
-      # ax2.invert_yaxis()
       ax2.set_facecolor('k')
       ax2.grid(True)
-      ax2.set_yticks([])
       if tstop != -1: ax2.set_xlim((0,tstop))
-      plt.ylabel('Proximal Input')
-      plt.xlabel('Time (ms)');
-
-      # red_patch = mpatches.Patch(color='red', label='dist')
-      # green_patch = mpatches.Patch(color='green', label='prox')
-      # plt.legend(handles=[red_patch,green_patch])
-
+      if EvokedInputs: drawProxEVInputTimes(ax2)
+      plt.ylabel('Proximal Input (Spikes)')
     else:
       ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2) 
       plt.ylabel(k + ' ID')
@@ -161,6 +175,7 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
     if tstop != -1: ax.set_xlim((0,tstop))
     if i ==0: ax.set_title('Spiking Plot' + ' ' + ltextra)
     gdx += 1
+  plt.xlabel('Time (ms)');
   return lax
 
 if __name__ == '__main__':
@@ -171,11 +186,15 @@ if __name__ == '__main__':
       for i in range(ntrial):
         spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(i+1)+'.txt') 
         dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+        extinputs.add_delay_times()
         fig = plt.figure(); 
         lax=drawrast(dspktrial,fig, 5, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
 
     fig = plt.figure(); fig.canvas.mpl_connect('close_event', handle_close)
     dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
+    extinputs = spikefn.ExtInputs(spkpath, outparamf)
+    extinputs.add_delay_times()
     lax = drawrast(dspkall,fig, 5, ltextra='All Trials')
     drawhist(dhistall,lax[-1])
   else:
