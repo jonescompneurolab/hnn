@@ -13,7 +13,7 @@ create_evoked_call = 0
 class ParFeedAll ():
   # p_ext has a different structure for the extinput
   # usually, p_ext is a dict of cell types
-  def __init__ (self, type, celltype, p_ext, gid):
+  def __init__ (self, ty, celltype, p_ext, gid):
     #print("ParFeedAll __init__")
     # VecStim setup
     self.eventvec = h.Vector()
@@ -21,37 +21,38 @@ class ParFeedAll ():
     # self.p_unique = p_unique[type]
     self.p_ext = p_ext
     self.celltype = celltype
-    self.set_prng(type) # sets seeds for random num generator
-    self.set_event_times(type) # sets event times into self.eventvec and plays into self.vs (VecStim)
+    self.ty = ty # feed type
+    self.set_prng() # sets seeds for random num generator
+    self.set_event_times() # sets event times into self.eventvec and plays into self.vs (VecStim)
 
-  def set_prng (self, type, seed = None):
+  def set_prng (self, seed = None):
     if seed is None: # no seed specified then use p_ext to determine seed
       # random generator for this instance
       # qnd hack to make the seeds the same across all gids
       # for just evoked
-      if type.startswith(('evprox', 'evdist')):
+      if self.ty.startswith(('evprox', 'evdist')):
         self.seed = self.p_ext['prng_seedcore']
         self.prng = np.random.RandomState(self.seed)
-        print('type,seed:',type,self.seed)
+        print('ty,seed:',self.ty,self.seed)
       else:
         self.seed = self.p_ext['prng_seedcore'] + gid
         self.prng = np.random.RandomState(self.seed)    
-        print('type,seed:',type,self.seed)
+        print('ty,seed:',self.ty,self.seed)
       # print('self.p_ext:',self.p_ext)
     else: # if seed explicitly specified use it
       self.seed = seed
       self.prng = np.random.RandomState(self.seed)
 
-  def set_event_times (self,type):
+  def set_event_times (self):
     # print('self.p_ext:',self.p_ext)
     # each of these methods creates self.eventvec for playback
-    if type == 'extpois':
+    if self.ty == 'extpois':
       self.__create_extpois()
-    elif type.startswith(('evprox', 'evdist')):
+    elif self.ty.startswith(('evprox', 'evdist')):
       self.__create_evoked()
-    elif type == 'extgauss':
+    elif self.ty == 'extgauss':
       self.__create_extgauss()
-    elif type == 'extinput':
+    elif self.ty == 'extinput':
       self.__create_extinput()
     # load eventvec into VecStim object
     self.vs.play(self.eventvec)
