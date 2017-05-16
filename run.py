@@ -285,21 +285,6 @@ def cattrialoutput ():
   dspec = catspec()
   del lspk,ldpl,dspec # do not need these variables; returned for testing
 
-def incrands ():
-  for k in simparams.keys():
-    if k.startswith('prng_seedcore'):
-      simparams[k] += 1
-  """
-  for k in ['prng_seedcore_evprox_early',
-            'prng_seedcore_extpois',
-            'prng_seedcore_extgauss',
-            'prng_seedcore_input_prox',
-            'prng_seedcore_evprox_late',
-            'prng_seedcore_evdist',
-            'prng_seedcore_input_dist']:
-  """
-  net.reset_src_input_times() # net uses prngs
-
 # run individual trials via runsim, then calc/save average dipole/specgram
 def runtrials (ntrial):
   global doutf
@@ -307,9 +292,9 @@ def runtrials (ntrial):
   for i in range(ntrial):
     if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)
-    initrands(ntrial+(i+1)**ntrial) # reinit for each trial
+    # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     runsim() # run the simulation
-    incrands()
+    net.reset_src_input_times() # adjusts the rng seeds and then the feed/event input times
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
 
@@ -335,7 +320,6 @@ def initrands (s=0): # fix to use s
   # give a random int seed from [0, 1e9]
   for param in p_exp.prng_seed_list: # this list empty for single experiment/trial
     p[param] = prng_base.randint(1e9)
-    print('param:',param,'p[param]:',p[param])
   # print('simparams[prng_seedcore]:',simparams['prng_seedcore'])
   
 

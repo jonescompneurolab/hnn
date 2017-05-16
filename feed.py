@@ -5,7 +5,7 @@
 # last major: (SL: toward python3)
 
 import numpy as np
-import itertools as it
+import itertools as it # this used?
 from neuron import h
 
 create_evoked_call = 0

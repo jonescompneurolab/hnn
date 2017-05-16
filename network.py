@@ -239,58 +239,21 @@ class NetworkOnNode ():
       return True
     """
 
-    def reset_src_input_times (self):
+    def reset_src_input_times (self, seed=None):
       print('in reset_src_input_times')
-      #print('in __create_all_src')
-      # loop through gids on this node
 
-      for feed in self.extinput_list:
-        print('feed in extinput_list:',feed)
+      if seed is None:
+        for k in self.p_ext.keys():
+          if k.startswith('prng_seedcore'): self.p_ext[k] += 1
+      else:
+        for k in self.p_ext.keys():
+          if k.startswith('prng_seedcore'): self.p_ext[k] = seed
 
-      for feed in self.ext_list:
-        print('feed in ext_list:',feed)
-
-      """
-      for gid in self.__gid_list:
-        # check existence of gid with Neuron
-        if self.pc.gid_exists(gid):
-          # get type of cell and pos via gid
-          # now should be valid for ext inputs
-          type = self.gid_to_type(gid)
-          type_pos_ind = gid - self.gid_dict[type][0]
-          pos = self.pos_dict[type][type_pos_ind]
-          # figure out which cell type is assoc with the gid
-          # create cells based on loc property
-          # creates a NetCon object internally to Neuron
-          if type == 'L2_pyramidal' or type == 'L5_pyramidal' or \
-             type == 'L2_basket' or type == 'L5_basket':
-            continue
-          elif type == 'extinput':
-            #print('type',type)
-            # to find param index, take difference between REAL gid
-            # here and gid start point of the items
-            p_ind = gid - self.gid_dict['extinput'][0]
-            # now use the param index in the params and create
-            # the cell and artificial NetCon
-            self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
-            self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
-          elif type in self.p_unique.keys():
-            #print('type',type)
-            #if not self.checkInputOn(type): 
-            #  print('skipping',type)
-            #  continue
-            gid_post = gid - self.gid_dict[type][0]
-            cell_type = self.gid_to_type(gid_post)
-            # create dictionary entry, append to list
-            self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type], gid))
-            self.pc.cell(gid, self.ext_list[type][-1].connect_to_target())
-          else:
-            print("None of these types in Net()")
-            exit()
-        else:
-          print("GID does not exist. See Cell()")
-          exit()
-      """
+      for lfeed in [self.extinput_list, self.ext_list]:
+        for feed in lfeed:
+          feed.p_ext = self.p_ext # p_ext contains seeds used to generate event times
+          feed.set_prng()
+          feed.set_event_times()
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets
