@@ -8,6 +8,7 @@ from run import net
 import paramrw
 from filt import boxfilt
 import spikefn
+from math import ceil
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -120,17 +121,15 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
     plt.xlabel('Time (ms)');
     if k == 'Input':
 
-      """
-      extinputs.plot_hist(axdist,'dist',0,bins,xlim_new,color='g')
-      extinputs.plot_hist(axprox,'prox',0,bins,xlim_new,color='r')
-      extinputs.plot_hist(axdist,'evdist',0,bins,xlim_new,color='g',hty='step')
-      extinputs.plot_hist(axprox,'evprox',0,bins,xlim_new,color='r',hty='step')
-      """
+      bins = ceil(150. * tstop / 1000.) # bins needs to be an int
+      extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g',hty='step')
+      extinputs.plot_hist(ax,'prox',0,bins,(0,tstop),color='r',hty='step')
+      extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g',hty='step')
+      extinputs.plot_hist(ax,'evprox',0,bins,(0,tstop),color='r',hty='step')
 
       plt.ylabel('Input')
       ax.set_yticks([])
 
-      # if OngoingInputs:
       red_patch = mpatches.Patch(color='red', label='dist')
       green_patch = mpatches.Patch(color='green', label='prox')
       plt.legend(handles=[red_patch,green_patch])
