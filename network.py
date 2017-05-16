@@ -240,10 +240,11 @@ class NetworkOnNode ():
     """
 
     # reset src (source/external) event times
-    def reset_src_event_times (self, seed=None):
-      print('in reset_src_input_times')
-      print('self.extinput_list:',self.extinput_list)
-      print('self.ext_list:',type(self.ext_list),self.ext_list)
+    def reset_src_event_times (self, seed=None,debug=False):
+      if debug:
+        print('in reset_src_input_times')
+        print('self.extinput_list:',self.extinput_list)
+        print('self.ext_list:',type(self.ext_list),self.ext_list)
 
       for feed in self.extinput_list:
         if seed is None:

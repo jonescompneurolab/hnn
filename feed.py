@@ -8,7 +8,7 @@ import numpy as np
 import itertools as it # this used?
 from neuron import h
 
-create_evoked_call = 0
+# create_evoked_call = 0
 
 class ParFeedAll ():
   # p_ext has a different structure for the extinput
@@ -34,15 +34,13 @@ class ParFeedAll ():
       if self.ty.startswith(('evprox', 'evdist')):
         self.seed = self.p_ext['prng_seedcore']
         self.prng = np.random.RandomState(self.seed)
-        print('ty,seed:',self.ty,self.seed)
       else:
         self.seed = self.p_ext['prng_seedcore'] + self.gid
         self.prng = np.random.RandomState(self.seed)    
-        print('ty,seed:',self.ty,self.seed)
-      # print('self.p_ext:',self.p_ext)
     else: # if seed explicitly specified use it
       self.seed = seed
       self.prng = np.random.RandomState(self.seed)
+    #print('ty,seed:',self.ty,self.seed)
 
   def set_event_times (self):
     # print('self.p_ext:',self.p_ext)
@@ -92,9 +90,9 @@ class ParFeedAll ():
 
   # mu and sigma vals come from p
   def __create_evoked (self):
-    global create_evoked_call
+    # global create_evoked_call
     # print("__create_evoked",create_evoked_call)
-    create_evoked_call += 1
+    # create_evoked_call += 1
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0']
@@ -108,7 +106,7 @@ class ParFeedAll ():
       val_evoked = val_evoked[val_evoked > 0]
       # vals must be sorted
       val_evoked.sort()
-      print("__create_evoked",create_evoked_call,'val_evoked:',val_evoked)
+      # print("__create_evoked",create_evoked_call,'val_evoked:',val_evoked)
       self.eventvec.from_python(val_evoked)
     else:
       # return an empty eventvec list
