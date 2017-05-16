@@ -91,9 +91,10 @@ class ExtInputs (Spikes):
       l = list(self.gid_dict['evprox0'])
       for x in self.gid_dict['evprox1']: l.append(x)
       gid_prox = np.array(l)
+      self.evprox_gid_range = (min(gid_prox),max(gid_prox))
     if len(self.gid_dict['evdist']) > 0:
       gid_dist = self.gid_dict['evdist']
-    print(gid_prox.shape,gid_dist.shape,self.gid_dict['extinput'].shape)
+      self.evdist_gid_range = (min(gid_dist),max(gid_dist))
     return gid_prox, gid_dist
 
   def unique_times (self,s_all,lidx):
@@ -131,6 +132,20 @@ class ExtInputs (Spikes):
     else: inputs['evdist'] = np.array([])
 
     return inputs
+
+  # check if gid is associated with a proximal input
+  def is_prox_gid (self, gid):
+    if gid == self.gid_prox: return True
+    if len(self.inputs['evprox']) > 0:
+      return self.evprox_gid_range[0] <= gid <= self.evprox_gid_range[1]
+    return False
+
+  # check if gid is associated with a distal input
+  def is_dist_gid (self, gid):
+    if gid == self.gid_dist: return True
+    if len(self.inputs['evdist']) > 0:
+      return self.evdist_gid_range[0] <= gid <= self.evdist_gid_range[1]
+    return False    
 
   def truncate_ext (self, dtype, t_int):
     if dtype == 'prox' or dtype == 'dist':
