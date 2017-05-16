@@ -158,12 +158,12 @@ class ExtInputs (Spikes):
     self.inputs['t'] = t
 
   # extinput is either 'dist' or 'prox'
-  def plot_hist (self, ax, extinput, tvec, bins=150, xlim=None, color='green'):
+  def plot_hist (self, ax, extinput, tvec, bins=150, xlim=None, color='green', hty='bar',lw=4):
     if not xlim:
       xlim = (0., p_dict['tstop'])
     if len(self.inputs[extinput]):
       #print("bins:",bins,type(bins))
-      hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput)
+      hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput, histtype=hty,linewidth=lw)
     else:
       hist = None
     return hist
