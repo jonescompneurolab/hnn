@@ -38,6 +38,25 @@ ncell = len(net.cells)
 binsz = 5.0
 smoothsz = 0 # no smoothing
 
+# adjust input gids for display purposes
+def adjustinputgid (extinputs, gid):
+  if gid == extinputs.gid_prox:
+    return 0
+  elif gid == extinputs.gid_dist:
+    return 1
+  elif extinputs.is_prox_gid(gid):
+    return 2
+  elif extinputs.is_dist_gid(gid):
+    return 3
+  """
+  if extinputs.is_evoked_gid(gid):
+    if extinputs.is_prox_gid(gid):
+      return extinputs.evprox_gid_range[0]
+    else:
+      return extinputs.evprox_gid_range[1] + 1 # evdist_gid_range[0]
+  """
+  return gid
+
 def getdspk (fn):
   ddat = {}
   try:
@@ -58,7 +77,7 @@ def getdspk (fn):
       dhist[ty].append(t)
     else:
       dspk['Input'][0].append(t)
-      dspk['Input'][1].append(gid)
+      dspk['Input'][1].append(adjustinputgid(extinputs, gid))
       if extinputs.is_prox_gid(gid):
         dspk['Input'][2].append('r')
       elif extinputs.is_dist_gid(gid):

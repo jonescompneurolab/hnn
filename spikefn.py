@@ -133,6 +133,16 @@ class ExtInputs (Spikes):
 
     return inputs
 
+  # gid associated with evoked input
+  def is_evoked_gid (self,gid):
+    if len(self.inputs['evprox']) > 0:
+      if self.evprox_gid_range[0] <= gid <= self.evprox_gid_range[1]:
+        return True
+    if len(self.inputs['evdist']) > 0:
+      if self.evdist_gid_range[0] <= gid <= self.evdist_gid_range[1]:
+        return True
+    return False    
+
   # check if gid is associated with a proximal input
   def is_prox_gid (self, gid):
     if gid == self.gid_prox: return True
