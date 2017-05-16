@@ -294,7 +294,7 @@ def runtrials (ntrial):
     doutf = setoutfiles(ddir,i+1,ntrial)
     # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     runsim() # run the simulation
-    net.reset_src_input_times() # adjusts the rng seeds and then the feed/event input times
+    net.reset_src_event_times() # adjusts the rng seeds and then the feed/event input times
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
 

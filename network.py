@@ -239,21 +239,26 @@ class NetworkOnNode ():
       return True
     """
 
-    def reset_src_input_times (self, seed=None):
+    # reset src (source/external) event times
+    def reset_src_event_times (self, seed=None):
       print('in reset_src_input_times')
+      print('self.extinput_list:',self.extinput_list)
+      print('self.ext_list:',type(self.ext_list),self.ext_list)
 
-      if seed is None:
-        for k in self.p_ext.keys():
-          if k.startswith('prng_seedcore'): self.p_ext[k] += 1
-      else:
-        for k in self.p_ext.keys():
-          if k.startswith('prng_seedcore'): self.p_ext[k] = seed
+      for feed in self.extinput_list:
+        if seed is None:
+          feed.set_prng(feed.seed+1)
+        else:
+          feed.set_prng(seed)
+        feed.set_event_times() # uses feed.seed
 
-      for lfeed in [self.extinput_list, self.ext_list]:
-        for feed in lfeed:
-          feed.p_ext = self.p_ext # p_ext contains seeds used to generate event times
-          feed.set_prng()
-          feed.set_event_times()
+      for k,lfeed in self.ext_list.items(): # dictionary of lists...
+        for feed in lfeed: # of feeds
+          if seed is None:
+            feed.set_prng(feed.seed+1)
+          else:
+            feed.set_prng(seed)
+          feed.set_event_times() # uses feed.seed
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets

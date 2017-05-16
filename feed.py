@@ -22,6 +22,7 @@ class ParFeedAll ():
     self.p_ext = p_ext
     self.celltype = celltype
     self.ty = ty # feed type
+    self.gid = gid
     self.set_prng() # sets seeds for random num generator
     self.set_event_times() # sets event times into self.eventvec and plays into self.vs (VecStim)
 
@@ -35,7 +36,7 @@ class ParFeedAll ():
         self.prng = np.random.RandomState(self.seed)
         print('ty,seed:',self.ty,self.seed)
       else:
-        self.seed = self.p_ext['prng_seedcore'] + gid
+        self.seed = self.p_ext['prng_seedcore'] + self.gid
         self.prng = np.random.RandomState(self.seed)    
         print('ty,seed:',self.ty,self.seed)
       # print('self.p_ext:',self.p_ext)
