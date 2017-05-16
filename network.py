@@ -240,10 +240,16 @@ class NetworkOnNode ():
     """
 
     def reset_src_input_times (self):
+      print('in reset_src_input_times')
       #print('in __create_all_src')
       # loop through gids on this node
-      """
-      for l in self.ext_list
+
+      for feed in self.extinput_list:
+        print('feed in extinput_list:',feed)
+
+      for feed in self.ext_list:
+        print('feed in ext_list:',feed)
+
       """
       for gid in self.__gid_list:
         # check existence of gid with Neuron
@@ -284,6 +290,7 @@ class NetworkOnNode ():
         else:
           print("GID does not exist. See Cell()")
           exit()
+      """
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets

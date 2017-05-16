@@ -21,17 +21,28 @@ class ParFeedAll ():
     # self.p_unique = p_unique[type]
     self.p_ext = p_ext
     self.celltype = celltype
-    # random generator for this instance
-    # qnd hack to make the seeds the same across all gids
-    # for just evoked
-    if type.startswith(('evprox', 'evdist')):
-      self.seed = self.p_ext['prng_seedcore']
+    self.set_prng(type) # sets seeds for random num generator
+    self.set_event_times(type) # sets event times into self.eventvec and plays into self.vs (VecStim)
+
+  def set_prng (self, type, seed = None):
+    if seed is None: # no seed specified then use p_ext to determine seed
+      # random generator for this instance
+      # qnd hack to make the seeds the same across all gids
+      # for just evoked
+      if type.startswith(('evprox', 'evdist')):
+        self.seed = self.p_ext['prng_seedcore']
+        self.prng = np.random.RandomState(self.seed)
+        print('type,seed:',type,self.seed)
+      else:
+        self.seed = self.p_ext['prng_seedcore'] + gid
+        self.prng = np.random.RandomState(self.seed)    
+        print('type,seed:',type,self.seed)
+      # print('self.p_ext:',self.p_ext)
+    else: # if seed explicitly specified use it
+      self.seed = seed
       self.prng = np.random.RandomState(self.seed)
-      print('type,seed:',type,self.seed)
-    else:
-      self.seed = self.p_ext['prng_seedcore'] + gid
-      self.prng = np.random.RandomState(self.seed)    
-      print('type,seed:',type,self.seed)
+
+  def set_event_times (self,type):
     # print('self.p_ext:',self.p_ext)
     # each of these methods creates self.eventvec for playback
     if type == 'extpois':
