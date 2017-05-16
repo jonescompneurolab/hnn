@@ -62,12 +62,10 @@ class ExtInputs (Spikes):
     # load gid and param dicts
     self.gid_dict, self.p_dict = paramrw.read(fparam)
     self.evoked = evoked
-    if evoked:
-      # parse prox and dist input gids from gid_dict
-      self.gid_prox, self.gid_dist = self.__get_evokedinput_gids()
-    else:
-      # parse prox and dist input gids from gid_dict
-      self.gid_prox, self.gid_dist = self.__get_extinput_gids()
+    # parse evoked prox and dist input gids from gid_dict
+    self.gid_evprox, self.gid_evdist = self.__get_evokedinput_gids()
+    # parse ongoing prox and dist input gids from gid_dict
+    self.gid_prox, self.gid_dist = self.__get_extinput_gids()
     # self.inputs is dict of input times with keys 'prox' and 'dist'
     self.inputs = self.__get_extinput_times(fspk)
 
@@ -98,20 +96,6 @@ class ExtInputs (Spikes):
     print(gid_prox.shape,gid_dist.shape,self.gid_dict['extinput'].shape)
     return gid_prox, gid_dist
 
-    """
-    if len(self.gid_dict['extinput']) == 2:
-      return self.gid_dict['extinput']
-    # Otherwise, only one feed exists in this sim
-    # Must use param file to figure out which one...
-    elif len(self.gid_dict['extinput']) > 0:
-      if self.p_dict['t0_input_prox'] <= self.p_dict['tstop']:
-        return self.gid_dict['extinput'][0], None
-      elif self.p_dict['t0_input_dist'] <= self.p_dict['tstop']:
-        return None, self.gid_dict['extinput'][0]
-    else:
-      return None, None
-    """
-
   def __get_extinput_times (self, fspk):
     # load all spike times from file
     s_all = np.loadtxt(open(fspk, 'rb'))
@@ -120,23 +104,30 @@ class ExtInputs (Spikes):
     # self.filter() inherited from Spikes()
     # self.r weirdness is necessary to use self.filter()
     # i.e. self.r must exist and be a list to execute self.filter()
-    if self.gid_prox is not None:
-      if type(self.gid_prox) == int:
-        self.r = [self.gid_prox]
-      else:
-        self.r = [x for x in self.gid_prox]
+    if self.gid_prox:
+      self.r = [self.gid_prox]
       inputs['prox'] = self.filter(s_all)[0]
     else:
       inputs['prox'] = np.array([])
     # If dist input exists, get spike times
     if self.gid_dist is not None:
-      if type(self.gid_dist) == int:
-        self.r = [self.gid_dist]
-      else:
-        self.r = [x for x in self.gid_dist]
+      self.r = [self.gid_dist]
       inputs['dist'] = self.filter(s_all)[0]
     else:
       inputs['dist'] = np.array([])
+
+    if self.gid_evprox is not None:
+      self.r = [x for x in self.gid_evprox]
+      inputs['evprox'] = self.filter(s_all)[0]
+    else:
+      inputs['evprox'] = np.array([])
+
+    if self.gid_evdist is not None:
+      self.r = [x for x in self.gid_evdist]
+      inputs['evdist'] = self.filter(s_all)[0]
+    else:
+      inputs['evdist'] = np.array([])
+
     return inputs
 
   def truncate_ext (self, dtype, t_int):
