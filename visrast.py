@@ -112,27 +112,39 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
   gdx = 111
   if haveinputs:
     lk.append('Input')
-    gdx = 211
+    gdx = 311
     lk.reverse()
   for i,k in enumerate(lk):
     ax = fig.add_subplot(gdx)
     lax.append(ax)
-    ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2)
+    # ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2)
     plt.xlabel('Time (ms)');
     if k == 'Input':
 
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
-      extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g',hty='step')
-      extinputs.plot_hist(ax,'prox',0,bins,(0,tstop),color='r',hty='step')
-      extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g',hty='step')
-      extinputs.plot_hist(ax,'evprox',0,bins,(0,tstop),color='r',hty='step')
 
-      plt.ylabel('Input')
+      extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
+      extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
       ax.set_yticks([])
+      ax.invert_yaxis()
+      plt.ylabel('Distal Input')
 
-      red_patch = mpatches.Patch(color='red', label='dist')
-      green_patch = mpatches.Patch(color='green', label='prox')
-      plt.legend(handles=[red_patch,green_patch])
+      gdx += 1
+      ax2 = fig.add_subplot(gdx)
+      lax.append(ax2)
+      extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
+      extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r')
+      # ax2.invert_yaxis()
+      ax2.set_facecolor('k')
+      ax2.grid(True)
+      ax2.set_yticks([])
+      if tstop != -1: ax2.set_xlim((0,tstop))
+      plt.ylabel('Proximal Input')
+      plt.xlabel('Time (ms)');
+
+      # red_patch = mpatches.Patch(color='red', label='dist')
+      # green_patch = mpatches.Patch(color='green', label='prox')
+      # plt.legend(handles=[red_patch,green_patch])
 
     else:
       plt.ylabel(k + ' ID')
