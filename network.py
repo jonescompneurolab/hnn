@@ -90,7 +90,7 @@ class NetworkOnNode ():
       for key in self.ext_list.keys(): self.ext_list[key] = []
       # create sources and init
       self.__create_all_src()
-      self.__state_init()
+      self.state_init()
       # parallel network connector
       self.__parnet_connect()
       # set to record spikes
@@ -389,7 +389,7 @@ class NetworkOnNode ():
           return v
 
     # initializes the state closer to baseline
-    def __state_init(self):
+    def state_init(self):
       for cell in self.cells:
         seclist = h.SectionList()
         seclist.wholetree(sec=cell.soma)

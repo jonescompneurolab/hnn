@@ -293,6 +293,7 @@ def runtrials (ntrial):
     if pcID==0: print('Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i+1,ntrial)
     # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
+    net.state_init() # initialize voltages
     runsim() # run the simulation
     net.reset_src_event_times() # adjusts the rng seeds and then the feed/event input times
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name

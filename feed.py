@@ -62,6 +62,7 @@ class ParFeedAll ():
   # new external pois designation
   def __create_extpois (self):
     #print("__create_extpois")
+    if self.p_ext[self.celltype][0] <= 0.0: return False # 0 weight
     # check the t interval
     t0 = self.p_ext['t_interval'][0]
     T = self.p_ext['t_interval'][1]
@@ -86,6 +87,7 @@ class ParFeedAll ():
     # Convert array into nrn vector
     # if len(val_pois)>0: print('val_pois:',val_pois)
     self.eventvec.from_python(val_pois)
+    return self.eventvec.size() > 0
 
   # mu and sigma vals come from p
   def __create_evoked (self):
@@ -108,11 +110,13 @@ class ParFeedAll ():
     else:
       # return an empty eventvec list
       self.eventvec.from_python([])
+    return self.eventvec.size() > 0
 
   def __create_extgauss (self):
     # print("__create_extgauss")
     # assign the params
-    print('gauss params:',self.p_ext[self.celltype])
+    if self.p_ext[self.celltype][0] <= 0.0: return False # 0 weight
+    # print('gauss params:',self.p_ext[self.celltype])
     mu = self.p_ext[self.celltype][2]
     sigma = self.p_ext[self.celltype][3]
     # mu and sigma values come from p
@@ -127,6 +131,7 @@ class ParFeedAll ():
     # if len(val_gauss)>0: print('val_gauss:',val_gauss)
     # Convert array into nrn vector
     self.eventvec.from_python(val_gauss)
+    return self.eventvec.size() > 0
 
   def __create_extinput (self):
     #print("__create_extinput")
@@ -187,6 +192,7 @@ class ParFeedAll ():
       t_input = []
     # Convert array into nrn vector
     self.eventvec.from_python(t_input)
+    return self.eventvec.size() > 0
 
   # for parallel, maybe be that postsyn for this is just nil (None)
   def connect_to_target (self):
