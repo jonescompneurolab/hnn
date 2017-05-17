@@ -8,8 +8,6 @@ import numpy as np
 import itertools as it # this used?
 from neuron import h
 
-# create_evoked_call = 0
-
 class ParFeedAll ():
   # p_ext has a different structure for the extinput
   # usually, p_ext is a dict of cell types
@@ -86,13 +84,12 @@ class ParFeedAll ():
     #     xdiff = np.diff(val_pois/1000)
     #     print(lamtha, np.mean(xdiff), np.var(xdiff), 1/lamtha**2)
     # Convert array into nrn vector
+    # if len(val_pois)>0: print('val_pois:',val_pois)
     self.eventvec.from_python(val_pois)
 
   # mu and sigma vals come from p
   def __create_evoked (self):
-    # global create_evoked_call
-    # print("__create_evoked",create_evoked_call)
-    # create_evoked_call += 1
+    # print("__create_evoked")
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0']
@@ -115,6 +112,7 @@ class ParFeedAll ():
   def __create_extgauss (self):
     # print("__create_extgauss")
     # assign the params
+    print('gauss params:',self.p_ext[self.celltype])
     mu = self.p_ext[self.celltype][2]
     sigma = self.p_ext[self.celltype][3]
     # mu and sigma values come from p
@@ -126,7 +124,7 @@ class ParFeedAll ():
     val_gauss = val_gauss[val_gauss > 0]
     # sort values - critical for nrn
     val_gauss.sort()
-    # print('val_gauss:',val_gauss)
+    # if len(val_gauss)>0: print('val_gauss:',val_gauss)
     # Convert array into nrn vector
     self.eventvec.from_python(val_gauss)
 

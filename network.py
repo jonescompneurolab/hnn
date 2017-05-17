@@ -8,7 +8,7 @@ import itertools as it
 import numpy as np
 import sys
 
-from neuron import h as nrn
+from neuron import h
 from feed import ParFeedAll
 from L2_pyramidal import L2Pyr
 from L5_pyramidal import L5Pyr
@@ -27,11 +27,11 @@ class NetworkOnNode ():
       # Originally used to create the empty vec for synaptic currents,
       # ensuring that they exist on this node irrespective of whether
       # or not cells of relevant type actually do
-      self.N_t = np.arange(0., nrn.tstop, self.p['dt']).size + 1
-      # Create a nrn.Vector() with size 1xself.N_t, zero'd
+      self.N_t = np.arange(0., h.tstop, self.p['dt']).size + 1
+      # Create a h.Vector() with size 1xself.N_t, zero'd
       self.current = {
-        'L5Pyr_soma': nrn.Vector(self.N_t, 0),
-        'L2Pyr_soma': nrn.Vector(self.N_t, 0),
+        'L5Pyr_soma': h.Vector(self.N_t, 0),
+        'L2Pyr_soma': h.Vector(self.N_t, 0),
       }
       # int variables for grid of pyramidal cells (for now in both L2 and L5)
       self.gridpyr = {
@@ -39,7 +39,7 @@ class NetworkOnNode ():
         'y': self.p['N_pyr_y'],
       }
       # Parallel stuff
-      self.pc = nrn.ParallelContext()
+      self.pc = h.ParallelContext()
       self.n_hosts = int(self.pc.nhost())
       self.rank = int(self.pc.id())
       self.N_src = 0
@@ -56,7 +56,7 @@ class NetworkOnNode ():
       # params of external inputs in p_ext
       # Global number of external inputs ... automatic counting makes more sense
       # p_unique represent ext inputs that are going to go to each cell
-      self.p_ext, self.p_unique = paramrw.create_pext(self.p, nrn.tstop)
+      self.p_ext, self.p_unique = paramrw.create_pext(self.p, h.tstop)
       self.N_extinput = len(self.p_ext)
       # Source list of names
       # in particular order (cells, extinput, alpha names of unique inputs)
@@ -94,8 +94,8 @@ class NetworkOnNode ():
       # parallel network connector
       self.__parnet_connect()
       # set to record spikes
-      self.spiketimes = nrn.Vector()
-      self.spikegids = nrn.Vector()
+      self.spiketimes = h.Vector()
+      self.spikegids = h.Vector()
       self.__record_spikes()
 
     # creates the immutable source list along with corresponding numbers of cells
@@ -309,10 +309,6 @@ class NetworkOnNode ():
             self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
             self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
           elif type in self.p_unique.keys():
-            #print('type',type)
-            #if not self.checkInputOn(type): 
-            #  print('skipping',type)
-            #  continue
             gid_post = gid - self.gid_dict[type][0]
             cell_type = self.gid_to_type(gid_post)
             # create dictionary entry, append to list
@@ -348,6 +344,7 @@ class NetworkOnNode ():
           # parreceive_ext receives connections from UNIQUE external inputs
           for type in self.p_unique.keys():
             p_type = self.p_unique[type]
+            # print('parnet_connect p_type:',p_type)
             cell.parreceive_ext(type, gid, self.gid_dict, self.pos_dict, p_type)
 
     # setup spike recording for this node
@@ -387,14 +384,14 @@ class NetworkOnNode ():
         # this will break if non-cell source is attempted
         if gid in self.__gid_list:
           n = self.__gid_list.index(gid)
-          v = nrn.Vector()
+          v = h.Vector()
           v.record(self.cells[n].soma(0.5)._ref_v)
           return v
 
     # initializes the state closer to baseline
     def __state_init(self):
       for cell in self.cells:
-        seclist = nrn.SectionList()
+        seclist = h.SectionList()
         seclist.wholetree(sec=cell.soma)
         for sect in seclist:
           for seg in sect:
