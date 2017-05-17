@@ -164,9 +164,8 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       row += 2
 
       ax2 = fig.add_subplot(G[row:row+2,:])
-      lax.append(ax)
-      row += 2
       lax.append(ax2)
+      row += 2
       extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
       extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r')
       ax2.set_facecolor('k')
