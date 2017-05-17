@@ -212,9 +212,10 @@ class SpikeCanvas (FigureCanvas):
       pass
 
   def plot (self):
-    global haveinputs
+    global haveinputs,extinputs
     self.clearaxes()
-    fsz = (12,10)
+    plt.close(self.figure)
+    fsz = (12,10)    
     if self.index == 0:      
       extinputs = spikefn.ExtInputs(spkpath, outparamf)
       extinputs.add_delay_times()
