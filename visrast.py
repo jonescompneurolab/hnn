@@ -1,7 +1,17 @@
 import sys, os
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
+from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtGui import QIcon, QFont, QPixmap
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
+from PyQt5 import QtCore
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 from neuron import h
@@ -17,7 +27,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; drawindivrast = False
+ntrial = 0; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; 
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
@@ -29,8 +39,6 @@ for i in range(len(sys.argv)):
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
     outparamf = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
-  elif sys.argv[i] == 'indiv':
-    drawindivrast = True
 
 extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
@@ -57,19 +65,13 @@ def getEVInputTimes ():
 def drawProxEVInputTimes (ax, h=0.55, w=15):
   t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
   yl = ax.get_ylim(); yrange = yl[1] - yl[0]
-  # print('yl:',yl)
-  #ax.arrow(t_evprox_early,yl[0],0,2,head_width=w, head_length=w, fc='w', ec='w')
   ax.plot([t_evprox_early,t_evprox_early],[yl[0],yl[1]],'r--',linewidth=8)
   ax.plot([t_evprox_late,t_evprox_late],[yl[0],yl[1]],'r--',linewidth=8)
-  #ax.arrow(t_evprox_early,yl[0],0,h*yrange,head_width=w, head_length=w, fc='w', ec='w')
-  #ax.arrow(t_evprox_late,yl[0],0,h*yrange,head_width=w, head_length=w, fc='w', ec='w')
 
 def drawDistEVInputTimes (ax, h=0.55, w=15):
   t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
   yl = ax.get_ylim(); yrange = yl[1] - yl[0]
-  # print('yl:',yl)
   ax.plot([t_evdist,t_evdist],[yl[0],yl[1]],'g--',linewidth=8)
-  #ax.arrow(t_evdist,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='w', ec='w')
 
 # adjust input gids for display purposes
 def adjustinputgid (extinputs, gid):
@@ -119,19 +121,21 @@ def getdspk (fn):
       dhist[ty] = dhist[ty][0]
   return dspk,haveinputs,dhist
 
-def handle_close (evt): quit()
-
 def drawhist (dhist,ax):
   ax2 = ax.twinx()
   fctr = 1.0
   if ntrial > 1:
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
-    plt.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
+    ax2.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
   ax2.set_xlim((0,tstop))
   ax2.set_ylabel('Cell Spikes')
+  return ax2
+
+invertedax = False
 
 def drawrast (dspk, fig, G, sz=8, ltextra=''):
+  global invertedax
   lax = []
   lk = ['Cell']
   row = 0
@@ -148,9 +152,11 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
 
       extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
       extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
-      ax.invert_yaxis()
+      if not invertedax: 
+        ax.invert_yaxis()
+        invertedax = True
       if EvokedInputs: drawDistEVInputTimes(ax)
-      plt.ylabel('Distal Input')
+      ax.set_ylabel('Distal Input')
 
       row += 2
 
@@ -164,55 +170,127 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       ax2.grid(True)
       if tstop != -1: ax2.set_xlim((0,tstop))
       if EvokedInputs: drawProxEVInputTimes(ax2)
-      plt.ylabel('Proximal Input')
+      ax.set_ylabel('Proximal Input')
     else:
 
       ax = fig.add_subplot(G[row:-1,:])
       lax.append(ax)
 
       ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2) 
-      plt.ylabel(k + ' ID')
+      ax.set_ylabel(k + ' ID')
       white_patch = mpatches.Patch(color='white', label='L2Basket')
       green_patch = mpatches.Patch(color='green', label='L2Pyr')
       red_patch = mpatches.Patch(color='red', label='L5Pyr')
       blue_patch = mpatches.Patch(color='blue', label='L5Basket')
-      plt.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
+      ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
       ax.set_ylim((-1,ncell+1))
       ax.invert_yaxis()
     ax.set_facecolor('k')
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
-    if i ==0: ax.set_title('Spiking Plot' + ' ' + ltextra)
-  plt.xlabel('Time (ms)');
+    if i ==0: ax.set_title(ltextra)
+  ax.set_xlabel('Time (ms)');
   return lax
 
-if __name__ == '__main__':
-  plt.ion()
-  fsz = (12,10)
-  if ntrial > 1:
+class SpikeCanvas (FigureCanvas):
+  def __init__ (self, paramf, index, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
+    FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
+    self.title = title
+    self.setParent(parent)
+    self.index = index
+    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+    FigureCanvas.updateGeometry(self)
+    self.paramf = paramf
+    self.invertedhistax = False
+    self.G = gridspec.GridSpec(10,1)
+    self.plot()
 
-    if drawindivrast:
+  def clearaxes (self):
+    try:
+      for ax in self.lax: ax.cla()
+    except:
+      pass
+
+  def plot (self):
+    global haveinputs
+    self.clearaxes()
+    fsz = (12,10)
+    if self.index == 0:      
+      extinputs = spikefn.ExtInputs(spkpath, outparamf)
+      extinputs.add_delay_times()
+      dspk,haveinputs,dhist = getdspk(spkpath)
+      self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
+      self.lax.append(drawhist(dhist,self.lax[-1]))
+    else:
+      spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
+      dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+      extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+      extinputs.add_delay_times()
+      self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+      self.lax.append(drawhist(dhisttrial,self.lax[-1]))
+
+    # ax.tight_layout()
+    self.draw()
+
+class SpikeGUI (QMainWindow):
+  def __init__ (self):
+    global dfile, ddat, paramf
+    super().__init__()        
+    self.initUI()
+
+  def initCanvas (self):
+    """
+    try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
+      self.grid.removeWidget(self.m)
+      self.grid.removeWidget(self.toolbar)
+      self.m.setParent(None)
+      self.toolbar.setParent(None)
+      self.m = self.toolbar = None
+    except:
+      pass
+    """
+    self.m = SpikeCanvas(paramf, self.index, parent = self, width=10, height=1)
+    # this is the Navigation widget
+    # it takes the Canvas widget and a parent
+    self.toolbar = NavigationToolbar(self.m, self)
+    self.grid.addWidget(self.toolbar, 0, 0, 1, 4); 
+    self.grid.addWidget(self.m, 1, 0, 1, 4);     
+
+  def initUI (self):
+    self.setGeometry(300, 300, 1300, 1100)
+    self.setWindowTitle('HNN Spike Viewer')
+    self.grid = grid = QGridLayout()
+    self.index = 0
+    self.initCanvas()
+    self.cb = QComboBox(self)
+    self.grid.addWidget(self.cb,2,0,1,4)
+
+    if ntrial > 0:
+      self.cb.addItem('Show All Trials')
       for i in range(ntrial):
-        spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(i+1)+'.txt') 
-        dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
-        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
-        extinputs.add_delay_times()
-        fig = plt.figure(figsize=fsz); 
-        G = gridspec.GridSpec(10,1)
-        lax=drawrast(dspktrial,fig, G, 5, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
-        plt.tight_layout()
+        self.cb.addItem('Show Trial ' + str(i+1))
+    else:
+      self.cb.addItem('All Trials')
+    self.cb.activated[int].connect(self.onActivated) 
 
-    fig = plt.figure(figsize=fsz); fig.canvas.mpl_connect('close_event', handle_close)
-    G = gridspec.GridSpec(10,1)
-    dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
-    extinputs = spikefn.ExtInputs(spkpath, outparamf)
-    extinputs.add_delay_times()
-    lax = drawrast(dspkall,fig, G, 5, ltextra='All Trials')
-    drawhist(dhistall,lax[-1])
-  else:
-    fig = plt.figure()
-    fig.canvas.mpl_connect('close_event', handle_close)
-    dspk,haveinputs,dhist = getdspk(spkpath)
-    lax = drawrast(dspk,fig, G, 5)
-  plt.tight_layout()
+    # need a separate widget to put grid on
+    widget = QWidget(self)
+    widget.setLayout(grid)
+    self.setCentralWidget(widget);
+
+    self.show()
+
+  def onActivated(self, idx):
+    self.index = idx
+    print('selected', self.index)
+    self.m.index = self.index
+    self.m.plot()
+    # self.initCanvas()
+
+if __name__ == '__main__':
+
+  app = QApplication(sys.argv)
+  ex = SpikeGUI()
+  sys.exit(app.exec_())  
+  
 
