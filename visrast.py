@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pylab as plt
+import matplotlib.gridspec as gridspec
 from neuron import h
 from run import net
 import paramrw
@@ -130,28 +131,32 @@ def drawhist (dhist,ax):
   ax2.set_xlim((0,tstop))
   ax2.set_ylabel('Cell Spikes')
 
-def drawrast (dspk, fig, sz=8, ltextra=''):
+def drawrast (dspk, fig, G, sz=8, ltextra=''):
   lax = []
   lk = ['Cell']
-  gdx = 111
+  row = 0
   if haveinputs:
     lk.append('Input')
-    gdx = 311
     lk.reverse()
   for i,k in enumerate(lk):
-    ax = fig.add_subplot(gdx)
-    lax.append(ax)
     if k == 'Input':
+
+      ax = fig.add_subplot(G[row:row+2,:])
+      lax.append(ax)
+
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
       extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
       extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
       ax.invert_yaxis()
       if EvokedInputs: drawDistEVInputTimes(ax)
-      plt.ylabel('Distal Input (Spikes)')
+      plt.ylabel('Distal Input')
 
-      gdx += 1
-      ax2 = fig.add_subplot(gdx)
+      row += 2
+
+      ax2 = fig.add_subplot(G[row:row+2,:])
+      lax.append(ax)
+      row += 2
       lax.append(ax2)
       extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
       extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r')
@@ -159,8 +164,12 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
       ax2.grid(True)
       if tstop != -1: ax2.set_xlim((0,tstop))
       if EvokedInputs: drawProxEVInputTimes(ax2)
-      plt.ylabel('Proximal Input (Spikes)')
+      plt.ylabel('Proximal Input')
     else:
+
+      ax = fig.add_subplot(G[row:-1,:])
+      lax.append(ax)
+
       ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2) 
       plt.ylabel(k + ' ID')
       white_patch = mpatches.Patch(color='white', label='L2Basket')
@@ -174,12 +183,12 @@ def drawrast (dspk, fig, sz=8, ltextra=''):
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
     if i ==0: ax.set_title('Spiking Plot' + ' ' + ltextra)
-    gdx += 1
   plt.xlabel('Time (ms)');
   return lax
 
 if __name__ == '__main__':
   plt.ion()
+  fsz = (12,10)
   if ntrial > 1:
 
     if drawindivrast:
@@ -188,18 +197,22 @@ if __name__ == '__main__':
         dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
         extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
         extinputs.add_delay_times()
-        fig = plt.figure(); 
-        lax=drawrast(dspktrial,fig, 5, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
+        fig = plt.figure(figsize=fsz); 
+        G = gridspec.GridSpec(10,1)
+        lax=drawrast(dspktrial,fig, G, 5, ltextra='Trial '+str(i+1)); drawhist(dhisttrial,lax[-1])
+        plt.tight_layout()
 
-    fig = plt.figure(); fig.canvas.mpl_connect('close_event', handle_close)
+    fig = plt.figure(figsize=fsz); fig.canvas.mpl_connect('close_event', handle_close)
+    G = gridspec.GridSpec(10,1)
     dspkall,haveinputs,dhistall = getdspk(spkpath) # histogram of spikes across trials
     extinputs = spikefn.ExtInputs(spkpath, outparamf)
     extinputs.add_delay_times()
-    lax = drawrast(dspkall,fig, 5, ltextra='All Trials')
+    lax = drawrast(dspkall,fig, G, 5, ltextra='All Trials')
     drawhist(dhistall,lax[-1])
   else:
     fig = plt.figure()
     fig.canvas.mpl_connect('close_event', handle_close)
     dspk,haveinputs,dhist = getdspk(spkpath)
-    lax = drawrast(dspk,fig, 5)
+    lax = drawrast(dspk,fig, G, 5)
+  plt.tight_layout()
 
