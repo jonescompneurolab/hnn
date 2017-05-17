@@ -43,6 +43,9 @@ for i in range(len(sys.argv)):
 extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
 
+alldat = {}
+alldat[0] = (extinputs)
+
 ncell = len(net.cells)
 
 binsz = 5.0
@@ -152,9 +155,9 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
 
       extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
       extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
-      if not invertedax: 
-        ax.invert_yaxis()
-        invertedax = True
+      #if not invertedax: 
+      ax.invert_yaxis()
+      #invertedax = True
       if EvokedInputs: drawDistEVInputTimes(ax)
       ax.set_ylabel('Distal Input')
 
@@ -170,7 +173,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       ax2.grid(True)
       if tstop != -1: ax2.set_xlim((0,tstop))
       if EvokedInputs: drawProxEVInputTimes(ax2)
-      ax.set_ylabel('Proximal Input')
+      ax2.set_ylabel('Proximal Input')
     else:
 
       ax = fig.add_subplot(G[row:-1,:])
@@ -193,7 +196,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
   return lax
 
 class SpikeCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
@@ -207,15 +210,16 @@ class SpikeCanvas (FigureCanvas):
 
   def clearaxes (self):
     try:
-      for ax in self.lax: ax.cla()
+      for ax in self.lax:
+        ax.set_yticks([])
+        ax.cla()
     except:
       pass
 
   def plot (self):
     global haveinputs,extinputs
-    self.clearaxes()
-    plt.close(self.figure)
-    fsz = (12,10)    
+    #self.clearaxes()
+    #plt.close(self.figure)
     if self.index == 0:      
       extinputs = spikefn.ExtInputs(spkpath, outparamf)
       extinputs.add_delay_times()
@@ -230,7 +234,6 @@ class SpikeCanvas (FigureCanvas):
       self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
       self.lax.append(drawhist(dhisttrial,self.lax[-1]))
 
-    # ax.tight_layout()
     self.draw()
 
 class SpikeGUI (QMainWindow):
@@ -240,7 +243,6 @@ class SpikeGUI (QMainWindow):
     self.initUI()
 
   def initCanvas (self):
-    """
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
       self.grid.removeWidget(self.toolbar)
@@ -249,8 +251,7 @@ class SpikeGUI (QMainWindow):
       self.m = self.toolbar = None
     except:
       pass
-    """
-    self.m = SpikeCanvas(paramf, self.index, parent = self, width=10, height=1)
+    self.m = SpikeCanvas(paramf, self.index, parent = self, width=12, height=10)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
@@ -283,10 +284,9 @@ class SpikeGUI (QMainWindow):
 
   def onActivated(self, idx):
     self.index = idx
-    print('selected', self.index)
     self.m.index = self.index
+    self.initCanvas()
     self.m.plot()
-    # self.initCanvas()
 
 if __name__ == '__main__':
 
