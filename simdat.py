@@ -78,6 +78,7 @@ class SIMCanvas (FigureCanvas):
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
     # set number of bins (150 bins per 1000ms)
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
+    if debug: print('bins:',bins)
     extinputs = None
     try:
       # print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
@@ -186,6 +187,7 @@ class SIMCanvas (FigureCanvas):
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
 
       N_trials = self.getNTrials()
+      if debug: print('simdat: N_trials:',N_trials)
 
       yl = [np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])]
 

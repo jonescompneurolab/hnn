@@ -79,11 +79,13 @@ class RunSimThread (QThread):
     cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
       sleep(1)
+      """ do not need to set upper bound on sim run time
       cend = time(); rtime = cend - cstart
       if rtime >= maxruntime:
         self.killed = True
         print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
         self.killproc()
+      """
     if not self.killed:
       try: self.proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
       except: print('could not communicate') # Process finished.
