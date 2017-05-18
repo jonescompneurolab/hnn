@@ -195,7 +195,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
   return lax
 
 class SpikeCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Simulation Viewer'):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Spike Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
@@ -241,6 +241,17 @@ class SpikeGUI (QMainWindow):
     super().__init__()        
     self.initUI()
 
+  def initMenu (self):
+    exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
+    exitAction.setShortcut('Ctrl+Q')
+    exitAction.setStatusTip('Exit HNN Spike Viewer.')
+    exitAction.triggered.connect(qApp.quit)
+
+    menubar = self.menuBar()
+    fileMenu = menubar.addMenu('&File')
+    menubar.setNativeMenuBar(False)
+    fileMenu.addAction(exitAction)
+
   def initCanvas (self):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
@@ -258,8 +269,10 @@ class SpikeGUI (QMainWindow):
     self.grid.addWidget(self.m, 1, 0, 1, 4);     
 
   def initUI (self):
+    self.initMenu()
+    self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle('HNN Spike Viewer')
+    self.setWindowTitle('HNN Spike Viewer - ' + paramf)
     self.grid = grid = QGridLayout()
     self.index = 0
     self.initCanvas()
@@ -283,9 +296,14 @@ class SpikeGUI (QMainWindow):
 
   def onActivated(self, idx):
     self.index = idx
+    if self.index == 0:
+      self.statusBar().showMessage('Loading data from all trials.')
+    else:
+      self.statusBar().showMessage('Loading data from trial ' + str(self.index) + '.')
     self.m.index = self.index
     self.initCanvas()
     self.m.plot()
+    self.statusBar().showMessage('')
 
 if __name__ == '__main__':
 
