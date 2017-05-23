@@ -133,7 +133,7 @@ class ParFeedAll ():
     self.eventvec.from_python(val_gauss)
     return self.eventvec.size() > 0
 
-  def __create_extinput (self):
+  def __create_extinput (self): # creates the ongoing external inputs (rhythmic)
     #print("__create_extinput")
     # store f_input as self variable for later use if it exists in p
     # t0 is always defined
@@ -156,7 +156,7 @@ class ParFeedAll ():
       isi_array = np.arange(t0, self.p_ext['tstop'], 1000. / f_input)
       # array of single stimulus times -- no doublets
       if stdev:
-        t_array = self.prng.normal(np.repeat(isi_array, 10), stdev)
+        t_array = self.prng.normal(np.repeat(isi_array, self.p_ext['repeats']), stdev)
       else:
         t_array = isi_array
       if events_per_cycle == 2:
@@ -168,12 +168,12 @@ class ParFeedAll ():
         t_input = np.append(t_array_low, t_array_high)
       elif events_per_cycle == 1:
         t_input = t_array
-      # brute force remove non-zero times. Might result in fewer vals than desired
+      # brute force remove zero times. Might result in fewer vals than desired
       t_input = t_input[t_input > 0]
       t_input.sort()
     # Uniform Distribution
     elif distribution == 'uniform':
-      n_inputs = 10. * f_input * (self.p_ext['tstop'] - t0) / 1000.
+      n_inputs = self.p_ext['repeats'] * f_input * (self.p_ext['tstop'] - t0) / 1000.
       t_array = self.prng.uniform(t0, self.p_ext['tstop'], n_inputs)
       if events_per_cycle == 2:
         # Two arrays store doublet times

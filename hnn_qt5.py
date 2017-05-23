@@ -216,7 +216,8 @@ class OngoingInputParamDialog (DictDialog):
                                 ('tstop_input' + self.postfix, 250.),
                                 ('f_input' + self.postfix, 10.),
                                 ('f_stdev' + self.postfix, 20.),
-                                ('events_per_cycle' + self.postfix, 2)])
+                                ('events_per_cycle' + self.postfix, 2),
+                                ('repeats' + self.postfix, 10)])
 
     self.dL2 = OrderedDict([(self.prefix + 'weight_L2Pyr_ampa', 0.),
                             (self.prefix + 'weight_L2Pyr_nmda', 0.),
@@ -247,6 +248,7 @@ class OngoingInputParamDialog (DictDialog):
     self.addtransvar('f_input'+self.postfix,'Frequency (Hz)')
     self.addtransvar('f_stdev'+self.postfix,'Freq. stdev (Hz)')
     self.addtransvar('events_per_cycle'+self.postfix,'Events/cycle')
+    self.addtransvar('repeats'+self.postfix,'Repeats')
 
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
