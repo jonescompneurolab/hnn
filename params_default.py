@@ -84,6 +84,7 @@ def get_params_default ():
         'f_stdev_prox': 20.,
         'events_per_cycle_prox': 2,
         'repeats_prox': 10,
+        't0_input_stdev_prox': 0.0,
 
         # Ongoing distal alpha rhythm
         'distribution_dist': 'normal',
@@ -93,6 +94,7 @@ def get_params_default ():
         'f_stdev_dist': 20.,
         'events_per_cycle_dist': 2,
         'repeats_dist': 10,
+        't0_input_stdev_dist': 0.0,
 
         # thalamic input amplitudes abd delays
         'input_prox_A_weight_L2Pyr_ampa': 0.,

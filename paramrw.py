@@ -479,7 +479,8 @@ def create_pext (p, tstop):
         'distribution': p['distribution_prox'],
         'lamtha': 100.,
         'loc': 'proximal',
-        'repeats': p['repeats_prox']
+        'repeats': p['repeats_prox'],
+        't0_stdev': p['t0_input_stdev_prox']
     }
 
     # ensures time interval makes sense
@@ -501,7 +502,8 @@ def create_pext (p, tstop):
         'distribution': p['distribution_dist'],
         'lamtha': 100.,
         'loc': 'distal',
-        'repeats': p['repeats_dist']
+        'repeats': p['repeats_dist'],
+        't0_stdev': p['t0_input_stdev_dist']
     }
 
     p_ext = feed_validate(p_ext, feed_dist, tstop)

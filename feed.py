@@ -139,7 +139,10 @@ class ParFeedAll ():
     # t0 is always defined
     t0 = self.p_ext['t0']
     # If t0 is -1, randomize start time of inputs
-    if t0 == -1: t0 = self.prng.uniform(25., 125.)
+    if t0 == -1:
+      t0 = self.prng.uniform(25., 125.)
+    elif self.p_ext['t0_stdev'] > 0.0: # randomize start time based on t0_stdev
+      t0 = self.prng.normal(t0, self.p_ext['t0_stdev'])
     f_input = self.p_ext['f_input']
     stdev = self.p_ext['stdev']
     events_per_cycle = self.p_ext['events_per_cycle']

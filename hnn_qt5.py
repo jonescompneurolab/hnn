@@ -213,6 +213,7 @@ class OngoingInputParamDialog (DictDialog):
   def initd (self):
     self.dtiming = OrderedDict([('distribution' + self.postfix, 'normal'),
                                 ('t0_input' + self.postfix, 1000.),
+                                ('t0_input_stdev' + self.postfix, 0.),
                                 ('tstop_input' + self.postfix, 250.),
                                 ('f_input' + self.postfix, 10.),
                                 ('f_stdev' + self.postfix, 20.),
@@ -244,6 +245,7 @@ class OngoingInputParamDialog (DictDialog):
 
     self.addtransvar('distribution'+self.postfix,'Distribution')
     self.addtransvar('t0_input'+self.postfix,'Start time (ms)')
+    self.addtransvar('t0_input_stdev'+self.postfix,'Start time stdev (ms)')
     self.addtransvar('tstop_input'+self.postfix,'Stop time (ms)')
     self.addtransvar('f_input'+self.postfix,'Frequency (Hz)')
     self.addtransvar('f_stdev'+self.postfix,'Freq. stdev (Hz)')
