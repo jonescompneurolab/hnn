@@ -30,7 +30,7 @@ simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
 
-defncore = multiprocessing.cpu_count()
+defncore = multiprocessing.cpu_count() # default number of cores
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
@@ -763,6 +763,7 @@ class HNNGUI (QMainWindow):
       self.baseparamwin.updateDispParam()
       self.initSimCanvas() # recreate canvas 
       self.m.plot() # replot data
+      self.setWindowTitle('HNN - ' + paramf)
 
   def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
@@ -923,7 +924,7 @@ class HNNGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle('HNN')
+    self.setWindowTitle('HNN - ' + paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
 
     self.grid = grid = QGridLayout()
@@ -1020,6 +1021,7 @@ class HNNGUI (QMainWindow):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
+    self.setWindowTitle('HNN - ' + paramf)
 
 if __name__ == '__main__':    
   app = QApplication(sys.argv)
