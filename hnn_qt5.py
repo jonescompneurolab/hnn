@@ -818,7 +818,7 @@ class HNNGUI (QMainWindow):
 
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
     loadDataFile.setShortcut('Ctrl+D')
-    loadDataFile.setStatusTip('Load (experimental) data file.')
+    loadDataFile.setStatusTip('Load (dipole) data file.')
     loadDataFile.triggered.connect(self.loadDataFileDialog)
 
     menubar = self.menuBar()
