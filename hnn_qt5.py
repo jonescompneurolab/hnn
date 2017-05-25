@@ -258,17 +258,67 @@ class SynGainParamDialog (QDialog):
     self.netparamwin = netparamwin
     self.initUI()
 
+  def scalegain (self, k, fctr):
+    oldval = float(self.netparamwin.dqline[k].text().strip())
+    newval = oldval * fctr
+    self.netparamwin.dqline[k].setText(str(newval))
+    if debug: print('scaling ',k,' by', fctr, 'from ',oldval,'to ',newval,'=',oldval*fctr)
+    return newval
+
+  def isE (self,ty): return ty.count('Pyr') > 0
+  def isI (self,ty): return ty.count('Basket') > 0
+
+  def tounity (self):
+    for k in self.dqle.keys(): self.dqle[k].setText('1.0')
+
+  def scalegains (self):
+    if debug: print('scaling synaptic gains')
+    for i,k in enumerate(self.dqle.keys()):
+      fctr = float(self.dqle[k].text().strip())
+      if fctr < 0.:
+        fctr = 0.
+        self.dqle[k].setText(str(fctr))
+      elif fctr == 1.0:
+        continue
+      if debug: print(k,fctr)
+      for k2 in self.netparamwin.dqline.keys():
+        l = k2.split('_')
+        ty1,ty2 = l[1],l[2]
+        if self.isE(ty1) and self.isE(ty2) and k == 'E -> E':
+          self.scalegain(k2,fctr)
+        elif self.isE(ty1) and self.isI(ty2) and k == 'E -> I':
+          self.scalegain(k2,fctr)
+        elif self.isI(ty1) and self.isE(ty2) and k == 'I -> E':
+          self.scalegain(k2,fctr)
+        elif self.isI(ty1) and self.isI(ty2) and k == 'I -> I':
+          self.scalegain(k2,fctr)
+    self.tounity() # go back to unity since pressed OK - next call to this dialog will reset new values
+    self.hide()
+
   def initUI (self):
     grid = QGridLayout()
     grid.setSpacing(10)
 
-    for row,k in enumerate(['E->E', 'E->I', 'I->E', 'I->I']):
+    self.dqle = OrderedDict()
+    for row,k in enumerate(['E -> E', 'E -> I', 'I -> E', 'I -> I']):
+      lbl = QLabel(self)
+      lbl.setText(k)
+      lbl.adjustSize()
+      grid.addWidget(lbl,row, 0)
       qle = QLineEdit(self)
       qle.setText('1.0')
-      grid.addWidget(qle,row, 0)
-      btn = QPushButton('Scale ' + k)
-      btn.resize(btn.sizeHint())
-      grid.addWidget(btn,row, 1)
+      grid.addWidget(qle,row, 1)
+      self.dqle[k] = qle
+
+    row += 1
+    self.btnok = QPushButton('OK',self)
+    self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.clicked.connect(self.scalegains)
+    grid.addWidget(self.btnok, row, 0, 1, 1)
+    self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.resize(self.btncancel.sizeHint())
+    self.btncancel.clicked.connect(self.hide)
+    grid.addWidget(self.btncancel, row, 1, 1, 1); 
 
     self.setLayout(grid)  
     self.setGeometry(150, 150, 270, 180)
@@ -684,17 +734,17 @@ class BaseParamDialog (QDialog):
     grid.addWidget(self.qle, row, 1)
     row+=1
 
-    self.btnrun = QPushButton('Run Parameters',self)
+    self.btnrun = QPushButton('Run Params',self)
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.clicked.connect(self.setrunparam)
     grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
 
-    self.btncell = QPushButton('Cell Parameters',self)
+    self.btncell = QPushButton('Cell Params',self)
     self.btncell.resize(self.btncell.sizeHint())
     self.btncell.clicked.connect(self.setcellparam)
     grid.addWidget(self.btncell, row, 0, 1, 2); row+=1
 
-    self.btnnet = QPushButton('Network Parameters',self)
+    self.btnnet = QPushButton('Network Params',self)
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.clicked.connect(self.setnetparam)
     grid.addWidget(self.btnnet, row, 0, 1, 1); 
