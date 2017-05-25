@@ -252,6 +252,28 @@ class OngoingInputParamDialog (DictDialog):
     self.addtransvar('events_per_cycle'+self.postfix,'Events/cycle')
     self.addtransvar('repeats'+self.postfix,'Repeats')
 
+class SynGainParamDialog (QDialog):
+  def __init__ (self, parent, netparamwin):
+    super(SynGainParamDialog, self).__init__(parent)
+    self.netparamwin = netparamwin
+    self.initUI()
+
+  def initUI (self):
+    grid = QGridLayout()
+    grid.setSpacing(10)
+
+    for row,k in enumerate(['E->E', 'E->I', 'I->E', 'I->I']):
+      qle = QLineEdit(self)
+      qle.setText('1.0')
+      grid.addWidget(qle,row, 0)
+      btn = QPushButton('Scale ' + k)
+      btn.resize(btn.sizeHint())
+      grid.addWidget(btn,row, 1)
+
+    self.setLayout(grid)  
+    self.setGeometry(150, 150, 270, 180)
+    self.setWindowTitle("Synaptic Gains")  
+
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
@@ -331,7 +353,7 @@ class RunParamDialog (DictDialog):
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
-    self.stitle = 'Set Run Parameters'
+    self.stitle = 'Run Parameters'
 
     self.addtransvar('tstop','Simulation duration (ms)')
     self.addtransvar('dt','Simulation timestep (ms)')
@@ -506,7 +528,7 @@ class CellParamDialog (DictDialog):
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
     self.ltitle = [ 'L2Pyr Geometry', 'L2Pyr Synapses', 'L2Pyr Biophysics',\
                     'L5Pyr Geometry', 'L5Pyr Synapses', 'L5Pyr Biophysics']
-    self.stitle = 'Set Cell Parameters'
+    self.stitle = 'Cell Parameters'
 
 
 # widget to specify network parameters (number cells, weights, etc.)
@@ -544,7 +566,7 @@ class NetworkParamDialog (DictDialog):
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
-    self.stitle = 'Set Network Parameters'
+    self.stitle = 'Network Parameters'
 
     self.addtransvar('N_pyr_x', 'Num Pyr Cells (X direction)')
     self.addtransvar('N_pyr_y', 'Num Pyr Cells (Z direction)')
@@ -618,11 +640,12 @@ class BaseParamDialog (QDialog):
 
   def __init__ (self, parent):
     super(BaseParamDialog, self).__init__(parent)
-    self.proxparamwin = self.distparamwin = self.netparamwin = None
+    self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
     self.initUI()
     self.runparamwin = RunParamDialog(self)
     self.cellparamwin = CellParamDialog(self)
     self.netparamwin = NetworkParamDialog(self)    
+    self.syngainparamwin = SynGainParamDialog(self,self.netparamwin)
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
@@ -640,6 +663,7 @@ class BaseParamDialog (QDialog):
   def setrunparam (self): self.runparamwin.show()
   def setcellparam (self): self.cellparamwin.show()
   def setnetparam (self): self.netparamwin.show()
+  def setsyngainparam (self): self.syngainparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
   def setevparam (self): self.evparamwin.show()
@@ -660,32 +684,39 @@ class BaseParamDialog (QDialog):
     grid.addWidget(self.qle, row, 1)
     row+=1
 
-    self.btnrun = QPushButton('Set Run Parameters',self)
+    self.btnrun = QPushButton('Run Parameters',self)
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.clicked.connect(self.setrunparam)
     grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
 
-    self.btncell = QPushButton('Set Cell Parameters',self)
+    self.btncell = QPushButton('Cell Parameters',self)
     self.btncell.resize(self.btncell.sizeHint())
     self.btncell.clicked.connect(self.setcellparam)
     grid.addWidget(self.btncell, row, 0, 1, 2); row+=1
 
-    self.btnnet = QPushButton('Set Network Parameters',self)
+    self.btnnet = QPushButton('Network Parameters',self)
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.clicked.connect(self.setnetparam)
-    grid.addWidget(self.btnnet, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnnet, row, 0, 1, 1); 
 
-    self.btnprox = QPushButton('Set Ongoing Proximal Inputs',self)
+    self.btnsyngain = QPushButton('Synaptic Gains',self)
+    self.btnsyngain.resize(self.btnsyngain.sizeHint())
+    self.btnsyngain.clicked.connect(self.setsyngainparam)
+    grid.addWidget(self.btnsyngain, row, 1, 1, 1); 
+
+    row+=1
+
+    self.btnprox = QPushButton('Ongoing Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.setproxparam)
     grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
-    self.btndist = QPushButton('Set Ongoing Distal Inputs',self)
+    self.btndist = QPushButton('Ongoing Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
 
-    self.btnev = QPushButton('Set Evoked Inputs',self)
+    self.btnev = QPushButton('Evoked Inputs',self)
     self.btnev.resize(self.btnev.sizeHint())
     self.btnev.clicked.connect(self.setevparam)
     grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
@@ -702,7 +733,7 @@ class BaseParamDialog (QDialog):
     self.setLayout(grid) 
         
     self.setGeometry(100, 100, 400, 100)
-    self.setWindowTitle('Set Sim Parameters')    
+    self.setWindowTitle('Set Parameters')    
 
   def saveparams (self):
     global paramf,basedir
