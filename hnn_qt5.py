@@ -399,7 +399,8 @@ class RunParamDialog (DictDialog):
                                   ('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
-                                  ('dipole_smooth_win',5.0)])
+                                  ('dipole_smooth_win',5.0),
+                                  ('save_vsoma',0)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
@@ -420,6 +421,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
+    self.addtransvar('save_vsoma','Save Somatic Voltages')
 
   def initExtra (self):
     DictDialog.initExtra(self)

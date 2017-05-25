@@ -12,6 +12,7 @@ from neuron import h
 
 # Create a cell class
 class Cell ():
+
     def __init__ (self, soma_props):
       self.pc = h.ParallelContext() # Parallel methods
       # make L_soma and diam_soma elements of self
@@ -39,6 +40,10 @@ class Cell ():
       self.ncfrom_extgauss = []
       self.ncfrom_extpois = []
       self.ncfrom_ev = []
+
+    def record_volt_soma (self):
+      self.vsoma = h.Vector()
+      self.vsoma.record(self.soma(0.5)._ref_v)
 
     def get_sections (self): return [self.soma]
 

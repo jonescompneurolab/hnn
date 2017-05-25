@@ -15,6 +15,7 @@ save_spec_data: 1
 f_max_spec: 40.
 dipole_scalefctr: 30000.0
 dipole_smooth_win: 5.0
+save_vsoma: 0
 L2Pyr_soma_L: 22.1
 L2Pyr_soma_diam: 23.4
 L2Pyr_soma_cm: 0.6195
@@ -130,10 +131,12 @@ gbar_L5Pyr_L5Basket: 5e-4
 gbar_L5Basket_L5Basket: 2e-2
 distribution_prox: normal
 t0_input_prox: 50.
+t0_input_stdev_prox: 0.0
 tstop_input_prox: 710.
 f_input_prox: 10.
 f_stdev_prox: 20.
 events_per_cycle_prox: 2
+repeats_prox: 10
 input_prox_A_weight_L2Pyr_ampa: 6e-5
 input_prox_A_weight_L2Pyr_nmda: 0.0
 input_prox_A_delay_L2: 0.1
@@ -144,10 +147,12 @@ input_prox_A_weight_inh_ampa: 12e-5
 input_prox_A_weight_inh_nmda: 0.0
 distribution_dist: normal
 t0_input_dist: 50.
+t0_input_stdev_dist: 0.0
 tstop_input_dist: 710.
 f_input_dist: 10.
 f_stdev_dist: 20.
 events_per_cycle_dist: 2
+repeats_dist: 10
 input_dist_A_weight_L2Pyr_ampa: 6e-5
 input_dist_A_weight_L2Pyr_nmda: 0.0
 input_dist_A_delay_L2: 5.0
@@ -173,5 +178,5 @@ gbar_evprox_late_L2Pyr: 5.3e-3
 gbar_evprox_late_L2Basket: 5.3e-3
 gbar_evprox_late_L5Pyr: 2.7e-3
 gbar_evprox_late_L5Basket: 2.7e-3
-dt_evprox0_evprox1: 110
 dt_evprox0_evdist: 45
+dt_evprox0_evprox1: 110
