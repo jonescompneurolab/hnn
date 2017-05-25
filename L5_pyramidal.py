@@ -447,7 +447,8 @@ class L5Pyr(Pyr):
         }
 
         # Dendritic synapses
-        self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabaa'])
+        #self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabaa'])
+        self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabab'])
         self.apicaltuft_ampa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['ampa'])
         self.apicaltuft_nmda = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['nmda'])
 
