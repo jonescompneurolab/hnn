@@ -284,21 +284,25 @@ class NetworkOnNode ():
             # run the IClamp function here
             # create_all_IClamp() is defined in L2Pyr (etc)
             self.cells[-1].create_all_IClamp(self.p)
+            if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_pyramidal':
             self.cells.append(L5Pyr(pos, self.p))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
+            if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L2_basket':
             self.cells.append(L2Basket(pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # also run the IClamp for L2_basket
             self.cells[-1].create_all_IClamp(self.p)
+            if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_basket':
             self.cells.append(L5Basket(pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
+            if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'extinput':
             #print('type',type)
             # to find param index, take difference between REAL gid
