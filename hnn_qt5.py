@@ -845,23 +845,23 @@ class HNNGUI (QMainWindow):
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
       self.initSimCanvas() # recreate canvas 
-      self.m.plot() # replot data
+      # self.m.plot() # replot data
       self.setWindowTitle('HNN - ' + paramf)
 
   def loadDataFileDialog (self):
+    import simdat
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]:
       try:
         self.extdata = np.loadtxt(fn[0])
         self.extdataf = fn[0] # data file
+        simdat.ddat['extdata'] = self.extdata
+        print('simdat.ddat.keys():',simdat.ddat.keys())
         print('Loaded data in ', fn[0])
       except:
         print('Could not load data in ', fn[0])
       try:
-        dat = self.extdata
-        shp = dat.shape
-        ax = self.m.axdipole
-        for c in range(1,shp[1],1): ax.plot(dat[:,0],dat[:,c],'--',linewidth=4)
+        self.m.plotextdat()
         self.m.draw() # make sure new lines show up in plot
       except:
         print('Could not plot data from ', fn[0])

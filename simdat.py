@@ -17,6 +17,12 @@ debug = dconf['debug']
 ddat = {}
 dfile = {}
 
+def rmse (a1, a2):
+  len1,len2 = len(a1),len(a2)
+  sz = min(len1,len2)
+  if debug: print('len1:',len1,'len2:',len2,'ty1:',type(a1),'ty2:',type(a2))
+  return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
+
 def readdpltrials (basedir,ntrial):
   ldpl = []
   for i in range(ntrial):
@@ -159,6 +165,38 @@ class SIMCanvas (FigureCanvas):
     except:
       pass
     return EvokedInputs, OngoingInputs
+
+  def plotextdat (self):
+    try:
+      dat = ddat['extdata']
+      shp = dat.shape
+      ax = self.axdipole
+      for c in range(1,shp[1],1): ax.plot(dat[:,0],dat[:,c],'--',linewidth=4)
+
+      yl = ax.get_ylim()
+
+      print('ddat.keys():',ddat.keys())
+      if 'extdata' in ddat:
+        errtot = 0.0
+        for c in range(1,shp[1],1):
+          err0 = rmse(dat[:,c], ddat['dpl'][:,1])
+          errtot += err0
+          print('RMSE: ',err0)
+
+          # tx,ty=0,0
+          # txt='rmse:' + str(err0)
+          # ax.annotate(txt,xy=(0,0),xytext=(0,0),arrowprops=dict(facecolor='black',shrink=0.05),)
+
+        tx,ty=0,0
+        errtot /= (shp[1]-1)
+        txt='Avg. RMSE: ' + str(round(errtot,2))
+        #ax.annotate(txt,xy=(0,0),xytext=(0,yl[0]),arrowprops=dict(facecolor='black',shrink=0.05),)
+        #ax.annotate(txt,xy=(0,0),xytext=(0,yl[0]),arrowprops=dict(facecolor='black',shrink=0.05),textcoords='figure fraction')
+        ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),arrowprops=dict(facecolor='black',shrink=0.05),textcoords='axes fraction',fontsize=15)
+        print(txt)
+    except:
+      print('simdat ERR: could not plotextdat')
+
 
   def plotsimdat (self):
 
