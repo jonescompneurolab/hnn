@@ -1107,13 +1107,13 @@ class HNNGUI (QMainWindow):
     # self.btn_start.setEnabled(False)
     self.qbtn.setEnabled(False)
 
-  def done(self):
+  def done (self):
     self.runningsim = False
     self.statusBar().showMessage("")
     self.btnsim.setText("Start Simulation")
     self.qbtn.setEnabled(True)
-    self.initSimCanvas() # recreate canvas to avoid incorrect axes
-    self.m.plot()
+    self.initSimCanvas() # recreate canvas (plots too) to avoid incorrect axes
+    # self.m.plot()
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
