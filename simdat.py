@@ -171,9 +171,14 @@ class SIMCanvas (FigureCanvas):
       dat = ddat['extdata']
       shp = dat.shape
       ax = self.axdipole
-      for c in range(1,shp[1],1): ax.plot(dat[:,0],dat[:,c],'--',linewidth=4)
 
       yl = ax.get_ylim()
+
+      for c in range(1,shp[1],1): 
+        ax.plot(dat[:,0],dat[:,c],'--',linewidth=4)
+        yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
+
+      ax.set_ylim(yl)
 
       print('ddat.keys():',ddat.keys())
       if 'extdata' in ddat:
