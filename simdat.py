@@ -9,6 +9,7 @@ from math import ceil
 from conf import dconf
 import spikefn
 from paramrw import usingOngoingInputs, usingEvokedInputs, find_param, quickgetprm
+from scipy import signal
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
@@ -179,13 +180,16 @@ class SIMCanvas (FigureCanvas):
 
       errtot = 0.0
 
+      # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
+      dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
+
       for c in range(1,shp[1],1): 
         clr = csm.to_rgba(c)
 
         ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4)
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
-        err0 = rmse(dat[:,c], ddat['dpl'][:,1])
+        err0 = rmse(dat[:,c], dpldown)
         errtot += err0
         print('RMSE: ',err0)
 
