@@ -706,11 +706,17 @@ class BaseParamDialog (QDialog):
 
   def updateDispParam (self):
     # now update the GUI components to reflect the param file selected
-    din = quickreadprm(paramf)
+    try:
+      din = quickreadprm(paramf)
+    except:
+      print('could not read',paramf)
     ddef = params_default.get_params_default()
     for dlg in self.lsubwin: dlg.setfromdin(ddef) # first set to default?
-    for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
-    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
+    try:
+      for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
+      self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
+    except:
+      pass
 
   def setrunparam (self): self.runparamwin.show()
   def setcellparam (self): self.cellparamwin.show()
