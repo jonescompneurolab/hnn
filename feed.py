@@ -91,22 +91,22 @@ class ParFeedAll ():
 
   # mu and sigma vals come from p
   def __create_evoked (self):
-    #print("__create_evoked")
+    # print("__create_evoked")
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0']
       sigma = self.p_ext[self.celltype][2]
-      #print('mu:',mu,'sigma:',sigma)
+      # print('mu:',mu,'sigma:',sigma)
       # if a non-zero sigma is specified
       if sigma:
-        val_evoked = self.prng.normal(mu, sigma, 1)
+        val_evoked = np.random.normal(mu,sigma,1) # self.prng.normal(mu, sigma, 1)
       else:
         # if sigma is specified at 0
         val_evoked = np.array([mu])
       val_evoked = val_evoked[val_evoked > 0]
       # vals must be sorted
       val_evoked.sort()
-      # print("__create_evoked",create_evoked_call,'val_evoked:',val_evoked)
+      print('__create_evoked val_evoked:',val_evoked)
       self.eventvec.from_python(val_evoked)
     else:
       # return an empty eventvec list
