@@ -166,41 +166,45 @@ class SIMCanvas (FigureCanvas):
       pass
     return EvokedInputs, OngoingInputs
 
-  def plotextdat (self):
+  def plotextdat (self): # plot 'external' data (e.g. from experimet/other simulation)
     try:
       dat = ddat['extdata']
       shp = dat.shape
       ax = self.axdipole
 
       yl = ax.get_ylim()
+      cmap=plt.get_cmap('spectral')
+      csm = plt.cm.ScalarMappable(cmap=cmap);
+      csm.set_clim((0,shp[1]))
+
+      errtot = 0.0
 
       for c in range(1,shp[1],1): 
-        ax.plot(dat[:,0],dat[:,c],'--',linewidth=4)
+        clr = csm.to_rgba(c)
+
+        ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4)
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
+        err0 = rmse(dat[:,c], ddat['dpl'][:,1])
+        errtot += err0
+        print('RMSE: ',err0)
+
+        fx = int(shp[0] * float(c) / shp[1])
+
+        tx,ty=dat[fx,0],dat[fx,c]
+        txt='RMSE:' + str(round(err0,2))
+        ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold')
       ax.set_ylim(yl)
 
-      print('ddat.keys():',ddat.keys())
-      if 'extdata' in ddat:
-        errtot = 0.0
-        for c in range(1,shp[1],1):
-          err0 = rmse(dat[:,c], ddat['dpl'][:,1])
-          errtot += err0
-          print('RMSE: ',err0)
-
-          # tx,ty=0,0
-          # txt='rmse:' + str(err0)
-          # ax.annotate(txt,xy=(0,0),xytext=(0,0),arrowprops=dict(facecolor='black',shrink=0.05),)
-
-        tx,ty=0,0
-        errtot /= (shp[1]-1)
-        txt='Avg. RMSE: ' + str(round(errtot,2))
-        #ax.annotate(txt,xy=(0,0),xytext=(0,yl[0]),arrowprops=dict(facecolor='black',shrink=0.05),)
-        #ax.annotate(txt,xy=(0,0),xytext=(0,yl[0]),arrowprops=dict(facecolor='black',shrink=0.05),textcoords='figure fraction')
-        ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),arrowprops=dict(facecolor='black',shrink=0.05),textcoords='axes fraction',fontsize=15)
-        print(txt)
+      tx,ty=0,0
+      errtot /= (shp[1]-1)
+      txt='Avg. RMSE:' + str(round(errtot,2))
+      ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
+      print(txt)
     except:
       print('simdat ERR: could not plotextdat')
+      return False
+    return True
 
 
   def plotsimdat (self):
