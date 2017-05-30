@@ -88,7 +88,7 @@ class SIMCanvas (FigureCanvas):
     if debug: print('bins:',bins)
     extinputs = None
     try:
-      # print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
+      if debug: print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
       extinputs.add_delay_times()
       dinput = extinputs.inputs
@@ -174,7 +174,7 @@ class SIMCanvas (FigureCanvas):
       ax = self.axdipole
 
       yl = ax.get_ylim()
-      cmap=plt.get_cmap('spectral')
+      cmap=plt.get_cmap('nipy_spectral')
       csm = plt.cm.ScalarMappable(cmap=cmap);
       csm.set_clim((0,shp[1]))
 

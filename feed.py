@@ -91,11 +91,12 @@ class ParFeedAll ():
 
   # mu and sigma vals come from p
   def __create_evoked (self):
-    # print("__create_evoked")
+    #print("__create_evoked")
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0']
       sigma = self.p_ext[self.celltype][2]
+      #print('mu:',mu,'sigma:',sigma)
       # if a non-zero sigma is specified
       if sigma:
         val_evoked = self.prng.normal(mu, sigma, 1)

@@ -59,6 +59,8 @@ datdir = os.path.join(dproj,simstr)
 
 # spike write function
 def spikes_write (net, filename_spikes):
+  f = open(filename_spikes,'w')
+  f.close() # first make sure writes to an empty file
   for rank in range(int(pc.nhost())):
     # guarantees node order and no competition
     pc.barrier()
