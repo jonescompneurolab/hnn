@@ -13,7 +13,7 @@ import specfn
 import matplotlib.pyplot as plt
 import axes_create as ac
 from math import ceil
-from filt import boxfilt
+from filt import boxfilt, hammfilt
 
 # class Dipole() is for a single set of f_dpl and f_param
 class Dipole():
@@ -71,7 +71,8 @@ class Dipole():
 
     def smooth (self, winsz):
       if winsz <= 1: return 
-      for key in self.dpl.keys(): self.dpl[key] = boxfilt(self.dpl[key],winsz)
+      #for key in self.dpl.keys(): self.dpl[key] = boxfilt(self.dpl[key],winsz)
+      for key in self.dpl.keys(): self.dpl[key] = hammfilt(self.dpl[key],winsz)
 
     # average stationary dipole over a time window
     def mean_stationary(self, opts_input={}):

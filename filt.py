@@ -1,6 +1,14 @@
 from pylab import convolve
+from numpy import hamming
 
 # box filter
 def boxfilt (x, winsz):
   win = [1.0/winsz for i in range(int(winsz))]
   return convolve(x,win,'same')
+
+# convolve with a hamming window
+def hammfilt (x, winsz):
+  win = hamming(winsz)
+  win /= sum(win)
+  return convolve(x,win,'same')
+

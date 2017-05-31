@@ -17,7 +17,7 @@ import matplotlib.gridspec as gridspec
 from neuron import h
 from run import net
 import paramrw
-from filt import boxfilt
+from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
 
@@ -119,7 +119,8 @@ def getdspk (fn):
   for ty in dhist.keys():
     dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
     if smoothsz > 0:
-      dhist[ty] = boxfilt(dhist[ty][0],smoothsz)
+      #dhist[ty] = boxfilt(dhist[ty][0],smoothsz)
+      dhist[ty] = hammfilt(dhist[ty][0],smoothsz)
     else:
       dhist[ty] = dhist[ty][0]
   return dspk,haveinputs,dhist
