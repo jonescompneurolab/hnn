@@ -107,7 +107,7 @@ class ParFeedAll ():
       val_evoked = val_evoked[val_evoked > 0]
       # vals must be sorted
       val_evoked.sort()
-      print('__create_evoked val_evoked:',val_evoked)
+      # print('__create_evoked val_evoked:',val_evoked)
       self.eventvec.from_python(val_evoked)
     else:
       # return an empty eventvec list

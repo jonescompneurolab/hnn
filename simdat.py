@@ -203,7 +203,12 @@ class SIMCanvas (FigureCanvas):
       tx,ty=0,0
       errtot /= (shp[1]-1)
       txt='Avg. RMSE:' + str(round(errtot,2))
-      ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
+      try:
+        self.annot_avg.set_visible(False)
+        del self.annot_avg
+      except:
+        pass
+      self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
       print(txt)
     except:
       print('simdat ERR: could not plotextdat')
