@@ -363,9 +363,11 @@ class EvokedInputParamDialog (DictDialog):
           self.addtransvar(k,'sigma (ms)')
 
     # time between prox/distal inputs -1 means relative - not used by default
-    self.dtiming = {'dt_evprox0_evdist': -1,
+    self.dtiming = {'sync_evinput': 1,
+                    'dt_evprox0_evdist': -1,
                     'dt_evprox0_evprox1': -1}
 
+    self.addtransvar('sync_evinput', 'Synchronous Inputs')
     self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
     self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
 
@@ -399,7 +401,7 @@ class RunParamDialog (DictDialog):
                                   ('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
-                                  ('dipole_smooth_win',5.0),
+                                  ('dipole_smooth_win',15.0),
                                   ('save_vsoma',0)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]

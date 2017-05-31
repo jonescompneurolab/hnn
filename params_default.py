@@ -148,13 +148,15 @@ def get_params_default ():
         't_evprox_late': 2000.,
         'sigma_t_evprox_late': 7.,
 
+        'sync_evinput': 1, # whether evoked inputs arrive at same time to all cells
+
         # analysis
         'save_spec_data': 0,
         'f_max_spec': 40.,
         'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
         #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
         # for ongoing rhythms + ERPs ... use ... ?
-        'dipole_smooth_win': 5.0, # window for smoothing (box filter) - 15 ms from jones 2009; keep shorter here,
+        'dipole_smooth_win': 15.0, # window for smoothing (box filter) - 15 ms from jones 2009; shorten
         # in case want to look at higher frequency activity
         'save_figs': 0,
         'save_vsoma': 0, # whether to record/save somatic voltage

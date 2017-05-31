@@ -248,7 +248,7 @@ class NetworkOnNode ():
 
       for feed in self.extinput_list:
         if seed is None:
-          feed.set_prng(feed.seed+1)
+          feed.set_prng(feed.seed+1000)
         else:
           feed.set_prng(seed)
         feed.set_event_times() # uses feed.seed

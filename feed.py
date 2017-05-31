@@ -30,14 +30,15 @@ class ParFeedAll ():
       # qnd hack to make the seeds the same across all gids
       # for just evoked
       if self.ty.startswith(('evprox', 'evdist')):
-        self.seed = self.p_ext['prng_seedcore']
-        self.prng = np.random.RandomState(self.seed)
+        if self.p_ext['sync_evinput']:
+          self.seed = self.p_ext['prng_seedcore']
+        else:
+          self.seed = self.p_ext['prng_seedcore'] + self.gid
       else:
         self.seed = self.p_ext['prng_seedcore'] + self.gid
-        self.prng = np.random.RandomState(self.seed)    
     else: # if seed explicitly specified use it
       self.seed = seed
-      self.prng = np.random.RandomState(self.seed)
+    self.prng = np.random.RandomState(self.seed)
     #print('ty,seed:',self.ty,self.seed)
 
   def set_event_times (self):
@@ -99,7 +100,7 @@ class ParFeedAll ():
       # print('mu:',mu,'sigma:',sigma)
       # if a non-zero sigma is specified
       if sigma:
-        val_evoked = np.random.normal(mu,sigma,1) # self.prng.normal(mu, sigma, 1)
+        val_evoked = self.prng.normal(mu, sigma, 1)
       else:
         # if sigma is specified at 0
         val_evoked = np.array([mu])

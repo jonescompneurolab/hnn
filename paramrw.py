@@ -521,6 +521,7 @@ def create_pext (p, tstop):
         'prng_seedcore': int(p['prng_seedcore_evprox_early']),
         'lamtha_space': 3.,
         'loc': 'proximal',
+        'sync_evinput': p['sync_evinput']
     }
 
     # see if relative start time is defined
@@ -548,6 +549,7 @@ def create_pext (p, tstop):
         'prng_seedcore': int(p['prng_seedcore_evdist']),
         'lamtha_space': 3.,
         'loc': 'distal',
+        'sync_evinput': p['sync_evinput']
     }
 
     # next evoked input is proximal also
@@ -560,6 +562,7 @@ def create_pext (p, tstop):
         'prng_seedcore': int(p['prng_seedcore_evprox_late']),
         'lamtha_space': 3.,
         'loc': 'proximal',
+        'sync_evinput': p['sync_evinput']
     }
 
     # this needs to create many feeds
