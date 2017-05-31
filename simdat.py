@@ -176,7 +176,10 @@ class SIMCanvas (FigureCanvas):
       yl = ax.get_ylim()
       cmap=plt.get_cmap('nipy_spectral')
       csm = plt.cm.ScalarMappable(cmap=cmap);
-      csm.set_clim((0,shp[1]))
+      if shp[1] == 2:
+        csm.set_clim((0,10))
+      else:
+        csm.set_clim((0,shp[1]))
 
       errtot = 0.0
 
@@ -184,7 +187,10 @@ class SIMCanvas (FigureCanvas):
       dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
 
       for c in range(1,shp[1],1): 
-        clr = csm.to_rgba(c)
+        if shp[1] == 2:
+          clr = csm.to_rgba(int(np.random.RandomState().uniform(0,10,1)))
+        else:
+          clr = csm.to_rgba(c)
 
         ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4)
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
