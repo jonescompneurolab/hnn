@@ -30,9 +30,7 @@ ntrial = 0; tstop = -1; outparamf = voltpath = paramf = '';
 maxperty = 10 # how many cells of a type to draw
 
 for i in range(len(sys.argv)):
-  if sys.argv[i].endswith('.pkl'):
-    voltpath = sys.argv[i]
-  elif sys.argv[i].endswith('.param'):
+  if sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
     tstop = paramrw.quickgetprm(paramf,'tstop',float)
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
@@ -40,20 +38,19 @@ for i in range(len(sys.argv)):
   elif sys.argv[i] == 'maxperty':
     maxperty = int(sys.argv[i])
 
-ncell = len(net.cells)
+if ntrial <= 1:
+  voltpath = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma.pkl') 
+else:
+  voltpath = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_1.pkl') 
 
 invertedax = False
 
 def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
   global invertedax
-  lax = []
   row = 0
   ax = fig.add_subplot(G[row:-1,:])
-
-  lax.append(ax)
-
-  dcnt = {}
-  
+  lax = [ax]
+  dcnt = {} # counts number of times cell of a type drawn  
   vtime = dvolt['vtime']
   yoff = 0
   # print(dvolt.keys())
@@ -103,7 +100,10 @@ class VoltCanvas (FigureCanvas):
 
   def plot (self):
     if self.index == 0:
-      dvolt = pickle.load(open(voltpath,'rb'))
+      if ntrial == 1:
+        dvolt = pickle.load(open(voltpath,'rb'))
+      else:
+        dvolt = pickle.load(open(voltpath,'rb'))
       self.lax = drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
     else:
       voltpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_'+str(self.index)+'.pkl') 
@@ -155,12 +155,7 @@ class VoltGUI (QMainWindow):
     self.cb = QComboBox(self)
     self.grid.addWidget(self.cb,2,0,1,4)
 
-    if ntrial > 1:
-      self.cb.addItem('Show All Trials')
-      for i in range(ntrial):
-        self.cb.addItem('Show Trial ' + str(i+1))
-    else:
-      self.cb.addItem('All Trials')
+    for i in range(ntrial): self.cb.addItem('Trial ' + str(i+1))
     self.cb.activated[int].connect(self.onActivated) 
 
     # need a separate widget to put grid on
@@ -172,10 +167,7 @@ class VoltGUI (QMainWindow):
 
   def onActivated(self, idx):
     self.index = idx
-    if self.index == 0:
-      self.statusBar().showMessage('Loading data from all trials.')
-    else:
-      self.statusBar().showMessage('Loading data from trial ' + str(self.index) + '.')
+    self.statusBar().showMessage('Loading data from trial ' + str(self.index+1) + '.')
     self.m.index = self.index
     self.initCanvas()
     self.m.plot()

@@ -883,10 +883,10 @@ class HNNGUI (QMainWindow):
   def showAboutDialog (self):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
 
-  def showSomaVPlot (self): # visvolt.py not implemented yet
+  def showSomaVPlot (self): 
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'visvolt.py',paramf,os.path.join(basedir,'vsoma.pkl')]
+    lcmd = ['python', 'visvolt.py',paramf]
     if debug: print('visvolt cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
