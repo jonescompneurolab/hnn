@@ -57,6 +57,16 @@ def updatedat (paramf):
   except:
     print('updatedat ERR: exception in getting input files. paramf:',paramf)
 
+def getscalefctr (paramf):
+  try:
+    xx = quickgetprm(paramf,'dipole_scalefctr',float)
+    if type(xx) == float: return xx
+  except:
+    pass
+  if 'dipole_scalefctr' in dconf:
+    return dconf['dipole_scalefctr']
+  return 30e3
+
 # draw raster to standalone matplotlib figure
 def drawraster ():  
   if 'spk' in ddat:
@@ -255,8 +265,7 @@ class SIMCanvas (FigureCanvas):
       if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
-      if 'dipole_scalefctr' in dconf: scalefctr = dconf['dipole_scalefctr']
-      else: scalefctr = 30e3
+      scalefctr = getscalefctr(self.paramf)
       ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
       ax.set_xlim(xl); ax.set_ylim(yl)
 

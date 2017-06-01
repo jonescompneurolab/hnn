@@ -385,7 +385,7 @@ class RunParamDialog (DictDialog):
 
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
                              ('dt', 0.025), # timestep
-                             ('celsius',6.3), # temperature
+                             # ('celsius',6.3), # temperature
                              ('N_trials',0)]) # number of trials
                              # cvode - not currently used by simulation
 
@@ -411,7 +411,7 @@ class RunParamDialog (DictDialog):
 
     self.addtransvar('tstop','Duration (ms)')
     self.addtransvar('dt','Integration timestep (ms)')
-    self.addtransvar('celsius','Temperature (C)')
+    #self.addtransvar('celsius','Temperature (C)')
     self.addtransvar('N_trials','Trials')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')

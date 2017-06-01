@@ -603,6 +603,8 @@ class L5Pyr(Pyr):
                     'lamtha': p_ext['lamtha_space']
                 }
 
+                #print('L5pyr:',type,'w:',nc_dict['A_weight'])
+
                 if p_ext['loc'] is 'proximal':
                     self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal2_ampa))
                     self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal3_ampa))
