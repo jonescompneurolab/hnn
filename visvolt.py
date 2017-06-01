@@ -17,9 +17,6 @@ import matplotlib.gridspec as gridspec
 from neuron import h
 from run import net
 import paramrw
-from filt import boxfilt, hammfilt
-import spikefn
-from math import ceil
 import pickle
 
 # colors for the different cell types
@@ -28,7 +25,9 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; outparamf = voltpath = paramf = ''; EvokedInputs = OngoingInputs = False; 
+ntrial = 0; tstop = -1; outparamf = voltpath = paramf = ''; 
+
+maxperty = 10 # how many cells of a type to draw
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.pkl'):
@@ -37,35 +36,48 @@ for i in range(len(sys.argv)):
     paramf = sys.argv[i]
     tstop = paramrw.quickgetprm(paramf,'tstop',float)
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-    EvokedInputs = paramrw.usingEvokedInputs(paramf)
-    OngoingInputs = paramrw.usingOngoingInputs(paramf)
     outparamf = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
+  elif sys.argv[i] == 'maxperty':
+    maxperty = int(sys.argv[i])
 
 ncell = len(net.cells)
 
+invertedax = False
+
 def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
+  global invertedax
   lax = []
   row = 0
   ax = fig.add_subplot(G[row:-1,:])
 
   lax.append(ax)
+
+  dcnt = {}
   
   vtime = dvolt['vtime']
   yoff = 0
-  print(dvolt.keys())
+  # print(dvolt.keys())
   for gid,it in dvolt.items():
     ty,vsoma = it[0],it[1]
     # print('ty:',ty,'gid:',gid)
     if type(gid) != int: continue
-    ax.plot(vtime, vsoma + yoff, dclr[ty], linewidth = 1)
+    if ty not in dcnt: dcnt[ty] = 1
+    if dcnt[ty] > maxperty: continue
+    ax.plot(vtime, -vsoma + yoff, dclr[ty], linewidth = 1)
     yoff += max(vsoma) - min(vsoma)
+    dcnt[ty] += 1
             
   white_patch = mpatches.Patch(color='white', label='L2Basket')
   green_patch = mpatches.Patch(color='green', label='L2Pyr')
   red_patch = mpatches.Patch(color='red', label='L5Pyr')
   blue_patch = mpatches.Patch(color='blue', label='L5Basket')
   ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
-  # ax.set_ylim((-1,ncell+1))
+
+  if not invertedax: 
+    ax.invert_yaxis()
+    invertedax = True
+
+  ax.set_yticks([])
 
   ax.set_facecolor('k')
   ax.grid(True)
@@ -87,16 +99,7 @@ class VoltCanvas (FigureCanvas):
     self.G = gridspec.GridSpec(10,1)
     self.plot()
 
-  def clearaxes (self):
-    try:
-      for ax in self.lax:
-        ax.set_yticks([])
-        ax.cla()
-    except:
-      pass
-
   def plot (self):
-    global haveinputs,extinputs
     if self.index == 0:
       dvolt = pickle.load(open(voltpath,'rb'))
       self.lax = drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
@@ -105,7 +108,6 @@ class VoltCanvas (FigureCanvas):
       dvolttrial = pickle.load(open(voltpathtrial,'rb'))
       self.lax=drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
     self.draw()
-
 
 class VoltGUI (QMainWindow):
   def __init__ (self):
