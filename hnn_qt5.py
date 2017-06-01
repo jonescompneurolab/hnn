@@ -938,7 +938,7 @@ class HNNGUI (QMainWindow):
     viewMenu.addAction(viewRasterAction)
     viewSomaVAction = QAction('View Soma Voltages',self)
     viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
-    # viewSomaVAction.triggered.connect(self.showSomaVPlot)
+    viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
     viewNetAction = QAction('View Network',self)
     viewNetAction.setStatusTip('View Model Network.')
