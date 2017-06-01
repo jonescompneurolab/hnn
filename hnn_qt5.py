@@ -876,6 +876,14 @@ class HNNGUI (QMainWindow):
       except:
         print('Could not plot data from ', fn[0])
 
+  def clearDataFile (self):
+    import simdat
+    self.m.clearlextdatobj()
+    self.extdata = None
+    self.extdataf = None
+    if 'extdata' in simdat.ddat: del simdat.ddat['extdata']
+    self.m.draw()
+
   def setparams (self):
     if self.baseparamwin:
       self.baseparamwin.show()
@@ -921,11 +929,17 @@ class HNNGUI (QMainWindow):
     loadDataFile.setStatusTip('Load (dipole) data file.')
     loadDataFile.triggered.connect(self.loadDataFileDialog)
 
+    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file.', self)
+    clearDataFileAct.setShortcut('Ctrl+C')
+    clearDataFileAct.setStatusTip('Clear (dipole) data file.')
+    clearDataFileAct.triggered.connect(self.clearDataFile)
+
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
+    fileMenu.addAction(clearDataFileAct)
     fileMenu.addAction(exitAction)
 
     # view menu - drawing/visualization

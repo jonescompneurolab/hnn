@@ -193,9 +193,11 @@ class SIMCanvas (FigureCanvas):
       # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
       dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
 
+      self.lextdatobj = []
+
       for c in range(1,shp[1],1): 
         clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
-        ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4)
+        self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
         err0 = rmse(dat[:,c], dpldown)
@@ -206,17 +208,15 @@ class SIMCanvas (FigureCanvas):
 
         tx,ty=dat[fx,0],dat[fx,c]
         txt='RMSE:' + str(round(err0,2))
-        ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold')
+        self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
       ax.set_ylim(yl)
 
       tx,ty=0,0
       errtot /= (shp[1]-1)
       txt='Avg. RMSE:' + str(round(errtot,2))
-      try:
+      if hasattr(self,'annot_avg'):
         self.annot_avg.set_visible(False)
         del self.annot_avg
-      except:
-        pass
       self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
       print(txt)
     except:
@@ -224,6 +224,17 @@ class SIMCanvas (FigureCanvas):
       return False
     return True
 
+  def clearlextdatobj (self):
+    if hasattr(self,'lextdatobj'):
+      for o in self.lextdatobj:
+        try:
+          o.set_visible(False)
+        except:
+          o[0].set_visible(False)
+      del self.lextdatobj
+    if hasattr(self,'annot_avg'):
+      self.annot_avg.set_visible(False)
+      del self.annot_avg
 
   def plotsimdat (self):
 
