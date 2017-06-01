@@ -201,6 +201,7 @@ def get_params_default ():
         't0_pois': 0.,
         'T_pois': -1,
         'dt': 0.025,
+        'celsius': 6.3
     }
 
     # grab cell-specific params and update p accordingly
