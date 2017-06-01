@@ -866,7 +866,7 @@ class HNNGUI (QMainWindow):
         self.extdata = np.loadtxt(fn[0])
         self.extdataf = fn[0] # data file
         simdat.ddat['extdata'] = self.extdata
-        print('simdat.ddat.keys():',simdat.ddat.keys())
+        # print('simdat.ddat.keys():',simdat.ddat.keys())
         print('Loaded data in ', fn[0])
       except:
         print('Could not load data in ', fn[0])
@@ -1093,6 +1093,12 @@ class HNNGUI (QMainWindow):
     self.toolbar = NavigationToolbar(self.m, self)
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
+    if hasattr(self, 'extdata'):
+      if self.extdata is not None:      
+        import simdat
+        simdat.ddat['extdata'] = self.extdata
+        self.m.plotextdat()
+        self.m.draw()
 
   def controlsim (self):
     if self.runningsim:
