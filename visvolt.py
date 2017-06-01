@@ -73,9 +73,10 @@ def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
   blue_patch = mpatches.Patch(color='blue', label='L5Basket')
   ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
 
-  if not invertedax: 
-    ax.invert_yaxis()
-    invertedax = True
+  #if not invertedax: 
+  ax.set_ylim(ax.get_ylim()[::-1])
+  # ax.invert_yaxis()
+  invertedax = True
 
   ax.set_yticks([])
 
@@ -153,7 +154,7 @@ class VoltGUI (QMainWindow):
     self.cb = QComboBox(self)
     self.grid.addWidget(self.cb,2,0,1,4)
 
-    if ntrial > 0:
+    if ntrial > 1:
       self.cb.addItem('Show All Trials')
       for i in range(ntrial):
         self.cb.addItem('Show Trial ' + str(i+1))
