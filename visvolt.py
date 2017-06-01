@@ -63,6 +63,7 @@ def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
     if type(gid) != int: continue
     if ty not in dcnt: dcnt[ty] = 1
     if dcnt[ty] > maxperty: continue
+    #ax.plot(vtime, -vsoma + yoff, dclr[ty], linewidth = 1)
     ax.plot(vtime, -vsoma + yoff, dclr[ty], linewidth = 1)
     yoff += max(vsoma) - min(vsoma)
     dcnt[ty] += 1
