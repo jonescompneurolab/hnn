@@ -936,7 +936,7 @@ class HNNGUI (QMainWindow):
     viewRasterAction.setStatusTip('View Simulation Raster Plot.')
     viewRasterAction.triggered.connect(self.showRasterPlot)
     viewMenu.addAction(viewRasterAction)
-    viewSomaVAction = QAction('View Spiking Activity',self)
+    viewSomaVAction = QAction('View Soma Voltages',self)
     viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
     # viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
