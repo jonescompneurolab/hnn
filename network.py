@@ -362,7 +362,7 @@ class NetworkOnNode ():
 
     def get_vsoma (self):
       dsoma = {}
-      for cell in self.cells: dsoma[cell.gid] = (cell.celltype, cell.vsoma.to_python())
+      for cell in self.cells: dsoma[cell.gid] = (cell.celltype, np.array(cell.vsoma.to_python()))
       return dsoma
 
     # aggregate recording all the somatic voltages for pyr

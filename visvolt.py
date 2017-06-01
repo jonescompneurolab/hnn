@@ -20,6 +20,7 @@ import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
+import pickle
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -40,10 +41,71 @@ for i in range(len(sys.argv)):
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
     outparamf = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
-alldat = {}
-alldat[0] = (extinputs)
-
 ncell = len(net.cells)
+
+def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
+  lax = []
+  row = 0
+  ax = fig.add_subplot(G[row:-1,:])
+
+  lax.append(ax)
+  
+  vtime = dvolt['vtime']
+  yoff = 0
+  print(dvolt.keys())
+  for gid,it in dvolt.items():
+    ty,vsoma = it[0],it[1]
+    # print('ty:',ty,'gid:',gid)
+    if type(gid) != int: continue
+    ax.plot(vtime, vsoma + yoff, dclr[ty], linewidth = 1)
+    yoff += max(vsoma) - min(vsoma)
+            
+  white_patch = mpatches.Patch(color='white', label='L2Basket')
+  green_patch = mpatches.Patch(color='green', label='L2Pyr')
+  red_patch = mpatches.Patch(color='red', label='L5Pyr')
+  blue_patch = mpatches.Patch(color='blue', label='L5Basket')
+  ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
+  # ax.set_ylim((-1,ncell+1))
+
+  ax.set_facecolor('k')
+  ax.grid(True)
+  if tstop != -1: ax.set_xlim((0,tstop))
+  if i ==0: ax.set_title(ltextra)
+  ax.set_xlabel('Time (ms)');
+  return lax
+
+class VoltCanvas (FigureCanvas):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Voltage Viewer'):
+    FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
+    self.title = title
+    self.setParent(parent)
+    self.index = index
+    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+    FigureCanvas.updateGeometry(self)
+    self.paramf = paramf
+    self.invertedhistax = False
+    self.G = gridspec.GridSpec(10,1)
+    self.plot()
+
+  def clearaxes (self):
+    try:
+      for ax in self.lax:
+        ax.set_yticks([])
+        ax.cla()
+    except:
+      pass
+
+  def plot (self):
+    global haveinputs,extinputs
+    if self.index == 0:
+      dvolt = pickle.load(open(voltpath,'rb'))
+      self.lax = drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
+    else:
+      voltpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_'+str(self.index)+'.pkl') 
+      dvolttrial = pickle.load(open(voltpathtrial,'rb'))
+      self.lax=drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+    self.draw()
+
 
 class VoltGUI (QMainWindow):
   def __init__ (self):
