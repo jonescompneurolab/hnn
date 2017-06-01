@@ -166,13 +166,13 @@ class VoltGUI (QMainWindow):
     self.show()
 
   def onActivated(self, idx):
-    self.index = idx
-    self.statusBar().showMessage('Loading data from trial ' + str(self.index+1) + '.')
-    self.m.index = self.index
-    self.initCanvas()
-    self.m.plot()
-    self.statusBar().showMessage('')
-
+    if idx != self.index:
+      self.index = idx
+      self.statusBar().showMessage('Loading data from trial ' + str(self.index+1) + '.')
+      self.m.index = self.index
+      self.initCanvas()
+      self.m.plot()
+      self.statusBar().showMessage('')
 
 if __name__ == '__main__':
 

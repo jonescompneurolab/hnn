@@ -296,15 +296,16 @@ class SpikeGUI (QMainWindow):
     self.show()
 
   def onActivated(self, idx):
-    self.index = idx
-    if self.index == 0:
-      self.statusBar().showMessage('Loading data from all trials.')
-    else:
-      self.statusBar().showMessage('Loading data from trial ' + str(self.index) + '.')
-    self.m.index = self.index
-    self.initCanvas()
-    self.m.plot()
-    self.statusBar().showMessage('')
+    if idx != self.index:
+      self.index = idx
+      if self.index == 0:
+        self.statusBar().showMessage('Loading data from all trials.')
+      else:
+        self.statusBar().showMessage('Loading data from trial ' + str(self.index) + '.')
+      self.m.index = self.index
+      self.initCanvas()
+      self.m.plot()
+      self.statusBar().showMessage('')
 
 if __name__ == '__main__':
 
