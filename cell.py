@@ -13,7 +13,8 @@ from neuron import h
 # Create a cell class
 class Cell ():
 
-    def __init__ (self, soma_props):
+    def __init__ (self, gid, soma_props):
+      self.gid = gid
       self.pc = h.ParallelContext() # Parallel methods
       # make L_soma and diam_soma elements of self
       # Used in shape_change() b/c func clobbers self.soma.L, self.soma.diam
@@ -259,9 +260,9 @@ class Cell ():
 
 # Inhibitory cell class
 class BasketSingle (Cell):
-  def __init__ (self, pos, cell_name='Basket'):
+  def __init__ (self, gid, pos, cell_name='Basket'):
     self.props = self.__set_props(cell_name, pos)
-    Cell.__init__(self, self.props)
+    Cell.__init__(self, gid, self.props)
     # store cell name for later
     self.name = cell_name
     # set 3D shape - unused for now but a prototype
@@ -291,8 +292,8 @@ class BasketSingle (Cell):
 
 # General Pyramidal cell class
 class Pyr (Cell):
-    def __init__ (self, soma_props):
-        Cell.__init__(self, soma_props)
+    def __init__ (self, gid, soma_props):
+        Cell.__init__(self, gid, soma_props)
         # store cell_name as self variable for later use
         self.name = soma_props['name']
         # preallocate dict to store dends

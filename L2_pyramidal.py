@@ -19,19 +19,7 @@ import params_default as p_default
 # Layer 2 pyramidal cell class
 class L2Pyr(Pyr):
 
-    def basic_shape (self):
-      # THESE AND LENGHTHS MUST CHANGE TOGETHER!!!
-      pt3dclear=h.pt3dclear; pt3dadd=h.pt3dadd; soma = self.soma; dend = self.list_dend
-      pt3dclear(sec=soma); pt3dadd(-50, 765, 0, 1,sec=soma); pt3dadd(-50, 778, 0, 1,sec=soma)
-      pt3dclear(sec=dend[0]); pt3dadd(-50, 778, 0, 1,sec=dend[0]); pt3dadd(-50, 813, 0, 1,sec=dend[0])
-      pt3dclear(sec=dend[1]); pt3dadd(-50, 813, 0, 1,sec=dend[1]); pt3dadd(-250, 813, 0, 1,sec=dend[1])
-      pt3dclear(sec=dend[2]); pt3dadd(-50, 813, 0, 1,sec=dend[2]); pt3dadd(-50, 993, 0, 1,sec=dend[2])
-      pt3dclear(sec=dend[3]); pt3dadd(-50, 993, 0, 1,sec=dend[3]); pt3dadd(-50, 1133, 0, 1,sec=dend[3])
-      pt3dclear(sec=dend[4]); pt3dadd(-50, 765, 0, 1,sec=dend[4]); pt3dadd(-50, 715, 0, 1,sec=dend[4])
-      pt3dclear(sec=dend[5]); pt3dadd(-50, 715, 0, 1,sec=dend[5]); pt3dadd(-156, 609, 0, 1,sec=dend[5])
-      pt3dclear(sec=dend[6]); pt3dadd(-50, 715, 0, 1,sec=dend[6]); pt3dadd(56, 609, 0, 1,sec=dend[6])
-
-    def __init__(self, pos, p={}):
+    def __init__(self, gid, pos, p={}):
         # Get default L2Pyr params and update them with any corresponding params in p
         p_all_default = p_default.get_L2Pyr_params_default()
         self.p_all = paramrw.compare_dictionaries(p_all_default, p)
@@ -43,7 +31,7 @@ class L2Pyr(Pyr):
         # p_dend_props, dend_names = self.__get_dend_props()
 
         # usage: Pyr.__init__(self, soma_props)
-        Pyr.__init__(self, p_soma)
+        Pyr.__init__(self, gid, p_soma)
         self.celltype = 'L2_pyramidal'
 
         # geometry
@@ -239,8 +227,20 @@ class L2Pyr(Pyr):
 
         self.basic_shape() # translated from original hoc (2009 model)
 
+    def basic_shape (self):
+      # THESE AND LENGHTHS MUST CHANGE TOGETHER!!!
+      pt3dclear=h.pt3dclear; pt3dadd=h.pt3dadd; soma = self.soma; dend = self.list_dend
+      pt3dclear(sec=soma); pt3dadd(-50, 765, 0, 1,sec=soma); pt3dadd(-50, 778, 0, 1,sec=soma)
+      pt3dclear(sec=dend[0]); pt3dadd(-50, 778, 0, 1,sec=dend[0]); pt3dadd(-50, 813, 0, 1,sec=dend[0])
+      pt3dclear(sec=dend[1]); pt3dadd(-50, 813, 0, 1,sec=dend[1]); pt3dadd(-250, 813, 0, 1,sec=dend[1])
+      pt3dclear(sec=dend[2]); pt3dadd(-50, 813, 0, 1,sec=dend[2]); pt3dadd(-50, 993, 0, 1,sec=dend[2])
+      pt3dclear(sec=dend[3]); pt3dadd(-50, 993, 0, 1,sec=dend[3]); pt3dadd(-50, 1133, 0, 1,sec=dend[3])
+      pt3dclear(sec=dend[4]); pt3dadd(-50, 765, 0, 1,sec=dend[4]); pt3dadd(-50, 715, 0, 1,sec=dend[4])
+      pt3dclear(sec=dend[5]); pt3dadd(-50, 715, 0, 1,sec=dend[5]); pt3dadd(-156, 609, 0, 1,sec=dend[5])
+      pt3dclear(sec=dend[6]); pt3dadd(-50, 715, 0, 1,sec=dend[6]); pt3dadd(56, 609, 0, 1,sec=dend[6])
+
     # Adds biophysics to soma
-    def __biophys_soma(self):
+    def __biophys_soma (self):
         # set soma biophysics specified in Pyr
         # self.pyr_biophys_soma()
 
@@ -257,7 +257,7 @@ class L2Pyr(Pyr):
         self.soma.gbar_km = self.p_all['L2Pyr_soma_gbar_km']
 
     # Defining biophysics for dendrites
-    def __biophys_dends(self):
+    def __biophys_dends (self):
         # set dend biophysics
         # iterate over keys in self.dends and set biophysics for each dend
         for key in self.dends:
@@ -298,7 +298,7 @@ class L2Pyr(Pyr):
             # sec.insert('km')
             # sec.gbar_km = 250
 
-    def __synapse_create(self, p_syn):
+    def __synapse_create (self, p_syn):
         # creates synapses onto this cell
         # Somatic synapses
         self.synapses = {
@@ -338,7 +338,7 @@ class L2Pyr(Pyr):
         # self.apicaltuft_nmda = self.syn_nmda_create(self.dends['apical_tuft'](0.5))
 
     # collect receptor-type-based connections here
-    def parconnect(self, gid, gid_dict, pos_dict, p):
+    def parconnect (self, gid, gid_dict, pos_dict, p):
         # init dict of dicts
         # nc_dict for ampa and nmda may be the same for this cell type
         nc_dict = {
@@ -408,7 +408,7 @@ class L2Pyr(Pyr):
         #     self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.synapes['soma_gabab']))
 
     # may be reorganizable
-    def parreceive(self, gid, gid_dict, pos_dict, p_ext):
+    def parreceive (self, gid, gid_dict, pos_dict, p_ext):
         for gid_src, p_src, pos in zip(gid_dict['extinput'], p_ext, pos_dict['extinput']):
             # Check if AMPA params defined in p_src
             if 'L2Pyr_ampa' in p_src.keys():
@@ -450,7 +450,7 @@ class L2Pyr(Pyr):
 
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
-    def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
+    def parreceive_ext (self, type, gid, gid_dict, pos_dict, p_ext):
         if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
@@ -516,7 +516,7 @@ class L2Pyr(Pyr):
     # Define 3D shape and position of cell. By default neuron uses xy plane for
     # height and xz plane for depth. This is opposite for model as a whole, but
     # convention is followed in this function for ease use of gui.
-    def __set_3Dshape(self):
+    def __set_3Dshape (self):
         # set 3d shape of soma by calling shape_soma from class Cell
         # print("Warning: You are setiing 3d shape geom. You better be doing")
         # print("gui analysis and not numerical analysis!!")
@@ -599,6 +599,3 @@ class L2Pyr(Pyr):
                            h.diam3d(i))
 
         h.pop_section()
-
-if __name__ == '__main__':
-    pass

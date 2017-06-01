@@ -12,10 +12,10 @@ from cell import BasketSingle
 
 # Layer 2 basket cell class
 class L2Basket(BasketSingle):
-    def __init__(self, pos):
+    def __init__(self, gid, pos):
         # BasketSingle.__init__(self, pos, L, diam, Ra, cm)
         # Note: Basket cell properties set in BasketSingle())
-        BasketSingle.__init__(self, pos, 'L2Basket')
+        BasketSingle.__init__(self, gid, pos, 'L2Basket')
         self.celltype = 'L2_basket'
 
         self.__synapse_create()

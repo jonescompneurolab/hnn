@@ -55,7 +55,7 @@ class L5Pyr(Pyr):
       dend[7].diam = 8.5
       self.set_dend_props(p_dend) # resets length,diam,etc. based on param specification
 
-    def __init__(self, pos, p={}):
+    def __init__(self, gid, pos, p={}):
         # Get default L5Pyr params and update them with corresponding params in p
         p_all_default = p_default.get_L5Pyr_params_default()
         self.p_all = paramrw.compare_dictionaries(p_all_default, p)
@@ -65,7 +65,7 @@ class L5Pyr(Pyr):
         p_dend = self.__get_dend_props()
         p_syn = self.__get_syn_props()
 
-        Pyr.__init__(self, p_soma)
+        Pyr.__init__(self, gid, p_soma)
         self.celltype = 'L5_pyramidal'
 
         # Geometry

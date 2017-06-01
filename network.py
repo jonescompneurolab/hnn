@@ -99,7 +99,7 @@ class NetworkOnNode ():
       self.__record_spikes()
 
     # creates the immutable source list along with corresponding numbers of cells
-    def __create_src_list(self):
+    def __create_src_list (self):
       # base source list of tuples, name and number, in this order
       self.cellname_list = [
         'L2_basket',
@@ -119,7 +119,7 @@ class NetworkOnNode ():
       return src_list
 
     # Creates cells and grid
-    def __create_coords_pyr(self):
+    def __create_coords_pyr (self):
       """ pyr grid is the immutable grid, origin now calculated in relation to feed
       """
       xrange = np.arange(self.gridpyr['x'])
@@ -129,7 +129,7 @@ class NetworkOnNode ():
       self.pos_dict['L5_pyramidal'] = [pos for pos in it.product(xrange, yrange, [self.zdiff])]
 
     # create basket cell coords based on pyr grid
-    def __create_coords_basket(self):
+    def __create_coords_basket (self):
       # define relevant x spacings for basket cells
       xzero = np.arange(0, self.gridpyr['x'], 3)
       xone = np.arange(1, self.gridpyr['x'], 3)
@@ -145,7 +145,7 @@ class NetworkOnNode ():
       self.pos_dict['L5_basket'] = [pos_xy + (self.zdiff,) for pos_xy in coords_sorted]
 
     # creates origin AND creates external input coords
-    def __create_coords_extinput(self):
+    def __create_coords_extinput (self):
       """ (same thing for now but won't fix because could change)
       """
       xrange = np.arange(self.gridpyr['x'])
@@ -163,7 +163,7 @@ class NetworkOnNode ():
         self.pos_dict[key] = [self.origin for i in range(self.N_cells)]
 
     # cell counting routine
-    def __count_cells(self):
+    def __count_cells (self):
       # cellname list is used *only* for this purpose for now
       for src in self.cellname_list:
         # if it's a cell, then add the number to total number of cells
@@ -172,14 +172,14 @@ class NetworkOnNode ():
 
     # general counting method requires pos_dict is correct for each source
     # and that all sources are represented
-    def __count_extsrcs(self):
+    def __count_extsrcs (self):
       # all src numbers are based off of length of pos_dict entry
       # generally done here in lieu of upstream changes
       for src in self.extname_list:
         self.N[src] = len(self.pos_dict[src])
 
     # creates gid dicts and pos_lists
-    def __create_gid_dict(self):
+    def __create_gid_dict (self):
       # initialize gid index gid_ind to start at 0
       gid_ind = [0]
       # append a new gid_ind based on previous and next cell count
@@ -199,7 +199,7 @@ class NetworkOnNode ():
 
     # this happens on EACH node
     # creates self.__gid_list for THIS node
-    def __gid_assign(self):
+    def __gid_assign (self):
       # round robin assignment of gids
       for gid in range(self.rank, self.N_cells, self.n_hosts):
         # set the cell gid
@@ -224,7 +224,7 @@ class NetworkOnNode ():
       self.__gid_list.sort()
 
     # reverse lookup of gid to type
-    def gid_to_type(self, gid):
+    def gid_to_type (self, gid):
       for gidtype, gids in self.gid_dict.items():
         if gid in gids:
           return gidtype
@@ -279,26 +279,26 @@ class NetworkOnNode ():
           # create cells based on loc property
           # creates a NetCon object internally to Neuron
           if type == 'L2_pyramidal':
-            self.cells.append(L2Pyr(pos, self.p))
+            self.cells.append(L2Pyr(gid, pos, self.p))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # run the IClamp function here
             # create_all_IClamp() is defined in L2Pyr (etc)
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_pyramidal':
-            self.cells.append(L5Pyr(pos, self.p))
+            self.cells.append(L5Pyr(gid, pos, self.p))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L2_basket':
-            self.cells.append(L2Basket(pos))
+            self.cells.append(L2Basket(gid, pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # also run the IClamp for L2_basket
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_basket':
-            self.cells.append(L5Basket(pos))
+            self.cells.append(L5Basket(gid, pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
@@ -331,7 +331,7 @@ class NetworkOnNode ():
     # for each item in the list, do a:
     # nc = pc.gid_connect(source_gid, target_syn), weight,delay
     # Both for synapses AND for external inputs
-    def __parnet_connect(self):
+    def __parnet_connect (self):
       # loop over target zipped gids and cells
       # cells has NO extinputs anyway. also no extgausses
       for gid, cell in zip(self.__gid_list, self.cells):
@@ -352,7 +352,7 @@ class NetworkOnNode ():
             cell.parreceive_ext(type, gid, self.gid_dict, self.pos_dict, p_type)
 
     # setup spike recording for this node
-    def __record_spikes(self):
+    def __record_spikes (self):
       # iterate through gids on this node and
       # set to record spikes in spike time vec and id vec
       # agnostic to type of source, will sort that out later
@@ -360,8 +360,13 @@ class NetworkOnNode ():
         if self.pc.gid_exists(gid):
           self.pc.spike_record(gid, self.spiketimes, self.spikegids)
 
+    def get_vsoma (self):
+      dsoma = {}
+      for cell in self.cells: dsoma[cell.gid] = (cell.celltype, cell.vsoma.to_python())
+      return dsoma
+
     # aggregate recording all the somatic voltages for pyr
-    def aggregate_currents(self):
+    def aggregate_currents (self):
       """ this method must be run post-integration
       """
       # this is quite ugly
@@ -381,7 +386,7 @@ class NetworkOnNode ():
             self.current['L2Pyr_soma'].add(I_soma)
 
     # recording debug function
-    def rec_debug(self, rank_exec, gid):
+    def rec_debug (self, rank_exec, gid):
       # only execute on this rank, make sure called properly
       if rank_exec == self.rank:
         # only if the gid exists here
@@ -393,7 +398,7 @@ class NetworkOnNode ():
           return v
 
     # initializes the state closer to baseline
-    def state_init(self):
+    def state_init (self):
       for cell in self.cells:
         seclist = h.SectionList()
         seclist.wholetree(sec=cell.soma)

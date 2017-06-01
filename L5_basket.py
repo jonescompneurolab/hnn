@@ -12,9 +12,9 @@ from cell import BasketSingle
 
 # Layer 5 basket cell class
 class L5Basket(BasketSingle):
-    def __init__(self, pos):
+    def __init__(self, gid, pos):
         # Note: Cell properties are set in BasketSingle()
-        BasketSingle.__init__(self, pos, 'L5Basket')
+        BasketSingle.__init__(self, gid, pos, 'L5Basket')
         self.celltype = 'L5_basket'
 
         self.__synapse_create()

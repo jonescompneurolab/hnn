@@ -881,6 +881,13 @@ class HNNGUI (QMainWindow):
   def showAboutDialog (self):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
 
+  def showSomaVPlot (self): # visvolt.py not implemented yet
+    global basedir
+    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    lcmd = ['python', 'visvolt.py',paramf,os.path.join(basedir,'vsoma.pkl')]
+    if debug: print('visvolt cmd:',lcmd)
+    Popen(lcmd) # nonblocking
+
   def showRasterPlot (self):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
@@ -921,15 +928,19 @@ class HNNGUI (QMainWindow):
 
     # view menu - drawing/visualization
     viewMenu = menubar.addMenu('&View')
-    viewRasterAction = QAction('View Spiking Activity.',self)
-    viewRasterAction.setStatusTip('View Simulation Raster Plot.')
-    viewRasterAction.triggered.connect(self.showRasterPlot)
-    viewMenu.addAction(viewRasterAction)
-    viewDipoleAction = QAction('View Dipoles.',self)
+    viewDipoleAction = QAction('View Dipoles',self)
     viewDipoleAction.setStatusTip('View Simulation Dipoles.')
     viewDipoleAction.triggered.connect(self.showDipolePlot)
     viewMenu.addAction(viewDipoleAction)
-    viewNetAction = QAction('View Network.',self)
+    viewRasterAction = QAction('View Spiking Activity',self)
+    viewRasterAction.setStatusTip('View Simulation Raster Plot.')
+    viewRasterAction.triggered.connect(self.showRasterPlot)
+    viewMenu.addAction(viewRasterAction)
+    viewSomaVAction = QAction('View Spiking Activity',self)
+    viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
+    # viewSomaVAction.triggered.connect(self.showSomaVPlot)
+    viewMenu.addAction(viewSomaVAction)
+    viewNetAction = QAction('View Network',self)
     viewNetAction.setStatusTip('View Model Network.')
     viewNetAction.triggered.connect(self.showvisnet)
     viewMenu.addAction(viewNetAction)

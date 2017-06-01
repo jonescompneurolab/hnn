@@ -86,6 +86,23 @@ def prsimtime ():
   sys.stdout.write('\rSimulation time: {0} ms...'.format(round(h.t,2)))
   sys.stdout.flush()
 
+# save somatic voltage of all cells to pkl object
+def save_vsoma ():
+  for host in range(int(pc.nhost())):
+    if host == pcID:
+      dsoma = net.get_vsoma()
+      messageid = pc.pack(dsoma) # create a message ID and store this value
+      pc.post(host,messageid) # post the message
+  if pcID==0:
+    dsomaout = {}
+    for host in range(int(pc.nhost())):
+      pc.take(host)
+      dsoma_node = pc.upkpyobj()
+      for k,v in dsoma_node.items(): dsomaout[k] = v
+    dsomaout['vtime'] = t_vec.to_python()
+    # print('dsomaout.keys():',dsomaout.keys(),'file:',doutf['file_vsoma'])
+    pickle.dump(dsomaout,open(doutf['file_vsoma'],'wb'))
+
 #
 def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   global doutf
@@ -121,6 +138,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   spikes_write(net, file_spikes_tmp)
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
+  if p['save_vsoma']: save_vsoma()
 
 #
 def runanalysis (prm, fparam, fdpl, fspec):
@@ -169,6 +187,7 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'figspec': ('spec','.png'),
                'figspk': ('spk','.png'),
                'param': ('param','.txt'),
+               'vsoma': ('vsoma','.pkl')
              }
   if ntrial == 0 or key == 'param': # param file currently identical for all trials
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
@@ -187,6 +206,7 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   doutf['file_spec'] = getfname(ddir, 'rawspec',trial,ntrial)
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
+  doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
   # if pcID==0: print(doutf)
   return doutf
 
@@ -348,6 +368,8 @@ def runsim ():
   net.aggregate_currents() # aggregate the currents independently on each proc
   # combine net.current{} variables on each proc
   pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
+
+  pc.barrier()
 
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
