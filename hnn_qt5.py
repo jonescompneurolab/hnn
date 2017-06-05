@@ -934,9 +934,15 @@ class HNNGUI (QMainWindow):
     clearDataFileAct.setStatusTip('Clear (dipole) data file.')
     clearDataFileAct.triggered.connect(self.clearDataFile)
 
+    runSimAct = QAction('Run simulation.', self)
+    runSimAct.setShortcut('Ctrl+S')
+    runSimAct.setStatusTip('Run simulation.')
+    runSimAct.triggered.connect(self.controlsim)
+
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
+    fileMenu.addAction(runSimAct)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
