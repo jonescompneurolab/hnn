@@ -331,10 +331,10 @@ class PoissonInputParamDialog (DictDialog):
 
   def initd (self):
 
-    self.dL2 = OrderedDict([('L2Basket_Pois_A_weight', 0.),
-                            ('L2Basket_Pois_lamtha', 0.),
-                            ('L2Pyr_Pois_A_weight', 0.),
-                            ('L2Pyr_Pois_lamtha', 0.)])
+    self.dL2 = OrderedDict([('L2Pyr_Pois_A_weight', 0.),
+                            ('L2Pyr_Pois_lamtha', 0.),
+                            ('L2Basket_Pois_A_weight', 0.),
+                            ('L2Basket_Pois_lamtha', 0.)])
 
     self.dL5 = OrderedDict([('L5Pyr_Pois_A_weight', 0.),
                             ('L5Pyr_Pois_lamtha', 0.),
@@ -344,20 +344,16 @@ class PoissonInputParamDialog (DictDialog):
     self.dtiming = OrderedDict([('t0_pois', 0.),
                                 ('T_pois', -1)])
 
-    """
-    for d in [self.dproxearly, self.dproxlate, self.ddist]:
+    self.addtransvar('t0_pois','Start time (ms)')
+    self.addtransvar('T_pois','Stop time (ms)')
+
+    for d in [self.dL2, self.dL5]:
       for k in d.keys():
-        if k.startswith('gbar'):
-          self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
-        elif k.startswith('t'):
-          self.addtransvar(k,'start (ms)')
-        elif k.startswith('sigma'):
-          self.addtransvar(k,'sigma (ms)')
-    
-    self.addtransvar('sync_evinput', 'Synchronous Inputs')
-    self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
-    self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
-    """
+        cty = k.split('_')[0]
+        if k.endswith('weight'):
+          self.addtransvar(k, cty+ ' weight (nS)')
+        elif k.endswith('lamtha'):
+          self.addtransvar(k, cty+ ' wait (ms)')
 
     self.ldict = [self.dL2, self.dL5, self.dtiming]
     self.ltitle = ['Layer2', 'Layer5', 'Timing']
