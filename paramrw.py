@@ -689,14 +689,14 @@ def usingEvokedInputs (fparam):
   return False
 
 # get diff on 2 dictionaries
-def diffdict (d1, d2):
+def diffdict (d1, d2, verbose=True):
   print('d1,d2 num keys - ', len(d1.keys()), len(d2.keys()))
   for k in d1.keys():
     if not k in d2:
-      print(k, ' in d1, not in d2')
+      if verbose: print(k, ' in d1, not in d2')
   for k in d2.keys():  
     if not k in d1:
-      print(k, ' in d2, not in d1')
+      if verbose: print(k, ' in d2, not in d1')
   for k in d1.keys():
     if k in d2:
       if d1[k] != d2[k]:
