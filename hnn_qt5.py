@@ -325,6 +325,46 @@ class SynGainParamDialog (QDialog):
     self.setWindowTitle("Synaptic Gains")  
 
 # widget to specify ongoing input params (proximal, distal)
+class PoissonInputParamDialog (DictDialog):
+  def __init__ (self, parent, din):
+    super(PoissonInputParamDialog, self).__init__(parent,din)
+
+  def initd (self):
+
+    self.dL2 = OrderedDict([('L2Basket_Pois_A_weight', 0.),
+                            ('L2Basket_Pois_lamtha', 0.),
+                            ('L2Pyr_Pois_A_weight', 0.),
+                            ('L2Pyr_Pois_lamtha', 0.)])
+
+    self.dL5 = OrderedDict([('L5Pyr_Pois_A_weight', 0.),
+                            ('L5Pyr_Pois_lamtha', 0.),
+                            ('L5Basket_Pois_A_weight', 0.),
+                            ('L5Basket_Pois_lamtha', 0.)])
+
+    self.dtiming = OrderedDict([('t0_pois', 0.),
+                                ('T_pois', -1)])
+
+    """
+    for d in [self.dproxearly, self.dproxlate, self.ddist]:
+      for k in d.keys():
+        if k.startswith('gbar'):
+          self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
+        elif k.startswith('t'):
+          self.addtransvar(k,'start (ms)')
+        elif k.startswith('sigma'):
+          self.addtransvar(k,'sigma (ms)')
+    
+    self.addtransvar('sync_evinput', 'Synchronous Inputs')
+    self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
+    self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
+    """
+
+    self.ldict = [self.dL2, self.dL5, self.dtiming]
+    self.ltitle = ['Layer2', 'Layer5', 'Timing']
+    self.stitle = 'Set Poisson Inputs'
+
+
+# widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(EvokedInputParamDialog, self).__init__(parent,din)
@@ -705,7 +745,8 @@ class BaseParamDialog (QDialog):
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
-    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin]
+    self.poisparamwin = PoissonInputParamDialog(self,None)
+    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin]
     self.updateDispParam()
 
   def updateDispParam (self):
@@ -729,6 +770,7 @@ class BaseParamDialog (QDialog):
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
   def setevparam (self): self.evparamwin.show()
+  def setpoisparam (self): self.poisparamwin.show()
 
   def initUI (self):
 
@@ -782,6 +824,11 @@ class BaseParamDialog (QDialog):
     self.btnev.resize(self.btnev.sizeHint())
     self.btnev.clicked.connect(self.setevparam)
     grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
+
+    self.btnpois = QPushButton('Poisson Inputs',self)
+    self.btnpois.resize(self.btnpois.sizeHint())
+    self.btnpois.clicked.connect(self.setpoisparam)
+    grid.addWidget(self.btnpois, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
