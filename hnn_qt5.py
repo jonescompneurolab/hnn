@@ -1121,7 +1121,7 @@ class HNNGUI (QMainWindow):
     # self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
-    self.distbtn = QPushButton('Distal Drive\nNonLemniscal Thalamus',self)
+    self.distbtn = QPushButton('Distal Drive NonLemniscal\nThal./Cortical Feedback',self)
     self.distbtn.setIcon(QIcon("res/distfig.png"))
     # self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
