@@ -5,7 +5,7 @@
 # turns out some whitespace is valid for dicts!
 
 sim_prefix: gamma_L5rand_L2weak
-expmt_groups: {weak}
+expmt_groups: {gamma_L5rand_L2weak}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -21,7 +21,8 @@ L2Pyr_Pois_lamtha: 140.
 
 # L5: pois inputs
 L5Pyr_Pois_A_weight: 7.5e-3
-L5Pyr_Pois_lamtha: [10., 20.]
+#L5Pyr_Pois_lamtha: [10., 20.]
+L5Pyr_Pois_lamtha: 10.
 
 # L2: weak ping
 gbar_L2Pyr_L2Basket: 1.2e-3

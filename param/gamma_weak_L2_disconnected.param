@@ -5,7 +5,7 @@
 # turns out some whitespace is valid for dicts!
 
 sim_prefix: gamma_weak_L2_disconnected
-expmt_groups: {spike}
+expmt_groups: {gamma_weak_L2_disconnected}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
