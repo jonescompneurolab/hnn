@@ -1239,6 +1239,9 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('')
 
   def startsim (self, ntrial, ncore):
+
+    self.baseparamwin.saveparams() # make sure params saved
+
     print('Starting simulation. . .')
     self.runningsim = True
 
