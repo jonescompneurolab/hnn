@@ -4,7 +4,7 @@
 # np.arrays for everything else
 
 sim_prefix: gamma_L5ping_L2ping
-expmt_groups: {spike}
+expmt_groups: {gamma_L5ping_L2ping}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -15,7 +15,8 @@ tstop: 550.
 N_trials: 0
 
 # PING Params
-Itonic_A_L2Pyr_soma: L[1.7, 5., 4]
+#Itonic_A_L2Pyr_soma: L[1.7, 5., 4]
+Itonic_A_L2Pyr_soma: 4.0 
 Itonic_A_L5Pyr_soma: 6.
 
 # L2 params
