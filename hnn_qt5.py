@@ -324,7 +324,48 @@ class SynGainParamDialog (QDialog):
     self.setGeometry(150, 150, 270, 180)
     self.setWindowTitle("Synaptic Gains")  
 
-# widget to specify ongoing input params (proximal, distal)
+# widget to specify tonic inputs
+class TonicInputParamDialog (DictDialog):
+  def __init__ (self, parent, din):
+    super(TonicInputParamDialog, self).__init__(parent,din)
+
+  def initd (self):
+
+    self.dL2 = OrderedDict([
+      # IClamp params for L2Pyr
+      ('Itonic_A_L2Pyr_soma', 0.),
+      ('Itonic_t0_L2Pyr_soma', 0.),
+      ('Itonic_T_L2Pyr_soma', -1.),
+      # IClamp param for L2Basket
+      ('Itonic_A_L2Basket', 0.),
+      ('Itonic_t0_L2Basket', 0.),
+      ('Itonic_T_L2Basket', -1.)])
+
+    self.dL5 = OrderedDict([
+      # IClamp params for L5Pyr
+      ('Itonic_A_L5Pyr_soma', 0.),
+      ('Itonic_t0_L5Pyr_soma', 0.),
+      ('Itonic_T_L5Pyr_soma', -1.),
+      # IClamp param for L5Basket
+      ('Itonic_A_L5Basket', 0.),
+      ('Itonic_t0_L5Basket', 0.),
+      ('Itonic_T_L5Basket', -1.)])
+
+    for d in [self.dL2, self.dL5]:
+      for k in d.keys():
+        cty = k.split('_')[2]
+        if k.count('A') > 0:
+          self.addtransvar(k, cty + ' amplitude (nA)')
+        elif k.count('t0') > 0:
+          self.addtransvar(k, cty + ' start time (ms)')
+        elif k.count('T') > 0:
+          self.addtransvar(k, cty + ' stop time (ms)')
+
+    self.ldict = [self.dL2, self.dL5]
+    self.ltitle = ['Layer2', 'Layer5']
+    self.stitle = 'Set Tonic Inputs'
+
+# widget to specify ongoing poisson inputs
 class PoissonInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(PoissonInputParamDialog, self).__init__(parent,din)
@@ -742,7 +783,8 @@ class BaseParamDialog (QDialog):
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
     self.poisparamwin = PoissonInputParamDialog(self,None)
-    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin]
+    self.tonicparamwin = TonicInputParamDialog(self,None)
+    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin]
     self.updateDispParam()
 
   def updateDispParam (self):
@@ -767,6 +809,7 @@ class BaseParamDialog (QDialog):
   def setdistparam (self): self.distparamwin.show()
   def setevparam (self): self.evparamwin.show()
   def setpoisparam (self): self.poisparamwin.show()
+  def settonicparam (self): self.tonicparamwin.show()
 
   def initUI (self):
 
@@ -825,6 +868,11 @@ class BaseParamDialog (QDialog):
     self.btnpois.resize(self.btnpois.sizeHint())
     self.btnpois.clicked.connect(self.setpoisparam)
     grid.addWidget(self.btnpois, row, 0, 1, 2); row+=1
+
+    self.btntonic = QPushButton('Tonic Inputs',self)
+    self.btntonic.resize(self.btntonic.sizeHint())
+    self.btntonic.clicked.connect(self.settonicparam)
+    grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())

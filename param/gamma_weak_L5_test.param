@@ -4,7 +4,7 @@
 # np.arrays for everything else
 
 sim_prefix: gamma_weak_L5_test
-expmt_groups: {spike}
+expmt_groups: {gamma_weak_L5_test}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
