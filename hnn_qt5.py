@@ -1064,8 +1064,8 @@ class HNNGUI (QMainWindow):
     viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
     viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
-    viewNetAction = QAction('View Network',self)
-    viewNetAction.setStatusTip('View Model Network.')
+    viewNetAction = QAction('View Network (3D)',self)
+    viewNetAction.setStatusTip('View Model Network (3D).')
     viewNetAction.triggered.connect(self.showvisnet)
     viewMenu.addAction(viewNetAction)
 
@@ -1113,22 +1113,22 @@ class HNNGUI (QMainWindow):
 
     self.locbtn = QPushButton('Local Network\nConnections',self)
     self.locbtn.setIcon(QIcon("res/connfig.png"))
-    self.locbtn.clicked.connect(self.shownetparamwin)
+    # self.locbtn.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.locbtn,gRow,0,1,1)
 
     self.proxbtn = QPushButton('Proximal Drive\nThalamus',self)
     self.proxbtn.setIcon(QIcon("res/proxfig.png"))
-    self.proxbtn.clicked.connect(self.showproxparamwin)
+    # self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
     self.distbtn = QPushButton('Distal Drive\nNonLemniscal Thalamus',self)
     self.distbtn.setIcon(QIcon("res/distfig.png"))
-    self.distbtn.clicked.connect(self.showdistparamwin)
+    # self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
     self.netbtn = QPushButton('Model Visualization\n',self)
     self.netbtn.setIcon(QIcon("res/netfig.png"))
-    self.netbtn.clicked.connect(self.showvisnet)
+    # self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
 
     gRow += 1
@@ -1136,25 +1136,25 @@ class HNNGUI (QMainWindow):
     self.pixConn = QPixmap("res/connfig.png")
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setPixmap(self.pixConn)
-    self.pixConnlbl.clicked.connect(self.shownetparamwin)
+    # self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
     self.pixProx = QPixmap("res/proxfig.png")
     self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setPixmap(self.pixProx)
-    self.pixProxlbl.clicked.connect(self.showproxparamwin)
+    # self.pixProxlbl.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.pixProxlbl,gRow,1,1,1)
 
     self.pixDist = QPixmap("res/distfig.png")
     self.pixDistlbl = ClickLabel(self)
     self.pixDistlbl.setPixmap(self.pixDist)
-    self.pixDistlbl.clicked.connect(self.showdistparamwin)
+    # self.pixDistlbl.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.pixDistlbl,gRow,2,1,1)
 
     self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = ClickLabel(self)
     self.pixNetlbl.setPixmap(self.pixNet)
-    self.pixNetlbl.clicked.connect(self.showvisnet)
+    # self.pixNetlbl.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
 
