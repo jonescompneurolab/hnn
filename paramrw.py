@@ -689,6 +689,42 @@ def usingEvokedInputs (fparam):
           return True
   return False
 
+# check if using any poisson inputs 
+def usingPoissonInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  if 't0_pois' in d and 'T_pois' in d:
+    t0_pois = float(d['t0_pois'])
+    if t0_pois > tstop: return False
+    T_pois = float(d['T_pois'])
+    if t0_pois > T_pois and T_pois != -1.0:
+      return False
+  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
+    k = cty+'_Pois_A_weight'             
+    if k in d:
+      if float(d[k]) != 0.0: return True
+  return False
+
+# check if using any tonic (IClamp) inputs 
+def usingTonicInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
+    k = 'Itonic_A_' + cty + '_soma'
+    if k in d:
+      amp = float(d[k])
+      if amp != 0.0:
+        print(k,'amp != 0.0',amp)
+        k = 'Itonic_t0_' + cty
+        t0,t1 = 0.0,-1.0
+        if k in d: t0 = float(d[k])
+        k = 'Itonic_T_' + cty
+        if k in d: t1 = float(d[k])
+        if t0 > tstop: continue
+        print('t0:',t0,'t1:',t1)
+        if t0 < t1 or t1 == -1.0: return True
+  return False
+
 # get diff on 2 dictionaries
 def diffdict (d1, d2, verbose=True):
   print('d1,d2 num keys - ', len(d1.keys()), len(d2.keys()))

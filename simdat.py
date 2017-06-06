@@ -8,7 +8,7 @@ import numpy as np
 from math import ceil
 from conf import dconf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, find_param, quickgetprm
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm
 from scipy import signal
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
@@ -168,14 +168,15 @@ class SIMCanvas (FigureCanvas):
     ax.arrow(t_evprox_late,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
 
   def getInputs (self):
-    EvokedInputs = OngoingInputs = False
+    EvokedInputs = OngoingInputs = PoissonInputs = TonicInputs = False
     try:
       EvokedInputs = usingEvokedInputs(dfile['outparam'])
       OngoingInputs = usingOngoingInputs(dfile['outparam'])
-      if debug: print('EvokedInputs:',EvokedInputs,'OngoingInputs:',OngoingInputs)
+      PoissonInputs = usingPoissonInputs(dfile['outparam'])
+      TonicInputs = usingTonicInputs(dfile['outparam'])
     except:
       pass
-    return EvokedInputs, OngoingInputs
+    return EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs
 
   def plotextdat (self): # plot 'external' data (e.g. from experimet/other simulation)
     try:
@@ -253,11 +254,11 @@ class SIMCanvas (FigureCanvas):
           xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
 
-      EvokedInputs, OngoingInputs = self.getInputs()
+      EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
 
       if OngoingInputs or EvokedInputs:
         if self.plotinputhist(xl): gRow = 2
-      if OngoingInputs:
+      if OngoingInputs or PoissonInputs or TonicInputs:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
@@ -280,7 +281,7 @@ class SIMCanvas (FigureCanvas):
       ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
       ax.set_xlim(xl); ax.set_ylim(yl)
 
-      if OngoingInputs: # only draw specgram when have ongoing inputs
+      if OngoingInputs or PoissonInputs or TonicInputs: # draw specgram when have ongoing, poisson, or tonic inputs
         if debug: print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
