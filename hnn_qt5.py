@@ -233,7 +233,7 @@ class OngoingInputParamDialog (DictDialog):
 
     self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
     self.ltitle = ['Timing', 'Layer2', 'Layer5', 'Inhib']
-    self.stitle = 'Set Ongoing '+self.inty+' Inputs'
+    self.stitle = 'Set Rhythmic '+self.inty+' Inputs'
 
     for d in [self.dL2, self.dL5, self.dInhib]:
       for k in d.keys():
@@ -849,12 +849,12 @@ class BaseParamDialog (QDialog):
 
     row+=1
 
-    self.btnprox = QPushButton('Ongoing Proximal Inputs',self)
+    self.btnprox = QPushButton('Rhythmic Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.setproxparam)
     grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
-    self.btndist = QPushButton('Ongoing Distal Inputs',self)
+    self.btndist = QPushButton('Rhythmic Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
