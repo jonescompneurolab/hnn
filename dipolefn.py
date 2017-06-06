@@ -13,7 +13,7 @@ import specfn
 import matplotlib.pyplot as plt
 import axes_create as ac
 from math import ceil
-from filt import boxfilt, hammfilt
+from filt import boxfilt, hammfilt, emptyfilt
 
 # class Dipole() is for a single set of f_dpl and f_param
 class Dipole():
