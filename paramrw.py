@@ -328,6 +328,7 @@ def read (fparam):
     p = {}
     gid_dict = {}
     for line in lines:
+        if line.startswith('#'): continue
         keystring, val = line.split(": ")
         key = keystring.strip()
         if val[0] is '[':
