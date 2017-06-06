@@ -4,8 +4,8 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: gamma_weak_L5_ei
-expmt_groups: {weak}
+sim_prefix: gamma_weak_L5
+expmt_groups: {gamma_weak_L5}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -16,7 +16,8 @@ tstop: 550.
 N_trials: 0
 
 # weak ping params
-gbar_L5Pyr_L5Basket: L[9.1e-4, 5e-4, 3]
+#gbar_L5Pyr_L5Basket: L[9.1e-4, 5e-4, 3]
+gbar_L5Pyr_L5Basket: 9.1e-4
 # gbar_L5Pyr_L5Basket: 9.1e-4
 gbar_L5Basket_L5Basket: 7.5e-3
 gbar_L5Basket_L5Pyr_gabaa: 8e-2

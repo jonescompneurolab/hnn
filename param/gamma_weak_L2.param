@@ -4,8 +4,8 @@
 # np.arrays for everything else?
 # turns out some whitespace is valid for dicts!
 
-sim_prefix: increased_m
-expmt_groups: {spike}
+sim_prefix: gamma_weak_L2
+expmt_groups: {gamma_weak_L2}
 
 # numbers of cells making up the pyramidal grids
 N_pyr_x: 10
@@ -25,7 +25,8 @@ L2Pyr_dend_gbar_km: 500.
 # pois inputs
 # L2Pyr_Pois_A_weight: 5e-3
 L2Pyr_Pois_A_weight: 1e-2
-L2Pyr_Pois_lamtha: L[80., 10., 8]
+#L2Pyr_Pois_lamtha: L[80., 10., 8]
+L2Pyr_Pois_lamtha: 80.0
 
 # max conductances TO L2Pyrs
 gbar_L2Pyr_L2Pyr_ampa: 0.
