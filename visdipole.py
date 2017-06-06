@@ -13,6 +13,7 @@ for i in range(len(sys.argv)):
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
     scalefctr = paramrw.find_param(paramf,'dipole_scalefctr')
+    if type(scalefctr)!=float and type(scalefctr)!=int: scalefctr=30e3
     tstop = paramrw.find_param(paramf,'tstop')
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
         
