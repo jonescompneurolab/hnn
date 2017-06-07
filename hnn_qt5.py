@@ -454,6 +454,11 @@ class EvokedInputParamDialog (DictDialog):
                               ('gbar_evdist_L2Basket', 0.),
                               ('gbar_evdist_L5Pyr', 0.)])
 
+    # time between prox/distal inputs -1 means relative - not used by default
+    self.dtiming = OrderedDict([('sync_evinput', 1)])#,
+    #('dt_evprox0_evdist', -1),# do not show these - not useful
+    #('dt_evprox0_evprox1', -1)])#
+
     for d in [self.dproxearly, self.dproxlate, self.ddist]:
       for k in d.keys():
         if k.startswith('gbar'):
@@ -462,11 +467,6 @@ class EvokedInputParamDialog (DictDialog):
           self.addtransvar(k,'start (ms)')
         elif k.startswith('sigma'):
           self.addtransvar(k,'sigma (ms)')
-
-    # time between prox/distal inputs -1 means relative - not used by default
-    self.dtiming = {'sync_evinput': 1,
-                    'dt_evprox0_evdist': -1,
-                    'dt_evprox0_evprox1': -1}
 
     self.addtransvar('sync_evinput', 'Synchronous Inputs')
     self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
