@@ -891,7 +891,6 @@ class BaseParamDialog (QDialog):
   def saveparams (self):
     global paramf,basedir
     tmpf = os.path.join('param',self.qle.text() + '.param')
-    print('Saving params to ',  tmpf)
     self.hide()
     oktosave = True
     if os.path.isfile(tmpf):
@@ -899,16 +898,18 @@ class BaseParamDialog (QDialog):
       msg = QMessageBox()
       msg.setIcon(QMessageBox.Warning)
       msg.setText(tmpf + ' already exists. Over-write?')
-      msg.setWindowTitle('Over-write file?')
+      msg.setWindowTitle('Over-write file(s)?')
       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
       if msg.exec_() == QMessageBox.Ok: oktosave = True
     if oktosave:
+      print('Saving params to ',  tmpf)
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
         paramf = dconf['paramf'] = tmpf # success? update paramf
         basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
       except:
-        print('exception in saving param file ',tmpf)
+        print('Exception in saving param file!',tmpf)
+    return oktosave
 
   def __str__ (self):
     s = 'sim_prefix: ' + self.qle.text() + '\n'
@@ -1240,7 +1241,7 @@ class HNNGUI (QMainWindow):
 
   def startsim (self, ntrial, ncore):
 
-    self.baseparamwin.saveparams() # make sure params saved
+    if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
 
     print('Starting simulation. . .')
     self.runningsim = True
