@@ -907,6 +907,7 @@ class BaseParamDialog (QDialog):
     self.btntonic.clicked.connect(self.settonicparam)
     grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
 
+    """
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
     self.btnok.setToolTip('Save All Parameters')
@@ -917,6 +918,7 @@ class BaseParamDialog (QDialog):
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
     grid.addWidget(self.btncancel, row, 1, 1, 1); row+=1
+    """
 
     self.setLayout(grid) 
         
@@ -929,6 +931,7 @@ class BaseParamDialog (QDialog):
     self.hide()
     oktosave = True
     if os.path.isfile(tmpf):
+      self.show()
       oktosave = False
       msg = QMessageBox()
       msg.setIcon(QMessageBox.Warning)
