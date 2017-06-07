@@ -179,7 +179,8 @@ class DictDialog (QDialog):
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
- 
+
+    """
     # Create a horizontal box layout to hold the button
     self.button_box = QHBoxLayout()
  
@@ -194,6 +195,7 @@ class DictDialog (QDialog):
     self.button_box.addWidget(self.btncancel)
 
     self.layout.addLayout(self.button_box)
+    """
 
     self.setGeometry(150, 150, 475, 300)
     self.setWindowTitle(self.stitle)  
@@ -211,6 +213,12 @@ class OngoingInputParamDialog (DictDialog):
       self.postfix = '_dist'
       self.isprox = False
     super(OngoingInputParamDialog, self).__init__(parent,din)
+
+  # turn off by setting all weights to 0.0
+  def TurnOff (self):
+    for k in self.dqline.keys():
+      if k.count('weight') > 0:
+        self.dqline[k].setText('0.0')
 
   def initd (self):
     self.dtiming = OrderedDict([('distribution' + self.postfix, 'normal'),
@@ -811,7 +819,17 @@ class BaseParamDialog (QDialog):
   def setnetparam (self): self.netparamwin.show()
   def setsyngainparam (self): self.syngainparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
+
+  def setproxparamoff (self):
+    self.proxparamwin.TurnOff()
+    self.proxparamwin.show()
+
   def setdistparam (self): self.distparamwin.show()
+
+  def setdistparamoff (self):
+    self.distparamwin.TurnOff()
+    self.distparamwin.show()
+
   def setevparam (self): self.evparamwin.show()
   def setpoisparam (self): self.poisparamwin.show()
   def settonicparam (self): self.tonicparamwin.show()
@@ -832,13 +850,13 @@ class BaseParamDialog (QDialog):
     grid.addWidget(self.qle, row, 1)
     row+=1
 
-    self.btnrun = QPushButton('Run Params',self)
+    self.btnrun = QPushButton('Run',self)
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.setToolTip('Set Run Parameters')
     self.btnrun.clicked.connect(self.setrunparam)
     grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
 
-    self.btncell = QPushButton('Cell Params',self)
+    self.btncell = QPushButton('Cell',self)
     self.btncell.resize(self.btncell.sizeHint())
     self.btncell.setToolTip('Set Cell Parameters')
     self.btncell.clicked.connect(self.setcellparam)
@@ -862,19 +880,39 @@ class BaseParamDialog (QDialog):
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.setToolTip('Set Rhythmic Proximal Inputs')
     self.btnprox.clicked.connect(self.setproxparam)
-    grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnprox, row, 0, 1, 1); 
+    self.btnproxoff = QPushButton('<<-- Turn Off',self)
+    self.btnproxoff.resize(self.btnproxoff.sizeHint())
+    self.btnproxoff.setToolTip('Turn Off Rhythmic Proximal Inputs')
+    self.btnproxoff.clicked.connect(self.setproxparamoff)
+    grid.addWidget(self.btnproxoff, row, 1, 1, 1); 
+    row+=1
 
     self.btndist = QPushButton('Rhythmic Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.setToolTip('Set Rhythmic Distal Inputs')
     self.btndist.clicked.connect(self.setdistparam)
-    grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btndist, row, 0, 1, 1);
+    self.btndistoff = QPushButton('<<-- Turn Off',self)
+    self.btndistoff.resize(self.btndistoff.sizeHint())
+    self.btndistoff.setToolTip('Turn Off Rhythmic Distal Inputs')
+    self.btndistoff.clicked.connect(self.setdistparamoff)
+    grid.addWidget(self.btndistoff, row, 1, 1, 1); 
+    row+=1
 
     self.btnev = QPushButton('Evoked Inputs',self)
     self.btnev.resize(self.btnev.sizeHint())
     self.btnev.setToolTip('Set Evoked Inputs')
     self.btnev.clicked.connect(self.setevparam)
-    grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnev, row, 0, 1, 2);
+    """
+    self.btnevoff = QPushButton('<<-- Turn Off',self)
+    self.btnevoff.resize(self.btnevoff.sizeHint())
+    self.btnevoff.setToolTip('Turn Off Evoked Inputs')
+    self.btnevoff.clicked.connect(self.setevparamoff)
+    grid.addWidget(self.btnevoff, row, 1, 1, 1); 
+    """
+    row+=1
 
     self.btnpois = QPushButton('Poisson Inputs',self)
     self.btnpois.resize(self.btnpois.sizeHint())
