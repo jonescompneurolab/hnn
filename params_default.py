@@ -101,8 +101,10 @@ def get_params_default ():
         'input_prox_A_weight_L2Pyr_nmda': 0.,
         'input_prox_A_weight_L5Pyr_ampa': 0.,
         'input_prox_A_weight_L5Pyr_nmda': 0.,
-        'input_prox_A_weight_inh_ampa': 0.,
-        'input_prox_A_weight_inh_nmda': 0.,
+        'input_prox_A_weight_L2Basket_ampa': 0.,
+        'input_prox_A_weight_L2Basket_nmda': 0.,
+        'input_prox_A_weight_L5Basket_ampa': 0.,
+        'input_prox_A_weight_L5Basket_nmda': 0.,
         'input_prox_A_delay_L2': 0.1,
         'input_prox_A_delay_L5': 1.0,
 
@@ -111,8 +113,8 @@ def get_params_default ():
         'input_dist_A_weight_L2Pyr_nmda': 0.,
         'input_dist_A_weight_L5Pyr_ampa': 0.,
         'input_dist_A_weight_L5Pyr_nmda': 0.,
-        'input_dist_A_weight_inh_ampa': 0.,
-        'input_dist_A_weight_inh_nmda': 0.,
+        'input_dist_A_weight_L2Basket_ampa': 0.,
+        'input_dist_A_weight_L2Basket_nmda': 0.,
         'input_dist_A_delay_L2': 5.,
         'input_dist_A_delay_L5': 5.,
 

@@ -205,9 +205,11 @@ class OngoingInputParamDialog (DictDialog):
     if self.inty.startswith('Proximal'):
       self.prefix = 'input_prox_A_'
       self.postfix = '_prox'
+      self.isprox = True
     else:
       self.prefix = 'input_dist_A_'
       self.postfix = '_dist'
+      self.isprox = False
     super(OngoingInputParamDialog, self).__init__(parent,din)
 
   def initd (self):
@@ -222,20 +224,23 @@ class OngoingInputParamDialog (DictDialog):
 
     self.dL2 = OrderedDict([(self.prefix + 'weight_L2Pyr_ampa', 0.),
                             (self.prefix + 'weight_L2Pyr_nmda', 0.),
-                            (self.prefix + 'delay_L2', 0.1)])
+                            (self.prefix + 'weight_L2Basket_ampa', 0.),
+                            (self.prefix + 'weight_L2Basket_nmda',0.),
+                            (self.prefix + 'delay_L2', 0.1),])
 
     self.dL5 = OrderedDict([(self.prefix + 'weight_L5Pyr_ampa', 0.),
-                            (self.prefix + 'weight_L5Pyr_nmda', 0.),
-                            (self.prefix + 'delay_L5', 0.1)])
+                            (self.prefix + 'weight_L5Pyr_nmda', 0.)])
 
-    self.dInhib = OrderedDict([(self.prefix + 'weight_inh_ampa', 0.),
-                               (self.prefix + 'weight_inh_nmda', 0.)])
+    if self.isprox:
+      self.dL5[self.prefix + 'weight_L5Basket_ampa'] = 0.0
+      self.dL5[self.prefix + 'weight_L5Basket_nmda'] = 0.0
+    self.dL5[self.prefix + 'delay_L5'] = 0.1
 
-    self.ldict = [self.dtiming, self.dL2, self.dL5, self.dInhib]
-    self.ltitle = ['Timing', 'Layer2', 'Layer5', 'Inhib']
+    self.ldict = [self.dtiming, self.dL2, self.dL5]
+    self.ltitle = ['Timing', 'Layer2', 'Layer5']
     self.stitle = 'Set Rhythmic '+self.inty+' Inputs'
 
-    for d in [self.dL2, self.dL5, self.dInhib]:
+    for d in [self.dL2, self.dL5]:
       for k in d.keys():
         lk = k.split('_')
         if k.count('weight') > 0:
