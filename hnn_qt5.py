@@ -479,8 +479,8 @@ class RunParamDialog (DictDialog):
                                   ('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
-                                  ('dipole_smooth_win',15.0),
-                                  ('save_vsoma',1)])
+                                  ('dipole_smooth_win',15.0)])#,
+                                  #('save_vsoma',0)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']
@@ -699,10 +699,10 @@ class NetworkParamDialog (DictDialog):
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
     self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
-    self.stitle = 'Network Parameters'
+    self.stitle = 'Local Network Parameters'
 
     self.addtransvar('N_pyr_x', 'Num Pyr Cells (X direction)')
-    self.addtransvar('N_pyr_y', 'Num Pyr Cells (Z direction)')
+    self.addtransvar('N_pyr_y', 'Num Pyr Cells (Y direction)')
 
     for d in [self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]:
       for k in d.keys():
@@ -837,12 +837,12 @@ class BaseParamDialog (QDialog):
     self.btncell.clicked.connect(self.setcellparam)
     grid.addWidget(self.btncell, row, 0, 1, 2); row+=1
 
-    self.btnnet = QPushButton('Network Params',self)
+    self.btnnet = QPushButton('Local Network',self)
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.clicked.connect(self.setnetparam)
     grid.addWidget(self.btnnet, row, 0, 1, 1); 
 
-    self.btnsyngain = QPushButton('Synaptic Gains',self)
+    self.btnsyngain = QPushButton('Local Network Synaptic Gains',self)
     self.btnsyngain.resize(self.btnsyngain.sizeHint())
     self.btnsyngain.clicked.connect(self.setsyngainparam)
     grid.addWidget(self.btnsyngain, row, 1, 1, 1); 
@@ -1061,12 +1061,12 @@ class HNNGUI (QMainWindow):
     viewPSDAction.setStatusTip('View PSD.')
     viewPSDAction.triggered.connect(self.showPSDPlot)
     viewMenu.addAction(viewPSDAction)
-    viewSomaVAction = QAction('View Soma Voltages',self)
-    viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
-    viewSomaVAction.triggered.connect(self.showSomaVPlot)
-    viewMenu.addAction(viewSomaVAction)
-    viewNetAction = QAction('View Network (3D)',self)
-    viewNetAction.setStatusTip('View Model Network (3D).')
+    #viewSomaVAction = QAction('View Soma Voltages',self)
+    #viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
+    #viewSomaVAction.triggered.connect(self.showSomaVPlot)
+    #viewMenu.addAction(viewSomaVAction)
+    viewNetAction = QAction('View Local Network (3D)',self)
+    viewNetAction.setStatusTip('View Local Network Model (3D).')
     viewNetAction.triggered.connect(self.showvisnet)
     viewMenu.addAction(viewNetAction)
 
