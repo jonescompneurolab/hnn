@@ -256,11 +256,11 @@ class OngoingInputParamDialog (DictDialog):
           self.addtransvar(k, 'Delay (ms)')
 
     self.addtransvar('distribution'+self.postfix,'Distribution')
-    self.addtransvar('t0_input'+self.postfix,'Start time (ms)')
+    self.addtransvar('t0_input'+self.postfix,'Start time mean (ms)')
     self.addtransvar('t0_input_stdev'+self.postfix,'Start time stdev (ms)')
     self.addtransvar('tstop_input'+self.postfix,'Stop time (ms)')
-    self.addtransvar('f_input'+self.postfix,'Frequency (Hz)')
-    self.addtransvar('f_stdev'+self.postfix,'Freq. stdev (Hz)')
+    self.addtransvar('f_input'+self.postfix,'Frequency mean (Hz)')
+    self.addtransvar('f_stdev'+self.postfix,'Frequency stdev (Hz)')
     self.addtransvar('events_per_cycle'+self.postfix,'Events/cycle')
     self.addtransvar('repeats'+self.postfix,'Repeats')
 
@@ -464,9 +464,9 @@ class EvokedInputParamDialog (DictDialog):
         if k.startswith('gbar'):
           self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
         elif k.startswith('t'):
-          self.addtransvar(k,'start (ms)')
+          self.addtransvar(k,'Start time mean (ms)')
         elif k.startswith('sigma'):
-          self.addtransvar(k,'sigma (ms)')
+          self.addtransvar(k,'Start time stdev (ms)')
 
     self.addtransvar('sync_evinput', 'Synchronous Inputs')
     self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
