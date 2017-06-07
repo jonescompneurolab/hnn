@@ -855,13 +855,13 @@ class BaseParamDialog (QDialog):
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.setToolTip('Set Run Parameters')
     self.btnrun.clicked.connect(self.setrunparam)
-    grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnrun, row, 0, 1, 1); 
 
     self.btncell = QPushButton('Cell',self)
     self.btncell.resize(self.btncell.sizeHint())
     self.btncell.setToolTip('Set Cell Parameters')
     self.btncell.clicked.connect(self.setcellparam)
-    grid.addWidget(self.btncell, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btncell, row, 1, 1, 1); row+=1
 
     self.btnnet = QPushButton('Local Network',self)
     self.btnnet.resize(self.btnnet.sizeHint())
