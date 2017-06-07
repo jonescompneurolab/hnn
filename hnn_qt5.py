@@ -133,6 +133,11 @@ class DictDialog (QDialog):
 
   def initd (self): pass # implemented in subclass
 
+  def lines2val (self,ksearch,val):
+    for k in self.dqline.keys():
+      if k.count(ksearch) > 0:
+        self.dqline[k].setText(str(val))
+
   def setfromdin (self,din):
     if not din: return
     for k,v in din.items():
@@ -180,25 +185,21 @@ class DictDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
 
-    """
-    # Create a horizontal box layout to hold the button
-    self.button_box = QHBoxLayout()
- 
-    self.btnok = QPushButton('OK',self)
-    self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.clicked.connect(self.saveparams)
-    self.button_box.addWidget(self.btnok)
-
-    self.btncancel = QPushButton('Cancel',self)
-    self.btncancel.resize(self.btncancel.sizeHint())
-    self.btncancel.clicked.connect(self.hide)
-    self.button_box.addWidget(self.btncancel)
-
-    self.layout.addLayout(self.button_box)
-    """
-
     self.setGeometry(150, 150, 475, 300)
     self.setWindowTitle(self.stitle)  
+
+  def TurnOff (self): pass
+
+  def addOffButton (self):
+    # Create a horizontal box layout to hold the button
+    self.button_box = QHBoxLayout() 
+    self.btnoff = QPushButton('Turn Off',self)
+    self.btnoff.resize(self.btnoff.sizeHint())
+    self.btnoff.clicked.connect(self.TurnOff)
+    self.btnoff.setToolTip('Turn Off Inputs')
+    self.button_box.addWidget(self.btnoff)
+    self.layout.addLayout(self.button_box)
+
 
 # widget to specify ongoing input params (proximal, distal)
 class OngoingInputParamDialog (DictDialog):
@@ -213,12 +214,10 @@ class OngoingInputParamDialog (DictDialog):
       self.postfix = '_dist'
       self.isprox = False
     super(OngoingInputParamDialog, self).__init__(parent,din)
+    self.addOffButton()
 
   # turn off by setting all weights to 0.0
-  def TurnOff (self):
-    for k in self.dqline.keys():
-      if k.count('weight') > 0:
-        self.dqline[k].setText('0.0')
+  def TurnOff (self): self.lines2val('weight',0.0)
 
   def initd (self):
     self.dtiming = OrderedDict([('distribution' + self.postfix, 'normal'),
@@ -341,6 +340,10 @@ class SynGainParamDialog (QDialog):
 class TonicInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(TonicInputParamDialog, self).__init__(parent,din)
+    self.addOffButton()
+
+  # turn off by setting all weights to 0.0
+  def TurnOff (self): self.lines2val('A',0.0)
 
   def initd (self):
 
@@ -382,6 +385,10 @@ class TonicInputParamDialog (DictDialog):
 class PoissonInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(PoissonInputParamDialog, self).__init__(parent,din)
+    self.addOffButton()
+
+  # turn off by setting all weights to 0.0
+  def TurnOff (self): self.lines2val('weight',0.0)
 
   def initd (self):
 
@@ -418,6 +425,10 @@ class PoissonInputParamDialog (DictDialog):
 class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(EvokedInputParamDialog, self).__init__(parent,din)
+    self.addOffButton()
+
+  # turn off by setting all weights to 0.0
+  def TurnOff (self): self.lines2val('weight',0.0)
 
   def initd (self):
     # evprox (early) feed strength
@@ -819,17 +830,7 @@ class BaseParamDialog (QDialog):
   def setnetparam (self): self.netparamwin.show()
   def setsyngainparam (self): self.syngainparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
-
-  def setproxparamoff (self):
-    self.proxparamwin.TurnOff()
-    self.proxparamwin.show()
-
   def setdistparam (self): self.distparamwin.show()
-
-  def setdistparamoff (self):
-    self.distparamwin.TurnOff()
-    self.distparamwin.show()
-
   def setevparam (self): self.evparamwin.show()
   def setpoisparam (self): self.poisparamwin.show()
   def settonicparam (self): self.tonicparamwin.show()
@@ -880,39 +881,19 @@ class BaseParamDialog (QDialog):
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.setToolTip('Set Rhythmic Proximal Inputs')
     self.btnprox.clicked.connect(self.setproxparam)
-    grid.addWidget(self.btnprox, row, 0, 1, 1); 
-    self.btnproxoff = QPushButton('<<-- Turn Off',self)
-    self.btnproxoff.resize(self.btnproxoff.sizeHint())
-    self.btnproxoff.setToolTip('Turn Off Rhythmic Proximal Inputs')
-    self.btnproxoff.clicked.connect(self.setproxparamoff)
-    grid.addWidget(self.btnproxoff, row, 1, 1, 1); 
-    row+=1
+    grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
     self.btndist = QPushButton('Rhythmic Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.setToolTip('Set Rhythmic Distal Inputs')
     self.btndist.clicked.connect(self.setdistparam)
-    grid.addWidget(self.btndist, row, 0, 1, 1);
-    self.btndistoff = QPushButton('<<-- Turn Off',self)
-    self.btndistoff.resize(self.btndistoff.sizeHint())
-    self.btndistoff.setToolTip('Turn Off Rhythmic Distal Inputs')
-    self.btndistoff.clicked.connect(self.setdistparamoff)
-    grid.addWidget(self.btndistoff, row, 1, 1, 1); 
-    row+=1
+    grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
 
     self.btnev = QPushButton('Evoked Inputs',self)
     self.btnev.resize(self.btnev.sizeHint())
     self.btnev.setToolTip('Set Evoked Inputs')
     self.btnev.clicked.connect(self.setevparam)
-    grid.addWidget(self.btnev, row, 0, 1, 2);
-    """
-    self.btnevoff = QPushButton('<<-- Turn Off',self)
-    self.btnevoff.resize(self.btnevoff.sizeHint())
-    self.btnevoff.setToolTip('Turn Off Evoked Inputs')
-    self.btnevoff.clicked.connect(self.setevparamoff)
-    grid.addWidget(self.btnevoff, row, 1, 1, 1); 
-    """
-    row+=1
+    grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
 
     self.btnpois = QPushButton('Poisson Inputs',self)
     self.btnpois.resize(self.btnpois.sizeHint())
