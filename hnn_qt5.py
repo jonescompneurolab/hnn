@@ -907,18 +907,11 @@ class BaseParamDialog (QDialog):
     self.btntonic.clicked.connect(self.settonicparam)
     grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
 
-    """
-    self.btnok = QPushButton('OK',self)
-    self.btnok.resize(self.btnok.sizeHint())
-    self.btnok.setToolTip('Save All Parameters')
-    self.btnok.clicked.connect(self.saveparams)
-    grid.addWidget(self.btnok, row, 0, 1, 1)
-    self.btncancel = QPushButton('Cancel',self)
-    self.btncancel.setToolTip('Do Not Save All Parameters')
-    self.btncancel.resize(self.btncancel.sizeHint())
-    self.btncancel.clicked.connect(self.hide)
-    grid.addWidget(self.btncancel, row, 1, 1, 1); row+=1
-    """
+    self.btnsave = QPushButton('Save Parameters To File',self)
+    self.btnsave.resize(self.btnsave.sizeHint())
+    self.btnsave.setToolTip('Save All Parameters to File')
+    self.btnsave.clicked.connect(self.saveparams)
+    grid.addWidget(self.btnsave, row, 0, 1, 2)
 
     self.setLayout(grid) 
         
