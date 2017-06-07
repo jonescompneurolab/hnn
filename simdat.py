@@ -107,14 +107,18 @@ class SIMCanvas (FigureCanvas):
         return False
     except:
       print('plotinputhist ERR: problem with extinputs')
-    self.hist = hist = {}
+    self.hist = hist = {'feed_dist':None, 'feed_prox':None, 'feed_evdist':None, 'feed_evprox':None}
     self.axdist = axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
     self.axprox = axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
-      hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
-      hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
-      hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step')
-      hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step')
+      if len(dinput['dist']) > 0:
+        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
+      if len(dinput['prox']) > 0:
+        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
+      if len(dinput['evdist']) > 0:
+        hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step')
+      if len(dinput['evdist']) > 0:
+        hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step')
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
          hist['feed_evdist'] is None and hist['feed_evprox'] is None:
         self.invertedhistax = False
