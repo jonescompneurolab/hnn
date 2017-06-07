@@ -834,21 +834,25 @@ class BaseParamDialog (QDialog):
 
     self.btnrun = QPushButton('Run Params',self)
     self.btnrun.resize(self.btnrun.sizeHint())
+    self.btnrun.setToolTip('Set Run Parameters')
     self.btnrun.clicked.connect(self.setrunparam)
     grid.addWidget(self.btnrun, row, 0, 1, 2); row+=1
 
     self.btncell = QPushButton('Cell Params',self)
     self.btncell.resize(self.btncell.sizeHint())
+    self.btncell.setToolTip('Set Cell Parameters')
     self.btncell.clicked.connect(self.setcellparam)
     grid.addWidget(self.btncell, row, 0, 1, 2); row+=1
 
     self.btnnet = QPushButton('Local Network',self)
     self.btnnet.resize(self.btnnet.sizeHint())
+    self.btnnet.setToolTip('Set Local Network Parameters')
     self.btnnet.clicked.connect(self.setnetparam)
     grid.addWidget(self.btnnet, row, 0, 1, 1); 
 
-    self.btnsyngain = QPushButton('Local Network Synaptic Gains',self)
+    self.btnsyngain = QPushButton('Synaptic Gains',self)
     self.btnsyngain.resize(self.btnsyngain.sizeHint())
+    self.btnsyngain.setToolTip('Set Local Network Synaptic Gains')
     self.btnsyngain.clicked.connect(self.setsyngainparam)
     grid.addWidget(self.btnsyngain, row, 1, 1, 1); 
 
@@ -856,34 +860,41 @@ class BaseParamDialog (QDialog):
 
     self.btnprox = QPushButton('Rhythmic Proximal Inputs',self)
     self.btnprox.resize(self.btnprox.sizeHint())
+    self.btnprox.setToolTip('Set Rhythmic Proximal Inputs')
     self.btnprox.clicked.connect(self.setproxparam)
     grid.addWidget(self.btnprox, row, 0, 1, 2); row+=1
 
     self.btndist = QPushButton('Rhythmic Distal Inputs',self)
     self.btndist.resize(self.btndist.sizeHint())
+    self.btndist.setToolTip('Set Rhythmic Distal Inputs')
     self.btndist.clicked.connect(self.setdistparam)
     grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
 
     self.btnev = QPushButton('Evoked Inputs',self)
     self.btnev.resize(self.btnev.sizeHint())
+    self.btnev.setToolTip('Set Evoked Inputs')
     self.btnev.clicked.connect(self.setevparam)
     grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
 
     self.btnpois = QPushButton('Poisson Inputs',self)
     self.btnpois.resize(self.btnpois.sizeHint())
+    self.btnpois.setToolTip('Set Poisson Inputs')
     self.btnpois.clicked.connect(self.setpoisparam)
     grid.addWidget(self.btnpois, row, 0, 1, 2); row+=1
 
     self.btntonic = QPushButton('Tonic Inputs',self)
     self.btntonic.resize(self.btntonic.sizeHint())
+    self.btntonic.setToolTip('Set Tonic Inputs')
     self.btntonic.clicked.connect(self.settonicparam)
     grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
 
     self.btnok = QPushButton('OK',self)
     self.btnok.resize(self.btnok.sizeHint())
+    self.btnok.setToolTip('Save All Parameters')
     self.btnok.clicked.connect(self.saveparams)
     grid.addWidget(self.btnok, row, 0, 1, 1)
     self.btncancel = QPushButton('Cancel',self)
+    self.btncancel.setToolTip('Do Not Save All Parameters')
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
     grid.addWidget(self.btncancel, row, 1, 1, 1); row+=1
