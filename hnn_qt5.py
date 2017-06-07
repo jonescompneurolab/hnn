@@ -661,9 +661,9 @@ class CellParamDialog (DictDialog):
         elif lk[-1] == 'diam':
           self.addtransvar(k,lk[1] + ' ' + r'diameter (micron)')
         elif lk[-1] == 'cm':
-          self.addtransvar(k,lk[1] + ' ' + r'cm (F/cm^2)')
+          self.addtransvar(k,lk[1] + ' ' + r'capacitive density (F/cm^2)')
         elif lk[-1] == 'Ra':
-          self.addtransvar(k,lk[1] + ' ' + r'resistivity ($ohm-cm')
+          self.addtransvar(k,lk[1] + ' ' + r'resistivity (ohm-cm)')
 
     for d in [self.dL2PyrSyn, self.dL5PyrSyn]:
       for k in d.keys():
@@ -675,11 +675,18 @@ class CellParamDialog (DictDialog):
         elif k.endswith('tau2'):
           self.addtransvar(k,lk[1].upper() + ' ' + ' decay time (ms)')
 
-    """
     for d in [self.dL2PyrBiophys, self.dL5PyrBiophys]:
       for k in d.keys():
         lk = k.split('_')
-    """
+        if lk[2].count('g') > 0:
+          nv = lk[0] + ' ' + lk[1] + ' ' + lk[2] + ' ' + lk[3] + ' density '
+          """
+          if lk[3] == 'hh':
+            nv += ' '
+          else:
+            nv += ' (pS/micron^2)'
+          """
+          self.addtransvar(k,nv)
 
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
