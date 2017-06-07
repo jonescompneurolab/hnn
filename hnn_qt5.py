@@ -394,7 +394,7 @@ class PoissonInputParamDialog (DictDialog):
         if k.endswith('weight'):
           self.addtransvar(k, cty+ ' weight (nS)')
         elif k.endswith('lamtha'):
-          self.addtransvar(k, cty+ ' wait (ms)')
+          self.addtransvar(k, cty+ ' Freq (Hz)')
 
     self.ldict = [self.dL2, self.dL5, self.dtiming]
     self.ltitle = ['Layer2', 'Layer5', 'Timing']
