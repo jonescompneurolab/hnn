@@ -159,7 +159,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       #if not invertedax: 
       ax.invert_yaxis()
       #invertedax = True
-      if EvokedInputs: drawDistEVInputTimes(ax)
+      # if EvokedInputs: drawDistEVInputTimes(ax)
       ax.set_ylabel('Distal Input')
 
       row += 2
@@ -172,7 +172,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       ax2.set_facecolor('k')
       ax2.grid(True)
       if tstop != -1: ax2.set_xlim((0,tstop))
-      if EvokedInputs: drawProxEVInputTimes(ax2)
+      # if EvokedInputs: drawProxEVInputTimes(ax2)
       ax2.set_ylabel('Proximal Input')
     else:
 
