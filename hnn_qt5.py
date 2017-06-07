@@ -480,7 +480,7 @@ class RunParamDialog (DictDialog):
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
                                   ('dipole_smooth_win',15.0),
-                                  ('save_vsoma',0)])
+                                  ('save_vsoma',1)])
 
     self.ldict = [self.drun, self.drand, self.danalysis]
     self.ltitle = ['Run', 'Randomization Seeds','Analysis']

@@ -159,7 +159,7 @@ def get_params_default ():
         'dipole_smooth_win': 15.0, # window for smoothing (box filter) - 15 ms from jones 2009; shorten
         # in case want to look at higher frequency activity
         'save_figs': 0,
-        'save_vsoma': 0, # whether to record/save somatic voltage
+        'save_vsoma': 1, # whether to record/save somatic voltage
 
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,
