@@ -215,6 +215,17 @@ class OngoingInputParamDialog (DictDialog):
       self.isprox = False
     super(OngoingInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
+    self.addImages()
+
+  # add png cartoons to tabs
+  def addImages (self):
+    if self.isprox: self.pix = QPixmap("res/proxfig.png")
+    else: self.pix = QPixmap("res/distfig.png")
+    for tab in self.ltabs:      
+      pixlbl = ClickLabel(self)
+      pixlbl.setPixmap(self.pix)
+      tab.layout.addRow(pixlbl)
+
 
   # turn off by setting all weights to 0.0
   def TurnOff (self): self.lines2val('weight',0.0)
@@ -426,6 +437,20 @@ class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(EvokedInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
+    self.addImages()
+
+  # add png cartoons to tabs
+  def addImages (self):
+    self.pixProx = QPixmap("res/proxfig.png")
+    for i in [0,2]:
+      pixProxlbl = ClickLabel(self)
+      pixProxlbl.setPixmap(self.pixProx)
+      self.ltabs[i].layout.addRow(pixProxlbl)
+
+    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDistlbl = ClickLabel(self)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    self.ltabs[1].layout.addRow(self.pixDistlbl)
 
   # turn off by setting all weights to 0.0
   def TurnOff (self): self.lines2val('weight',0.0)
@@ -469,8 +494,8 @@ class EvokedInputParamDialog (DictDialog):
           self.addtransvar(k,'Start time stdev (ms)')
 
     self.addtransvar('sync_evinput', 'Synchronous Inputs')
-    self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
-    self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
+    #self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
+    #self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
 
     self.ldict = [self.dproxearly, self.ddist, self.dproxlate, self.dtiming]
     self.ltitle = ['Proximal Early', 'Distal', 'Proximal Late', 'Timing']
