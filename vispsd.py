@@ -21,6 +21,7 @@ import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil, sqrt
+from specfn import MorletSpec
 
 ntrial = 0; specpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -44,7 +45,7 @@ except:
 
 # assumes column 0 is time, rest of columns are time-series
 def extractpsd (dat, fmax=120.0):
-  from specfn import MorletSpec
+  print('extractpsd',dat.shape)
   lpsd = []
   tvec = dat[:,0]
   dt = tvec[1] - tvec[0]
@@ -52,7 +53,7 @@ def extractpsd (dat, fmax=120.0):
   prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
   for col in range(1,dat.shape[1],1):
     ms = MorletSpec(tvec,dat[:,col],None,None,prm)
-    lpsd.append(mean(ms.TFR,axis=1))
+    lpsd.append(np.mean(ms.TFR,axis=1))
   return ms.f, np.array(lpsd)
 
 def drawpsd (dspec, fig, G, ltextra=''):
@@ -152,8 +153,24 @@ class PSDCanvas (FigureCanvas):
           o[0].set_visible(False)
       del self.lextdatobj
 
-  def plotextdat (self): # plot 'external' data (e.g. from experiment/other simulation)
-    pass
+  def plotextdat (self, lF, lextpsd, lextfiles): # plot 'external' data (e.g. from experiment/other simulation)
+
+    print('len(lax)',len(self.lax))
+
+    self.lextdatobj = []
+
+    ax = self.lax[2] # plot on agg
+
+    yl = ax.get_ylim()
+
+    for f,lpsd,fname in zip(lF,lextpsd,lextfiles):
+      print(fname,len(f),lpsd.shape)
+      avg = np.mean(lpsd,axis=0)
+      self.lextdatobj.append(ax.plot(f,avg))
+      yl = ((min(yl[0],min(avg))),(max(yl[1],max(avg))))
+
+    ax.set_ylim(yl)
+
     """
     try:
       dat = ddat['extdata']
@@ -214,9 +231,12 @@ class PSDCanvas (FigureCanvas):
 class PSDViewGUI (DataViewGUI):
   def __init__ (self,CanvasType,paramf,ntrial):
     super(PSDViewGUI,self).__init__(CanvasType,paramf,ntrial)
-    self.addLoadData()
+    self.addLoadDataActions()
+    self.lF = [] # frequencies associated with external data psd
+    self.lextpsd = [] # external data psd
+    self.lextfiles = [] # external data files
 
-  def addLoadData(self):
+  def addLoadDataActions (self):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
     loadDataFile.setShortcut('Ctrl+D')
     loadDataFile.setStatusTip('Load data file.')
@@ -234,23 +254,31 @@ class PSDViewGUI (DataViewGUI):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]:
       try:
-        self.extdata = np.load(fn[0])
-        self.extdataf = fn[0] # data file
-        print('Loaded data in ', fn[0])
+        extdataf = fn[0] # data file
+        dat = np.loadtxt(extdataf)
+        print('Loaded data in ', extdataf, '. Extracting PSDs.')
+
+        f, lpsd = extractpsd(dat)
+        print('Extracted PSDs from', extdataf)
+        self.lextpsd.append(lpsd)
+        self.lextfiles.append(extdataf)
+        self.lF.append(f)
       except:
         print('Could not load data in ', fn[0])
-      """
+
       try:
-        self.m.plotextdat()
-        self.m.draw() # make sure new lines show up in plot
+        if len(self.lextpsd) > 0:
+          print('Plotting ext data PSDs')
+          self.m.plotextdat(self.lF,self.lextpsd,self.lextfiles)
+          self.m.draw() # make sure new lines show up in plot
       except:
         print('Could not plot data from ', fn[0])
-      """
 
   def clearDataFile (self):
     self.m.clearlextdatobj()
-    self.extdata = None
-    self.extdataf = None
+    self.lextpsd = []
+    self.lextfiles = []
+    self.lF = []
     self.m.draw()
 
 
