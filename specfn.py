@@ -877,9 +877,10 @@ def spec_current_kernel(fparam, fts, fspec, f_max):
 # necessary for parallelization
 def spec_dpl_kernel(fparam, fts, fspec, f_max):
     dpl = dipolefn.Dipole(fts)
+    dpl.units = 'nAm'
 
     # Do the conversion prior to generating these spec
-    dpl.convert_fAm_to_nAm()
+    # dpl.convert_fAm_to_nAm()
 
     # Generate various spec results
     spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], fparam, f_max)

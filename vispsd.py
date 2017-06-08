@@ -69,11 +69,6 @@ def drawpsd (dspec, fig, G, ltextra=''):
 
   ltitle = ['Layer2', 'Layer5', 'Aggregate']
 
-  #white_patch = mpatches.Patch(color='white', label='Average')
-  #gray_patch = mpatches.Patch(color='gray', label='Individual')
-  #lpatch = []
-  #if len(ddat['dpltrials']) > 0: lpatch = [white_patch,gray_patch]
-
   yl = [1e9,-1e9]
 
   for i in [0,1,2]:
@@ -81,12 +76,7 @@ def drawpsd (dspec, fig, G, ltextra=''):
     ddat['std'+str(i)] = std = np.std(dspec[lkS[i]],axis=1) / sqrt(dspec[lkS[i]].shape[1])
     yl[0] = min(yl[0],np.amin(avg-std))
     yl[1] = max(yl[1],np.amax(avg+std))
-    """
-    if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
-      for dpltrial in ddat['dpltrials']:
-        yl[0] = min(yl[0],dpltrial[:,i].min())
-        yl[1] = max(yl[1],dpltrial[:,i].max())
-    """
+
   yl = tuple(yl)
   xl = (dspec['f_L2'][0],dspec['f_L2'][-1])
 
@@ -96,28 +86,19 @@ def drawpsd (dspec, fig, G, ltextra=''):
 
     if i == 2: ax.set_xlabel('Frequency (Hz)');
 
-    """
-    if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
-      for dpltrial in ddat['dpltrials']:
-        ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=2)
-    """
-
     ax.plot(dspec[lkF[i]],np.mean(dspec[lkS[i]],axis=1),color='w',linewidth=4)
     avg = ddat['avg'+str(i)]
     std = ddat['std'+str(i)]
     ax.plot(dspec[lkF[i]],avg-std,color='gray',linewidth=2)
     ax.plot(dspec[lkF[i]],avg+std,color='gray',linewidth=2)
 
-    # ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5)
-    # ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
     ax.set_ylim(yl)
     ax.set_xlim(xl)
-
-    # if i == 2 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
 
     ax.set_facecolor('k')
     ax.grid(True)
     ax.set_title(title)
+    ax.set_ylabel(r'$nAm^2$')
 
     gdx += 1
   return lax
@@ -158,62 +139,32 @@ class PSDCanvas (FigureCanvas):
     print('len(lax)',len(self.lax))
 
     self.lextdatobj = []
+    self.lpatch = []
+    white_patch = mpatches.Patch(color='white', label='Sim Avg.')
+    self.lpatch = [white_patch]
 
     ax = self.lax[2] # plot on agg
 
     yl = ax.get_ylim()
 
+    cmap=plt.get_cmap('nipy_spectral')
+    csm = plt.cm.ScalarMappable(cmap=cmap);
+    csm.set_clim((0,100))
+
     for f,lpsd,fname in zip(lF,lextpsd,lextfiles):
-      print(fname,len(f),lpsd.shape)
+      # print(fname,len(f),lpsd.shape)
+      clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
       avg = np.mean(lpsd,axis=0)
-      self.lextdatobj.append(ax.plot(f,avg))
+      std = np.std(lpsd,axis=0) / sqrt(lpsd.shape[1])
+      self.lextdatobj.append(ax.plot(f,avg,color=clr,linewidth=2))
+      self.lextdatobj.append(ax.plot(f,avg-std,'--',color=clr,linewidth=1))
+      self.lextdatobj.append(ax.plot(f,avg+std,'--',color=clr,linewidth=1))
       yl = ((min(yl[0],min(avg))),(max(yl[1],max(avg))))
+      new_patch = mpatches.Patch(color=clr, label=fname.split(os.path.sep)[-1].split('.txt')[0])
+      self.lpatch.append(new_patch)
 
     ax.set_ylim(yl)
-
-    """
-    try:
-      dat = ddat['extdata']
-      shp = dat.shape
-      ax = self.axdipole
-
-      yl = ax.get_ylim()
-      cmap=plt.get_cmap('nipy_spectral')
-      csm = plt.cm.ScalarMappable(cmap=cmap);
-      csm.set_clim((0,100))
-
-      errtot = 0.0
-
-      # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
-      dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
-
-      self.lextdatobj = []
-
-      for c in range(1,shp[1],1): 
-        clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
-        self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
-        yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
-
-        err0 = rmse(dat[:,c], dpldown)
-        errtot += err0
-        print('RMSE: ',err0)
-
-        fx = int(shp[0] * float(c) / shp[1])
-
-        tx,ty=dat[fx,0],dat[fx,c]
-        txt='RMSE:' + str(round(err0,2))
-        self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
-      ax.set_ylim(yl)
-
-      tx,ty=0,0
-      errtot /= (shp[1]-1)
-
-      print(txt)
-    except:
-      print('simdat ERR: could not plotextdat')
-      return False
-    return True
-    """
+    ax.legend(handles=self.lpatch)
 
   def plot (self):
     #self.clearaxes()

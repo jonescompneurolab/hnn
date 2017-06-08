@@ -380,7 +380,7 @@ def runsim ():
     print("Simulation run time: %4.4f s" % (time.time()-t0))
     print("Simulation directory is: %s" % ddir.dsim)    
     if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
-      runanalysis(p, doutf['file_param'], doutf['file_dpl'], doutf['file_spec']) # run spectral analysis
+      runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
     if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures
 
   pc.barrier() # make sure all done in case multiple trials
