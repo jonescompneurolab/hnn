@@ -14,6 +14,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
+from TrialGUI import TrialGUI
 from neuron import h
 from run import net
 import paramrw
@@ -107,3 +108,51 @@ if __name__ == '__main__':
 
     gdx += 1
 
+
+class PSDCanvas (FigureCanvas):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='PSD Viewer'):
+    FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
+    self.title = title
+    self.setParent(parent)
+    self.index = index
+    FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+    FigureCanvas.updateGeometry(self)
+    self.paramf = paramf
+    self.invertedhistax = False
+    self.G = gridspec.GridSpec(10,1)
+    self.plot()
+
+  def clearaxes (self):
+    try:
+      for ax in self.lax:
+        ax.set_yticks([])
+        ax.cla()
+    except:
+      pass
+
+  def plot (self):
+    global haveinputs,extinputs
+    #self.clearaxes()
+    #plt.close(self.figure)
+    if self.index == 0:      
+      extinputs = spikefn.ExtInputs(spkpath, outparamf)
+      extinputs.add_delay_times()
+      dspk,haveinputs,dhist = getdspk(spkpath)
+      self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
+      self.lax.append(drawhist(dhist,self.lax[-1]))
+    else:
+      spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
+      dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+      extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+      extinputs.add_delay_times()
+      self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+      self.lax.append(drawhist(dhisttrial,self.lax[-1]))
+
+    self.draw()
+
+
+if __name__ == '__main__':
+  app = QApplication(sys.argv)
+  ex = PSDGUI(PSDCanvas,paramf)
+  sys.exit(app.exec_())  
+  
