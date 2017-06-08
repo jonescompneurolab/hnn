@@ -140,7 +140,7 @@ class PSDCanvas (FigureCanvas):
 
     self.lextdatobj = []
     self.lpatch = []
-    white_patch = mpatches.Patch(color='white', label='Sim Avg.')
+    white_patch = mpatches.Patch(color='white', label='Simulation')
     self.lpatch = [white_patch]
 
     ax = self.lax[2] # plot on agg
@@ -152,7 +152,7 @@ class PSDCanvas (FigureCanvas):
     csm.set_clim((0,100))
 
     for f,lpsd,fname in zip(lF,lextpsd,lextfiles):
-      # print(fname,len(f),lpsd.shape)
+      print(fname,len(f),lpsd.shape)
       clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
       avg = np.mean(lpsd,axis=0)
       std = np.std(lpsd,axis=0) / sqrt(lpsd.shape[1])
@@ -164,7 +164,7 @@ class PSDCanvas (FigureCanvas):
       self.lpatch.append(new_patch)
 
     ax.set_ylim(yl)
-    ax.legend(handles=self.lpatch)
+    self.lextdatobj.append(ax.legend(handles=self.lpatch))
 
   def plot (self):
     #self.clearaxes()
