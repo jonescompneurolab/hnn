@@ -850,8 +850,9 @@ class BaseParamDialog (QDialog):
     row = 1
 
     self.lbl = QLabel(self)
-    self.lbl.setText('Simulation name:')
+    self.lbl.setText('Simulation Name:')
     self.lbl.adjustSize()
+    self.lbl.setToolTip('Simulation Name used to save parameter file and simulation data')
     grid.addWidget(self.lbl, row, 0)
     self.qle = QLineEdit(self)
     self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
@@ -866,7 +867,7 @@ class BaseParamDialog (QDialog):
 
     self.btncell = QPushButton('Cell',self)
     self.btncell.resize(self.btncell.sizeHint())
-    self.btncell.setToolTip('Set Cell Parameters')
+    self.btncell.setToolTip('Set Cell (Geometry, Synapses, Biophysics) Parameters')
     self.btncell.clicked.connect(self.setcellparam)
     grid.addWidget(self.btncell, row, 1, 1, 1); row+=1
 
@@ -910,13 +911,13 @@ class BaseParamDialog (QDialog):
 
     self.btntonic = QPushButton('Tonic Inputs',self)
     self.btntonic.resize(self.btntonic.sizeHint())
-    self.btntonic.setToolTip('Set Tonic Inputs')
+    self.btntonic.setToolTip('Set Tonic (Current Clamp) Inputs')
     self.btntonic.clicked.connect(self.settonicparam)
     grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
 
     self.btnsave = QPushButton('Save Parameters To File',self)
     self.btnsave.resize(self.btnsave.sizeHint())
-    self.btnsave.setToolTip('Save All Parameters to File')
+    self.btnsave.setToolTip('Save All Parameters to File (Specified by Simulation Name)')
     self.btnsave.clicked.connect(self.saveparams)
     grid.addWidget(self.btnsave, row, 0, 1, 2)
 
