@@ -998,6 +998,7 @@ class HNNGUI (QMainWindow):
     self.runthread = None
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
+    self.dextdata = OrderedDict() # external data
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1019,11 +1020,8 @@ class HNNGUI (QMainWindow):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]:
       try:
-        self.extdata = np.loadtxt(fn[0])
-        self.extdataf = fn[0] # data file
-        simdat.ddat['extdata'] = self.extdata
-        simdat.ddat['extdataf'] = self.extdataf
-        # print('simdat.ddat.keys():',simdat.ddat.keys())
+        self.dextdata[fn[0]] = np.loadtxt(fn[0])
+        simdat.ddat['dextdata'] = self.dextdata
         print('Loaded data in ', fn[0])
       except:
         print('Could not load data in ', fn[0])
@@ -1036,9 +1034,7 @@ class HNNGUI (QMainWindow):
   def clearDataFile (self):
     import simdat
     self.m.clearlextdatobj()
-    self.extdata = None
-    self.extdataf = None
-    if 'extdata' in simdat.ddat: del simdat.ddat['extdata']
+    self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
     self.m.draw()
 
   def setparams (self):
@@ -1281,10 +1277,10 @@ class HNNGUI (QMainWindow):
     self.toolbar = NavigationToolbar(self.m, self)
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
-    if hasattr(self, 'extdata'):
-      if self.extdata is not None:      
+    if hasattr(self, 'dextdata'):
+      if self.dextdata is not None:      
         import simdat
-        simdat.ddat['extdata'] = self.extdata
+        simdat.ddat['dextdata'] = self.dextdata
         self.m.plotextdat()
         self.m.draw()
 
