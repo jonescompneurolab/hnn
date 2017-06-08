@@ -34,7 +34,6 @@ basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
 print('basedir:',basedir)
 
 ddat = {}
-#ddat['spectrials']
 try:
   specpath = os.path.join(basedir,'rawspec.npz')
   print('specpath',specpath)
@@ -42,6 +41,19 @@ try:
 except:
   print('Could not load',specpath)
   quit()
+
+# assumes column 0 is time, rest of columns are time-series
+def extractpsd (dat, fmax=120.0):
+  from specfn import MorletSpec
+  lpsd = []
+  tvec = dat[:,0]
+  dt = tvec[1] - tvec[0]
+  tstop = tvec[-1]
+  prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
+  for col in range(1,dat.shape[1],1):
+    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+    lpsd.append(mean(ms.TFR,axis=1))
+  return ms.f, np.array(lpsd)
 
 def drawpsd (dspec, fig, G, ltextra=''):
 
@@ -131,6 +143,61 @@ class PSDCanvas (FigureCanvas):
     except:
       pass
 
+  def clearlextdatobj (self):
+    if hasattr(self,'lextdatobj'):
+      for o in self.lextdatobj:
+        try:
+          o.set_visible(False)
+        except:
+          o[0].set_visible(False)
+      del self.lextdatobj
+
+  def plotextdat (self): # plot 'external' data (e.g. from experiment/other simulation)
+    pass
+    """
+    try:
+      dat = ddat['extdata']
+      shp = dat.shape
+      ax = self.axdipole
+
+      yl = ax.get_ylim()
+      cmap=plt.get_cmap('nipy_spectral')
+      csm = plt.cm.ScalarMappable(cmap=cmap);
+      csm.set_clim((0,100))
+
+      errtot = 0.0
+
+      # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
+      dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
+
+      self.lextdatobj = []
+
+      for c in range(1,shp[1],1): 
+        clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
+        self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
+        yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
+
+        err0 = rmse(dat[:,c], dpldown)
+        errtot += err0
+        print('RMSE: ',err0)
+
+        fx = int(shp[0] * float(c) / shp[1])
+
+        tx,ty=dat[fx,0],dat[fx,c]
+        txt='RMSE:' + str(round(err0,2))
+        self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
+      ax.set_ylim(yl)
+
+      tx,ty=0,0
+      errtot /= (shp[1]-1)
+
+      print(txt)
+    except:
+      print('simdat ERR: could not plotextdat')
+      return False
+    return True
+    """
+
   def plot (self):
     #self.clearaxes()
     #plt.close(self.figure)
@@ -144,9 +211,51 @@ class PSDCanvas (FigureCanvas):
 
     self.draw()
 
+class PSDViewGUI (DataViewGUI):
+  def __init__ (self,CanvasType,paramf,ntrial):
+    super(PSDViewGUI,self).__init__(CanvasType,paramf,ntrial)
+    self.addLoadData()
+
+  def addLoadData(self):
+    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
+    loadDataFile.setShortcut('Ctrl+D')
+    loadDataFile.setStatusTip('Load data file.')
+    loadDataFile.triggered.connect(self.loadDataFileDialog)
+
+    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file.', self)
+    clearDataFileAct.setShortcut('Ctrl+C')
+    clearDataFileAct.setStatusTip('Clear data file.')
+    clearDataFileAct.triggered.connect(self.clearDataFile)
+
+    self.fileMenu.addAction(loadDataFile)
+    self.fileMenu.addAction(clearDataFileAct)
+
+  def loadDataFileDialog (self):
+    fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
+    if fn[0]:
+      try:
+        self.extdata = np.load(fn[0])
+        self.extdataf = fn[0] # data file
+        print('Loaded data in ', fn[0])
+      except:
+        print('Could not load data in ', fn[0])
+      """
+      try:
+        self.m.plotextdat()
+        self.m.draw() # make sure new lines show up in plot
+      except:
+        print('Could not plot data from ', fn[0])
+      """
+
+  def clearDataFile (self):
+    self.m.clearlextdatobj()
+    self.extdata = None
+    self.extdataf = None
+    self.m.draw()
+
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = DataViewGUI(PSDCanvas,paramf,ntrial)
+  ex = PSDViewGUI(PSDCanvas,paramf,ntrial)
   sys.exit(app.exec_())  
   

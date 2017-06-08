@@ -22,7 +22,7 @@ import axes_create as ac
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
-    def __init__(self, tvec, tsvec, fparam, f_max=None):
+    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None):
         # Save variable portion of fdata_spec as identifying attribute
         # self.name = fdata_spec
 
@@ -31,7 +31,10 @@ class MorletSpec():
         self.tsvec = tsvec
 
         # function is called this way because paramrw.read() returns 2 outputs
-        self.p_dict = paramrw.read(fparam)[1]
+        if p_dict is None:
+          self.p_dict = paramrw.read(fparam)[1]
+        else:
+          self.p_dict = p_dict
 
         # maximum frequency of analysis
         # Add 1 to ensure analysis is inclusive of maximum frequency

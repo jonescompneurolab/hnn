@@ -24,9 +24,9 @@ class DataViewGUI (QMainWindow):
     exitAction.triggered.connect(qApp.quit)
 
     menubar = self.menuBar()
-    fileMenu = menubar.addMenu('&File')
+    self.fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
-    fileMenu.addAction(exitAction)
+    self.fileMenu.addAction(exitAction)
 
   def initCanvas (self):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
