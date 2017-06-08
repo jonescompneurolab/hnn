@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QMenu, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 import numpy as np
 from math import ceil
@@ -83,6 +84,8 @@ class SIMCanvas (FigureCanvas):
   def __init__ (self, paramf, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
+    self.lextdatobj = []
+    self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
     self.setParent(parent)
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
@@ -198,10 +201,8 @@ class SIMCanvas (FigureCanvas):
       # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
       dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
 
-      self.lextdatobj = []
-
       for c in range(1,shp[1],1): 
-        clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
+        clr = csm.to_rgba(int(np.random.RandomState().uniform(1,101,1)))
         self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
@@ -214,7 +215,12 @@ class SIMCanvas (FigureCanvas):
         tx,ty=dat[fx,0],dat[fx,c]
         txt='RMSE:' + str(round(err0,2))
         self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
+
+        new_patch = mpatches.Patch(color=clr, label='data')#fname.split(os.path.sep)[-1].split('.txt')[0])
+        self.lpatch.append(new_patch)
+
       ax.set_ylim(yl)
+      self.lextdatobj.append(ax.legend(handles=self.lpatch))
 
       tx,ty=0,0
       errtot /= (shp[1]-1)
@@ -230,13 +236,14 @@ class SIMCanvas (FigureCanvas):
     return True
 
   def clearlextdatobj (self):
-    if hasattr(self,'lextdatobj'):
-      for o in self.lextdatobj:
-        try:
-          o.set_visible(False)
-        except:
-          o[0].set_visible(False)
-      del self.lextdatobj
+    for o in self.lextdatobj:
+      try:
+        o.set_visible(False)
+      except:
+        o[0].set_visible(False)
+    del self.lextdatobj
+    self.lextdatobj = []
+    self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
     if hasattr(self,'annot_avg'):
       self.annot_avg.set_visible(False)
       del self.annot_avg

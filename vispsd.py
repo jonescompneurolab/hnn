@@ -139,7 +139,6 @@ class PSDCanvas (FigureCanvas):
     print('len(lax)',len(self.lax))
 
     self.lextdatobj = []
-    self.lpatch = []
     white_patch = mpatches.Patch(color='white', label='Simulation')
     self.lpatch = [white_patch]
 
@@ -153,7 +152,7 @@ class PSDCanvas (FigureCanvas):
 
     for f,lpsd,fname in zip(lF,lextpsd,lextfiles):
       print(fname,len(f),lpsd.shape)
-      clr = csm.to_rgba(int(np.random.RandomState().uniform(0,101,1)))
+      clr = csm.to_rgba(int(np.random.RandomState().uniform(1,101,1)))
       avg = np.mean(lpsd,axis=0)
       std = np.std(lpsd,axis=0) / sqrt(lpsd.shape[1])
       self.lextdatobj.append(ax.plot(f,avg,color=clr,linewidth=2))
