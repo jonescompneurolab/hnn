@@ -14,7 +14,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
-from TrialGUI import TrialGUI
+from DataViewGUI import DataViewGUI
 from neuron import h
 from run import net
 import paramrw
@@ -43,15 +43,14 @@ except:
   print('Could not load',specpath)
   quit()
 
-def handle_close (evt): quit()
+def drawpsd (dspec, fig, G, ltextra=''):
 
-if __name__ == '__main__':
+  lax = []
+
   lkF = ['f_L2', 'f_L5', 'f_L2']
   lkS = ['TFR_L2', 'TFR_L5', 'TFR']      
 
   plt.ion()
-  fig = plt.figure()
-  fig.canvas.mpl_connect('close_event', handle_close)
 
   gdx = 311
 
@@ -65,8 +64,8 @@ if __name__ == '__main__':
   yl = [1e9,-1e9]
 
   for i in [0,1,2]:
-    ddat['avg'+str(i)] = avg = np.mean(ddat['spec'][lkS[i]],axis=1)
-    ddat['std'+str(i)] = std = np.std(ddat['spec'][lkS[i]],axis=1) / sqrt(ddat['spec'][lkS[i]].shape[1])
+    ddat['avg'+str(i)] = avg = np.mean(dspec[lkS[i]],axis=1)
+    ddat['std'+str(i)] = std = np.std(dspec[lkS[i]],axis=1) / sqrt(dspec[lkS[i]].shape[1])
     yl[0] = min(yl[0],np.amin(avg-std))
     yl[1] = max(yl[1],np.amax(avg+std))
     """
@@ -76,10 +75,11 @@ if __name__ == '__main__':
         yl[1] = max(yl[1],dpltrial[:,i].max())
     """
   yl = tuple(yl)
-  xl = (ddat['spec']['f_L2'][0],ddat['spec']['f_L2'][-1])
+  xl = (dspec['f_L2'][0],dspec['f_L2'][-1])
 
   for i,title in zip([0, 1, 2],ltitle):
     ax = fig.add_subplot(gdx)
+    lax.append(ax)
 
     if i == 2: ax.set_xlabel('Frequency (Hz)');
 
@@ -89,11 +89,11 @@ if __name__ == '__main__':
         ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=2)
     """
 
-    ax.plot(ddat['spec'][lkF[i]],np.mean(ddat['spec'][lkS[i]],axis=1),color='w',linewidth=4)
+    ax.plot(dspec[lkF[i]],np.mean(dspec[lkS[i]],axis=1),color='w',linewidth=4)
     avg = ddat['avg'+str(i)]
     std = ddat['std'+str(i)]
-    ax.plot(ddat['spec'][lkF[i]],avg-std,color='gray',linewidth=2)
-    ax.plot(ddat['spec'][lkF[i]],avg+std,color='gray',linewidth=2)
+    ax.plot(dspec[lkF[i]],avg-std,color='gray',linewidth=2)
+    ax.plot(dspec[lkF[i]],avg+std,color='gray',linewidth=2)
 
     # ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5)
     # ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
@@ -107,6 +107,7 @@ if __name__ == '__main__':
     ax.set_title(title)
 
     gdx += 1
+  return lax
 
 
 class PSDCanvas (FigureCanvas):
@@ -131,28 +132,21 @@ class PSDCanvas (FigureCanvas):
       pass
 
   def plot (self):
-    global haveinputs,extinputs
     #self.clearaxes()
     #plt.close(self.figure)
     if self.index == 0:      
-      extinputs = spikefn.ExtInputs(spkpath, outparamf)
-      extinputs.add_delay_times()
-      dspk,haveinputs,dhist = getdspk(spkpath)
-      self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
-      self.lax.append(drawhist(dhist,self.lax[-1]))
+      self.lax = drawpsd(ddat['spec'],self.figure, self.G, ltextra='All Trials')
     else:
-      spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
-      dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
-      extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
-      extinputs.add_delay_times()
-      self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
-      self.lax.append(drawhist(dhisttrial,self.lax[-1]))
+      specpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
+      if 'spec'+str(self.index) not in ddat:
+        ddat['spec'+str(self.index)] = np.load(specpath)
+      self.lax=drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));
 
     self.draw()
 
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = PSDGUI(PSDCanvas,paramf)
+  ex = DataViewGUI(PSDCanvas,paramf,ntrial)
   sys.exit(app.exec_())  
   

@@ -1057,7 +1057,7 @@ class HNNGUI (QMainWindow):
   def showPSDPlot (self):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', '-i', 'vispsd.py',paramf]
+    lcmd = ['python', 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
