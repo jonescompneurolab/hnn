@@ -1022,6 +1022,7 @@ class HNNGUI (QMainWindow):
         self.extdata = np.loadtxt(fn[0])
         self.extdataf = fn[0] # data file
         simdat.ddat['extdata'] = self.extdata
+        simdat.ddat['extdataf'] = self.extdataf
         # print('simdat.ddat.keys():',simdat.ddat.keys())
         print('Loaded data in ', fn[0])
       except:

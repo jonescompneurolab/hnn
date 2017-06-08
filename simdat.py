@@ -202,7 +202,7 @@ class SIMCanvas (FigureCanvas):
       dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
 
       for c in range(1,shp[1],1): 
-        clr = csm.to_rgba(int(np.random.RandomState().uniform(1,101,1)))
+        clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
         self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
         yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
@@ -216,7 +216,7 @@ class SIMCanvas (FigureCanvas):
         txt='RMSE:' + str(round(err0,2))
         self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
 
-        new_patch = mpatches.Patch(color=clr, label='data')#fname.split(os.path.sep)[-1].split('.txt')[0])
+        new_patch = mpatches.Patch(color=clr, label=ddat['extdataf'].split(os.path.sep)[-1].split('.txt')[0])
         self.lpatch.append(new_patch)
 
       ax.set_ylim(yl)
@@ -243,7 +243,7 @@ class SIMCanvas (FigureCanvas):
         o[0].set_visible(False)
     del self.lextdatobj
     self.lextdatobj = []
-    self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
+    self.lpatch = [mpatches.Patch(color='black', label='Simulation')]
     if hasattr(self,'annot_avg'):
       self.annot_avg.set_visible(False)
       del self.annot_avg
