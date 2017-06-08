@@ -191,7 +191,7 @@ class PSDViewGUI (DataViewGUI):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
     loadDataFile.setShortcut('Ctrl+D')
     loadDataFile.setStatusTip('Load data file.')
-    loadDataFile.triggered.connect(self.loadDataFileDialog)
+    loadDataFile.triggered.connect(self.loadDisplayData)
 
     clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file.', self)
     clearDataFileAct.setShortcut('Ctrl+C')
@@ -201,29 +201,39 @@ class PSDViewGUI (DataViewGUI):
     self.fileMenu.addAction(loadDataFile)
     self.fileMenu.addAction(clearDataFileAct)
 
+  def loadDisplayData (self):
+    extdataf,dat = self.loadDataFileDialog()    
+    if not extdataf: return
+    try:
+      f, lpsd = extractpsd(dat)
+      self.printStat('Extracted PSDs from ' + extdataf)
+      self.lextpsd.append(lpsd)
+      self.lextfiles.append(extdataf)
+      self.lF.append(f)
+    except:
+      self.printStat('Could not extract PSDs from ' + extdataf)
+
+    try:
+      if len(self.lextpsd) > 0:
+        self.printStat('Plotting ext data PSDs.')
+        self.m.plotextdat(self.lF,self.lextpsd,self.lextfiles)
+        self.m.draw() # make sure new lines show up in plot
+        self.printStat('')
+    except:
+      self.printStat('Could not plot data from ' + extdataf)    
+
   def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]:
       try:
         extdataf = fn[0] # data file
         dat = np.loadtxt(extdataf)
-        print('Loaded data in ', extdataf, '. Extracting PSDs.')
-
-        f, lpsd = extractpsd(dat)
-        print('Extracted PSDs from', extdataf)
-        self.lextpsd.append(lpsd)
-        self.lextfiles.append(extdataf)
-        self.lF.append(f)
+        self.printStat('Loaded data in ' + extdataf + '. Extracting PSDs.')
+        return extdataf,dat
       except:
-        print('Could not load data in ', fn[0])
-
-      try:
-        if len(self.lextpsd) > 0:
-          print('Plotting ext data PSDs')
-          self.m.plotextdat(self.lF,self.lextpsd,self.lextfiles)
-          self.m.draw() # make sure new lines show up in plot
-      except:
-        print('Could not plot data from ', fn[0])
+        self.printStat('Could not load data in ' + fn[0])
+        return None,None
+    return None,None
 
   def clearDataFile (self):
     self.m.clearlextdatobj()

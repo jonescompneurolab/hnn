@@ -28,6 +28,10 @@ class DataViewGUI (QMainWindow):
     menubar.setNativeMenuBar(False)
     self.fileMenu.addAction(exitAction)
 
+  def printStat (self,s):
+    print(s)
+    self.statusBar().showMessage(s)
+
   def initCanvas (self):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
