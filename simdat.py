@@ -269,9 +269,13 @@ class SIMCanvas (FigureCanvas):
 
       EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
 
+      # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
+      DrawSpec = find_param(dfile['outparam'],'save_spec_data') or OngoingInputs or PoissonInputs or TonicInputs
+
       if OngoingInputs or EvokedInputs:
         if self.plotinputhist(xl): gRow = 2
-      if OngoingInputs or PoissonInputs or TonicInputs:
+
+      if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
@@ -294,7 +298,7 @@ class SIMCanvas (FigureCanvas):
       ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
       ax.set_xlim(xl); ax.set_ylim(yl)
 
-      if OngoingInputs or PoissonInputs or TonicInputs: # draw specgram when have ongoing, poisson, or tonic inputs
+      if DrawSpec: # 
         if debug: print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
