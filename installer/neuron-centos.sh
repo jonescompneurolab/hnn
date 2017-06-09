@@ -58,9 +58,26 @@ sudo python3 configure.py
 make
 sudo make install
 
-# pyqt - needed for GUI
-sudo pip3 install pyqt5
+# qt, pyqt, and supporting packages - needed for GUI
+wget https://sourceforge.net/projects/pyqt/files/sip/sip-4.19.2/sip-4.19.2.tar.gz
+tar -zxf sip-4.19.2.tar.gz
+cd sip-4.19.2
+sudo python3 configure.py
+make
+sudo make install
+cp ..
 
+sudo yum -y install qt-devel
+sudo yum -y install qt5-qtbase
+sudo yum -y install qt5-qtbase-devel
+
+wget https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.8.2/PyQt5_gpl-5.8.2.tar.gz
+tar -xvf PyQt5_gpl-5.8.2.tar.gz
+cd PyQt5_gpl-5.8.2
+python3 configure.py --qmake=/usr/lib64/qt5/bin/qmake --confirm-license
+make
+sudo make install
+cd ..
 # pyqtgraph - only used for visualization
 cd hnn
 git clone https://github.com/pyqtgraph/pyqtgraph.git
