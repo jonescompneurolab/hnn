@@ -49,12 +49,20 @@ cd hnn
 make
 
 # need sip for pyqt5 - https://www.riverbankcomputing.com/software/sip/download
-pip3 install SIP
+# pip3 install SIP # problems with bison (used by NEURON) and sip
+cd ..
+wget https://sourceforge.net/projects/pyqt/files/sip/sip-4.19.2/sip-4.19.2.tar.gz
+tar -zxf sip-4.19.2.tar.gz
+cd sip-4.19.2
+sudo python3 configure.py
+make
+sudo make install
 
 # pyqt - needed for GUI
 sudo pip3 install pyqt5
 
 # pyqtgraph - only used for visualization
+cd hnn
 git clone https://github.com/pyqtgraph/pyqtgraph.git
 cd pyqtgraph
 git checkout pyqt5
