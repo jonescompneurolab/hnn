@@ -38,11 +38,18 @@ sudo python3 setup.py install
 # move outside of nrn directories
 cd $startdir
 
+# need hg for now
+sudo yum -y install mercurial
+# pip3 install Mercurial # <<-- alternative for other platform - doesn't work on centos
+
 # HNN repo from bitbucket - can adjust to git later
 hg clone ssh://hg@bitbucket.org/samnemo/hnn
 cd hnn
 # make compiles the mod files
 make
+
+# need sip for pyqt5 - https://www.riverbankcomputing.com/software/sip/download
+pip3 install SIP
 
 # pyqt - needed for GUI
 sudo pip3 install pyqt5
