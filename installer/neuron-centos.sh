@@ -1,3 +1,12 @@
+# start with this since it gets input needed
+
+# need hg for now
+sudo yum -y install mercurial
+# pip3 install Mercurial # <<-- alternative for other platform - doesn't work on centos
+
+# HNN repo from bitbucket - can adjust to git later
+hg clone https://bitbucket.org/samnemo/hnn
+
 wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 sudo rpm -i epel-release-latest-7.noarch.rpm
 sudo yum -y install python34-devel.x86_64
@@ -38,12 +47,7 @@ sudo python3 setup.py install
 # move outside of nrn directories
 cd $startdir
 
-# need hg for now
-sudo yum -y install mercurial
-# pip3 install Mercurial # <<-- alternative for other platform - doesn't work on centos
-
-# HNN repo from bitbucket - can adjust to git later
-hg clone https://bitbucket.org/samnemo/hnn
+# setup HNN itself
 cd hnn
 # make compiles the mod files
 make
@@ -54,9 +58,9 @@ wget https://sourceforge.net/projects/pyqt/files/sip/sip-4.19.2/sip-4.19.2.tar.g
 tar -zxf sip-4.19.2.tar.gz
 cd sip-4.19.2
 sudo python3 configure.py
-make
-sudo make install
-cp ..
+make -j4
+sudo make install -j4
+cd ..
 
 sudo yum -y install qt-devel
 sudo yum -y install qt5-qtbase
@@ -66,8 +70,8 @@ wget https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.8.2/PyQt5_gpl-5.8.
 tar -xvf PyQt5_gpl-5.8.2.tar.gz
 cd PyQt5_gpl-5.8.2
 python3 configure.py --qmake=/usr/lib64/qt5/bin/qmake --confirm-license
-make
-sudo make install
+make -j4
+sudo make install -j4
 cd ..
 
 # pyqtgraph - only used for visualization
