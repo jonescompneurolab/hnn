@@ -768,6 +768,18 @@ class NetworkParamDialog (DictDialog):
         else:
           self.addtransvar(k,lk[1]+'->'+lk[2]+' '+lk[3].upper()+' weight (nS)')
 
+class HelpDialog (QDialog):
+  def __init__ (self, parent):
+    super(HelpDialog, self).__init__(parent)
+    self.initUI()
+
+  def initUI (self):
+    self.layout = QVBoxLayout(self)
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+    self.setGeometry(100, 100, 300, 100)
+    self.setWindowTitle('HNN Help')    
+
 # dialog for visualizing model
 class VisnetDialog (QDialog):
   def __init__ (self, parent):
@@ -999,6 +1011,7 @@ class HNNGUI (QMainWindow):
     self.initUI()
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
+    self.helpwin = HelpDialog(self)
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1043,6 +1056,9 @@ class HNNGUI (QMainWindow):
 
   def showAboutDialog (self):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
+
+  def showHelpDialog (self):
+    self.helpwin.show()
 
   def showSomaVPlot (self): 
     global basedir
@@ -1136,6 +1152,10 @@ class HNNGUI (QMainWindow):
     aboutAction.setStatusTip('About HNN.')
     aboutAction.triggered.connect(self.showAboutDialog)
     aboutMenu.addAction(aboutAction)
+    helpAction = QAction('Help',self)
+    helpAction.setStatusTip('Help on how to use HNN (parameters).')
+    helpAction.triggered.connect(self.showHelpDialog)
+    #aboutMenu.addAction(helpAction)
 
   def addButtons (self, gRow):
     self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
