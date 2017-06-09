@@ -1,1 +1,1 @@
-python hnn.py hnn.cfg
+python3 hnn.py hnn.cfg

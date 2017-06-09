@@ -75,7 +75,7 @@ sudo make install -j4
 cd ..
 
 # used by pqtgraph - for visualization
-pip3 install PyOpenGL PyOpenGL_accelerate
+sudo pip3 install PyOpenGL PyOpenGL_accelerate
 
 # pyqtgraph - only used for visualization
 cd hnn
