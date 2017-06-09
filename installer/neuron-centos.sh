@@ -43,7 +43,7 @@ sudo yum -y install mercurial
 # pip3 install Mercurial # <<-- alternative for other platform - doesn't work on centos
 
 # HNN repo from bitbucket - can adjust to git later
-hg clone ssh://hg@bitbucket.org/samnemo/hnn
+hg clone https://bitbucket.org/samnemo/hnn
 cd hnn
 # make compiles the mod files
 make
