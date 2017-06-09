@@ -153,6 +153,15 @@ class SIMCanvas (FigureCanvas):
       pass
     return N_trials
 
+  def getNPyr (self):
+    try:
+      x = quickgetprm(self.paramf,'N_pyr_x',float)
+      y = quickgetprm(self.paramf,'N_pyr_y',float)
+      if type(x)==float and type(y)==float:
+        return int(x * y * 2)
+    except:
+      return 0
+
   def getEVInputTimes (self):
     t_evprox_early,t_evdist,t_evprox_late=-1,-1,-1
     try:
@@ -295,7 +304,11 @@ class SIMCanvas (FigureCanvas):
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       scalefctr = getscalefctr(self.paramf)
-      ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')')
+      NEstPyr = int(self.getNPyr() * scalefctr)
+      if NEstPyr > 0:
+        ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells')
+      else:
+        ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')\n')
       ax.set_xlim(xl); ax.set_ylim(yl)
 
       if DrawSpec: # 
