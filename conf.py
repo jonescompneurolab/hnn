@@ -206,4 +206,4 @@ def backupcfg (simstr):
 fcfg = setfcfg() # config file name
 dconf = readconf(fcfg)
 
-print(dconf)
+

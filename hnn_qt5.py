@@ -123,6 +123,14 @@ class DictDialog (QDialog):
     self.initUI()
     self.initExtra()
     self.setfromdin(din) # set values from input dictionary
+    self.addtips()
+
+  def addtips (self):
+    for ktip in dconf.keys():
+      if ktip in self.dqline:
+        self.dqline[ktip].setToolTip(dconf[ktip])
+      elif ktip in self.dqextra:
+        self.dqextra[ktip].setToolTip(dconf[ktip])
 
   def __str__ (self):
     s = ''
