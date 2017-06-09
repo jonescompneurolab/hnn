@@ -306,9 +306,9 @@ class SIMCanvas (FigureCanvas):
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
       if NEstPyr > 0:
-        ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells')
+        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells')
       else:
-        ax.set_ylabel(r'dipole (nAm $\times$ '+str(scalefctr)+')\n')
+        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n')
       ax.set_xlim(xl); ax.set_ylim(yl)
 
       if DrawSpec: # 
