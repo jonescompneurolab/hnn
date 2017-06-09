@@ -515,14 +515,6 @@ class RunParamDialog (DictDialog):
                              ('N_trials',0)]) # number of trials
                              # cvode - not currently used by simulation
 
-    self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
-                              ('prng_seedcore_input_dist', 0),
-                              ('prng_seedcore_extpois', 0),
-                              ('prng_seedcore_extgauss', 0),
-                              ('prng_seedcore_evprox_early', 0),
-                              ('prng_seedcore_evdist', 0),
-                              ('prng_seedcore_evprox_late', 0)])
-
     # analysis    
     self.danalysis = OrderedDict([('save_figs',0),
                                   ('save_spec_data', 0),
@@ -531,14 +523,28 @@ class RunParamDialog (DictDialog):
                                   ('dipole_smooth_win',15.0)])#,
                                   #('save_vsoma',0)])
 
-    self.ldict = [self.drun, self.drand, self.danalysis]
-    self.ltitle = ['Run', 'Randomization Seeds','Analysis']
+    self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
+                              ('prng_seedcore_input_dist', 0),
+                              ('prng_seedcore_extpois', 0),
+                              ('prng_seedcore_extgauss', 0),
+                              ('prng_seedcore_evprox_early', 0),
+                              ('prng_seedcore_evdist', 0),
+                              ('prng_seedcore_evprox_late', 0)])
+
+    self.ldict = [self.drun, self.danalysis, self.drand]
+    self.ltitle = ['Run', 'Analysis', 'Randomization Seeds']
     self.stitle = 'Run Parameters'
 
     self.addtransvar('tstop','Duration (ms)')
     self.addtransvar('dt','Integration timestep (ms)')
     #self.addtransvar('celsius','Temperature (C)')
     self.addtransvar('N_trials','Trials')
+    self.addtransvar('save_spec_data','Save spectral data')
+    self.addtransvar('save_figs','Save figures')
+    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
+    self.addtransvar('dipole_scalefctr','Dipole Scaling')
+    self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
+    self.addtransvar('save_vsoma','Save Somatic Voltages')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
@@ -546,12 +552,6 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evprox_early','Evoked Proximal Early')
     self.addtransvar('prng_seedcore_evdist','Evoked Distal')
     self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
-    self.addtransvar('save_spec_data','Save spectral data')
-    self.addtransvar('save_figs','Save figures')
-    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
-    self.addtransvar('dipole_scalefctr','Dipole Scaling')
-    self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
-    self.addtransvar('save_vsoma','Save Somatic Voltages')
 
   def initExtra (self):
     DictDialog.initExtra(self)

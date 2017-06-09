@@ -22,6 +22,9 @@ paramf = param/default.param
 [draw]
 drawindivdpl = 1
 drawindivrast = 1
+[tips]
+tstop = Simulation duration; Evoked response simulations typically take 170 ms while ongoing rhythms are run for longer.
+dt = Simulation timestep - shorter timesteps mean more accuracy but longer runtimes.
 """
 
 class baseparam:
@@ -105,6 +108,12 @@ def readconf (fn="hnn.cfg"):
   def confbool (base,var,defa):
     return str2bool(confstr(base,var,defa))
 
+  def readtips (d):
+    if not config.has_section('tips'): return None
+    ltips = config.options('tips')
+    for i,prm in enumerate(ltips):
+      d[prm] = config.get('tips',prm).strip()      
+
   def getlparam (base, ty):
     lout = []
     if not config.has_section(base): return lout
@@ -145,6 +154,8 @@ def readconf (fn="hnn.cfg"):
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawindivrast'] = confint("draw","drawindivrast",1)
+
+  readtips(d)
 
   """
   recstr = confstr('run','recordV','')
@@ -195,3 +206,4 @@ def backupcfg (simstr):
 fcfg = setfcfg() # config file name
 dconf = readconf(fcfg)
 
+print(dconf)
