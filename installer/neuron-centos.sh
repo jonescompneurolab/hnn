@@ -13,6 +13,11 @@ sudo yum -y install openmpi openmpi-devel
 sudo yum -y install libXext libXext-devel
 export PATH=$PATH:/usr/lib64/openmpi/bin
 sudo PATH=$PATH:/usr/lib64/openmpi/bin pip3 install mpi4py
+
+# save dir installing hnn to
+startdir=$(pwd)
+echo $startdir
+
 git clone https://github.com/nrnhines/nrn
 git clone https://github.com/nrnhines/iv
 cd iv
@@ -29,3 +34,23 @@ make -j4
 sudo PATH=$PATH:/usr/lib64/openmpi/bin make install -j4
 cd src/nrnpython
 sudo python3 setup.py install
+
+# move outside of nrn directories
+cd $startdir
+
+# HNN repo from bitbucket - can adjust to git later
+hg clone ssh://hg@bitbucket.org/samnemo/hnn
+cd hnn
+# make compiles the mod files
+make
+
+# pyqt - needed for GUI
+sudo pip3 install pyqt5
+
+# pyqtgraph - only used for visualization
+git clone https://github.com/pyqtgraph/pyqtgraph.git
+cd pyqtgraph
+git checkout pyqt5
+git pull
+sudo python3 setup.py install
+
