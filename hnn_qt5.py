@@ -993,12 +993,12 @@ class HNNGUI (QMainWindow):
   def __init__ (self):
     global dfile, ddat, paramf
     super().__init__()        
-    self.initUI()
     self.runningsim = False
     self.runthread = None
+    self.dextdata = OrderedDict() # external data
+    self.initUI()
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
-    self.dextdata = OrderedDict() # external data
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1277,12 +1277,11 @@ class HNNGUI (QMainWindow):
     self.toolbar = NavigationToolbar(self.m, self)
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
-    if hasattr(self, 'dextdata'):
-      if self.dextdata is not None:      
-        import simdat
-        simdat.ddat['dextdata'] = self.dextdata
-        self.m.plotextdat()
-        self.m.draw()
+    if len(self.dextdata.keys()) > 0:
+      import simdat
+      simdat.ddat['dextdata'] = self.dextdata
+      self.m.plotextdat()
+      self.m.draw()
 
   def controlsim (self):
     if self.runningsim:
