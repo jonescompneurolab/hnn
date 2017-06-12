@@ -85,3 +85,6 @@ git checkout pyqt5
 git pull
 sudo python3 setup.py install
 
+# needed for matplotlib
+sudo yum -y install python34-tkinter
+
