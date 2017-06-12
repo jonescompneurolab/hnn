@@ -461,7 +461,7 @@ class EvokedInputParamDialog (DictDialog):
     self.ltabs[1].layout.addRow(self.pixDistlbl)
 
   # turn off by setting all weights to 0.0
-  def TurnOff (self): self.lines2val('weight',0.0)
+  def TurnOff (self): self.lines2val('gbar',0.0)
 
   def initd (self):
     # evprox (early) feed strength
