@@ -98,7 +98,7 @@ def drawpsd (dspec, fig, G, ltextra=''):
     ax.set_facecolor('k')
     ax.grid(True)
     ax.set_title(title)
-    ax.set_ylabel(r'$nAm^2$')
+    ax.set_ylabel(r'$Am^2$')
 
     gdx += 1
   return lax
