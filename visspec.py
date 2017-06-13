@@ -196,21 +196,22 @@ class SpecCanvas (FigureCanvas):
     if self.index == 0:      
       self.lax = drawspec(self.lextspec,self.index, self.figure, self.G, ltextra='All Trials')
     else:
-      specpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
-      if 'spec'+str(self.index) not in ddat:
-        ddat['spec'+str(self.index)] = np.load(specpath)
       self.lax=drawspec(self.lextspec,self.index, self.figure, self.G, ltextra='Trial '+str(self.index));
 
     self.draw()
 
 class SpecViewGUI (DataViewGUI):
   def __init__ (self,CanvasType,paramf,ntrial,title):
-    super(SpecViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
-    self.addLoadDataActions()
     self.lF = [] # frequencies associated with external data spec
     self.lextspec = [] # external data spec
     self.lextfiles = [] # external data files
     self.dat = None
+    super(SpecViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
+    self.addLoadDataActions()
+
+  def initCanvas (self):
+    super(SpecViewGUI,self).initCanvas()
+    self.m.lextspec = self.lextspec
 
   def addLoadDataActions (self):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
