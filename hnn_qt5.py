@@ -1082,6 +1082,11 @@ class HNNGUI (QMainWindow):
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
+  def showSpecPlot (self):
+    lcmd = ['python3', 'visspec.py']
+    if debug: print('visspec cmd:',lcmd)
+    Popen(lcmd) # nonblocking
+
   def showRasterPlot (self):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
@@ -1134,11 +1139,11 @@ class HNNGUI (QMainWindow):
 
     # view menu - drawing/visualization
     viewMenu = menubar.addMenu('&View')
-    viewDipoleAction = QAction('View Dipoles',self)
+    viewDipoleAction = QAction('View Simulation Dipoles',self)
     viewDipoleAction.setStatusTip('View Simulation Dipoles.')
     viewDipoleAction.triggered.connect(self.showDipolePlot)
     viewMenu.addAction(viewDipoleAction)
-    viewRasterAction = QAction('View Spiking Activity',self)
+    viewRasterAction = QAction('View Simulation Spiking Activity',self)
     viewRasterAction.setStatusTip('View Simulation Raster Plot.')
     viewRasterAction.triggered.connect(self.showRasterPlot)
     viewMenu.addAction(viewRasterAction)
@@ -1146,6 +1151,10 @@ class HNNGUI (QMainWindow):
     viewPSDAction.setStatusTip('View PSD.')
     viewPSDAction.triggered.connect(self.showPSDPlot)
     viewMenu.addAction(viewPSDAction)
+    viewSpecAction = QAction('View Experiment Spectrograms',self)
+    viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data.')
+    viewSpecAction.triggered.connect(self.showSpecPlot)
+    viewMenu.addAction(viewSpecAction)
     #viewSomaVAction = QAction('View Soma Voltages',self)
     #viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
     #viewSomaVAction.triggered.connect(self.showSomaVPlot)
