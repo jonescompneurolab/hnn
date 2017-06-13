@@ -111,7 +111,7 @@ def drawspec (dat, lspec, sdx, fig, G, ltextra=''):
 
   ax = fig.add_subplot(gdx)
 
-  ax.imshow(lspec[sdx].TFR, extent=[tvec[0], tvec[-1], lspec[sdx].f[-1], lspec[sdx].f[0]], aspect='auto', origin='upper')
+  ax.imshow(lspec[sdx].TFR, extent=[tvec[0], tvec[-1], lspec[sdx].f[-1], lspec[sdx].f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
 
   ax.set_xlim(tvec[0],tvec[-1])
   ax.set_xlabel('Time (ms)')
