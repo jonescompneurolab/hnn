@@ -50,6 +50,8 @@ cd $startdir
 # setup HNN itself
 cd hnn
 # make compiles the mod files
+export CPU = $(uname -m)
+export PATH=$PATH:/usr/local/nrn/$CPU/bin
 make
 cd ..
 
