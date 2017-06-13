@@ -51,6 +51,7 @@ def extractspec (dat, fmax=120.0):
   tvec = dat[:,0]
   dt = tvec[1] - tvec[0]
   tstop = tvec[-1]
+  print('tstop is ', tstop)
   prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
   for col in range(1,dat.shape[1],1):
     ms = MorletSpec(tvec,dat[:,col],None,None,prm)
@@ -98,13 +99,22 @@ def drawspec (dat, lspec, sdx, fig, G, ltextra=''):
   ax = fig.add_subplot(gdx)
   lax.append(ax)
 
+  tvec = dat[:,0]
+  dt = tvec[1] - tvec[0]
+  tstop = tvec[-1]
+
   ax.plot(dat[:,0], dat[:,sdx],linewidth=2,color='gray')
+  ax.set_xlim(tvec[0],tvec[-1])
+  ax.set_ylabel('Dipole (nAm)')
 
   gdx = 212
 
   ax = fig.add_subplot(gdx)
 
-  lspec[sdx].plot_to_ax(ax,1e3/600.0)
+  ax.imshow(lspec[sdx].TFR, extent=[tvec[0], tvec[-1], lspec[sdx].f[-1], lspec[sdx].f[0]], aspect='auto', origin='upper')
+
+  ax.set_xlim(tvec[0],tvec[-1])
+  ax.set_xlabel('Time (ms)')
 
   lax.append(ax)
 
