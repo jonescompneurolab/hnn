@@ -45,7 +45,8 @@ except:
 
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=120.0):
-  print('extractpsd',dat.shape)
+  global ntrial
+  print('extractspec',dat.shape)
   lspec = []
   tvec = dat[:,0]
   dt = tvec[1] - tvec[0]
@@ -55,9 +56,12 @@ def extractspec (dat, fmax=120.0):
     ms = MorletSpec(tvec,dat[:,col],None,None,prm)
     lspec.append(ms)
     # lpsd.append(np.mean(ms.TFR,axis=1))
+  ntrial = len(lspec)
   return ms.f, lspec
 
 def drawspec (lspec, sdx, fig, G, ltextra=''):
+
+  print('len(lspec)',len(lspec))
 
   if len(lspec) == 0: return
 
@@ -132,6 +136,7 @@ class SpecCanvas (FigureCanvas):
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
     self.lextspec = []
+    self.lax = []
     self.plot()
 
   def clearaxes (self):
@@ -153,23 +158,24 @@ class SpecCanvas (FigureCanvas):
 
   def plotextdat (self, lF, lextspec, lextfiles): # plot 'external' data (e.g. from experiment/other simulation)
 
-    print('len(lax)',len(self.lax))
+    print('plotextdat')
 
-    self.lextdatobj = []
-    white_patch = mpatches.Patch(color='white', label='Simulation')
-    self.lpatch = [white_patch]
+    # print('len(lax)',len(self.lax))
+
+    self.lax = []
+
+    #self.lextdatobj = []
+    #white_patch = mpatches.Patch(color='white', label='Simulation')
+    #self.lpatch = [white_patch]
 
     ax = self.lax[2] # plot on agg
 
     yl = ax.get_ylim()
 
-    cmap=plt.get_cmap('nipy_spectral')
-    csm = plt.cm.ScalarMappable(cmap=cmap);
-    csm.set_clim((0,100))
-
+    """
     for f,lspec,fname in zip(lF,lextspec,lextfiles):
       print(fname,len(f),lspec.shape)
-      clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
+      clr = 'k'
       avg = np.mean(lspec,axis=0)
       std = np.std(lspec,axis=0) / sqrt(lspec.shape[1])
       self.lextdatobj.append(ax.plot(f,avg,color=clr,linewidth=2))
@@ -178,13 +184,15 @@ class SpecCanvas (FigureCanvas):
       yl = ((min(yl[0],min(avg))),(max(yl[1],max(avg))))
       new_patch = mpatches.Patch(color=clr, label=fname.split(os.path.sep)[-1].split('.txt')[0])
       self.lpatch.append(new_patch)
-
+    
     ax.set_ylim(yl)
     self.lextdatobj.append(ax.legend(handles=self.lpatch))
-
+    """
+    
   def plot (self):
     #self.clearaxes()
     #plt.close(self.figure)
+    print('self.index:',self.index)
     if self.index == 0:      
       self.lax = drawspec(self.lextspec,self.index, self.figure, self.G, ltextra='All Trials')
     else:
@@ -202,6 +210,7 @@ class SpecViewGUI (DataViewGUI):
     self.lF = [] # frequencies associated with external data spec
     self.lextspec = [] # external data spec
     self.lextfiles = [] # external data files
+    self.dat = None
 
   def addLoadDataActions (self):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
@@ -220,10 +229,13 @@ class SpecViewGUI (DataViewGUI):
   def loadDisplayData (self):
     extdataf,dat = self.loadDataFileDialog()    
     if not extdataf: return
+    self.dat = dat
     try:
       f, lspec = extractspec(dat)
-      self.printStat('Extracted Spectrograms from ' + extdataf)
-      self.lextspec.append(lspec)
+      self.ntrial = len(lspec)
+      self.updateCB()
+      self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms from ' + extdataf)
+      self.lextspec = lspec
       self.lextfiles.append(extdataf)
       self.lF.append(f)
     except:
@@ -232,7 +244,10 @@ class SpecViewGUI (DataViewGUI):
     try:
       if len(self.lextspec) > 0:
         self.printStat('Plotting ext data Spectrograms.')
-        self.m.plotextdat(self.lF,self.lextspec,self.lextfiles)
+        print('len(lF)',len(self.lF),'len(lextspec)',len(self.lextspec),'len(lextfiles)',len(self.lextfiles))
+        # self.m.plotextdat(self.lF,self.lextspec,self.lextfiles)
+        self.m.lextspec = self.lextspec
+        self.m.plot()
         self.m.draw() # make sure new lines show up in plot
         self.printStat('')
     except:

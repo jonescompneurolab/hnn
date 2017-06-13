@@ -49,6 +49,15 @@ class DataViewGUI (QMainWindow):
     self.grid.addWidget(self.toolbar, 0, 0, 1, 4); 
     self.grid.addWidget(self.m, 1, 0, 1, 4);     
 
+  def updateCB (self):
+    self.cb.clear()
+    if self.ntrial > 0:
+      self.cb.addItem('Show All Trials')
+      for i in range(self.ntrial):
+        self.cb.addItem('Show Trial ' + str(i+1))
+    else:
+      self.cb.addItem('All Trials')
+
   def initUI (self):
     self.initMenu()
     self.statusBar()
@@ -60,13 +69,7 @@ class DataViewGUI (QMainWindow):
     self.cb = QComboBox(self)
     self.grid.addWidget(self.cb,2,0,1,4)
 
-    if self.ntrial > 0:
-      self.cb.addItem('Show All Trials')
-      for i in range(self.ntrial):
-        self.cb.addItem('Show Trial ' + str(i+1))
-    else:
-      self.cb.addItem('All Trials')
-    self.cb.activated[int].connect(self.onActivated) 
+    self.updateCB()
 
     # need a separate widget to put grid on
     widget = QWidget(self)
