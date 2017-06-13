@@ -57,6 +57,7 @@ class DataViewGUI (QMainWindow):
         self.cb.addItem('Show Trial ' + str(i+1))
     else:
       self.cb.addItem('All Trials')
+    self.cb.activated[int].connect(self.onActivated) 
 
   def initUI (self):
     self.initMenu()
