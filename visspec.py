@@ -59,7 +59,7 @@ def extractspec (dat, fmax=120.0):
   ntrial = len(lspec)
   return ms.f, lspec
 
-def drawspec (lspec, sdx, fig, G, ltextra=''):
+def drawspec (dat, lspec, sdx, fig, G, ltextra=''):
 
   print('len(lspec)',len(lspec))
 
@@ -92,6 +92,13 @@ def drawspec (lspec, sdx, fig, G, ltextra=''):
   xl = (ms.f[0],ms.f[-1])
 
   #for i,title in zip([0, 1, 2],ltitle):
+
+  gdx = 211
+
+  ax = fig.add_subplot(gdx)
+  lax.append(ax)
+
+  ax.plot(dat[:,0], dat[:,sdx],linewidth=2,color='gray')
 
   gdx = 212
 
@@ -135,6 +142,7 @@ class SpecCanvas (FigureCanvas):
     self.paramf = paramf
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
+    self.dat = []
     self.lextspec = []
     self.lax = []
     self.plot()
@@ -194,9 +202,9 @@ class SpecCanvas (FigureCanvas):
     #plt.close(self.figure)
     print('self.index:',self.index)
     if self.index == 0:      
-      self.lax = drawspec(self.lextspec,self.index, self.figure, self.G, ltextra='All Trials')
+      self.lax = drawspec(self.dat, self.lextspec,self.index, self.figure, self.G, ltextra='All Trials')
     else:
-      self.lax=drawspec(self.lextspec,self.index, self.figure, self.G, ltextra='Trial '+str(self.index));
+      self.lax=drawspec(self.dat, self.lextspec,self.index, self.figure, self.G, ltextra='Trial '+str(self.index));
 
     self.draw()
 
@@ -212,6 +220,7 @@ class SpecViewGUI (DataViewGUI):
   def initCanvas (self):
     super(SpecViewGUI,self).initCanvas()
     self.m.lextspec = self.lextspec
+    self.m.dat = self.dat
 
   def addLoadDataActions (self):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
@@ -248,6 +257,7 @@ class SpecViewGUI (DataViewGUI):
         print('len(lF)',len(self.lF),'len(lextspec)',len(self.lextspec),'len(lextfiles)',len(self.lextfiles))
         # self.m.plotextdat(self.lF,self.lextspec,self.lextfiles)
         self.m.lextspec = self.lextspec
+        self.m.dat = self.dat
         self.m.plot()
         self.m.draw() # make sure new lines show up in plot
         self.printStat('')
