@@ -1093,7 +1093,7 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     global basedir
     basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', '-i','visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+    lcmd = ['python3', 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 

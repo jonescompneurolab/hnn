@@ -10,17 +10,18 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 
 # GUI for viewing data from individual/all trials
 class DataViewGUI (QMainWindow):
-  def __init__ (self, CanvasType, paramf, ntrial):
+  def __init__ (self, CanvasType, paramf, ntrial,title):
     super().__init__()        
     self.CanvasType = CanvasType
     self.paramf = paramf
     self.ntrial = ntrial
+    self.title = title
     self.initUI()
 
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
-    exitAction.setStatusTip('Exit HNN PSD Viewer.')
+    exitAction.setStatusTip('Exit ' + self.title + '.')
     exitAction.triggered.connect(qApp.quit)
 
     menubar = self.menuBar()
@@ -52,7 +53,7 @@ class DataViewGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle('HNN PSD Viewer - ' + self.paramf)
+    self.setWindowTitle(self.title + ' - ' + self.paramf)
     self.grid = grid = QGridLayout()
     self.index = 0
     self.initCanvas()

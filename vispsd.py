@@ -179,8 +179,8 @@ class PSDCanvas (FigureCanvas):
     self.draw()
 
 class PSDViewGUI (DataViewGUI):
-  def __init__ (self,CanvasType,paramf,ntrial):
-    super(PSDViewGUI,self).__init__(CanvasType,paramf,ntrial)
+  def __init__ (self,CanvasType,paramf,ntrial,title):
+    super(PSDViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
     self.addLoadDataActions()
     self.lF = [] # frequencies associated with external data psd
     self.lextpsd = [] # external data psd
@@ -244,6 +244,6 @@ class PSDViewGUI (DataViewGUI):
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = PSDViewGUI(PSDCanvas,paramf,ntrial)
+  ex = PSDViewGUI(PSDCanvas,paramf,ntrial,'HNN PSD Viewer')
   sys.exit(app.exec_())  
   
