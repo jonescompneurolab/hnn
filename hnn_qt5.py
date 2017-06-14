@@ -201,13 +201,21 @@ class DictDialog (QDialog):
   def addOffButton (self):
     # Create a horizontal box layout to hold the button
     self.button_box = QHBoxLayout() 
-    self.btnoff = QPushButton('Turn Off',self)
+    self.btnoff = QPushButton('Turn Off Inputs',self)
     self.btnoff.resize(self.btnoff.sizeHint())
     self.btnoff.clicked.connect(self.TurnOff)
     self.btnoff.setToolTip('Turn Off Inputs')
     self.button_box.addWidget(self.btnoff)
     self.layout.addLayout(self.button_box)
 
+  def addHideButton (self):
+    self.bbhidebox = QHBoxLayout() 
+    self.btnhide = QPushButton('Hide Window',self)
+    self.btnhide.resize(self.btnhide.sizeHint())
+    self.btnhide.clicked.connect(self.hide)
+    self.btnhide.setToolTip('Hide Window')
+    self.bbhidebox.addWidget(self.btnhide)
+    self.layout.addLayout(self.bbhidebox)
 
 # widget to specify ongoing input params (proximal, distal)
 class OngoingInputParamDialog (DictDialog):
@@ -224,6 +232,7 @@ class OngoingInputParamDialog (DictDialog):
     super(OngoingInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
     self.addImages()
+    self.addHideButton()
 
   # add png cartoons to tabs
   def addImages (self):
@@ -360,6 +369,7 @@ class TonicInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(TonicInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
+    self.addHideButton()
 
   # turn off by setting all weights to 0.0
   def TurnOff (self): self.lines2val('A',0.0)
@@ -405,6 +415,7 @@ class PoissonInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
     super(PoissonInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
+    self.addHideButton()
 
   # turn off by setting all weights to 0.0
   def TurnOff (self): self.lines2val('weight',0.0)
@@ -446,6 +457,7 @@ class EvokedInputParamDialog (DictDialog):
     super(EvokedInputParamDialog, self).__init__(parent,din)
     self.addOffButton()
     self.addImages()
+    self.addHideButton()
 
   # add png cartoons to tabs
   def addImages (self):
@@ -514,6 +526,7 @@ class EvokedInputParamDialog (DictDialog):
 class RunParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
     super(RunParamDialog, self).__init__(parent,din)
+    self.addHideButton()
 
   def initd (self):
 
@@ -576,6 +589,7 @@ class RunParamDialog (DictDialog):
 class CellParamDialog (DictDialog):
   def __init__ (self, parent = None, din = None):
     super(CellParamDialog, self).__init__(parent,din)
+    self.addHideButton()
 
   def initd (self):
     
@@ -732,6 +746,7 @@ class CellParamDialog (DictDialog):
 class NetworkParamDialog (DictDialog):
   def __init__ (self, parent = None, din = None):
     super(NetworkParamDialog, self).__init__(parent,din)
+    self.addHideButton()
 
   def initd (self):
     # number of cells
