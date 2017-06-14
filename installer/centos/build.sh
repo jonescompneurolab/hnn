@@ -36,7 +36,7 @@ git checkout d4bb059
 make -j4
 sudo make install -j4
 cd ../nrn
-git checkout be2997e
+#git checkout be2997e
 ./build.sh
 ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d
 make -j4
