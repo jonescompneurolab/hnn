@@ -979,7 +979,13 @@ class BaseParamDialog (QDialog):
     self.btnsave.resize(self.btnsave.sizeHint())
     self.btnsave.setToolTip('Save All Parameters to File (Specified by Simulation Name)')
     self.btnsave.clicked.connect(self.saveparams)
-    grid.addWidget(self.btnsave, row, 0, 1, 2)
+    grid.addWidget(self.btnsave, row, 0, 1, 2); row+=1
+
+    self.btnhide = QPushButton('Hide Window',self)
+    self.btnhide.resize(self.btnhide.sizeHint())
+    self.btnhide.clicked.connect(self.hide)
+    self.btnhide.setToolTip('Hide Window')
+    grid.addWidget(self.btnhide, row, 0, 1, 2)
 
     self.setLayout(grid) 
         
