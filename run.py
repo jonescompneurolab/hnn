@@ -294,8 +294,7 @@ def catspec ():
   except:
     return None
   for k in ['t_L5', 'f_L5', 't_L2', 'f_L2', 'time', 'freq']: dout[k] = dspecin[lf[0]][k]
-  dout['time'] = dspecin[lf[0]]['time']
-  for k in ['TFR', 'TFR_L5', 'TFR_L2']: dout[k] = np.mean(np.array([np.load(f)[k] for f in lf]),axis=0)
+  for k in ['TFR', 'TFR_L5', 'TFR_L2']: dout[k] = np.mean(np.array([dspecin[f][k] for f in lf]),axis=0)
   with open(os.path.join(datdir,'rawspec.npz'), 'wb') as fdpl:
     np.savez_compressed(fdpl,t_L5=dout['t_L5'],f_L5=dout['f_L5'],t_L2=dout['t_L2'],f_L2=dout['f_L2'],time=dout['time'],freq=dout['freq'],TFR=dout['TFR'],TFR_L5=dout['TFR_L5'],TFR_L2=dout['TFR_L2'])
   return dout

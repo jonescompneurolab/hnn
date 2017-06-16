@@ -24,6 +24,14 @@ class ParFeedAll ():
     self.set_prng() # sets seeds for random num generator
     self.set_event_times() # sets event times into self.eventvec and plays into self.vs (VecStim)
 
+  # inc random number generator seeds
+  def inc_prng (self, inc):
+    self.seed += inc
+    self.prng = np.random.RandomState(self.seed)
+    if hasattr(self,'seed2'):
+      self.seed2 += inc
+      self.prng2 = np.random.RandomState(self.seed2)
+
   def set_prng (self, seed = None):
     if seed is None: # no seed specified then use p_ext to determine seed
       # random generator for this instance
@@ -34,11 +42,16 @@ class ParFeedAll ():
           self.seed = self.p_ext['prng_seedcore']
         else:
           self.seed = self.p_ext['prng_seedcore'] + self.gid
+      elif self.ty.startswith('extinput'):
+        self.seed = self.p_ext['prng_seedcore'] + self.gid # seed for events assuming a given start time
+        self.seed2  = self.p_ext['prng_seedcore'] # separate seed for start times
       else:
         self.seed = self.p_ext['prng_seedcore'] + self.gid
     else: # if seed explicitly specified use it
       self.seed = seed
+      if hasattr(self,'seed2'): self.seed2 = seed
     self.prng = np.random.RandomState(self.seed)
+    if hasattr(self,'seed2'): self.prng2 = np.random.RandomState(self.seed2)
     #print('ty,seed:',self.ty,self.seed)
 
   def set_event_times (self):
@@ -143,8 +156,10 @@ class ParFeedAll ():
     # If t0 is -1, randomize start time of inputs
     if t0 == -1:
       t0 = self.prng.uniform(25., 125.)
+      #print(self.ty,'t0 was -1; now', t0,'seed:',self.seed)
     elif self.p_ext['t0_stdev'] > 0.0: # randomize start time based on t0_stdev
-      t0 = self.prng.normal(t0, self.p_ext['t0_stdev'])
+      t0 = self.prng2.normal(t0, self.p_ext['t0_stdev']) # start time uses different prng
+      #print(self.ty,'t0 is', t0, 'seed:',self.seed,'seed2:',self.seed2)
     f_input = self.p_ext['f_input']
     stdev = self.p_ext['stdev']
     events_per_cycle = self.p_ext['events_per_cycle']

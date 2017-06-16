@@ -248,7 +248,7 @@ class NetworkOnNode ():
 
       for feed in self.extinput_list:
         if seed is None:
-          feed.set_prng(feed.seed+1000)
+          feed.inc_prng(1000)
         else:
           feed.set_prng(seed)
         feed.set_event_times() # uses feed.seed
@@ -256,7 +256,7 @@ class NetworkOnNode ():
       for k,lfeed in self.ext_list.items(): # dictionary of lists...
         for feed in lfeed: # of feeds
           if seed is None:
-            feed.set_prng(feed.seed+1)
+            feed.inc_prng(1)
           else:
             feed.set_prng(seed)
           feed.set_event_times() # uses feed.seed
