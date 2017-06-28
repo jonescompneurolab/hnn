@@ -16,6 +16,10 @@ def_config = """
 dorun = 1
 doquit = 1
 debug = 0
+[paths]
+datdir = data
+paramindir = param
+paramoutdir = param
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -147,6 +151,10 @@ def readconf (fn="hnn.cfg"):
   #d['dlg'] = getlparam('dialog', dlgparam)
   #d['tab'] = getlparam('tab', tabparam)
   #d['param'] = getlparam('param', param)
+
+  d['datdir'] = confstr('paths','datdir','data')
+  d['paramindir'] = confstr('paths','paramindir','param')
+  d['paramoutdir'] = confstr('paths','paramoutdir','param')
 
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)

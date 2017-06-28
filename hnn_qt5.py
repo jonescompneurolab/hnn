@@ -97,7 +97,7 @@ class RunSimThread (QThread):
         else:
           ddat['spec'] = None
         ddat['spk'] = np.loadtxt(dfile['spk'])
-        ddat['dpltrials'] = readdpltrials(os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0]))
+        ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]))
         print("Read simulation outputs:",dfile.values())
       except:
         print('WARN: could not read simulation outputs:',dfile.values())
@@ -995,7 +995,6 @@ class BaseParamDialog (QDialog):
   def saveparams (self):
     global paramf,basedir
     tmpf = os.path.join('param',self.qle.text() + '.param')
-    #self.hide()
     oktosave = True
     if os.path.isfile(tmpf):
       self.show()
@@ -1011,7 +1010,7 @@ class BaseParamDialog (QDialog):
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
         paramf = dconf['paramf'] = tmpf # success? update paramf
-        basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+        basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
       except:
         print('Exception in saving param file!',tmpf)
     return oktosave
@@ -1091,14 +1090,14 @@ class HNNGUI (QMainWindow):
 
   def showSomaVPlot (self): 
     global basedir
-    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python3', 'visvolt.py',paramf]
     if debug: print('visvolt cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     global basedir
-    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python3', 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -1110,7 +1109,7 @@ class HNNGUI (QMainWindow):
 
   def showRasterPlot (self):
     global basedir
-    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python3', 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
@@ -1118,7 +1117,7 @@ class HNNGUI (QMainWindow):
 
   def showDipolePlot (self):
     global basedir
-    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = ['python3', 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
@@ -1386,7 +1385,7 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas() # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
     global basedir
-    basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle('HNN - ' + paramf)
 

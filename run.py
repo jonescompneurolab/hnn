@@ -31,7 +31,7 @@ from L5_basket import L5Basket
 dconf = readconf()
 
 # data directory - ./data
-dproj = fio.return_data_dir()
+dproj = dconf['datdir'] # fio.return_data_dir(dconf['datdir'])
 debug = dconf['debug']
 pc = h.ParallelContext()
 pcID = int(pc.id())
