@@ -22,6 +22,7 @@ from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil, sqrt
 from specfn import MorletSpec
+from conf import dconf
 
 ntrial = 0; specpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -31,7 +32,7 @@ for i in range(len(sys.argv)):
     paramf = sys.argv[i]
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
         
-basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 print('basedir:',basedir)
 
 ddat = {}
@@ -171,7 +172,7 @@ class PSDCanvas (FigureCanvas):
     if self.index == 0:      
       self.lax = drawpsd(ddat['spec'],self.figure, self.G, ltextra='All Trials')
     else:
-      specpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
+      specpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
       if 'spec'+str(self.index) not in ddat:
         ddat['spec'+str(self.index)] = np.load(specpath)
       self.lax=drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));

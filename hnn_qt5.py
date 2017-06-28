@@ -994,7 +994,7 @@ class BaseParamDialog (QDialog):
 
   def saveparams (self):
     global paramf,basedir
-    tmpf = os.path.join('param',self.qle.text() + '.param')
+    tmpf = os.path.join(dconf['paramoutdir'],self.qle.text() + '.param')
     oktosave = True
     if os.path.isfile(tmpf):
       self.show()

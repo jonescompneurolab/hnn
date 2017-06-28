@@ -3,6 +3,7 @@ import io
 import pickle
 import os
 import sys
+from fileio import safemkdir
 
 try:
   from StringIO import StringIO
@@ -17,9 +18,7 @@ dorun = 1
 doquit = 1
 debug = 0
 [paths]
-datdir = data
 paramindir = param
-paramoutdir = param
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -142,8 +141,6 @@ def readconf (fn="hnn.cfg"):
   lsec = config.sections()
 
   d = {}
-  #d['params'] = getparamd('params') # param values optimized by evolution
-  #d['fixed'] = getparamd('fixed') # optional fixed values, assigned prior to assignment of evolutionary params
 
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
@@ -152,9 +149,13 @@ def readconf (fn="hnn.cfg"):
   #d['tab'] = getlparam('tab', tabparam)
   #d['param'] = getlparam('param', param)
 
-  d['datdir'] = confstr('paths','datdir','data')
-  d['paramindir'] = confstr('paths','paramindir','param')
-  d['paramoutdir'] = confstr('paths','paramoutdir','param')
+  duser = os.path.expanduser('~') # user home directory
+  d['datdir'] = os.path.join(duser, 'hnn', 'data') # data output directory
+  d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location
+  d['paramoutdir'] = os.path.join(duser,'hnn', 'param')
+
+  for k in ['datdir', 'paramindir', 'paramoutdir']: # need these directories
+    if not safemkdir(d[k]): sys.exit(1)
 
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)
@@ -163,7 +164,7 @@ def readconf (fn="hnn.cfg"):
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawindivrast'] = confint("draw","drawindivrast",1)
 
-  readtips(d)
+  readtips(d) # read tooltips for parameters
 
   """
   recstr = confstr('run','recordV','')
@@ -175,18 +176,6 @@ def readconf (fn="hnn.cfg"):
   d['stimdur'] = conffloat('run','stimdur',1000)
   d['postassign'] = confstr('run','postassign','')
   d['usecvode'] = confbool('run','usecvode','True')
-  d['cellimport'] = confstr('run','cellimport','geom')
-  d['cellfunc'] = confstr('run','cellfunc','makecell')
-  d['useallspikes'] = confbool('run','useallspikes','False')
-  d['cellfuncargs'] = confstr('run','cellfuncargs','') # eg if cellfuncargs is (1,2,3) will call makecell(1,2,3)
-  d['isivolts'] = confstr('data','isivolts','')
-  d['evolts'] = confstr('data','evolts','')
-  d['onvolts'] = confstr('data','onvolts','')
-  d['offvolts'] = confstr('data','offvolts','')
-  d['spikevolts'] = confstr('data','spikevolts','')
-  d['spiket'] = confstr('data','spiket','')
-  d['sampr'] = conffloat('data','sampr',10000)
-  d['lstimamp'] = confstr('data','lstimamp','')
   """
 
   return d

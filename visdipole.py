@@ -22,6 +22,7 @@ from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
 from simdat import readdpltrials
+from conf import dconf
 
 tstop = -1; ntrial = 0; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -34,7 +35,7 @@ for i in range(len(sys.argv)):
     tstop = paramrw.find_param(paramf,'tstop')
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
         
-basedir = os.path.join('data',paramf.split(os.path.sep)[-1].split('.param')[0])
+basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 
 ddat = {}
 ddat['dpltrials'] = readdpltrials(basedir,ntrial)

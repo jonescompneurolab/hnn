@@ -20,6 +20,7 @@ import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
+from conf import dconf
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -38,7 +39,7 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
-    outparamf = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
+    outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
 extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
@@ -227,7 +228,7 @@ class SpikeCanvas (FigureCanvas):
       self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
       self.lax.append(drawhist(dhist,self.lax[-1]))
     else:
-      spkpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
+      spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
       dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
       extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
       extinputs.add_delay_times()

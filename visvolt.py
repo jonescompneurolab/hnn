@@ -18,6 +18,7 @@ from neuron import h
 from run import net
 import paramrw
 import pickle
+from conf import dconf
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -34,14 +35,14 @@ for i in range(len(sys.argv)):
     paramf = sys.argv[i]
     tstop = paramrw.quickgetprm(paramf,'tstop',float)
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-    outparamf = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
+    outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
   elif sys.argv[i] == 'maxperty':
     maxperty = int(sys.argv[i])
 
 if ntrial <= 1:
-  voltpath = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma.pkl') 
+  voltpath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma.pkl') 
 else:
-  voltpath = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_1.pkl') 
+  voltpath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_1.pkl') 
 
 invertedax = False
 
@@ -106,7 +107,7 @@ class VoltCanvas (FigureCanvas):
         dvolt = pickle.load(open(voltpath,'rb'))
       self.lax = drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
     else:
-      voltpathtrial = os.path.join('data',paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_'+str(self.index)+'.pkl') 
+      voltpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_'+str(self.index)+'.pkl') 
       dvolttrial = pickle.load(open(voltpathtrial,'rb'))
       self.lax=drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
     self.draw()
