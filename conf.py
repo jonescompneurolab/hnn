@@ -154,6 +154,7 @@ def readconf (fn="hnn.cfg"):
   d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location
   d['paramoutdir'] = os.path.join(duser,'hnn', 'param')
 
+  if not safemkdir(os.path.join(duser,'hnn')): sys.exit(1) # check existence of base hnn output dir
   for k in ['datdir', 'paramindir', 'paramoutdir']: # need these directories
     if not safemkdir(d[k]): sys.exit(1)
 
