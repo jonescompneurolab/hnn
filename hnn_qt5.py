@@ -457,7 +457,6 @@ class BaseEvokedInputParamDialog (QDialog):
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dqline = OrderedDict()
-    self.createImages()
     self.initUI()
   
   def initUI (self):
@@ -529,7 +528,13 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket', 0.)])
     self.ld.append(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
-    self.ltabs[-1].layout.addRow(self.pixProxlbl)
+    self.ltabs[-1].layout.addRow(self.makePixLabel('res/proxfig.png'))
+
+  def makePixLabel (self,fn):
+    pix = QPixmap(fn)
+    pixlbl = ClickLabel(self)
+    pixlbl.setPixmap(pix)
+    return pixlbl
 
   def addDist (self):
     self.ndist += 1
@@ -541,18 +546,7 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
     self.ld.append(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
-    self.ltabs[-1].layout.addRow(self.pixDistlbl)
-
-  def createImages (self):
-    self.pixProx = QPixmap("res/proxfig.png")
-    self.pixProxlbl = ClickLabel(self)
-    self.pixProxlbl.setPixmap(self.pixProx)
-    #self.ltabs[i].layout.addRow(pixProxlbl)
-
-    self.pixDist = QPixmap("res/distfig.png")
-    self.pixDistlbl = ClickLabel(self)
-    self.pixDistlbl.setPixmap(self.pixDist)
-    #self.ltabs[1].layout.addRow(self.pixDistlbl)
+    self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
     
     
 # widget to specify ongoing input params (proximal, distal)
