@@ -456,6 +456,8 @@ class BaseEvokedInputParamDialog (QDialog):
     super(BaseEvokedInputParamDialog, self).__init__(parent)
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
+    self.dqline = OrderedDict()
+    self.createImages()
     self.initUI()
   
   def initUI (self):
@@ -496,21 +498,25 @@ class BaseEvokedInputParamDialog (QDialog):
     self.setLayout(self.layout)
 
     self.setGeometry(150, 150, 475, 300)
-    #self.setWindowTitle(self.stitle)  
+    self.setWindowTitle('Evoked Inputs')
 
     self.show()
 
 
   def addTab (self,prox,s):
-
     tab = QWidget()
     self.ltabs.append(tab)
-
     self.tabs.addTab(tab,s)
-
     tab.layout = QFormLayout()
     tab.setLayout(tab.layout)
+    return tab
 
+  def addFormToTab (self,d,tab):
+    for k,v in d.items():
+      self.dqline[k] = QLineEdit(self)
+      self.dqline[k].setText(str(v))
+      #tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab      
+      tab.layout.addRow(k,self.dqline[k])    
 
   def addProx (self):
     self.nprox += 1 # starts at 1
@@ -522,8 +528,8 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L5Pyr', 0.),                                   
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket', 0.)])
     self.ld.append(dprox)
-    self.addTab(True,'Proximal ' + str(self.nprox))
-
+    self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
+    self.ltabs[-1].layout.addRow(self.pixProxlbl)
 
   def addDist (self):
     self.ndist += 1
@@ -534,10 +540,10 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evdist_' + str(self.ndist) + '_L2Basket', 0.),
                          ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
     self.ld.append(ddist)
-    self.addTab(True,'Distal ' + str(self.ndist))
+    self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
+    self.ltabs[-1].layout.addRow(self.pixDistlbl)
 
-
-  def addImages (self):
+  def createImages (self):
     self.pixProx = QPixmap("res/proxfig.png")
     self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setPixmap(self.pixProx)
