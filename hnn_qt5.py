@@ -451,6 +451,104 @@ class PoissonInputParamDialog (DictDialog):
     self.stitle = 'Set Poisson Inputs'
 
 
+class BaseEvokedInputParamDialog (QDialog):
+  def __init__ (self, parent, din):
+    super(BaseEvokedInputParamDialog, self).__init__(parent)
+    self.nprox = self.ndist = 0 # number of proximal,distal inputs
+    self.ld = [] # list of dictionaries for proximal/distal inputs
+    self.initUI()
+  
+  def initUI (self):
+
+    self.layout = QVBoxLayout(self)
+
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    self.ltabs = []
+    self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
+
+    self.btntab = QWidget()
+    self.ltabs.append(self.btntab)
+    
+    self.button_box = QHBoxLayout() 
+    self.btnprox = QPushButton('Add Proximal Input',self)
+    self.btnprox.resize(self.btnprox.sizeHint())
+    self.btnprox.clicked.connect(self.addProx)
+    self.btnprox.setToolTip('Add Proximal Input')
+    self.button_box.addWidget(self.btnprox)
+
+    self.btndist = QPushButton('Add Distal Input',self)
+    self.btndist.resize(self.btndist.sizeHint())
+    self.btndist.clicked.connect(self.addDist)
+    self.btndist.setToolTip('Add Distal Input')
+    self.button_box.addWidget(self.btndist)
+
+    self.layout.addLayout(self.button_box)
+
+    self.tabs.resize(425,200) 
+
+
+    ################################################
+
+    # Add tabs to widget        
+    self.layout.addWidget(self.tabs)
+    self.setLayout(self.layout)
+
+    self.setGeometry(150, 150, 475, 300)
+    #self.setWindowTitle(self.stitle)  
+
+    self.show()
+
+
+  def addTab (self,prox,s):
+
+    tab = QWidget()
+    self.ltabs.append(tab)
+
+    self.tabs.addTab(tab,s)
+
+    tab.layout = QFormLayout()
+    tab.setLayout(tab.layout)
+
+
+  def addProx (self):
+    self.nprox += 1 # starts at 1
+    # evprox feed strength
+    dprox = OrderedDict([('t_evprox_' + str(self.nprox), 0.), # times and stdevs for evoked responses
+                         ('sigma_t_evprox_' + str(self.nprox), 2.5),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr', 0.),                                   
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket', 0.)])
+    self.ld.append(dprox)
+    self.addTab(True,'Proximal ' + str(self.nprox))
+
+
+  def addDist (self):
+    self.ndist += 1
+    # evdist feed strengths
+    ddist = OrderedDict([('t_evdist_' + str(self.ndist), 0.),
+                         ('sigma_t_evdist_' + str(self.ndist), 6.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
+    self.ld.append(ddist)
+    self.addTab(True,'Distal ' + str(self.ndist))
+
+
+  def addImages (self):
+    self.pixProx = QPixmap("res/proxfig.png")
+    self.pixProxlbl = ClickLabel(self)
+    self.pixProxlbl.setPixmap(self.pixProx)
+    #self.ltabs[i].layout.addRow(pixProxlbl)
+
+    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDistlbl = ClickLabel(self)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    #self.ltabs[1].layout.addRow(self.pixDistlbl)
+    
+    
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
   def __init__ (self, parent, din):
@@ -873,6 +971,7 @@ class BaseParamDialog (QDialog):
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
+    self.baseevparamwin = BaseEvokedInputParamDialog(self,None)
     self.poisparamwin = PoissonInputParamDialog(self,None)
     self.tonicparamwin = TonicInputParamDialog(self,None)
     self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin]
