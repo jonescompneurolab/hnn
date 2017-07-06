@@ -472,7 +472,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.btntab = QWidget()
     self.ltabs.append(self.btntab)
     
-    self.button_box = QHBoxLayout() 
+    self.button_box = QVBoxLayout() 
     self.btnprox = QPushButton('Add Proximal Input',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.addProx)
@@ -499,8 +499,18 @@ class BaseEvokedInputParamDialog (QDialog):
     self.setGeometry(150, 150, 475, 300)
     self.setWindowTitle('Evoked Inputs')
 
-    self.show()
+    self.addHideButton()
 
+    # self.show()
+
+  def addHideButton (self):
+    self.bbhidebox = QHBoxLayout() 
+    self.btnhide = QPushButton('Hide Window',self)
+    self.btnhide.resize(self.btnhide.sizeHint())
+    self.btnhide.clicked.connect(self.hide)
+    self.btnhide.setToolTip('Hide Window')
+    self.bbhidebox.addWidget(self.btnhide)
+    self.layout.addLayout(self.bbhidebox)
 
   def addTab (self,prox,s):
     tab = QWidget()
@@ -517,6 +527,12 @@ class BaseEvokedInputParamDialog (QDialog):
       #tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab      
       tab.layout.addRow(k,self.dqline[k])    
 
+  def makePixLabel (self,fn):
+    pix = QPixmap(fn)
+    pixlbl = ClickLabel(self)
+    pixlbl.setPixmap(pix)
+    return pixlbl
+
   def addProx (self):
     self.nprox += 1 # starts at 1
     # evprox feed strength
@@ -529,12 +545,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld.append(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/proxfig.png'))
-
-  def makePixLabel (self,fn):
-    pix = QPixmap(fn)
-    pixlbl = ClickLabel(self)
-    pixlbl.setPixmap(pix)
-    return pixlbl
+    self.tabs.setCurrentIndex(len(self.ltabs)-1)
 
   def addDist (self):
     self.ndist += 1
@@ -547,7 +558,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld.append(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
-    
+    self.tabs.setCurrentIndex(len(self.ltabs)-1)
     
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
