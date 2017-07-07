@@ -460,17 +460,14 @@ class BaseEvokedInputParamDialog (QDialog):
     self.initUI()
   
   def initUI (self):
-
     self.layout = QVBoxLayout(self)
 
     # Add stretch to separate the form layout from the button
     self.layout.addStretch(1)
 
     self.ltabs = []
-    self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
-
-    self.btntab = QWidget()
-    self.ltabs.append(self.btntab)
+    self.tabs = QTabWidget(); 
+    self.layout.addWidget(self.tabs)
     
     self.button_box = QVBoxLayout() 
     self.btnprox = QPushButton('Add Proximal Input',self)
@@ -489,9 +486,6 @@ class BaseEvokedInputParamDialog (QDialog):
 
     self.tabs.resize(425,200) 
 
-
-    ################################################
-
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
@@ -501,7 +495,7 @@ class BaseEvokedInputParamDialog (QDialog):
 
     self.addHideButton()
 
-    # self.show()
+    self.show()
 
   def addHideButton (self):
     self.bbhidebox = QHBoxLayout() 
@@ -545,7 +539,10 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld.append(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/proxfig.png'))
+    print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
+    print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    #self.tabs.show()
 
   def addDist (self):
     self.ndist += 1
@@ -558,7 +555,11 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld.append(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
+    print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
+    self.tabs.setCurrentIndex(len(self.ltabs)-1)
+    print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    #self.tabs.show()
     
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
