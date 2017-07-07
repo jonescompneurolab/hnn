@@ -499,7 +499,14 @@ class BaseEvokedInputParamDialog (QDialog):
     self.show()
 
   def removeInput (self):
-    print('removing input at index', self.tabs.currentIndex())
+    idx = self.tabs.currentIndex()
+    if idx < 0: return
+    print('removing input at index', idx)
+    self.tabs.removeTab(idx)
+    tab = self.ltabs[idx]
+    self.ltabs.remove(tab)
+    self.ld.remove(self.ld[idx])
+    tab.setParent(None)
 
   def addRemoveInputButton (self):
     self.bbremovebox = QHBoxLayout() 
