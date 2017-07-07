@@ -134,7 +134,7 @@ class DictDialog (QDialog):
 
   def __str__ (self):
     s = ''
-    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + '\n'
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
     return s
 
   def saveparams (self): self.hide()
@@ -505,8 +505,16 @@ class BaseEvokedInputParamDialog (QDialog):
     self.tabs.removeTab(idx)
     tab = self.ltabs[idx]
     self.ltabs.remove(tab)
-    self.ld.remove(self.ld[idx])
+    d = self.ld[idx]
+    for k in d.keys(): del self.dqline[k]
+    self.ld.remove(d)
     tab.setParent(None)
+    print(self) # for testing
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
+    return s
 
   def addRemoveInputButton (self):
     self.bbremovebox = QHBoxLayout() 
@@ -1144,8 +1152,8 @@ class BaseParamDialog (QDialog):
     return oktosave
 
   def __str__ (self):
-    s = 'sim_prefix: ' + self.qle.text() + '\n'
-    s += 'expmt_groups: {' + self.qle.text() + '}\n'
+    s = 'sim_prefix: ' + self.qle.text() + os.linesep
+    s += 'expmt_groups: {' + self.qle.text() + '}' + os.linesep
     for win in self.lsubwin: s += str(win)
     return s
 
@@ -1211,7 +1219,7 @@ class HNNGUI (QMainWindow):
       self.baseparamwin.show()
 
   def showAboutDialog (self):
-    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver\nhttps://bitbucket.org/samnemo/hnn\n2017.")
+    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://bitbucket.org/samnemo/hnn"+os.linesep+"2017.")
 
   def showHelpDialog (self):
     self.helpwin.show()
@@ -1358,22 +1366,22 @@ class HNNGUI (QMainWindow):
 
   def addParamImageButtons (self,gRow):
 
-    self.locbtn = QPushButton('Local Network\nConnections',self)
+    self.locbtn = QPushButton('Local Network'+os.linesep+'Connections',self)
     self.locbtn.setIcon(QIcon("res/connfig.png"))
     # self.locbtn.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.locbtn,gRow,0,1,1)
 
-    self.proxbtn = QPushButton('Proximal Drive\nThalamus',self)
+    self.proxbtn = QPushButton('Proximal Drive'+os.linesep+'Thalamus',self)
     self.proxbtn.setIcon(QIcon("res/proxfig.png"))
     # self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
-    self.distbtn = QPushButton('Distal Drive NonLemniscal\nThal./Cortical Feedback',self)
+    self.distbtn = QPushButton('Distal Drive NonLemniscal'+os.linesep+'Thal./Cortical Feedback',self)
     self.distbtn.setIcon(QIcon("res/distfig.png"))
     # self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
-    self.netbtn = QPushButton('Model Visualization\n',self)
+    self.netbtn = QPushButton('Model Visualization',self)
     self.netbtn.setIcon(QIcon("res/netfig.png"))
     # self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
