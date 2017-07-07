@@ -493,9 +493,22 @@ class BaseEvokedInputParamDialog (QDialog):
     self.setGeometry(150, 150, 475, 300)
     self.setWindowTitle('Evoked Inputs')
 
+    self.addRemoveInputButton()
     self.addHideButton()
 
     self.show()
+
+  def removeInput (self):
+    print('removing input at index', self.tabs.currentIndex())
+
+  def addRemoveInputButton (self):
+    self.bbremovebox = QHBoxLayout() 
+    self.btnremove = QPushButton('Remove Input',self)
+    self.btnremove.resize(self.btnremove.sizeHint())
+    self.btnremove.clicked.connect(self.removeInput)
+    self.btnremove.setToolTip('Remove This Input')
+    self.bbremovebox.addWidget(self.btnremove)
+    self.layout.addLayout(self.bbremovebox)
 
   def addHideButton (self):
     self.bbhidebox = QHBoxLayout() 
@@ -542,7 +555,6 @@ class BaseEvokedInputParamDialog (QDialog):
     print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
-    #self.tabs.show()
 
   def addDist (self):
     self.ndist += 1
@@ -557,9 +569,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
     print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
-    self.tabs.setCurrentIndex(len(self.ltabs)-1)
     print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
-    #self.tabs.show()
     
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
