@@ -458,6 +458,12 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dqline = OrderedDict()
     self.initUI()
+
+  def setfromdin (self,din):
+    if not din: return
+    for k,v in din.items():
+      if k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
   
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -496,7 +502,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.addRemoveInputButton()
     self.addHideButton()
 
-    self.show()
+    #self.show()
 
   def removeInput (self):
     idx = self.tabs.currentIndex()
@@ -1011,7 +1017,7 @@ class BaseParamDialog (QDialog):
     self.baseevparamwin = BaseEvokedInputParamDialog(self,None)
     self.poisparamwin = PoissonInputParamDialog(self,None)
     self.tonicparamwin = TonicInputParamDialog(self,None)
-    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin]
+    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin, self.baseevparamwin]
     self.updateDispParam()
 
   def updateDispParam (self):
