@@ -458,9 +458,24 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dqline = OrderedDict()
     self.initUI()
+    self.setfromdin(din)
+
+  # return number of evoked inputs in the input dictionary (din)
+  def countinputs (self,din):
+    nprox = ndist = 0
+    for k,v in din.items():
+      if k.startswith('t_'):
+        if k.count('evprox') > 0:
+          nprox += 1
+        elif k.count('evdist') > 0:
+          ndist += 1
+    return nprox, ndist
 
   def setfromdin (self,din):
     if not din: return
+    nprox, ndist = self.countinputs(din)
+    for i in range(nprox): self.addProx()
+    for i in range(ndist): self.addDist()
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
@@ -502,7 +517,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.addRemoveInputButton()
     self.addHideButton()
 
-    #self.show()
+    # self.show()
 
   def removeInput (self):
     idx = self.tabs.currentIndex()
@@ -516,6 +531,10 @@ class BaseEvokedInputParamDialog (QDialog):
     self.ld.remove(d)
     tab.setParent(None)
     print(self) # for testing
+
+  """
+  def removeInputAtIdx(self, idx):
+  """
 
   def __str__ (self):
     s = ''
@@ -1040,7 +1059,9 @@ class BaseParamDialog (QDialog):
   def setsyngainparam (self): self.syngainparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
-  def setevparam (self): self.evparamwin.show()
+  def setevparam (self):
+    self.evparamwin.show()
+    self.baseevparamwin.show()
   def setpoisparam (self): self.poisparamwin.show()
   def settonicparam (self): self.tonicparamwin.show()
 
