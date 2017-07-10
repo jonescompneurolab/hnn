@@ -121,34 +121,34 @@ def get_params_default ():
         #'useEvokedInputs': 1., # whether to use evoked inputs
         #'useOngoingInputs': 1., # whether to use ongoing inputs
 
-        # evprox (early) feed strength
-        'gbar_evprox_early_L2Pyr': 0.,
-        'gbar_evprox_early_L5Pyr': 0.,
-        'gbar_evprox_early_L2Basket': 0.,
-        'gbar_evprox_early_L5Basket': 0.,
+        # evprox (1 - e.g. early) feed strength
+        'gbar_evprox_1_L2Pyr': 0.,
+        'gbar_evprox_1_L5Pyr': 0.,
+        'gbar_evprox_1_L2Basket': 0.,
+        'gbar_evprox_1_L5Basket': 0.,
 
-        # evprox (late) feed strength
-        'gbar_evprox_late_L2Pyr': 0.,
-        'gbar_evprox_late_L5Pyr': 0.,
-        'gbar_evprox_late_L2Basket': 0.,
-        'gbar_evprox_late_L5Basket': 0.,
+        # evprox (2 - e.g. late) feed strength
+        'gbar_evprox_2_L2Pyr': 0.,
+        'gbar_evprox_2_L5Pyr': 0.,
+        'gbar_evprox_2_L2Basket': 0.,
+        'gbar_evprox_2_L5Basket': 0.,
 
         # evdist feed strengths
-        'gbar_evdist_L2Pyr': 0.,
-        'gbar_evdist_L5Pyr': 0.,
-        'gbar_evdist_L2Basket': 0.,
+        'gbar_evdist_1_L2Pyr': 0.,
+        'gbar_evdist_1_L5Pyr': 0.,
+        'gbar_evdist_1_L2Basket': 0.,
 
         # times and stdevs for evoked responses
-        't_evprox_early': 2000.,
-        'sigma_t_evprox_early': 2.5,
+        't_evprox_1': 2000.,
+        'sigma_t_evprox_1': 2.5,
 
         'dt_evprox0_evdist': -1,
-        't_evdist': 2000.,
-        'sigma_t_evdist': 6.,
+        't_evdist_1': 2000.,
+        'sigma_t_evdist_1': 6.,
 
         'dt_evprox0_evprox1': -1,
-        't_evprox_late': 2000.,
-        'sigma_t_evprox_late': 7.,
+        't_evprox_2': 2000.,
+        'sigma_t_evprox_2': 7.,
 
         'sync_evinput': 1, # whether evoked inputs arrive at same time to all cells
 
@@ -195,9 +195,9 @@ def get_params_default ():
         'prng_seedcore_input_dist': 0,
         'prng_seedcore_extpois': 0,
         'prng_seedcore_extgauss': 0,
-        'prng_seedcore_evprox_early': 0,
-        'prng_seedcore_evdist': 0,
-        'prng_seedcore_evprox_late': 0,
+        'prng_seedcore_evprox_1': 0,
+        'prng_seedcore_evdist_1': 0,
+        'prng_seedcore_evprox_2': 0,
 
         # default end time for pois inputs
         't0_pois': 0.,

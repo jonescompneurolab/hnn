@@ -450,10 +450,10 @@ class PoissonInputParamDialog (DictDialog):
     self.ltitle = ['Layer2', 'Layer5', 'Timing']
     self.stitle = 'Set Poisson Inputs'
 
-
-class BaseEvokedInputParamDialog (QDialog):
+# evoked input param dialog (allows adding/removing arbitrary number of evoked inputs)
+class EvokedInputParamDialog (QDialog):
   def __init__ (self, parent, din):
-    super(BaseEvokedInputParamDialog, self).__init__(parent)
+    super(EvokedInputParamDialog, self).__init__(parent)
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dqline = OrderedDict()
@@ -657,77 +657,6 @@ class BaseEvokedInputParamDialog (QDialog):
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
     
-# widget to specify ongoing input params (proximal, distal)
-class EvokedInputParamDialog (DictDialog):
-  def __init__ (self, parent, din):
-    super(EvokedInputParamDialog, self).__init__(parent,din)
-    self.addOffButton()
-    self.addImages()
-    self.addHideButton()
-
-  # add png cartoons to tabs
-  def addImages (self):
-    self.pixProx = QPixmap("res/proxfig.png")
-    for i in [0,2]:
-      pixProxlbl = ClickLabel(self)
-      pixProxlbl.setPixmap(self.pixProx)
-      self.ltabs[i].layout.addRow(pixProxlbl)
-
-    self.pixDist = QPixmap("res/distfig.png")
-    self.pixDistlbl = ClickLabel(self)
-    self.pixDistlbl.setPixmap(self.pixDist)
-    self.ltabs[1].layout.addRow(self.pixDistlbl)
-
-  # turn off by setting all weights to 0.0
-  def TurnOff (self): self.lines2val('gbar',0.0)
-
-  def initd (self):
-    # evprox (early) feed strength
-    self.dproxearly = OrderedDict([('t_evprox_early', 2000.), # times and stdevs for evoked responses
-                                   ('sigma_t_evprox_early', 2.5),
-                                   ('gbar_evprox_early_L2Pyr', 0.),
-                                   ('gbar_evprox_early_L2Basket', 0.),
-                                   ('gbar_evprox_early_L5Pyr', 0.),                                   
-                                   ('gbar_evprox_early_L5Basket', 0.)])
-
-    # evprox (late) feed strength
-    self.dproxlate = OrderedDict([('t_evprox_late', 2000.),
-                                  ('sigma_t_evprox_late', 7.),
-                                  ('gbar_evprox_late_L2Pyr', 0.),
-                                  ('gbar_evprox_late_L2Basket', 0.),
-                                  ('gbar_evprox_late_L5Pyr', 0.),                                  
-                                  ('gbar_evprox_late_L5Basket', 0.)])
-
-    # evdist feed strengths
-    self.ddist = OrderedDict([('t_evdist', 2000.),
-                              ('sigma_t_evdist', 6.),
-                              ('gbar_evdist_L2Pyr', 0.),
-                              ('gbar_evdist_L2Basket', 0.),
-                              ('gbar_evdist_L5Pyr', 0.)])
-
-    # time between prox/distal inputs -1 means relative - not used by default
-    self.dtiming = OrderedDict([('sync_evinput', 1)])#,
-    #('dt_evprox0_evdist', -1),# do not show these - not useful
-    #('dt_evprox0_evprox1', -1)])#
-
-    for d in [self.dproxearly, self.dproxlate, self.ddist]:
-      for k in d.keys():
-        if k.startswith('gbar'):
-          self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
-        elif k.startswith('t'):
-          self.addtransvar(k,'Start time mean (ms)')
-        elif k.startswith('sigma'):
-          self.addtransvar(k,'Start time stdev (ms)')
-
-    self.addtransvar('sync_evinput', 'Synchronous Inputs')
-    #self.addtransvar('dt_evprox0_evdist','Proximal Early/Distal delay (ms)')
-    #self.addtransvar('dt_evprox0_evprox1','Proximal Early/Late delay (ms)')
-
-    self.ldict = [self.dproxearly, self.ddist, self.dproxlate, self.dtiming]
-    self.ltitle = ['Proximal Early', 'Distal', 'Proximal Late', 'Timing']
-    self.stitle = 'Set Evoked Inputs'
-
-
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
@@ -754,9 +683,9 @@ class RunParamDialog (DictDialog):
                               ('prng_seedcore_input_dist', 0),
                               ('prng_seedcore_extpois', 0),
                               ('prng_seedcore_extgauss', 0),
-                              ('prng_seedcore_evprox_early', 0),
-                              ('prng_seedcore_evdist', 0),
-                              ('prng_seedcore_evprox_late', 0)])
+                              ('prng_seedcore_evprox_1', 0),
+                              ('prng_seedcore_evdist_1', 0),
+                              ('prng_seedcore_evprox_2', 0)])
 
     self.ldict = [self.drun, self.danalysis, self.drand]
     self.ltitle = ['Run', 'Analysis', 'Randomization Seeds']
@@ -1079,10 +1008,9 @@ class BaseParamDialog (QDialog):
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
-    self.baseevparamwin = BaseEvokedInputParamDialog(self,None)
     self.poisparamwin = PoissonInputParamDialog(self,None)
     self.tonicparamwin = TonicInputParamDialog(self,None)
-    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin, self.baseevparamwin]
+    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin]
     self.updateDispParam()
 
   def updateDispParam (self):
@@ -1105,9 +1033,7 @@ class BaseParamDialog (QDialog):
   def setsyngainparam (self): self.syngainparamwin.show()
   def setproxparam (self): self.proxparamwin.show()
   def setdistparam (self): self.distparamwin.show()
-  def setevparam (self):
-    self.evparamwin.show()
-    self.baseevparamwin.show()
+  def setevparam (self): self.evparamwin.show()
   def setpoisparam (self): self.poisparamwin.show()
   def settonicparam (self): self.tonicparamwin.show()
 

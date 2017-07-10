@@ -53,29 +53,29 @@ binsz = 5.0
 smoothsz = 0 # no smoothing
 
 def getEVInputTimes ():
-  t_evprox_early,t_evdist,t_evprox_late=-1,-1,-1
+  t_evprox_1,t_evdist_1,t_evprox_2=-1,-1,-1
   try:
-    xx = paramrw.quickgetprm(paramf,'t_evprox_early',float)
-    if type(xx)==float: t_evprox_early=xx
-    xx = paramrw.quickgetprm(paramf,'t_evprox_late',float)
-    if type(xx)==float: t_evprox_late = xx
-    xx = paramrw.quickgetprm(paramf,'t_evdist',float)
-    if type(xx)==float: t_evdist = xx
+    xx = paramrw.quickgetprm(paramf,'t_evprox_1',float)
+    if type(xx)==float: t_evprox_1=xx
+    xx = paramrw.quickgetprm(paramf,'t_evprox_2',float)
+    if type(xx)==float: t_evprox_2 = xx
+    xx = paramrw.quickgetprm(paramf,'t_evdist_1',float)
+    if type(xx)==float: t_evdist_1 = xx
   except:
     print('except in getEVInputTimes')
     pass
-  return t_evprox_early,t_evdist,t_evprox_late
+  return t_evprox_1,t_evdist_1,t_evprox_2
 
 def drawProxEVInputTimes (ax, h=0.55, w=15):
-  t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
+  t_evprox_1,t_evdist_1,t_evprox_2 = getEVInputTimes()
   yl = ax.get_ylim(); yrange = yl[1] - yl[0]
-  ax.plot([t_evprox_early,t_evprox_early],[yl[0],yl[1]],'r--',linewidth=8)
-  ax.plot([t_evprox_late,t_evprox_late],[yl[0],yl[1]],'r--',linewidth=8)
+  ax.plot([t_evprox_1,t_evprox_1],[yl[0],yl[1]],'r--',linewidth=8)
+  ax.plot([t_evprox_2,t_evprox_2],[yl[0],yl[1]],'r--',linewidth=8)
 
 def drawDistEVInputTimes (ax, h=0.55, w=15):
-  t_evprox_early,t_evdist,t_evprox_late = getEVInputTimes()
+  t_evprox_1,t_evdist_1,t_evprox_2 = getEVInputTimes()
   yl = ax.get_ylim(); yrange = yl[1] - yl[0]
-  ax.plot([t_evdist,t_evdist],[yl[0],yl[1]],'g--',linewidth=8)
+  ax.plot([t_evdist_1,t_evdist_1],[yl[0],yl[1]],'g--',linewidth=8)
 
 # adjust input gids for display purposes
 def adjustinputgid (extinputs, gid):

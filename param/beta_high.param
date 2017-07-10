@@ -93,35 +93,35 @@ input_dist_A_delay_L2: 5.0
 input_dist_A_delay_L5: 5.0
 
 # evprox (early) input
-#t_evprox_early: A(410, 510, 5) 
-t_evprox_early: 1000
-sigma_t_evprox_early: 2.5
-gbar_evprox_early_L2Pyr: 1e-3
+#t_evprox_1: A(410, 510, 5)
+t_evprox_1: 1000
+sigma_t_evprox_1: 2.5
+gbar_evprox_1_L2Pyr: 1e-3
 
-#was 2e-3 
-gbar_evprox_early_L2Basket: 2e-3
-gbar_evprox_early_L5Pyr: 5e-4
-gbar_evprox_early_L5Basket: 1e-3
+#was 2e-3
+gbar_evprox_1_L2Basket: 2e-3
+gbar_evprox_1_L5Pyr: 5e-4
+gbar_evprox_1_L5Basket: 1e-3
 
-# evdist input
-dt_evprox0_evdist: 45
-#t_evdist: 1070.
-sigma_t_evdist: 6.
+# evdist_1 input
+dt_evprox0_evdist_1: 45
+#t_evdist_1: 1070.
+sigma_t_evdist_1: 6.
 # was 1e-3
-gbar_evdist_L2Pyr: 5e-4
+gbar_evdist_1_L2Pyr: 5e-4
 # was 5e-4
-gbar_evdist_L2Basket: 5e-4
+gbar_evdist_1_L2Basket: 5e-4
 # was 1e-3
-gbar_evdist_L5Pyr: 5e-4
+gbar_evdist_1_L5Pyr: 5e-4
 
 # evprox (late) input
 dt_evprox0_evprox1: 110
-#t_evprox_late: 1135.
-sigma_t_evprox_late: 7.
-gbar_evprox_late_L2Pyr: 5.3e-3
-gbar_evprox_late_L2Basket: 5.3e-3
-gbar_evprox_late_L5Pyr: 2.7e-3
-gbar_evprox_late_L5Basket: 2.7e-3
+#t_evprox_2: 1135.
+sigma_t_evprox_2: 7.
+gbar_evprox_2_L2Pyr: 5.3e-3
+gbar_evprox_2_L2Basket: 5.3e-3
+gbar_evprox_2_L5Pyr: 2.7e-3
+gbar_evprox_2_L5Basket: 2.7e-3
 
 # amplitudes of individual gaussian random inputs to L2Pyr and L5Pyr
 # L2 Basket params
@@ -179,10 +179,10 @@ prng_seedcore_input_dist: 4
 prng_seedcore_extpois: 4
 prng_seedcore_extgauss: 4
 # ec=vprox_early was 1
-prng_seedcore_evprox_early: 4
-prng_seedcore_evdist: 4
-# evprox_late was 0
-prng_seedcore_evprox_late: 4
+prng_seedcore_evprox_1: 4
+prng_seedcore_evdist_1: 4
+# evprox_2 was 0
+prng_seedcore_evprox_2: 4
 
 # Numerics
 tstop: 710.

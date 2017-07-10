@@ -165,25 +165,25 @@ class SIMCanvas (FigureCanvas):
       return 0
 
   def getEVInputTimes (self):
-    t_evprox_early,t_evdist,t_evprox_late=-1,-1,-1
+    t_evprox_1,t_evdist_1,t_evprox_2=-1,-1,-1
     try:
-      xx = quickgetprm(self.paramf,'t_evprox_early',float)
-      if type(xx)==float: t_evprox_early=xx
-      xx = quickgetprm(self.paramf,'t_evprox_late',float)
-      if type(xx)==float: t_evprox_late = xx
-      xx = quickgetprm(self.paramf,'t_evdist',float)
-      if type(xx)==float: t_evdist = xx
+      xx = quickgetprm(self.paramf,'t_evprox_1',float)
+      if type(xx)==float: t_evprox_1=xx
+      xx = quickgetprm(self.paramf,'t_evprox_2',float)
+      if type(xx)==float: t_evprox_2 = xx
+      xx = quickgetprm(self.paramf,'t_evdist_1',float)
+      if type(xx)==float: t_evdist_1 = xx
     except:
       print('except in getEVInputTimes')
       pass
-    return t_evprox_early,t_evdist,t_evprox_late
+    return t_evprox_1,t_evdist_1,t_evprox_2
 
   def drawEVInputTimes (self, ax, yl, h=0.1, w=15):
-    t_evprox_early,t_evdist,t_evprox_late = self.getEVInputTimes()
+    t_evprox_1,t_evdist_1,t_evprox_2 = self.getEVInputTimes()
     yrange = yl[1] - yl[0]
-    ax.arrow(t_evprox_early,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
-    ax.arrow(t_evdist,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='g', ec='g')
-    ax.arrow(t_evprox_late,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
+    ax.arrow(t_evprox_1,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
+    ax.arrow(t_evdist_1,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='g', ec='g')
+    ax.arrow(t_evprox_2,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
 
   def getInputs (self):
     EvokedInputs = OngoingInputs = PoissonInputs = TonicInputs = False

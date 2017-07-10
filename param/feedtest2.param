@@ -51,7 +51,7 @@ input_dist_A_weight_inh_ampa: 4e-5
 input_dist_A_weight_L5Pyr_nmda: 0.
 input_dist_A_weight_L2Pyr_nmda: 0.
 input_dist_A_weight_inh_nmda: 0.
-input_dist_A_delay_L2: 5. 
+input_dist_A_delay_L2: 5.
 input_dist_A_delay_L5: 5.
 # input_dist_A_delay_L2: [50., 60., 70., 80., 90.]
 # input_dist_A_delay_L5: input_dist_A_delay_L2
@@ -71,9 +71,9 @@ prng_seedcore_input_prox: -1
 prng_seedcore_input_dist: -1
 prng_seedcore_extpois: -1
 prng_seedcore_extgauss: -1
-prng_seedcore_evprox_early: -1
-prng_seedcore_evdist: -1
-prng_seedcore_evprox_late: -1
+prng_seedcore_evprox_1: -1
+prng_seedcore_evdist_1: -1
+prng_seedcore_evprox_2: -1
 
 # Numerics
 tstop: 1000.

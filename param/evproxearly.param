@@ -63,30 +63,30 @@ input_dist_A_delay_L5: 5.0
 
 # evoked response strengths
 # evprox (early) feed strength
-# t_evprox_early: [0., 482.025]
-t_evprox_early: A(144.948, 191.402, 5.)
-sigma_t_evprox_early: 0.
-gbar_evprox_early_L2Pyr: 1e-3
-gbar_evprox_early_L2Basket: 2e-3
-gbar_evprox_early_L5Pyr: 5e-4
-gbar_evprox_early_L5Basket: 1e-3
+# t_evprox_1: [0., 482.025]
+t_evprox_1: A(144.948, 191.402, 5.)
+sigma_t_evprox_1: 0.
+gbar_evprox_1_L2Pyr: 1e-3
+gbar_evprox_1_L2Basket: 2e-3
+gbar_evprox_1_L5Pyr: 5e-4
+gbar_evprox_1_L5Basket: 1e-3
 
-# evdist feed strengths
-t_evdist: 1000.
-dt_evprox0_evdist: -1
-sigma_t_evdist: 6.
-gbar_evdist_L2Pyr: 0.
-gbar_evdist_L2Basket: 0.
-gbar_evdist_L5Pyr: 0.
+# evdist_1 feed strengths
+t_evdist_1: 1000.
+dt_evprox0_evdist_1: -1
+sigma_t_evdist_1: 6.
+gbar_evdist_1_L2Pyr: 0.
+gbar_evdist_1_L2Basket: 0.
+gbar_evdist_1_L5Pyr: 0.
 
 # evprox (late) feed strength
-t_evprox_late: 1000.
+t_evprox_2: 1000.
 dt_evprox0_evprox1: -1
-sigma_t_evprox_late: 7.
-gbar_evprox_late_L2Pyr: 0.
-gbar_evprox_late_L2Basket: 0.
-gbar_evprox_late_L5Pyr: 0.
-gbar_evprox_late_L5Basket: 0.
+sigma_t_evprox_2: 7.
+gbar_evprox_2_L2Pyr: 0.
+gbar_evprox_2_L2Basket: 0.
+gbar_evprox_2_L5Pyr: 0.
+gbar_evprox_2_L5Basket: 0.
 
 # analysis
 save_spec_data: 0
@@ -101,9 +101,9 @@ prng_seedcore_input_dist: 817612092
 prng_seedcore_input_prox: 710963573
 prng_seedcore_extpois: -1
 prng_seedcore_extgauss: -1
-prng_seedcore_evprox_early: -1
-prng_seedcore_evdist: -1
-prng_seedcore_evprox_late: -1
+prng_seedcore_evprox_1: -1
+prng_seedcore_evdist_1: -1
+prng_seedcore_evprox_2: -1
 
 # Numerics
 tstop: 1000.

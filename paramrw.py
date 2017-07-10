@@ -514,12 +514,12 @@ def create_pext (p, tstop):
     # these vals correspond to non-perceived max
     # conductance threshold in uS (Jones et al. 2007)
     p_unique['evprox0'] = {
-        't0': p['t_evprox_early'],
-        'L2_pyramidal': (p['gbar_evprox_early_L2Pyr'], 0.1, p['sigma_t_evprox_early']),
-        'L2_basket': (p['gbar_evprox_early_L2Basket'], 0.1, p['sigma_t_evprox_early']),
-        'L5_pyramidal': (p['gbar_evprox_early_L5Pyr'], 1., p['sigma_t_evprox_early']),
-        'L5_basket': (p['gbar_evprox_early_L5Basket'], 1., p['sigma_t_evprox_early']),
-        'prng_seedcore': int(p['prng_seedcore_evprox_early']),
+        't0': p['t_evprox_1'],
+        'L2_pyramidal': (p['gbar_evprox_1_L2Pyr'], 0.1, p['sigma_t_evprox_1']),
+        'L2_basket': (p['gbar_evprox_1_L2Basket'], 0.1, p['sigma_t_evprox_1']),
+        'L5_pyramidal': (p['gbar_evprox_1_L5Pyr'], 1., p['sigma_t_evprox_1']),
+        'L5_basket': (p['gbar_evprox_1_L5Basket'], 1., p['sigma_t_evprox_1']),
+        'prng_seedcore': int(p['prng_seedcore_evprox_1']),
         'lamtha_space': 3.,
         'loc': 'proximal',
         'sync_evinput': p['sync_evinput']
@@ -528,26 +528,26 @@ def create_pext (p, tstop):
     # see if relative start time is defined
     if p['dt_evprox0_evdist'] == -1:
         # if dt is -1, assign the input time based on the input param
-        t0_evdist = p['t_evdist']
+        t0_evdist_1 = p['t_evdist_1']
     else:
         # use dt to set the relative timing
-        t0_evdist = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
+        t0_evdist_1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
 
     # relative timing between evprox0 and evprox1
     # not defined by distal time
     if p['dt_evprox0_evprox1'] == -1:
-        t0_evprox1 = p['t_evprox_late']
+        t0_evprox1 = p['t_evprox_2']
 
     else:
         t0_evprox1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
 
     # next evoked input is distal
-    p_unique['evdist'] = {
-        't0': t0_evdist,
-        'L2_pyramidal': (p['gbar_evdist_L2Pyr'], 0.1, p['sigma_t_evdist']),
-        'L5_pyramidal': (p['gbar_evdist_L5Pyr'], 0.1, p['sigma_t_evdist']),
-        'L2_basket': (p['gbar_evdist_L2Basket'], 0.1, p['sigma_t_evdist']),
-        'prng_seedcore': int(p['prng_seedcore_evdist']),
+    p_unique['evdist_1'] = {
+        't0': t0_evdist_1,
+        'L2_pyramidal': (p['gbar_evdist_1_L2Pyr'], 0.1, p['sigma_t_evdist_1']),
+        'L5_pyramidal': (p['gbar_evdist_1_L5Pyr'], 0.1, p['sigma_t_evdist_1']),
+        'L2_basket': (p['gbar_evdist_1_L2Basket'], 0.1, p['sigma_t_evdist_1']),
+        'prng_seedcore': int(p['prng_seedcore_evdist_1']),
         'lamtha_space': 3.,
         'loc': 'distal',
         'sync_evinput': p['sync_evinput']
@@ -556,11 +556,11 @@ def create_pext (p, tstop):
     # next evoked input is proximal also
     p_unique['evprox1'] = {
         't0': t0_evprox1,
-        'L2_pyramidal': (p['gbar_evprox_late_L2Pyr'], 0.1, p['sigma_t_evprox_late']),
-        'L2_basket': (p['gbar_evprox_late_L2Basket'], 0.1, p['sigma_t_evprox_late']),
-        'L5_pyramidal': (p['gbar_evprox_late_L5Pyr'], 5., p['sigma_t_evprox_late']),
-        'L5_basket': (p['gbar_evprox_late_L5Basket'], 5., p['sigma_t_evprox_late']),
-        'prng_seedcore': int(p['prng_seedcore_evprox_late']),
+        'L2_pyramidal': (p['gbar_evprox_2_L2Pyr'], 0.1, p['sigma_t_evprox_2']),
+        'L2_basket': (p['gbar_evprox_2_L2Basket'], 0.1, p['sigma_t_evprox_2']),
+        'L5_pyramidal': (p['gbar_evprox_2_L5Pyr'], 5., p['sigma_t_evprox_2']),
+        'L5_basket': (p['gbar_evprox_2_L5Basket'], 5., p['sigma_t_evprox_2']),
+        'prng_seedcore': int(p['prng_seedcore_evprox_2']),
         'lamtha_space': 3.,
         'loc': 'proximal',
         'sync_evinput': p['sync_evinput']
@@ -679,13 +679,13 @@ def usingOngoingInputs (fparam):
 def usingEvokedInputs (fparam):
   d = quickreadprm(fparam)
   tstop = float(d['tstop']) 
-  for k1 in ['t_evprox_early', 't_evprox_late', 't_evdist']:
+  for k1 in ['t_evprox_1', 't_evprox_2', 't_evdist_1']:
     if k1 not in d: continue
     if float(d[k1]) <= tstop:
       for k2 in d.keys():
-        if (k1=='t_evprox_early' and k2.startswith('gbar_evprox_early') and float(d[k2])>0.) or \
-           (k1=='t_evprox_late' and k2.startswith('gbar_evprox_late') and float(d[k2])>0.) or \
-           (k1=='t_evdist' and k2.startswith('gbar_evdist') and float(d[k2])>0.):
+        if (k1=='t_evprox_1' and k2.startswith('gbar_evprox_1') and float(d[k2])>0.) or \
+           (k1=='t_evprox_2' and k2.startswith('gbar_evprox_2') and float(d[k2])>0.) or \
+           (k1=='t_evdist_1' and k2.startswith('gbar_evdist_1') and float(d[k2])>0.):
           return True
   return False
 
