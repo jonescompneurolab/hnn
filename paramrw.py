@@ -225,10 +225,23 @@ class ExpParams():
             'distribution_dist': self.p_all.pop('distribution_dist'),
         }
 
+    def count_ev_inputs (self, p_all_input):
+      nprox = ndist = 0
+      for k,v in p_all_input.items():
+        if k.startswith('t_'):
+          if k.count('evprox') > 0:
+            nprox += 1
+          elif k.count('evdist') > 0:
+            ndist += 1
+      return nprox, ndist
+
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
+        nprox, ndist = self.count_ev_inputs(p_all_input)
+        print('found nproxB,ndistB ev inputs:', nprox, ndist)
+
         # create a copy of params_default through which to iterate
-        p_all = get_params_default()
+        p_all = get_params_default(nprox, ndist)
 
         # now find ONLY the values that are present in the supplied p_all_input
         # based on the default dict

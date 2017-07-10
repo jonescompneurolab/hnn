@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
 # v 1.9.01
@@ -5,7 +7,7 @@
 # last major: (SL: Added default params for L2Basket and L5Basket cells)
 
 # returns default params - see note
-def get_params_default ():
+def get_params_default (nprox = 2, ndist = 1):
     """ Note that nearly all start times are set BEYOND tstop for this file
         Most values here are set to whatever default value inactivates them, such as 0 for conductance
         prng seed values are also set to 0 (non-random)
@@ -118,38 +120,9 @@ def get_params_default ():
         'input_dist_A_delay_L2': 5.,
         'input_dist_A_delay_L5': 5.,
 
-        #'useEvokedInputs': 1., # whether to use evoked inputs
-        #'useOngoingInputs': 1., # whether to use ongoing inputs
-
-        # evprox (1 - e.g. early) feed strength
-        'gbar_evprox_1_L2Pyr': 0.,
-        'gbar_evprox_1_L5Pyr': 0.,
-        'gbar_evprox_1_L2Basket': 0.,
-        'gbar_evprox_1_L5Basket': 0.,
-
-        # evprox (2 - e.g. late) feed strength
-        'gbar_evprox_2_L2Pyr': 0.,
-        'gbar_evprox_2_L5Pyr': 0.,
-        'gbar_evprox_2_L2Basket': 0.,
-        'gbar_evprox_2_L5Basket': 0.,
-
-        # evdist feed strengths
-        'gbar_evdist_1_L2Pyr': 0.,
-        'gbar_evdist_1_L5Pyr': 0.,
-        'gbar_evdist_1_L2Basket': 0.,
-
         # times and stdevs for evoked responses
-        't_evprox_1': 2000.,
-        'sigma_t_evprox_1': 2.5,
-
-        'dt_evprox0_evdist': -1,
-        't_evdist_1': 2000.,
-        'sigma_t_evdist_1': 6.,
-
-        'dt_evprox0_evprox1': -1,
-        't_evprox_2': 2000.,
-        'sigma_t_evprox_2': 7.,
-
+        'dt_evprox0_evdist': -1, # not used in GUI
+        'dt_evprox0_evprox1': -1, # not used in GUI
         'sync_evinput': 1, # whether evoked inputs arrive at same time to all cells
 
         # analysis
@@ -195,9 +168,6 @@ def get_params_default ():
         'prng_seedcore_input_dist': 0,
         'prng_seedcore_extpois': 0,
         'prng_seedcore_extgauss': 0,
-        'prng_seedcore_evprox_1': 0,
-        'prng_seedcore_evdist_1': 0,
-        'prng_seedcore_evprox_2': 0,
 
         # default end time for pois inputs
         't0_pois': 0.,
@@ -212,7 +182,30 @@ def get_params_default ():
     p.update(p_L2Pyr)
     p.update(p_L5Pyr)
 
+    # get evoked params and update p accordingly
+    p_ev_prox = get_ev_params_default(nprox,True)
+    p_ev_dist = get_ev_params_default(ndist,False)
+    p.update(p_ev_prox)
+    p.update(p_ev_dist)
+
     return p
+
+# return dict with default params (empty) for evoked inputs; n is number of evoked inputs
+# isprox == True iff proximal (otherwise distal)
+def get_ev_params_default (n,isprox):
+  dout = {}#OrderedDict()
+  if isprox: pref = 'evprox'
+  else: pref = 'evdist'
+  for i in range(n):
+    tystr = pref + '_' + str(i+1)
+    dout['gbar_' + tystr + '_L2Pyr'] =  0. # feed strength
+    dout['gbar_' + tystr + '_L5Pyr'] =  0.
+    dout['gbar_' + tystr + '_L2Basket'] =  0.
+    if isprox: dout['gbar_' + tystr + '_L5Basket'] =  0.
+    dout['t_' + tystr] = 0. # times and stdevs for evoked responses
+    dout['sigma_t_' + tystr] = 0.
+    dout['prng_seedcore_' + tystr] = 0 # random number generator seed for this input
+  return dout
 
 # returns default params for L2 pyramidal cell
 def get_L2Pyr_params_default():
