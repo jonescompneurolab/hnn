@@ -473,6 +473,7 @@ class BaseEvokedInputParamDialog (QDialog):
 
   def setfromdin (self,din):
     if not din: return
+    self.allOff() # first turn off all weights - in case user removed an input, need to turn its weights to 0
     nprox, ndist = self.countinputs(din)
     for i in range(nprox+ndist):
       if i % 2 == 0:
@@ -526,11 +527,15 @@ class BaseEvokedInputParamDialog (QDialog):
     self.addRemoveInputButton()
     self.addHideButton()
 
-    # self.show()
+  def lines2val (self,ksearch,val):
+    for k in self.dqline.keys():
+      if k.count(ksearch) > 0:
+        self.dqline[k].setText(str(val))
 
-  def removeInput (self):
-    idx = self.tabs.currentIndex()
-    if idx < 0: return
+  def allOff (self): self.lines2val('gbar',0.0)
+
+  def removeInput (self,idx):
+    if idx < 0 or idx > len(self.ltabs): return
     print('removing input at index', idx)
     self.tabs.removeTab(idx)
     tab = self.ltabs[idx]
@@ -541,9 +546,10 @@ class BaseEvokedInputParamDialog (QDialog):
     tab.setParent(None)
     print(self) # for testing
 
-  """
-  def removeInputAtIdx(self, idx):
-  """
+  def removeCurrentInput (self): # removes currently selected input
+    idx = self.tabs.currentIndex()
+    if idx < 0: return
+    self.removeInput(idx)
 
   def __str__ (self):
     s = ''
@@ -554,7 +560,7 @@ class BaseEvokedInputParamDialog (QDialog):
     self.bbremovebox = QHBoxLayout() 
     self.btnremove = QPushButton('Remove Input',self)
     self.btnremove.resize(self.btnremove.sizeHint())
-    self.btnremove.clicked.connect(self.removeInput)
+    self.btnremove.clicked.connect(self.removeCurrentInput)
     self.btnremove.setToolTip('Remove This Input')
     self.bbremovebox.addWidget(self.btnremove)
     self.layout.addLayout(self.bbremovebox)
