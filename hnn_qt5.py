@@ -471,7 +471,7 @@ class EvokedInputParamDialog (QDialog):
 
   def setfromdin (self,din):
     if not din: return
-    self.allOff() # first turn off all weights - in case user removed an input, need to turn its weights to 0
+    self.removeAllInputs() # turn off any previously set inputs
     nprox, ndist = countEvokedInputs(din)
     for i in range(nprox+ndist):
       if i % 2 == 0:
@@ -541,6 +541,10 @@ class EvokedInputParamDialog (QDialog):
         self.dqline[k].setText(str(val))
 
   def allOff (self): self.lines2val('gbar',0.0)
+
+  def removeAllInputs (self):
+    for i in range(len(self.ltabs)): self.removeCurrentInput()
+    self.nprox = self.ndist = 0
 
   def removeInput (self,idx):
     if idx < 0 or idx > len(self.ltabs): return
