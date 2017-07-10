@@ -228,7 +228,7 @@ class ExpParams():
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
         nprox, ndist = countEvokedInputs(p_all_input)
-        print('found nprox,ndist ev inputs:', nprox, ndist)
+        # print('found nprox,ndist ev inputs:', nprox, ndist)
 
         # create a copy of params_default through which to iterate
         p_all = get_params_default(nprox, ndist)
