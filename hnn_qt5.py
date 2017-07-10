@@ -474,8 +474,17 @@ class BaseEvokedInputParamDialog (QDialog):
   def setfromdin (self,din):
     if not din: return
     nprox, ndist = self.countinputs(din)
-    for i in range(nprox): self.addProx()
-    for i in range(ndist): self.addDist()
+    for i in range(nprox+ndist):
+      if i % 2 == 0:
+        if self.nprox < nprox:
+          self.addProx()
+        elif self.ndist < ndist:
+          self.addDist()
+      else:
+        if self.ndist < ndist:          
+          self.addDist()
+        elif self.nprox < nprox:
+          self.addProx()
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
