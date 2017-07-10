@@ -498,6 +498,11 @@ class BaseEvokedInputParamDialog (QDialog):
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
+      elif k == 'sync_evinput':
+        if float(v)==0.0:
+          self.chksync.setChecked(False)
+        elif float(v)==1.0:
+          self.chksync.setChecked(True)
   
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -521,6 +526,11 @@ class BaseEvokedInputParamDialog (QDialog):
     self.btndist.clicked.connect(self.addDist)
     self.btndist.setToolTip('Add Distal Input')
     self.button_box.addWidget(self.btndist)
+
+    self.chksync = QCheckBox('Synchronous Inputs',self)
+    self.chksync.resize(self.chksync.sizeHint())
+    self.chksync.setChecked(True)
+    self.button_box.addWidget(self.chksync)
 
     self.layout.addLayout(self.button_box)
 
@@ -563,6 +573,8 @@ class BaseEvokedInputParamDialog (QDialog):
   def __str__ (self):
     s = ''
     for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
+    if self.chksync.isChecked(): s += 'sync_evinput: 1'+os.linesep
+    else: s += 'sync_evinput: 0'+os.linesep
     return s
 
   def addRemoveInputButton (self):
