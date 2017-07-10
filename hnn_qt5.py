@@ -457,8 +457,17 @@ class BaseEvokedInputParamDialog (QDialog):
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dqline = OrderedDict()
+    self.dtransvar = {} # for translating model variable name to more human-readable form
     self.initUI()
     self.setfromdin(din)
+
+  def transvar (self,k):
+    if k in self.dtransvar: return self.dtransvar[k]
+    return k
+
+  def addtransvar (self,k,strans):
+    self.dtransvar[k] = strans
+    self.dtransvar[strans] = k
 
   # return number of evoked inputs in the input dictionary (din)
   def countinputs (self,din):
@@ -586,14 +595,22 @@ class BaseEvokedInputParamDialog (QDialog):
     for k,v in d.items():
       self.dqline[k] = QLineEdit(self)
       self.dqline[k].setText(str(v))
-      #tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab      
-      tab.layout.addRow(k,self.dqline[k])    
+      tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab
 
   def makePixLabel (self,fn):
     pix = QPixmap(fn)
     pixlbl = ClickLabel(self)
     pixlbl.setPixmap(pix)
     return pixlbl
+
+  def addtransvarfromdict (self,d):
+    for k in d.keys():
+      if k.startswith('gbar'):
+        self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
+      elif k.startswith('t'):
+        self.addtransvar(k,'Start time mean (ms)')
+      elif k.startswith('sigma'):
+        self.addtransvar(k,'Start time stdev (ms)')
 
   def addProx (self):
     self.nprox += 1 # starts at 1
@@ -605,11 +622,12 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L5Pyr', 0.),                                   
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket', 0.)])
     self.ld.append(dprox)
+    self.addtransvarfromdict(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/proxfig.png'))
-    print('index to', len(self.ltabs)-1)
+    #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
-    print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
 
   def addDist (self):
     self.ndist += 1
@@ -620,11 +638,12 @@ class BaseEvokedInputParamDialog (QDialog):
                          ('gbar_evdist_' + str(self.ndist) + '_L2Basket', 0.),
                          ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
     self.ld.append(ddist)
+    self.addtransvarfromdict(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
     self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
-    print('index to', len(self.ltabs)-1)
+    #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
-    print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
     
 # widget to specify ongoing input params (proximal, distal)
 class EvokedInputParamDialog (DictDialog):
