@@ -225,20 +225,10 @@ class ExpParams():
             'distribution_dist': self.p_all.pop('distribution_dist'),
         }
 
-    def count_ev_inputs (self, p_all_input):
-      nprox = ndist = 0
-      for k,v in p_all_input.items():
-        if k.startswith('t_'):
-          if k.count('evprox') > 0:
-            nprox += 1
-          elif k.count('evdist') > 0:
-            ndist += 1
-      return nprox, ndist
-
     # create the dict based on the default param dict
     def __create_dict_from_default(self, p_all_input):
-        nprox, ndist = self.count_ev_inputs(p_all_input)
-        print('found nproxB,ndistB ev inputs:', nprox, ndist)
+        nprox, ndist = countEvokedInputs(p_all_input)
+        print('found nprox,ndist ev inputs:', nprox, ndist)
 
         # create a copy of params_default through which to iterate
         p_all = get_params_default(nprox, ndist)
@@ -700,6 +690,19 @@ def usingEvokedInputs (fparam):
            (k1=='t_evdist_1' and k2.startswith('gbar_evdist_1') and float(d[k2])>0.):
           return True
   return False
+
+# return number of evoked inputs (proximal, distal)
+# using dictionary d (or if d is a string, first load the dictionary from filename d)
+def countEvokedInputs (d):
+  if type(d) == str: d = quickreadprm(d)
+  nprox = ndist = 0
+  for k,v in d.items():
+    if k.startswith('t_'):
+      if k.count('evprox') > 0:
+        nprox += 1
+      elif k.count('evdist') > 0:
+        ndist += 1
+  return nprox, ndist
 
 # check if using any poisson inputs 
 def usingPoissonInputs (fparam):

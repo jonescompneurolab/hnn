@@ -9,7 +9,7 @@ import numpy as np
 from math import ceil
 from conf import dconf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm, countEvokedInputs
 from scipy import signal
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
@@ -165,25 +165,20 @@ class SIMCanvas (FigureCanvas):
       return 0
 
   def getEVInputTimes (self):
-    t_evprox_1,t_evdist_1,t_evprox_2=-1,-1,-1
+    nprox, ndist = countEvokedInputs(self.paramf)
+    ltprox, ltdist = [], []
     try:
-      xx = quickgetprm(self.paramf,'t_evprox_1',float)
-      if type(xx)==float: t_evprox_1=xx
-      xx = quickgetprm(self.paramf,'t_evprox_2',float)
-      if type(xx)==float: t_evprox_2 = xx
-      xx = quickgetprm(self.paramf,'t_evdist_1',float)
-      if type(xx)==float: t_evdist_1 = xx
+      for i in range(nprox): ltprox.append(quickgetprm(self.paramf,'t_evprox_' + str(i+1), float))
+      for i in range(ndist): ltdist.append(quickgetprm(self.paramf,'t_evdist_' + str(i+1), float))
     except:
       print('except in getEVInputTimes')
-      pass
-    return t_evprox_1,t_evdist_1,t_evprox_2
+    return ltprox, ltdist
 
   def drawEVInputTimes (self, ax, yl, h=0.1, w=15):
-    t_evprox_1,t_evdist_1,t_evprox_2 = self.getEVInputTimes()
+    ltprox, ltdist = self.getEVInputTimes()
     yrange = yl[1] - yl[0]
-    ax.arrow(t_evprox_1,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
-    ax.arrow(t_evdist_1,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='g', ec='g')
-    ax.arrow(t_evprox_2,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
+    for tt in ltprox: ax.arrow(tt,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
+    for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='g', ec='g')
 
   def getInputs (self):
     EvokedInputs = OngoingInputs = PoissonInputs = TonicInputs = False

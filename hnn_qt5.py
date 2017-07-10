@@ -21,7 +21,7 @@ import random
 from math import ceil
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs
+from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles
 
 prtime = True
@@ -469,21 +469,10 @@ class EvokedInputParamDialog (QDialog):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
 
-  # return number of evoked inputs in the input dictionary (din)
-  def countinputs (self,din):
-    nprox = ndist = 0
-    for k,v in din.items():
-      if k.startswith('t_'):
-        if k.count('evprox') > 0:
-          nprox += 1
-        elif k.count('evdist') > 0:
-          ndist += 1
-    return nprox, ndist
-
   def setfromdin (self,din):
     if not din: return
     self.allOff() # first turn off all weights - in case user removed an input, need to turn its weights to 0
-    nprox, ndist = self.countinputs(din)
+    nprox, ndist = countEvokedInputs(din)
     for i in range(nprox+ndist):
       if i % 2 == 0:
         if self.nprox < nprox:
