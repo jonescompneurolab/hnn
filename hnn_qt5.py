@@ -1330,7 +1330,7 @@ class HNNGUI (QMainWindow):
     #aboutMenu.addAction(helpAction)
 
   def addButtons (self, gRow):
-    self.pbtn = pbtn = QPushButton('Set Parameters (Advanced)', self)
+    self.pbtn = pbtn = QPushButton('Set Parameters', self)
     pbtn.setToolTip('Set parameters')
     pbtn.resize(pbtn.sizeHint())
     pbtn.clicked.connect(self.setparams)
