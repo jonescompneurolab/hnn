@@ -63,7 +63,9 @@ class ExtInputs (Spikes):
     self.gid_dict, self.p_dict = paramrw.read(fparam)
     self.evoked = evoked
     # parse evoked prox and dist input gids from gid_dict
+    print('getting evokedinput gids')
     self.gid_evprox, self.gid_evdist = self.__get_evokedinput_gids()
+    print('got evokedinput gids')
     # parse ongoing prox and dist input gids from gid_dict
     self.gid_prox, self.gid_dist = self.__get_extinput_gids()
     # self.inputs is dict of input times with keys 'prox' and 'dist'
@@ -87,13 +89,14 @@ class ExtInputs (Spikes):
 
   def __get_evokedinput_gids (self):
     gid_prox,gid_dist=None,None
-    if len(self.gid_dict['evprox0']) > 0 or len(self.gid_dict['evprox1'])>0:
-      l = list(self.gid_dict['evprox0'])
-      for x in self.gid_dict['evprox1']: l.append(x)
+    print('keys:',self.gid_dict.keys())
+    if len(self.gid_dict['evprox1']) > 0 or len(self.gid_dict['evprox2'])>0:
+      l = list(self.gid_dict['evprox1'])
+      for x in self.gid_dict['evprox2']: l.append(x)
       gid_prox = np.array(l)
       self.evprox_gid_range = (min(gid_prox),max(gid_prox))
-    if len(self.gid_dict['evdist']) > 0:
-      gid_dist = self.gid_dict['evdist']
+    if len(self.gid_dict['evdist1']) > 0:
+      gid_dist = self.gid_dict['evdist1']
       self.evdist_gid_range = (min(gid_dist),max(gid_dist))
     return gid_prox, gid_dist
 

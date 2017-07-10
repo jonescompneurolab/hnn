@@ -513,7 +513,7 @@ def create_pext (p, tstop):
     # f_input needs to be defined as 0
     # these vals correspond to non-perceived max
     # conductance threshold in uS (Jones et al. 2007)
-    p_unique['evprox0'] = {
+    p_unique['evprox1'] = {
         't0': p['t_evprox_1'],
         'L2_pyramidal': (p['gbar_evprox_1_L2Pyr'], 0.1, p['sigma_t_evprox_1']),
         'L2_basket': (p['gbar_evprox_1_L2Basket'], 0.1, p['sigma_t_evprox_1']),
@@ -527,22 +527,21 @@ def create_pext (p, tstop):
 
     # see if relative start time is defined
     if p['dt_evprox0_evdist'] == -1:
-        # if dt is -1, assign the input time based on the input param
-        t0_evdist_1 = p['t_evdist_1']
+      # if dt is -1, assign the input time based on the input param
+      t0_evdist_1 = p['t_evdist_1']
     else:
-        # use dt to set the relative timing
-        t0_evdist_1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
+      # use dt to set the relative timing
+      t0_evdist_1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
 
     # relative timing between evprox0 and evprox1
     # not defined by distal time
     if p['dt_evprox0_evprox1'] == -1:
-        t0_evprox1 = p['t_evprox_2']
-
+      t0_evprox2 = p['t_evprox_2']
     else:
-        t0_evprox1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
+      t0_evprox2 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
 
     # next evoked input is distal
-    p_unique['evdist_1'] = {
+    p_unique['evdist1'] = {
         't0': t0_evdist_1,
         'L2_pyramidal': (p['gbar_evdist_1_L2Pyr'], 0.1, p['sigma_t_evdist_1']),
         'L5_pyramidal': (p['gbar_evdist_1_L5Pyr'], 0.1, p['sigma_t_evdist_1']),
@@ -554,8 +553,8 @@ def create_pext (p, tstop):
     }
 
     # next evoked input is proximal also
-    p_unique['evprox1'] = {
-        't0': t0_evprox1,
+    p_unique['evprox2'] = {
+        't0': t0_evprox2,
         'L2_pyramidal': (p['gbar_evprox_2_L2Pyr'], 0.1, p['sigma_t_evprox_2']),
         'L2_basket': (p['gbar_evprox_2_L2Basket'], 0.1, p['sigma_t_evprox_2']),
         'L5_pyramidal': (p['gbar_evprox_2_L5Pyr'], 5., p['sigma_t_evprox_2']),
@@ -741,7 +740,7 @@ def diffdict (d1, d2, verbose=True):
 
 # debug test function
 if __name__ == '__main__':
-    fparam = 'param/debug.param'
-    p = ExpParams(fparam)
-    # print(find_param(fparam, 'WhoDat')) # ?
+  fparam = 'param/debug.param'
+  p = ExpParams(fparam)
+  # print(find_param(fparam, 'WhoDat')) # ?
 
