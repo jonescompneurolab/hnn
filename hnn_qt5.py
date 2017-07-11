@@ -686,7 +686,8 @@ class RunParamDialog (DictDialog):
                               ('prng_seedcore_extgauss', 0),
                               ('prng_seedcore_evprox_1', 0),
                               ('prng_seedcore_evdist_1', 0),
-                              ('prng_seedcore_evprox_2', 0)])
+                              ('prng_seedcore_evprox_2', 0),
+                              ('prng_seedcore_evdist_2', 0)])
 
     self.ldict = [self.drun, self.danalysis, self.drand]
     self.ltitle = ['Run', 'Analysis', 'Randomization Seeds']
@@ -706,9 +707,10 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
     self.addtransvar('prng_seedcore_extgauss','External Gaussian')
-    self.addtransvar('prng_seedcore_evprox_early','Evoked Proximal Early')
-    self.addtransvar('prng_seedcore_evdist','Evoked Distal')
-    self.addtransvar('prng_seedcore_evprox_late','Evoked Proximal Late')
+    self.addtransvar('prng_seedcore_evprox_1','Evoked Proximal 1')
+    self.addtransvar('prng_seedcore_evdist_1','Evoked Distal 1 ')
+    self.addtransvar('prng_seedcore_evprox_2','Evoked Proximal 2')
+    self.addtransvar('prng_seedcore_evdist_2','Evoked Distal 2')
 
   def initExtra (self):
     DictDialog.initExtra(self)
