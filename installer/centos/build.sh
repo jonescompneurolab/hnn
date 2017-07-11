@@ -1,11 +1,7 @@
 # start with this since it gets input needed
 
-# need hg for now
-sudo yum -y install mercurial
-# pip3 install Mercurial # <<-- alternative for other platform - doesn't work on centos
-
-# HNN repo from bitbucket - can adjust to git later
-hg clone https://bitbucket.org/samnemo/hnn
+# HNN repo from bitbucket
+git clone https://bitbucket.org/samnemo/hnn.git
 
 wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 sudo rpm -i epel-release-latest-7.noarch.rpm
