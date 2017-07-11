@@ -461,6 +461,11 @@ class EvokedInputParamDialog (QDialog):
     self.initUI()
     self.setfromdin(din)
 
+  def addtips (self):
+    for ktip in dconf.keys():
+      if ktip in self.dqline:
+        self.dqline[ktip].setToolTip(dconf[ktip])
+
   def transvar (self,k):
     if k in self.dtransvar: return self.dtransvar[k]
     return k
@@ -534,6 +539,7 @@ class EvokedInputParamDialog (QDialog):
 
     self.addRemoveInputButton()
     self.addHideButton()
+    self.addtips()
 
   def lines2val (self,ksearch,val):
     for k in self.dqline.keys():
@@ -633,6 +639,7 @@ class EvokedInputParamDialog (QDialog):
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    self.addtips()
 
   def addDist (self):
     self.ndist += 1
@@ -649,6 +656,7 @@ class EvokedInputParamDialog (QDialog):
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+    self.addtips()
     
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
