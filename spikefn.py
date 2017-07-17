@@ -63,9 +63,9 @@ class ExtInputs (Spikes):
     self.gid_dict, self.p_dict = paramrw.read(fparam)
     self.evoked = evoked
     # parse evoked prox and dist input gids from gid_dict
-    print('getting evokedinput gids')
+    # print('getting evokedinput gids')
     self.gid_evprox, self.gid_evdist = self.__get_evokedinput_gids()
-    print('got evokedinput gids')
+    # print('got evokedinput gids')
     # parse ongoing prox and dist input gids from gid_dict
     self.gid_prox, self.gid_dist = self.__get_extinput_gids()
     # self.inputs is dict of input times with keys 'prox' and 'dist'
@@ -87,16 +87,34 @@ class ExtInputs (Spikes):
     else:
       return None, None
 
+  def countevinputs (self, ty):
+    n = 0
+    for k in self.gid_dict.keys():
+      if k.startswith(ty) and len(self.gid_dict[k]) > 0: n += 1
+    return n
+
+  def countevprox (self): return self.countevinputs('evprox')
+  def countevdist (self): return self.countevinputs('evdist')
+
   def __get_evokedinput_gids (self):
     gid_prox,gid_dist=None,None
-    print('keys:',self.gid_dict.keys())
-    if len(self.gid_dict['evprox1']) > 0 or len(self.gid_dict['evprox2'])>0:
-      l = list(self.gid_dict['evprox1'])
-      for x in self.gid_dict['evprox2']: l.append(x)
-      gid_prox = np.array(l)
+    nprox,ndist = self.countevprox(), self.countevdist()
+    #print('__get_evokedinput_gids keys:',self.gid_dict.keys(),'nprox:',nprox,'ndist:',ndist)
+    if nprox > 0:
+      gid_prox = []
+      for i in range(nprox):
+        if len(self.gid_dict['evprox'+str(i+1)]) > 0:
+          l = list(self.gid_dict['evprox'+str(i+1)])
+          for x in l: gid_prox.append(x)
+      gid_prox = np.array(gid_prox)
       self.evprox_gid_range = (min(gid_prox),max(gid_prox))
-    if len(self.gid_dict['evdist1']) > 0:
-      gid_dist = self.gid_dict['evdist1']
+    if ndist > 0:
+      gid_dist = []
+      for i in range(ndist):
+        if len(self.gid_dict['evdist'+str(i+1)]) > 0:
+          l = list(self.gid_dict['evdist'+str(i+1)])
+          for x in l: gid_dist.append(x)
+      gid_dist = np.array(gid_dist)
       self.evdist_gid_range = (min(gid_dist),max(gid_dist))
     return gid_prox, gid_dist
 

@@ -554,7 +554,7 @@ class EvokedInputParamDialog (QDialog):
 
   def removeInput (self,idx):
     if idx < 0 or idx > len(self.ltabs): return
-    print('removing input at index', idx)
+    # print('removing input at index', idx)
     self.tabs.removeTab(idx)
     tab = self.ltabs[idx]
     self.ltabs.remove(tab)
@@ -562,7 +562,7 @@ class EvokedInputParamDialog (QDialog):
     for k in d.keys(): del self.dqline[k]
     self.ld.remove(d)
     tab.setParent(None)
-    print(self) # for testing
+    # print(self) # for testing
 
   def removeCurrentInput (self): # removes currently selected input
     idx = self.tabs.currentIndex()

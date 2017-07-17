@@ -11,6 +11,105 @@ import itertools as it
 # from cartesian import cartesian
 from params_default import get_params_default
 
+# get dict of ':' separated params from fn; ignore lines starting with #
+def quickreadprm (fn):
+  d = {}
+  with open(fn,'r') as fp:
+    ln = fp.readlines()
+    for l in ln:
+      s = l.strip()
+      if s.startswith('#'): continue
+      sp = s.split(':')
+      if len(sp) > 1:
+        d[sp[0].strip()]=str(sp[1]).strip()
+  return d
+
+# get dict of ':' separated params from fn; ignore lines starting with #
+def quickgetprm (fn,k,ty):
+  d = quickreadprm(fn)
+  return ty(d[k])
+
+# check if using ongoing inputs
+def usingOngoingInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
+  try:
+    for postfix in ['_prox','_dist']:    
+      if float(d['t0_input'+postfix])<= tstop and \
+         float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
+         float(d['f_input'+postfix])>0.:
+        for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
+                  'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
+                  'weight_inh_ampa','weight_inh_nmda']:
+          if float(d[dpref[postfix]+k])>0.: return True
+  except: 
+    return False
+  return False
+
+# check if using any evoked inputs 
+def usingEvokedInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop']) 
+  for k1 in ['t_evprox_1', 't_evprox_2', 't_evdist_1']:
+    if k1 not in d: continue
+    if float(d[k1]) <= tstop:
+      for k2 in d.keys():
+        if (k1=='t_evprox_1' and k2.startswith('gbar_evprox_1') and float(d[k2])>0.) or \
+           (k1=='t_evprox_2' and k2.startswith('gbar_evprox_2') and float(d[k2])>0.) or \
+           (k1=='t_evdist_1' and k2.startswith('gbar_evdist_1') and float(d[k2])>0.):
+          return True
+  return False
+
+# return number of evoked inputs (proximal, distal)
+# using dictionary d (or if d is a string, first load the dictionary from filename d)
+def countEvokedInputs (d):
+  if type(d) == str: d = quickreadprm(d)
+  nprox = ndist = 0
+  for k,v in d.items():
+    if k.startswith('t_'):
+      if k.count('evprox') > 0:
+        nprox += 1
+      elif k.count('evdist') > 0:
+        ndist += 1
+  return nprox, ndist
+
+# check if using any poisson inputs 
+def usingPoissonInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  if 't0_pois' in d and 'T_pois' in d:
+    t0_pois = float(d['t0_pois'])
+    if t0_pois > tstop: return False
+    T_pois = float(d['T_pois'])
+    if t0_pois > T_pois and T_pois != -1.0:
+      return False
+  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
+    k = cty+'_Pois_A_weight'             
+    if k in d:
+      if float(d[k]) != 0.0: return True
+  return False
+
+# check if using any tonic (IClamp) inputs 
+def usingTonicInputs (fparam):
+  d = quickreadprm(fparam)
+  tstop = float(d['tstop'])
+  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
+    k = 'Itonic_A_' + cty + '_soma'
+    if k in d:
+      amp = float(d[k])
+      if amp != 0.0:
+        print(k,'amp != 0.0',amp)
+        k = 'Itonic_t0_' + cty
+        t0,t1 = 0.0,-1.0
+        if k in d: t0 = float(d[k])
+        k = 'Itonic_T_' + cty
+        if k in d: t1 = float(d[k])
+        if t0 > tstop: continue
+        print('t0:',t0,'t1:',t1)
+        if t0 < t1 or t1 == -1.0: return True
+  return False
+
 # class controlling multiple simulation files (.param)
 class ExpParams():
     def __init__ (self, f_psim):
@@ -512,61 +611,39 @@ def create_pext (p, tstop):
 
     p_ext = feed_validate(p_ext, feed_dist, tstop)
 
-    # Create evoked response parameters
+    nprox, ndist = countEvokedInputs(p)
+    # print('nprox,ndist evoked inputs:', nprox, ndist)
+
+    # Create proximal evoked response parameters
     # f_input needs to be defined as 0
-    # these vals correspond to non-perceived max
-    # conductance threshold in uS (Jones et al. 2007)
-    p_unique['evprox1'] = {
-        't0': p['t_evprox_1'],
-        'L2_pyramidal': (p['gbar_evprox_1_L2Pyr'], 0.1, p['sigma_t_evprox_1']),
-        'L2_basket': (p['gbar_evprox_1_L2Basket'], 0.1, p['sigma_t_evprox_1']),
-        'L5_pyramidal': (p['gbar_evprox_1_L5Pyr'], 1., p['sigma_t_evprox_1']),
-        'L5_basket': (p['gbar_evprox_1_L5Basket'], 1., p['sigma_t_evprox_1']),
-        'prng_seedcore': int(p['prng_seedcore_evprox_1']),
-        'lamtha_space': 3.,
-        'loc': 'proximal',
-        'sync_evinput': p['sync_evinput']
-    }
+    for i in range(nprox):
+      skey = 'evprox_' + str(i+1)
+      p_unique['evprox' + str(i+1)] = {
+          't0': p['t_' + skey],
+          'L2_pyramidal': (p['gbar_' + skey + '_L2Pyr'], 0.1, p['sigma_t_' + skey]),
+          'L2_basket': (p['gbar_' + skey + '_L2Basket'], 0.1, p['sigma_t_' + skey]),
+          'L5_pyramidal': (p['gbar_' + skey + '_L5Pyr'], 1., p['sigma_t_' + skey]),
+          'L5_basket': (p['gbar_' + skey + '_L5Basket'], 1., p['sigma_t_' + skey]),
+          'prng_seedcore': int(p['prng_seedcore_' + skey]),
+          'lamtha_space': 3.,
+          'loc': 'proximal',
+          'sync_evinput': p['sync_evinput']
+      }
 
-    # see if relative start time is defined
-    if p['dt_evprox0_evdist'] == -1:
-      # if dt is -1, assign the input time based on the input param
-      t0_evdist_1 = p['t_evdist_1']
-    else:
-      # use dt to set the relative timing
-      t0_evdist_1 = p_unique['evprox0']['t0'] + p['dt_evprox0_evdist']
-
-    # relative timing between evprox0 and evprox1
-    # not defined by distal time
-    if p['dt_evprox0_evprox1'] == -1:
-      t0_evprox2 = p['t_evprox_2']
-    else:
-      t0_evprox2 = p_unique['evprox0']['t0'] + p['dt_evprox0_evprox1']
-
-    # next evoked input is distal
-    p_unique['evdist1'] = {
-        't0': t0_evdist_1,
-        'L2_pyramidal': (p['gbar_evdist_1_L2Pyr'], 0.1, p['sigma_t_evdist_1']),
-        'L5_pyramidal': (p['gbar_evdist_1_L5Pyr'], 0.1, p['sigma_t_evdist_1']),
-        'L2_basket': (p['gbar_evdist_1_L2Basket'], 0.1, p['sigma_t_evdist_1']),
-        'prng_seedcore': int(p['prng_seedcore_evdist_1']),
-        'lamtha_space': 3.,
-        'loc': 'distal',
-        'sync_evinput': p['sync_evinput']
-    }
-
-    # next evoked input is proximal also
-    p_unique['evprox2'] = {
-        't0': t0_evprox2,
-        'L2_pyramidal': (p['gbar_evprox_2_L2Pyr'], 0.1, p['sigma_t_evprox_2']),
-        'L2_basket': (p['gbar_evprox_2_L2Basket'], 0.1, p['sigma_t_evprox_2']),
-        'L5_pyramidal': (p['gbar_evprox_2_L5Pyr'], 5., p['sigma_t_evprox_2']),
-        'L5_basket': (p['gbar_evprox_2_L5Basket'], 5., p['sigma_t_evprox_2']),
-        'prng_seedcore': int(p['prng_seedcore_evprox_2']),
-        'lamtha_space': 3.,
-        'loc': 'proximal',
-        'sync_evinput': p['sync_evinput']
-    }
+    # Create distal evoked response parameters
+    # f_input needs to be defined as 0
+    for i in range(ndist):
+      skey = 'evdist_' + str(i+1)
+      p_unique['evdist' + str(i+1)] = {
+          't0': p['t_' + skey],
+          'L2_pyramidal': (p['gbar_' + skey + '_L2Pyr'], 0.1, p['sigma_t_' + skey]),
+          'L5_pyramidal': (p['gbar_' + skey + '_L5Pyr'], 0.1, p['sigma_t_' + skey]),
+          'L2_basket': (p['gbar_' + skey +'_L2Basket'], 0.1, p['sigma_t_' + skey]),
+          'prng_seedcore': int(p['prng_seedcore_' + skey]),
+          'lamtha_space': 3.,
+          'loc': 'distal',
+          'sync_evinput': p['sync_evinput']
+      }
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
@@ -582,8 +659,7 @@ def create_pext (p, tstop):
     }
 
     # define T_pois as 0 or -1 to reset automatically to tstop
-    if p['T_pois'] in (0, -1):
-        p['T_pois'] = tstop
+    if p['T_pois'] in (0, -1): p['T_pois'] = tstop
 
     # Poisson distributed inputs to proximal
     p_unique['extpois'] = {
@@ -640,105 +716,6 @@ def compare_dictionaries(d1, d2):
         d1[key] = d2[key]
 
     return d1
-
-# get dict of ':' separated params from fn; ignore lines starting with #
-def quickreadprm (fn):
-  d = {}
-  with open(fn,'r') as fp:
-    ln = fp.readlines()
-    for l in ln:
-      s = l.strip()
-      if s.startswith('#'): continue
-      sp = s.split(':')
-      if len(sp) > 1:
-        d[sp[0].strip()]=str(sp[1]).strip()
-  return d
-
-# get dict of ':' separated params from fn; ignore lines starting with #
-def quickgetprm (fn,k,ty):
-  d = quickreadprm(fn)
-  return ty(d[k])
-
-# check if using ongoing inputs
-def usingOngoingInputs (fparam):
-  d = quickreadprm(fparam)
-  tstop = float(d['tstop'])
-  dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
-  try:
-    for postfix in ['_prox','_dist']:    
-      if float(d['t0_input'+postfix])<= tstop and \
-         float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
-         float(d['f_input'+postfix])>0.:
-        for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
-                  'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
-                  'weight_inh_ampa','weight_inh_nmda']:
-          if float(d[dpref[postfix]+k])>0.: return True
-  except: 
-    return False
-  return False
-
-# check if using any evoked inputs 
-def usingEvokedInputs (fparam):
-  d = quickreadprm(fparam)
-  tstop = float(d['tstop']) 
-  for k1 in ['t_evprox_1', 't_evprox_2', 't_evdist_1']:
-    if k1 not in d: continue
-    if float(d[k1]) <= tstop:
-      for k2 in d.keys():
-        if (k1=='t_evprox_1' and k2.startswith('gbar_evprox_1') and float(d[k2])>0.) or \
-           (k1=='t_evprox_2' and k2.startswith('gbar_evprox_2') and float(d[k2])>0.) or \
-           (k1=='t_evdist_1' and k2.startswith('gbar_evdist_1') and float(d[k2])>0.):
-          return True
-  return False
-
-# return number of evoked inputs (proximal, distal)
-# using dictionary d (or if d is a string, first load the dictionary from filename d)
-def countEvokedInputs (d):
-  if type(d) == str: d = quickreadprm(d)
-  nprox = ndist = 0
-  for k,v in d.items():
-    if k.startswith('t_'):
-      if k.count('evprox') > 0:
-        nprox += 1
-      elif k.count('evdist') > 0:
-        ndist += 1
-  return nprox, ndist
-
-# check if using any poisson inputs 
-def usingPoissonInputs (fparam):
-  d = quickreadprm(fparam)
-  tstop = float(d['tstop'])
-  if 't0_pois' in d and 'T_pois' in d:
-    t0_pois = float(d['t0_pois'])
-    if t0_pois > tstop: return False
-    T_pois = float(d['T_pois'])
-    if t0_pois > T_pois and T_pois != -1.0:
-      return False
-  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
-    k = cty+'_Pois_A_weight'             
-    if k in d:
-      if float(d[k]) != 0.0: return True
-  return False
-
-# check if using any tonic (IClamp) inputs 
-def usingTonicInputs (fparam):
-  d = quickreadprm(fparam)
-  tstop = float(d['tstop'])
-  for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
-    k = 'Itonic_A_' + cty + '_soma'
-    if k in d:
-      amp = float(d[k])
-      if amp != 0.0:
-        print(k,'amp != 0.0',amp)
-        k = 'Itonic_t0_' + cty
-        t0,t1 = 0.0,-1.0
-        if k in d: t0 = float(d[k])
-        k = 'Itonic_T_' + cty
-        if k in d: t1 = float(d[k])
-        if t0 > tstop: continue
-        print('t0:',t0,'t1:',t1)
-        if t0 < t1 or t1 == -1.0: return True
-  return False
 
 # get diff on 2 dictionaries
 def diffdict (d1, d2, verbose=True):
