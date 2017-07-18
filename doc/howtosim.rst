@@ -1,5 +1,12 @@
-How to Simulate (ERPs, Alpha/Beta, Gamma)
-===============================
- 1. ERPs
- 2. Alpha/Beta
- 3. Gamma 
+How to Simulate...
+=========================================
+
+Event related potentials (ERPs)
+-------------------------------
+
+Alpha/Beta rhythms
+------------------
+
+Gamma rhythms
+-------------
+

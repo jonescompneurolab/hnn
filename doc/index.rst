@@ -4,17 +4,20 @@
    contain the root `toctree` directive.
 
 Human Neocortical Neurosolver (HNN) documentation
-===============================
+=================================================
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    background
+   overview
    model
    priorstudies
    howtosim
    viewingdata
    adjustableparams
    limitsandfuture
+   refs
 
+.. hello world
