@@ -15,3 +15,6 @@ need, and a unique opportunity, to relate the ‘macro-scale’ signals to their
 Current dipoles 
 ----------------
 
+Model - how current dipoles are simulated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+

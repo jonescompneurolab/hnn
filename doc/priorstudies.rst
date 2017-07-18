@@ -1,6 +1,12 @@
-Review of hypothesis development and testing in prior somatosensory studies
-===============================
- 1. ERP
- 2. Alpha/Beta
- 3. Gamma 
+Hypothesis development/testing in prior somatosensory studies
+=============================================================
+ 
+Event related potentials (ERPs)
+-------------------------------
+
+Alpha/Beta rhythms
+------------------
+
+Gamma rhythms
+-------------
 
