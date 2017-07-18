@@ -1,4 +1,4 @@
-How to Simulate...
+How to Simulate:
 =========================================
 
 Event related potentials (ERPs)
