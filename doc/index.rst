@@ -12,6 +12,7 @@ Human Neocortical Neurosolver (HNN) documentation
 
    background
    overview
+   install
    model
    priorstudies
    howtosim
