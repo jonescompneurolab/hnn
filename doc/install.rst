@@ -18,9 +18,16 @@ Required packages:
  #. pyqtgraph
  #. Scipy
 
+These packages are automatically installed when running the installation scripts provided below. However,
+if your operating system does not yet have an installer, you could install the required packages manually
+and then install the HNN code itself using the source-code from the bitbucket repository: http://bitbucket.org/samnemo/hnn .
+For more information and/or questions about this contact samuel_neymotin@brown.edu .
 
-Installers
-----------
+Installing HNN
+--------------
+
+We have provided installation scripts for CentOS and Ubuntu below. Mac OSX and Windows installers
+are currently in development. 
 
  #. `CentOS install script <https://bitbucket.org/samnemo/hnn/src/70f8db5fc7310a811378920d61954d0277abe8c8/installer/centos/build.sh?at=master>`_ 
  #. `Ubuntu install script <https://bitbucket.org/samnemo/hnn/src/70f8db5fc7310a811378920d61954d0277abe8c8/installer/ubuntu/build.sh?at=master>`_
@@ -32,12 +39,8 @@ a terminal, change into the directory with the ``build.sh`` script and run
 **Note: you will need to enter the sudo password.** The build.sh script will take
 at least a few minutes to run, depending on your operating system and hardware.
 
-Mac OSX and Windows installers are currently under development.
-
-All source code is available on bitbucket at: http://bitbucket.org/samnemo/hnn
-
-Running
--------
+Starting HNN
+------------
 
 First start a terminal. Then change into the directory
 where HNN is installed with ``cd path_to_hnn``. Next, from the
