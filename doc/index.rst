@@ -12,9 +12,9 @@ Human Neocortical Neurosolver (HNN) documentation
 
    background
    overview
+   install
    model   
    priorstudies
-   install
    howtosim
    viewingdata
    adjustableparams

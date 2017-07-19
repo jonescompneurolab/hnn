@@ -2,8 +2,8 @@
 Overview
 ===============================
 
-What is HNN
-----------------
+HNN Description
+---------------
 
 The Human Neocortical Neurosolver (HNN) is an open-source
 neural modeling tool designed to help researchers/clinicians interpret human brain imaging data. HNN
@@ -26,9 +26,6 @@ documentation and a user forum for interaction between users and developers. We 
 initial construction of our tool and describe its use in studying the circuit-level origin of
 some of the most commonly measured MEG/EEG and ECoG signal: event related potentials (ERPs) and
 low frequency rhythms (alpha/beta/gamma).
-
-Features
---------------
 
 Further information
 ----------------
