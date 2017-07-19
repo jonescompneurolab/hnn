@@ -13,11 +13,11 @@ Human Neocortical Neurosolver (HNN) documentation
    background
    overview
    install
+   gui
    model   
    priorstudies
    howtosim
    viewingdata
-   adjustableparams
    limitsandfuture
    refs
 
