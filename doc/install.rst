@@ -1,4 +1,4 @@
-Installation
+Installing & Running HNN
 =======================================
 
 Requirements
@@ -29,9 +29,47 @@ To install using these scripts, download the installer appropriate for your
 operating system. Then from
 a terminal, change into the directory with the ``build.sh`` script and run 
 ``sudo ./build.sh`` on CentOS or ``sudo source build.sh`` if you are using Ubuntu.
-**Note: you will need to enter the sudo password.**
+**Note: you will need to enter the sudo password.** The build.sh script will take
+at least a few minutes to run, depending on your operating system and hardware.
 
 Mac OSX and Windows installers are currently under development.
 
 All source code is available on bitbucket at: http://bitbucket.org/samnemo/hnn
 
+Running
+-------
+
+First start a terminal. Then change into the directory
+where HNN is installed with ``cd path_to_hnn``. Next, from the
+terminal, run the HNN startup script ``hnn.sh``. If everything
+is installed correctly, you will see the HNN graphical user interface (GUI),
+as shown below. Note that the empty white area in the GUI is 
+where simulation data is displayed. Since no simulation was run, the
+area is empty. 
+
+.. image:: images/starthnnempty.png
+	:width: 50%	
+	:align: center
+
+Test run
+--------
+
+To test the default simulation press the ``Run Simulation`` button.
+You will be asked if you want to over-write the default.param file.
+Press the OK button to confirm and the simulation will begin. 
+Then, a simulation that displays ongoing alpha (~10 Hz) and beta (~20 Hz)
+oscillations will begin. After 1-2 minutes (depending on your hardware), you will
+get notified in a dialog window that the simulation has run to completion. Press OK
+and you should see the output in the main GUI window, as displayed below. 
+
+.. image:: images/starthnndefaultrun.png
+	:width: 50%	
+	:align: center
+
+The simulation output displayed  consists of several panels. The top panels
+represent histograms of the inputs provided to the neurons. Note their rhythmicity, which
+helps to produce alpha/beta events. The middle panel shows the dipole signal generate
+by the model. Note the units are in nAm, and directly comparable to data from MEG
+experiments. The bottom portion show a wavelet-based spectrogram from the current
+dipole signal. In the Tutorial, we will provide more information on what the output
+represents. 
