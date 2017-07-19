@@ -111,3 +111,42 @@ to the model. Varying a seed will still maintain statistically identical inputs 
 * Random number generator seed used for evoked proximal input 2.
 * Random number generator seed used for evoked distal input 2.
 
+Cell Parameters
+^^^^^^^^^^^^^^^
+
+Pressing the ``Cell`` button on the ``Set Parameters`` dialog box brings up the
+following dialog, enabling you to view/change the cell parameters
+associated with geometry, synapses, and biophysics for layer 2 and layer 5
+pyramidal neurons.
+
+These parameters control the cell's geometry:
+
+.. image:: images/cell_geomparamdlg.png
+        :width: 35%
+	:align: center	
+
+and include lengths/diameters of individual compartments. Although not
+strictly related, we have also included axial resistivity and capacitive
+in this panel. 
+
+Clicking on the Synapses tab allows you to modify the postsynaptic
+properties of layer 2 pyramidal neurons:
+
+.. image:: images/cell_synparamdlg.png
+        :width: 35%
+	:align: center	
+
+These include the excitatory (AMPA/NMDA) and inhibitory (GABAA/GABAB)
+reversal potentials and rise/decay exponential time-constants.
+
+Clicking on the L2Pyr Biophysics tab allows you to modify the biophysical
+properties of layer 2 pyramidal neurons, including ion channel densities
+and reversal potentials:
+
+.. image:: images/cell_biophysparamdlg.png
+        :width: 35%
+	:align: center	
+
+To modify properties of the layer 5 pyramidal neurons, click on the right
+arrow to access the relevant tabs (beginning with L5Pyr).
+
