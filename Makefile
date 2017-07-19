@@ -20,7 +20,7 @@ x86_64/special : mod
 	# $(MV) bin/$@ bin/$@.autobak
 	# $(CC) $(CFLAGS) -o bin/$@ $+
 	@$(ECHO) '-------------------------------------------------------'
-	@$(ECHO) 'make built [$@] successfully. Now go save the stupid princess.'
+	@$(ECHO) 'make built [$@] successfully.'
 	@$(ECHO) '-------------------------------------------------------'
 
 # clean
