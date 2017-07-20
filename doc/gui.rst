@@ -278,9 +278,59 @@ Rhythmic Input Parameters
 
 You can provide rhythmic inputs throughout a simulation, or for a fixed interval
 within the simulation using the ``Rhythmic Proximal Inputs`` and ``Rhythmic Distal Inputs``
-dialogs available from the main ``Set Parameters`` dialog window. As mentioned above, proximal
-and distal inputs target different cortical layers. However, their temporal specification
-is similar. 
+dialogs available from the main ``Set Parameters`` dialog window. 
+
+.. |rhythproxparamfig| image:: images/rhythproxparamdlg.png
+        :width: 33%
+	:align: bottom
+
+.. |rhythproxL2paramfig| image:: images/rhythprox_L2paramdlg.png
+        :width: 33%
+	:align: bottom
+
+.. |rhythproxL5paramfig| image:: images/rhythprox_L5paramdlg.png
+        :width: 33%
+	:align: bottom
+
++-----------+---------+------------------------+-----------------------+
+| |rhythproxparamfig| | |rhythproxL2paramfig|  | |rhythproxL5paramfig| |
++-----------+---------+------------------------+-----------------------+
+
+
+
+.. |rhythdistparamfig| image:: images/rhythdistparamdlg.png
+        :width: 33%
+	:align: bottom
+
+.. |rhythdistL2paramfig| image:: images/rhythdist_L2paramdlg.png
+        :width: 33%
+	:align: bottom
+
+.. |rhythdistL5paramfig| image:: images/rhythdist_L5paramdlg.png
+        :width: 33%
+	:align: bottom
+
++-----------+---------+------------------------+-----------------------+
+| |rhythdistparamfig| | |rhythdistL2paramfig|  | |rhythdistL5paramfig| |
++-----------+---------+------------------------+-----------------------+
+
+Rhythmic inputs are selected using an average frequency with some variability. These
+events can be repeated multiple times to create further variability and more inputs.
+
+As mentioned above, proximal and distal inputs target different cortical layers. However, you can set
+their start/stop times and frequencies using the same specification. This is shown in the left-most
+panels above:
+ * Distribution - specifies the distribution used to set the individual synaptic input events -- currently only normal distributions are supported
+ * Start time mean (ms) - specifies the avarage start time for rhythmic inputs
+ * Start time stdev (ms) - specifies the standard deviation of start times for rhythmic inputs
+ * Stop time (ms) - specifies when the rhythmic inputs should be turned off
+ * Frequency mean (Hz) - average frequency of rhythmic input
+ * Frequency stdev (Hz) - standard deviation of rhythmic input frequency
+ * Events/cycle - must be set to 1 or 2; provides *n* events at each selected time
+ * Repeats - how many times should the full event sequence get repeated (each repeat adds variability and more inputs)
+
+The middle and right panels above allow you to set the weights of the rhythmic synaptic inputs units of conductance)
+and add delays (ms) before the cells receive the events to layers 2 and 5, respectively.
 
 Evoked Inputs
 ^^^^^^^^^^^^^
