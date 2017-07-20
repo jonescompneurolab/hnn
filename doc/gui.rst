@@ -12,10 +12,22 @@ a simulation that produces ongoing alpha/beta rhythms.
 	:width: 50%	
 	:align: center
 
-Parameter Files
----------------
+The top contains a standard menu and buttons for setting parameters,
+running simulations, and viewing the simulation/experimental data output. 
+Under the simulation output there are several schematics to provide
+intuition on the model's structure, and are described below. 
 
-In order to facilitate modeling, we have provided text-based parameter files for replicating event related
+Preliminaries: Parameter Files
+------------------------------
+
+Before delving into the details of the GUI, we first provide an overview of the
+parameter files used by HNN. Parameter files are text-based and contain all the
+key parameters needed to run a model. These parameters include synaptic inputs,
+neuronal biophysics, and local network connectivity. HNN reads/writes these parameter
+files so you don't have to edit them yourself.
+
+In order to facilitate effective modeling, we have provided a set of text-based parameter files
+that allow you to replicate event related
 potentials (ERPs), and alpha/beta/gamma rhythms. HNN can load the parameter files, allowing 
 you to replicate the dynamics, see the critical parameter values that are responsible for
 the observed dynamics, and then modify the parameter files/values to observe the effect on 
@@ -153,6 +165,30 @@ arrow to access the relevant tabs (beginning with L5Pyr).
 Local Network Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+Neurons in the model are arranged in three dimensions. The *XY* plane
+is used to array cells on a regular grid while the Z-axis specifies
+cortical layer. 
+
+.. figure:: images/net_3D.png
+        :width: 20%
+	:align: center
+    
+This 3D visualization of the model is rotated to allow easier viewing.
+The top and bottom represent supra- and infragranular cortical layers. 
+In this figure, the following color code is used for the different cell types
+in the model-- red: layer 5 pyramidal neurons; green: layer 2 pyramidal
+neurons; white: layer 2 interneurons; blue: layer 5 interneurons. 
+
+.. figure:: ../res/connfig.png 
+        :width: 20%           
+	:align: center
+	
+This figure shows a schematic of network connectivity. The blue cells are pyramidal
+cells, while the orange circles represent the interneurons. The lines between neurons
+represent local synaptic connections. Lines ending with a circle are excitatory 
+(AMPA/NMDA) synapses, while lines ending with a line are inhibitory (GABAA/GABAB)
+synapses.	
+
 Pressing the ``Local Network`` button on the ``Set Parameters`` dialog box brings up the
 following dialog, enabling you to view/change the local network microcircuit parameters
 including number of cells and synaptic weights between cells of specific types.
@@ -165,8 +201,8 @@ per cortical layer:
 	:align: center	
 
 Note that the pyramidal cells are arranged in the *XY* plane, so the number of cells
-in a layer is *X* * *Y*. Interneurons are interspersed between the pyramidal cells,
-so are automatically adjusted.
+in a layer is the product of the number along the X and Y directions. The number of interneurons
+per layer is adjusted to be 
 
 To adjust synaptic weights onto a particular cell type, click the corresponding tab
 in the dialog. For example, the following dialog alllows viewing/setting the synaptic
@@ -203,4 +239,35 @@ In this dialog changing the ``1.0`` to other values and pressing ``OK`` will mul
 weights displayed in the ``Local Network Parameter`` dialog. For example, setting ``E->E`` to
 a value of ``2.0`` will double the weights between all pairs of excitatory cells. Changing a value
 and then pressing ``Cancel`` will produce no effect.
+
+Synaptic Inputs - *Proximal* vs *Distal*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For both rhythmic and evoked synaptic inputs (described below) we use the terms
+*proximal* and *distal* to refer both to the origin of the inputs as well as the 
+laminar target within the neocortical microcircuit. Proximal inputs refers to inputs
+arriving from lemniscal thalamus, which primarily target the granular
+and infragranular layers while distal inputs arrive from non-lemniscal thalamus
+and cortico-cortical feedback, which primarily target the supragranular layers. These
+differences are illustrated in schematics in the HNN GUI, and shown below.
+
+Rhythmic Input Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can provide rhythmic inputs throughout a simulation, or for a fixed interval
+within the simulation using the ``Rhythmic Proximal Inputs`` and ``Rhythmic Distal Inputs``
+dialogs available from the main ``Set Parameters`` dialog window. As mentioned above, proximal
+and distal inputs target different cortical layers. However, their temporal specification
+is similar. 
+
+Evoked Inputs
+^^^^^^^^^^^^^
+
+Evoked inputs 
+
+Poisson Inputs
+^^^^^^^^^^^^^^
+
+Tonic Inputs
+^^^^^^^^^^^^
 

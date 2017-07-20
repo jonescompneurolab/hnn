@@ -27,21 +27,3 @@ initial construction of our tool and describe its use in studying the circuit-le
 some of the most commonly measured MEG/EEG and ECoG signal: event related potentials (ERPs) and
 low frequency rhythms (alpha/beta/gamma).
 
-Further information
-----------------
-
-- `Overview (slides) from Cutting EEG 2017 Workshop <https://www.dropbox.com/preview/HNN/CuttingEEG-Workshop/CuttingEEG-workshop-6-19-17.pdf?role=work>`_
-
-- `Tutorial (slides) from Cutting EEG 2017 Workshop <https://www.dropbox.com/home/HNN/CuttingEEG-Workshop?preview=slides_workshop_coding.pdf>`_
-
-- `Poster from Cutting EEG 2017 conference <https://www.dropbox.com/home/HNN/CuttingEEG-Poster?preview=CuttingEEG-poster.pdf>`_ 
-
-Contact
------------------------------------------
-
-HNN is under active development by the Jones lab (https://www.brown.edu/research/labs/jones/) 
-and supported by a NIH BRAIN grant. 
-
-HNN is open source and available at https://bitbucket.com/samnemo/hnn .
-
-For questions/suggestions or further information contact samuel_neymotin@brown.edu or stephanie_jones@brown.edu .

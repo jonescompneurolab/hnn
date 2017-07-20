@@ -69,9 +69,10 @@ and you should see the output in the main GUI window, as displayed below.
 	:width: 50%	
 	:align: center
 
+.. _simdefoutput:
 The simulation output displayed  consists of several panels. The top panels
 represent histograms of the inputs provided to the neurons. Note their rhythmicity, which
-helps to produce alpha/beta events. The middle panel shows the dipole signal generate
+contributes to alpha/beta events. The middle panel shows the dipole signal generated
 by the model. Note the units are in nAm, and directly comparable to data from MEG
 experiments. The bottom portion show a wavelet-based spectrogram from the current
 dipole signal. In the Tutorial, we will provide more information on what the output
