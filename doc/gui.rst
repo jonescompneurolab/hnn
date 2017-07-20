@@ -122,7 +122,7 @@ pyramidal neurons.
 These parameters control the cell's geometry:
 
 .. image:: images/cell_geomparamdlg.png
-        :width: 35%
+        :width: 25%
 	:align: center	
 
 and include lengths/diameters of individual compartments. Although not
@@ -133,7 +133,7 @@ Clicking on the Synapses tab allows you to modify the postsynaptic
 properties of layer 2 pyramidal neurons:
 
 .. image:: images/cell_synparamdlg.png
-        :width: 35%
+        :width: 25%
 	:align: center	
 
 These include the excitatory (AMPA/NMDA) and inhibitory (GABAA/GABAB)
@@ -144,9 +144,60 @@ properties of layer 2 pyramidal neurons, including ion channel densities
 and reversal potentials:
 
 .. image:: images/cell_biophysparamdlg.png
-        :width: 35%
+        :width: 25%
 	:align: center	
 
 To modify properties of the layer 5 pyramidal neurons, click on the right
 arrow to access the relevant tabs (beginning with L5Pyr).
+
+Local Network Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pressing the ``Local Network`` button on the ``Set Parameters`` dialog box brings up the
+following dialog, enabling you to view/change the local network microcircuit parameters
+including number of cells and synaptic weights between cells of specific types.
+
+These parameters control the number of pyramidal cells in the *X* and *Y* directions
+per cortical layer:
+
+.. image:: images/localnetparamdlg.png
+        :width: 25%
+	:align: center	
+
+Note that the pyramidal cells are arranged in the *XY* plane, so the number of cells
+in a layer is *X* * *Y*. Interneurons are interspersed between the pyramidal cells,
+so are automatically adjusted.
+
+To adjust synaptic weights onto a particular cell type, click the corresponding tab
+in the dialog. For example, the following dialog alllows viewing/setting the synaptic
+weights onto layer 2 pyramidal neurons:
+
+.. image:: images/localnet_L2Pyrparamdlg.png
+        :width: 25%
+	:align: center	
+
+In this example, AMPA/NMDA weight are the excitatory synaptic weights, while GABAA/GABAB are the
+inhibitory synaptic weights. All weights are specified in units of conductance (nS). Note that
+the synaptic weight between two cells also depends on their distance through the 
+following equation:  w * e^-(d^2/lam^2) , where w is the weight specified in the dialog,
+d is the distance between the cells in the *XY* plane, and lam is a spatial length
+constant which is 3 or 20 when a presynaptic cell is excitatory or inhibitory, respectively.
+
+.. fix equation above to use proper ajax? syntax; where is lam set? 3,20 for all?
+.. (/u/samn/hnn/L2_basket.py:78)
+.. (/u/samn/hnn/cell.py:241)
+
+Excitatory (E) and inhibitory (I) *tone* within the network is a major factor influencing
+network dynamics. The following dialog, accessible with the ``Synaptic Gains`` button from the
+main ``Set Parameters`` dialog, facilitates scaling of E->E, E->I, I->E, and I->I
+weights, without having to adjust the weights between specific types of cells.
+
+.. image:: images/syngainparamdlg.png
+        :width: 15%
+	:align: center	
+
+In this dialog changing the ``1.0`` to other values and pressing ``OK`` will multiply the appropriate
+weights displayed in the ``Local Network Parameter`` dialog. For example, setting ``E->E`` to
+a value of ``2.0`` will double the weights between all pairs of excitatory cells. Changing a value
+and then pressing ``Cancel`` will produce no effect.
 
