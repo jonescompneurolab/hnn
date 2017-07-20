@@ -249,7 +249,29 @@ laminar target within the neocortical microcircuit. Proximal inputs refers to in
 arriving from lemniscal thalamus, which primarily target the granular
 and infragranular layers while distal inputs arrive from non-lemniscal thalamus
 and cortico-cortical feedback, which primarily target the supragranular layers. These
-differences are illustrated in schematics in the HNN GUI, and shown below.
+differences are illustrated in schematics in several places in the HNN GUI, and also shown here.
+
+.. |proxfig| image:: ../res/proxfig.png
+        :width: 50%
+	:align: bottom
+
+.. |distfig| image:: ../res/distfig.png
+        :width: 50%
+	:align: bottom
+
++-----------+------------+
+| |proxfig| | |distfig|  |
++-----------+------------+
+
+The left schematic here shows proximal inputs which target basal dendrites
+of layer 2 and layer 5 pyramidal neurons, and somata of layer 2 and layer 5 interneurons.
+The red arrows indicate that these proximal inputs *push* the current flow up the dendrites
+towards supragranular layers.
+The right schematic shows distal inputs which target the distal apical dendrites
+of layer 5 and layer 2 pyramidal neurons and the somata of layer 2 interneurons.
+The green arrows indicate that these distal inputs *push* the current flow down
+towards the infragranular layers.
+
 
 Rhythmic Input Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -263,11 +285,17 @@ is similar.
 Evoked Inputs
 ^^^^^^^^^^^^^
 
-Evoked inputs 
+Evoked inputs are used to model event related potentials (ERPs) and are typically
+set to produce some level of spiking. 
 
 Poisson Inputs
 ^^^^^^^^^^^^^^
 
+Poisson Inputs, are synaptic inputs to the somata of different neurons, and follow
+a Poisson Process. The parameters to control them are accessed via the dialog
+brought up when pressing the ``Poisson Input`` button.
+
 Tonic Inputs
 ^^^^^^^^^^^^
 
+*Tonic* inputs are modeled as somatic current clamps with fixed current injection.
