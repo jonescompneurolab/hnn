@@ -178,12 +178,15 @@ weights onto layer 2 pyramidal neurons:
 
 In this example, AMPA/NMDA weight are the excitatory synaptic weights, while GABAA/GABAB are the
 inhibitory synaptic weights. All weights are specified in units of conductance (nS). Note that
-the synaptic weight between two cells also depends on their distance through the 
-following equation:  w * e^-(d^2/lam^2) , where w is the weight specified in the dialog,
-d is the distance between the cells in the *XY* plane, and lam is a spatial length
-constant which is 3 or 20 when a presynaptic cell is excitatory or inhibitory, respectively.
+the synaptic weight, :math:`w`, between two cells is scaled by the distance between
+the two cells through the 
+following equation:  :math:`w \cdot e^-(d^2/\lambda^2)` , where :math:`w` is the weight
+specified in the dialog,
+:math:`d` is the distance between the cells in the *XY* plane, and :math:`\lambda` is a spatial length
+constant which is 3 or 20 :math:`\mu m` when a presynaptic cell is excitatory or inhibitory, respectively,
+in order to have shorter spread of excitation relative to inhibition.
 
-.. fix equation above to use proper ajax? syntax; where is lam set? 3,20 for all?
+.. where is lambda set? 3,20 for all?
 .. (/u/samn/hnn/L2_basket.py:78)
 .. (/u/samn/hnn/cell.py:241)
 
