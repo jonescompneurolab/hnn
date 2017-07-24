@@ -56,18 +56,34 @@ and selecting the file you just downloaded.
 To view the parameters, click on ``Set Paramters``, and then ``Evoked Inputs``.
 You should see the values displayed in the dialogs below.
 
-ERPYesProx1param.png
-ERPYesDist1param.png
-ERPYesProx2param.png
+.. |erpprox1fig| image:: images/ERPYesProx1param.png
+        :scale: 40%
+	:align: bottom
 
+.. |erpdist1fig| image:: images/ERPYesDist1param.png
+        :scale: 40%
+	:align: bottom
+
+.. |erpprox2fig| image:: images/ERPYesProx2param.png
+        :scale: 40%
+	:align: bottom
+
++---------------+---------------+---------------+
+| |erpprox1fig| | |erpdist1fig| | |erpprox2fig| |
++---------------+---------------+---------------+
+
+Running the simulation will produce the output shown below. The thin gray
+traces are dipole signals from individual trials while the thick black
+trace is the average ERP. 
 
 .. figure:: images/ERPYes100Compare.png
-	:scale: 20%	
+	:scale: 40%	
 	:align: center
 
-	If you had run the model with these settings you would see the output below. 
+	If you had run the model with these settings and 100 trials you would see the output below. 
 	In addition, this figure shows comparison to the MEG data and the root-mean-squared-error
-	comparison. Note the close similarity of model and experimental data.
+	comparison. Note the close similarity of model and experimental data. Below, we will describe
+	how to load the MEG data provided with HNN.
 
 Next, we will reduce the number of trials so that you can run the model
 on your laptop. Press the Run button to change the number of trials and
