@@ -273,8 +273,8 @@ The green arrows indicate that these distal inputs *push* the current flow down
 towards the infragranular layers.
 
 
-Rhythmic Input Parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Rhythmic Inputs (Synaptic)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can provide rhythmic inputs throughout a simulation, or for a fixed interval
 within the simulation using the ``Rhythmic Proximal Inputs`` and ``Rhythmic Distal Inputs``
@@ -336,8 +336,8 @@ and add delays (ms) before the cells receive the events to layers 2 and 5, respe
 ``Turn Off Inputs`` button shown on the two dialogs above is a shorthand, allowing you to set the weights
 of rhythmic or proximal synaptic inputs to 0.0, effectively shutting them off.
 
-Evoked Inputs
-^^^^^^^^^^^^^
+Evoked Inputs (Synaptic)
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Evoked inputs are used to model event related potentials (ERPs) and are typically
 set to produce neuronal spiking. To set Evoked Input parameters, press the ``Evoked Inputs``
@@ -372,8 +372,8 @@ used:
 the input at the same time, or if instead each neuron receives the evoked input events independently drawn from
 the same distribution. To remove the input shown in the currently active tab, press the ``Remove Input`` button.
 
-Poisson Inputs
-^^^^^^^^^^^^^^
+Poisson Inputs (Synaptic)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Poisson Inputs, are excitatory AMPAergic synaptic inputs to the somata of different
 neurons, which follow a Poisson Process. The parameters to control them are accessed
@@ -401,8 +401,8 @@ for each type of neuron. The timing tab of the dialog allows you to set the star
 and stop time of Poisson-generated events. **Note: a Stop time of -1 means that
 events are generated until the end of the simulation.**
 
-Tonic Inputs
-^^^^^^^^^^^^
+Tonic Inputs (Current Clamp)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *Tonic* inputs are modeled as somatic current clamps with a fixed current injection.
 These clamps can be used to adjust the resting membrane potential of a neuron, and bring
