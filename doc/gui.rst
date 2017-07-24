@@ -375,11 +375,53 @@ the same distribution. To remove the input shown in the currently active tab, pr
 Poisson Inputs
 ^^^^^^^^^^^^^^
 
-Poisson Inputs, are synaptic inputs to the somata of different neurons, and follow
-a Poisson Process. The parameters to control them are accessed via the dialog
-brought up when pressing the ``Poisson Input`` button.
+Poisson Inputs, are excitatory AMPAergic synaptic inputs to the somata of different
+neurons, which follow a Poisson Process. The parameters to control them are accessed
+via the dialog brought up when pressing the ``Poisson Inputs`` button on the main
+``Set Parameters`` dialog window.
+
+.. |poissonparamdlgfig| image:: images/poissonparamdlg.png
+        :scale: 40%
+	:align: bottom
+
+.. |poisson_L5paramdlgfig| image:: images/poisson_L5paramdlg.png
+        :scale: 40%
+	:align: bottom
+
+.. |poisson_timingparamdlgfig| image:: images/poisson_timingparamdlg.png
+        :scale: 40%
+	:align: bottom
+
++----------------------+-------------------------+-----------------------------+
+| |poissonparamdlgfig| | |poisson_L5paramdlgfig| | |poisson_timingparamdlgfig| |
++----------------------+-------------------------+-----------------------------+
+
+As shown above, the Poisson synaptic input frequency and weight are set individually
+for each type of neuron. The timing tab of the dialog allows you to set the start
+and stop time of Poisson-generated events. **Note: a Stop time of -1 means that
+events are generated until the end of the simulation.**
 
 Tonic Inputs
 ^^^^^^^^^^^^
 
-*Tonic* inputs are modeled as somatic current clamps with fixed current injection.
+*Tonic* inputs are modeled as somatic current clamps with a fixed current injection.
+These clamps can be used to adjust the resting membrane potential of a neuron, and bring
+it closer (with positive amplitude injection) or further from firing threshold (with
+a negative amplitude injection). 
+
+.. |tonicparamdlgfig| image:: images/tonicparamdlg.png
+        :scale: 40%
+	:align: bottom
+
+.. |tonic_L5paramdlgfig| image:: images/tonic_L5paramdlg.png
+        :scale: 40%
+	:align: bottom
+
++----------------------+-------------------------+
+| |tonicparamdlgfig|   | |tonic_L5paramdlgfig|   |
++----------------------+-------------------------+
+
+As shown above, you can set the current clamp amplitude, and start/stop time
+for each neuron type. **Note: Stop time of -1 means that the clamp is applied
+until the end of the simulation.**
+
