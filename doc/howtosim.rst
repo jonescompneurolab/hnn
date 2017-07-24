@@ -25,19 +25,34 @@ to the hand, after a delay, an ERP can be detected in somatosensory
 cortex. ERPs have prototypical waveforms. However, the mechanisms
 that lead to ERPs are not fully known. Previous modeling has demonstrated
 that the timing and strength of inputs arriving into different cortical
-layers is responsible for generating the events. We can use HNN to
-generate ERP waveforms which have close similarity with ERPs from
-*in vivo* EEG/MEG experiments.
+layers is responsible for generating the events. 
 
-To run the simulations yourself, first load the param file
-ERPYes100Trials.param available here: 
-This load the parameter values by clicking ``Set Parameters From File``
+.. figure:: images/MEG_pub_model_comp.png
+	:scale: 20%	
+	:align: center
+
+	**Comparison of ERP in experiment and simulation.** Left: MEG experiment showing
+	ERP in response to tactile stimulation.
+	Red: suprathreshold/detected trials; Blue: Threshold detected trials.
+	Right: Simulation showing proximal/distal inputs needed to replicate the
+	ERP waveform from MEG experiment. 
+
+
+We will use HNN to
+generate ERP waveforms which have close similarity with ERPs from
+primary somatosensory cortex (S1) *in vivo* MEG experiments. These
+experiments were previously published (refs), and involve tactile
+stimulation. The data is split into two conditions: yes (detected)
+and no (non-detected) trials. As we will see, the ERP waveforms
+differ noticeably.
+
+To run the simulations yourself, first download the param file
+here: - `ERPYes100Trials.param <param/ERPYes100Trials.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
 and selecting the file you just downloaded.
 
 To view the parameters, click on ``Set Paramters``, and then ``Evoked Inputs``.
 You should see the values displayed in the dialogs below.
-
-
 
 Alpha/Beta Rhythms
 ------------------
