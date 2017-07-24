@@ -9,7 +9,7 @@ This is a display of the GUI after running
 a simulation that produces ongoing alpha/beta rhythms.
 
 .. image:: images/starthnndefaultrun.png
-	:width: 50%	
+	:scale: 30%	
 	:align: center
 
 The top contains a standard menu and buttons for setting parameters,
@@ -43,7 +43,7 @@ To view and set the parameters that control the simulation, press the ``Set Para
 main GUI window. This will bring up the following dialog:
 
 .. image:: images/setparamsdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 Pressing each button on this dialog brings up a new dialog box with more adjustable
@@ -59,12 +59,12 @@ Here is an example of the data directory and files saved after running the simul
 specified in ``default.param``.
 
 .. image:: images/dataoutputwin.png
-        :width: 35%
+        :scale: 35%
 	:align: center	
 
 Note that the directory path is ``/home/hnn/data/default``, corresponding to the ``default``
-``Simulation Name`` parameter specified in the GUI. Also note the individual files present
-in the window: 
+``Simulation Name`` parameter specified in the GUI. Also note the individual files present in the window: 
+
  #. default.param - a backup copy of the param file used to run the simulation
  #. dpl.txt - normalized dipole in units of nAm; 1st column is time; 2nd column is layer 2 dipole; 3rd column is layer 5 dipole; 45h column is aggregate dipole from layers 2 and 5
  #. i.txt - currents from the cells
@@ -85,7 +85,7 @@ Pressing the ``Run`` button on the ``Set Parameters`` dialog box brings up the
 following dialog, enabling you to view/change the following displayed parameters.
 
 .. image:: images/runparamdlg.png
-        :width: 35%
+        :scale: 40%
 	:align: center	
 
 * Duration (ms) - this sets the simulation duration in milliseconds.
@@ -96,7 +96,7 @@ following dialog, enabling you to view/change the following displayed parameters
 Clicking on the ``Analysis`` tab brings up the following parameters.
 
 .. image:: images/run_analysisparamdlg.png
-        :width: 35%
+        :scale: 40%
 	:align: center	
 
 * Save figures - whether to save figures of model activity when the simulation is run; if set to 1, figures are saved in simulation output directory.
@@ -108,7 +108,7 @@ Clicking on the ``Analysis`` tab brings up the following parameters.
 Clicking on the Randomization Seeds tab brings up the following parameters.
 
 .. image:: images/run_randparamdlg.png
-        :width: 35%
+        :scale: 40%
 	:align: center	
 
 All these paramters are random number generator seeds for the different types of *inputs* provided
@@ -134,7 +134,7 @@ pyramidal neurons.
 These parameters control the cell's geometry:
 
 .. image:: images/cell_geomparamdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 and include lengths/diameters of individual compartments. Although not
@@ -145,7 +145,7 @@ Clicking on the Synapses tab allows you to modify the postsynaptic
 properties of layer 2 pyramidal neurons:
 
 .. image:: images/cell_synparamdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 These include the excitatory (AMPA/NMDA) and inhibitory (GABAA/GABAB)
@@ -156,7 +156,7 @@ properties of layer 2 pyramidal neurons, including ion channel densities
 and reversal potentials:
 
 .. image:: images/cell_biophysparamdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 To modify properties of the layer 5 pyramidal neurons, click on the right
@@ -170,7 +170,7 @@ is used to array cells on a regular grid while the Z-axis specifies
 cortical layer. 
 
 .. figure:: images/net_3D.png
-        :width: 20%
+        :scale: 20%
 	:align: center
     
 This 3D visualization of the model is rotated to allow easier viewing.
@@ -180,7 +180,7 @@ in the model-- red: layer 5 pyramidal neurons; green: layer 2 pyramidal
 neurons; white: layer 2 interneurons; blue: layer 5 interneurons. 
 
 .. figure:: ../res/connfig.png 
-        :width: 20%           
+        :scale: 60%           
 	:align: center
 	
 This figure shows a schematic of network connectivity. The blue cells are pyramidal
@@ -197,7 +197,7 @@ These parameters control the number of pyramidal cells in the *X* and *Y* direct
 per cortical layer:
 
 .. image:: images/localnetparamdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 Note that the pyramidal cells are arranged in the *XY* plane, so the number of cells
@@ -209,7 +209,7 @@ in the dialog. For example, the following dialog alllows viewing/setting the syn
 weights onto layer 2 pyramidal neurons:
 
 .. image:: images/localnet_L2Pyrparamdlg.png
-        :width: 25%
+        :scale: 40%
 	:align: center	
 
 In this example, AMPA/NMDA weight are the excitatory synaptic weights, while GABAA/GABAB are the
@@ -232,7 +232,7 @@ main ``Set Parameters`` dialog, facilitates scaling of E->E, E->I, I->E, and I->
 weights, without having to adjust the weights between specific types of cells.
 
 .. image:: images/syngainparamdlg.png
-        :width: 15%
+        :scale: 40%
 	:align: center	
 
 In this dialog changing the ``1.0`` to other values and pressing ``OK`` will multiply the appropriate
@@ -252,11 +252,11 @@ and cortico-cortical feedback, which primarily target the supragranular layers. 
 differences are illustrated in schematics in several places in the HNN GUI, and also shown here.
 
 .. |proxfig| image:: ../res/proxfig.png
-        :width: 50%
+        :scale: 50%
 	:align: bottom
 
 .. |distfig| image:: ../res/distfig.png
-        :width: 50%
+        :scale: 50%
 	:align: bottom
 
 +-----------+------------+
@@ -281,48 +281,47 @@ within the simulation using the ``Rhythmic Proximal Inputs`` and ``Rhythmic Dist
 dialogs available from the main ``Set Parameters`` dialog window. 
 
 .. |rhythproxparamfig| image:: images/rhythproxparamdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
 .. |rhythproxL2paramfig| image:: images/rhythprox_L2paramdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
 .. |rhythproxL5paramfig| image:: images/rhythprox_L5paramdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
-+-----------+---------+------------------------+-----------------------+
++---------------------+------------------------+-----------------------+
 | |rhythproxparamfig| | |rhythproxL2paramfig|  | |rhythproxL5paramfig| |
-+-----------+---------+------------------------+-----------------------+
-
++---------------------+------------------------+-----------------------+
 
 
 .. |rhythdistparamfig| image:: images/rhythdistparamdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
 .. |rhythdistL2paramfig| image:: images/rhythdist_L2paramdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
 .. |rhythdistL5paramfig| image:: images/rhythdist_L5paramdlg.png
-        :width: 33%
+        :scale: 40%
 	:align: bottom
 
-+-----------+---------+------------------------+-----------------------+
++---------------------+------------------------+-----------------------+
 | |rhythdistparamfig| | |rhythdistL2paramfig|  | |rhythdistL5paramfig| |
-+-----------+---------+------------------------+-----------------------+
++---------------------+------------------------+-----------------------+
 
-Rhythmic inputs are selected using an average frequency with some variability. These
-events can be repeated multiple times to create further variability and more inputs.
-Each *repeat* selects a set of events from a distribution with average starting time and interval, 
-with appropriate ending time. Each input is sent to the synapses of the appropriate compartments (basal
+Rhythmic inputs are selected using an average frequency with variability. The resulting 
+synaptic events can be repeated multiple times to create further variability and more inputs.
+Each *repeat* selects a set of events from a distribution with average starting time, interval (frequency), 
+and appropriate ending time. Each input is sent to the synapses of the appropriate compartments (basal
 vs apical dendrites, etc.) of the appropriate neurons. 
 
 As mentioned above, proximal and distal inputs target different cortical layers. However, you can set
-their start/stop times and frequencies using the same specification. This is shown in the left-most
-panels above:
+their start/stop times and frequencies using the same specification. This is shown in the left-most panels above:
+
  * Distribution - specifies the distribution used to set the individual synaptic input events -- currently only normal distributions are supported
  * Start time mean (ms) - specifies the avarage start time for rhythmic inputs
  * Start time stdev (ms) - specifies the standard deviation of start times for rhythmic inputs
@@ -341,7 +340,37 @@ Evoked Inputs
 ^^^^^^^^^^^^^
 
 Evoked inputs are used to model event related potentials (ERPs) and are typically
-set to produce some level of spiking. 
+set to produce neuronal spiking. To set Evoked Input parameters, press the ``Evoked Inputs``
+button on the main ``Set Parameters`` dialog window. Evoked Inputs use the proximal/distal
+notation mentioned above. You will be able to set an arbitrary number of evoked inputs using
+the ``Add Proximal Input`` and ``Add Distal Input`` button shown. 
+
+.. |evokedparamdlgfig| image:: images/evokedparamdlg.png
+        :scale: 40%
+	:align: bottom
+
+.. |evokeddist_paramdlgfig| image:: images/evokeddist_paramdlg.png
+        :scale: 40%
+	:align: bottom
+
++---------------------+--------------------------+
+| |evokedparamdlgfig| | |evokeddist_paramdlgfig| |
++---------------------+--------------------------+
+
+Proximal and distal inputs are numbered sequentially. In the example shown,
+there are 2 Proximal and 1 Distal inputs. The following parameter values are
+used:
+
+ * Start time mean (ms) - average start time
+ * Start time stdev (ms) - standard deviation of start time
+ * L2Pyr weight (nS) - weight of synaptic inputs to layer 2 pyramidal neurons
+ * L2Basket weight (nS) - weight of synaptic inputs to layer 2 basket cells
+ * L5Pyr weight (nS) - weight of synaptic inputs to layer 5 pyramidal neurons
+ * L5Basket weight (nS) - weight of synaptic inputs to layer 5 basket cells (only used for *proximal* inputs)
+
+``Synchronous Inputs`` indicates whether for a specific evoked proximal/distal input each neuron receives
+the input at the same time, or if instead each neuron receives the evoked input events independently drawn from
+the same distribution. To remove the input shown in the currently active tab, press the ``Remove Input`` button.
 
 Poisson Inputs
 ^^^^^^^^^^^^^^
