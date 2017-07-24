@@ -316,6 +316,9 @@ dialogs available from the main ``Set Parameters`` dialog window.
 
 Rhythmic inputs are selected using an average frequency with some variability. These
 events can be repeated multiple times to create further variability and more inputs.
+Each *repeat* selects a set of events from a distribution with average starting time and interval, 
+with appropriate ending time. Each input is sent to the synapses of the appropriate compartments (basal
+vs apical dendrites, etc.) of the appropriate neurons. 
 
 As mentioned above, proximal and distal inputs target different cortical layers. However, you can set
 their start/stop times and frequencies using the same specification. This is shown in the left-most
@@ -330,7 +333,9 @@ panels above:
  * Repeats - how many times should the full event sequence get repeated (each repeat adds variability and more inputs)
 
 The middle and right panels above allow you to set the weights of the rhythmic synaptic inputs units of conductance)
-and add delays (ms) before the cells receive the events to layers 2 and 5, respectively.
+and add delays (ms) before the cells receive the events to layers 2 and 5, respectively. Note that the
+``Turn Off Inputs`` button shown on the two dialogs above is a shorthand, allowing you to set the weights
+of rhythmic or proximal synaptic inputs to 0.0, effectively shutting them off.
 
 Evoked Inputs
 ^^^^^^^^^^^^^
