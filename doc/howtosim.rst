@@ -284,6 +284,79 @@ on the main GUI.
 Alpha/Beta Rhythms
 ------------------
 
+In this part of the tutorial we will look at how to use HNN to simulate low-frequency
+alpha (~10 Hz) and beta (~20 Hz) rhythmic activity. A look at ongoing MEG signals
+shows that alpha/beta complexes emerge for brief periods. We will use the model
+to replicate some of these features.
+
+.. figure:: images/yes_trial32_prestim_dipole_specgram.png
+	:scale: 40%	
+	:align: center
+
+	Ongoing MEG activity (top) along with wavelet spectrogram (bottom) shows
+	that alpha/beta complexes emerge briefly. This data is viewed in HNN's
+	spectrogram viewer (described in the Viewing Data section). Note that in this
+	data the MEG signal goes both above and below 0, an important constraint
+	for any model to replicate.
+
+Only Rhythmic Proximal Inputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+What are the inputs required to generate alpha and/or beta rhythms? To start we 
+can add rhythmic proximal inputs at an alpha frequency. Download the relevant param file
+here: - `OnlyRhythmicProx.param <../../param/OnlyRhythmicProx.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then ``Rhythmic Proximal Inputs``.
+You should see the values displayed in the dialogs below.
+
+Next, click on ``Start Simulation`` from the main GUI window. This simulation
+runs for 700 ms of simulation time, so will take a little longer to run than
+the ERP simulations. Once completed, you will see output similar to that shown below.
+
+
+.. |rhythproxonlytimingparamfig| image:: images/OnlyRhythmicProxTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |rhythproxonlyl2paramfig| image:: images/OnlyRhythmicProxL2param.png
+        :scale: 40%
+	:align: bottom
+
+.. |rhythproxonlyl5paramfig| image:: images/OnlyRhythmicProxL5param.png
+        :scale: 40%
+	:align: bottom
+
++-------------------------------+---------------------------+---------------------------+
+| |rhythproxonlytimingparamfig| | |rhythproxonlyl2paramfig| | |rhythproxonlyl5paramfig| |
++-------------------------------+---------------------------+---------------------------+
+
+As shown below, rhythmic proximal input is provided at ~10 Hz -- this is seen in the red
+histogram at the top of the output canvas. Due to the stochastic nature of the inputs, there
+is some variability in the input times. The rhythmic inputs  generate ongoing alpha oscillations
+in the model centered around 10 Hz. However, the current in the pyramidal neurons is only *pushed*
+towards the supragranular layers, causing the dipole signal to only deviate above 0 nAm. This does not match
+the experimental data accurately. In addition,  the ongoing alpha oscillation, throughout the simulation is
+not realistic, since in the experiments alpha events are transient. 
+
+.. figure:: images/OnlyRhythmicProxOutput.png
+	:scale: 40%	
+	:align: center
+
+
+Only Rhythmic Distal Inputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Having seen that proximal inputs alone push the current flow only in a single direction, what
+will happen if we instead provide rhythmic distal inputs?
+
+Combined Rhythmic Proximal/Distal Inputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Stronger Beta
+^^^^^^^^^^^^^
+
+
 Gamma Rhythms
 -------------
 
