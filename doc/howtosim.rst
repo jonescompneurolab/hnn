@@ -235,8 +235,8 @@ HNN will recalculate the model fit to the data, showing a poor fit (RMSE of 32.1
 	:scale: 40%	
 	:align: center
 
-	Model run with *yes* parameter has poor fit to the MEG data from *no* trials.
-	(*yes* means detected; *no* means non-detected trials)
+	Model run with 100 trials using yes/detected parameters has poor fit to the MEG data from the
+	no/non-detected trials. 
 
 Next, we'll load the
 .param file with parameter values to match this MEG data.  First download the param file
@@ -245,6 +245,41 @@ Then load the parameter file values by clicking ``Set Parameters From File``
 and selecting the file you just downloaded. To view the new parameters,
 click on ``Set Paramters``, and then ``Evoked Inputs``.
 You should see the values displayed in the dialogs below.
+
+.. |erpnoprox1fig| image:: images/ERPNoProx1param.png
+        :scale: 40%
+	:align: bottom
+
+.. |erpnodist1fig| image:: images/ERPNoDist1param.png
+        :scale: 40%
+	:align: bottom
+
+.. |erpnoprox2fig| image:: images/ERPNoProx2param.png
+        :scale: 40%
+	:align: bottom
+
++-----------------+-----------------+-----------------+
+| |erpnoprox1fig| | |erpnodist1fig| | |erpnoprox2fig| |
++-----------------+-----------------+-----------------+
+
+Notice that the weights of these evoked inputs for these non-detected
+trials are smaller than the weights for the detected trials. The timing
+also differs.
+
+Next, let's reduce the number of trials to 2 (from the ``Run`` dialog),
+change the ``simulation name`` (from the ``Set Parameters`` dialog), and see how well
+the data fits after running the simulation (with the ``Start Simulation`` button
+on the main GUI.
+
+.. figure:: images/ERPNo2Output.png
+	:scale: 40%	
+	:align: center
+
+	Output after running 2 trials of the model with the non-detected parameters.
+	Note that the distal inputs are highly dispersed in time. There is a good fit
+	to the experimental data (RMSE of 10.75). As an exercise you may want to run
+	100 trials and/or see if you can reduce the RMSE further. 
+	
 
 Alpha/Beta Rhythms
 ------------------
