@@ -170,6 +170,30 @@ following window.
 Comparing to MEG ERP data
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Now that we have run the simulation we can compare how well its ERP waveform fits the ERP
+seen in the MEG experiments. We have provided data from the Jones 2007 (ref) paper in a format
+that HNN can read (described here). To load the data go to ``File menu`` -> ``Load data file``
+and select ``data/MEG_detection_data/yes_trial_S1_ERP_all_avg.txt`` (``data`` is a subdirectory
+under the main hnn install location). HNN will then load the data and display the waveform
+in the dipole window as shown below.
+
+.. figure:: images/ERPYes2Compare.png
+	:scale: 40%	
+	:align: center
+
+	This figure shows a comparison of mode land MEG ERP waveforms for the ``yes/detected`` condition.
+	The MEG ERP is drawn in the yellow dotted-line, while the average simulation ERP waveform is drawn
+	in black. HNN also calculates the root-mean-squared-error (RMSE) between the average simulation ERP
+	waveform and the waveform loaded from the .txt file. As seen in the figure, the RMSE is 10.19. Above,
+	when we ran more trials, the ERP was considerably lower - at 5.15. If you run more trials with the same
+	parameters you should be able to reduce the RMSE.
+
+Adjust Evoked Inputs
+^^^^^^^^^^^^^^^^^^^^
+
+Now let's practice adjusting the evoked input parameters. We can tell HNN to provide synchronous evoked inputs
+to all the neurons. This will reduce variability in timing of evoked inputs producing a stronger response. 
+*Question: will this also improve goodness-of-fit to the MEG data?*
 
 Alpha/Beta Rhythms
 ------------------
