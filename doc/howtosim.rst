@@ -110,7 +110,7 @@ Now press the ``Run`` button on the ``Set Parameters`` dialog box to change the 
 **Note: NumCores is the number of cores to parallelize the model, is automatically detected by HNN
 and may differ, depending on your hardware.**
 
-Next, press the ``Run Simulation`` button from the main GUI window. This will start the simulation,
+Next, press the ``Start Simulation`` button from the main GUI window. This will start the simulation,
 and should take 1-2 minutes, depending on your hardware. 
 
 .. figure:: images/ERPYes2Output.png
@@ -194,6 +194,25 @@ Adjust Evoked Inputs
 Now let's practice adjusting the evoked input parameters. We can tell HNN to provide synchronous evoked inputs
 to all the neurons. This will reduce variability in timing of evoked inputs producing a stronger response. 
 *Question: will this also improve goodness-of-fit to the MEG data?*
+
+All we'll do now is set the evoked inputs to *synchronous* -- so that all relevant neurons get the proximal/distal
+inputs at the same time. First change the ``simulation name`` to *e.g.* ERPYes2TrialsSync in the main
+``Set Parameters`` window. If you don't still have the ``Evoked Inputs`` dialog window open, click 
+the ``Evoked Inputs`` button in the ``Set Parameters`` window. Then, make sure the box with
+``Synchronous Inputs`` is checked. Then press ``Start Simulation``.
+
+.. figure:: images/ERPYes2SyncCheck.png
+	:scale: 40%	
+	:align: center
+	
+After the simulation has completed you'll see the following output. Although the model 
+replicates gross features of the MEG data, the fit to the
+is now substantially worse (RMSE of 23.31). Also note that there is much lower
+variability of the input times in the green/red histograms at the top of the output canvas.
+
+.. figure:: images/ERPYes2SyncOutput.png
+	:scale: 40%	
+	:align: center
 
 Alpha/Beta Rhythms
 ------------------
