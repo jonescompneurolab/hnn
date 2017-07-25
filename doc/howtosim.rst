@@ -52,7 +52,7 @@ Load/view parameters
 ^^^^^^^^^^^^^^^^^^^^
 
 To run the simulations yourself, first download the param file
-here: - `ERPYes100Trials.param <param/ERPYes100Trials.param>`_
+here: - `ERPYes100Trials.param <../../param/ERPYes100Trials.param>`_
 Then load the parameter file values by clicking ``Set Parameters From File``
 and selecting the file you just downloaded.
 
@@ -213,6 +213,38 @@ variability of the input times in the green/red histograms at the top of the out
 .. figure:: images/ERPYes2SyncOutput.png
 	:scale: 40%	
 	:align: center
+
+If you're adventurous and have some time, try running the same parameters with 100
+trials. That will reduce the RMSE, producing output similar to that shown here.
+
+.. figure:: images/ERPYes100SyncOutput.png
+	:scale: 40%	
+	:align: center
+
+	Output from 100 trials with *synchronous* evoked inputs. Note that the fit to
+	the MEG data is now improved (RMSE of 13.7).
+
+Next, we'll look at the MEG data from *no/non-detected* trials. We'll look at how
+to adjust the evoked input parameters to better match this model. First, let's clear
+the MEG data from the detected trials. To do this, go to ``File menu`` -> ``Clear data file``
+from the main GUI window. Next, load the data from the non-detected trials. Go to
+``File menu`` -> ``Load data file`` and select ``data/MEG_detection_data/no_trial_S1_ERP_all_avg.txt``.
+HNN will recalculate the model fit to the data, showing a poor fit (RMSE of 32.19). 
+
+.. figure:: images/ERPYes100SyncCompareToNo.png
+	:scale: 40%	
+	:align: center
+
+	Model run with *yes* parameter has poor fit to the MEG data from *no* trials.
+	(*yes* means detected; *no* means non-detected trials)
+
+Next, we'll load the
+.param file with parameter values to match this MEG data.  First download the param file
+here: - `ERPNo100Trials.param <../../param/ERPNo100Trials.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then ``Evoked Inputs``.
+You should see the values displayed in the dialogs below.
 
 Alpha/Beta Rhythms
 ------------------
