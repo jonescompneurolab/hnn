@@ -493,6 +493,59 @@ effective in opposing the proximal inputs, and in pushing the current flow towar
 layers, which contributes to the typical 20 Hz waveform seen in the dipole. We will demonstrate
 this in the next simulation. 
 
+We will use a param file with both rhythmic proximal and distal inputs provided at 10 Hz, with
+stronger, more synchronous distal inputs. Download the relevant param file
+here: - `AlphaAndMoreBeta.param <../../param/AlphaAndMoreBeta.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below.
+
+.. |alphaandmorebetadisttimingparamfig| image:: images/AlphaAndMoreBetaDistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphaandmorebetadistL2paramfig| image:: images/AlphaAndMoreBetaDistL2param.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphaandmorebetadistL5paramfig| image:: images/AlphaAndMoreBetaDistL5param.png
+        :scale: 40%
+	:align: bottom
+
++--------------------------------------+----------------------------------+----------------------------------+
+| |alphaandmorebetadisttimingparamfig| | |alphaandmorebetadistL2paramfig| | |alphaandmorebetadistL5paramfig| |
++--------------------------------------+----------------------------------+----------------------------------+
+
+Key parameter changes include a reduction in the ``Frequency stdev (Hz)`` value - to 10.0 instead
+of the previous 20.0. This creates higher synchrony in the timing of the distal inputs. In addition
+the weights of the distal inputs have been increased, allowing the distal inputs to more effectively
+push current flow down the dendrites towards infragranular cortical layers. 
+
+Next, we will test how these parameters effect the simulation dynamics. Click on ``Start
+Simulation`` from the main GUI window. This simulation runs for ~700 ms of simulation time. Once
+completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaAndMoreBetaOutput.png
+	:scale: 40%	
+	:align: center
+
+As seen in the narrower green histograms at the top of the output canvas, the distal inputs are
+provided more synchronously. This produces higher beta power around 20 Hz - seen in the higher
+prevalence as well as higher power in the beta band (note the red regions in the spectrogram
+around 20 Hz). 
+
+Now we will use HNN to further verify that the simulation produces more beta than previously by looking
+at the simulation's power spectral density (PSD). To do so, click on the ``View menu`` -> ``View
+PSD``. You should see the following window.
+
+.. figure:: images/AlphaAndMoreBetaViewPSD.png
+	:scale: 40%	
+	:align: center
+
+	Power spectral density from the simulation shows a larger beta than alpha amplitude in the
+	L5 (middle panel) and aggregate PSD (bottom panel).
+
 Gamma Rhythms
 -------------
 
