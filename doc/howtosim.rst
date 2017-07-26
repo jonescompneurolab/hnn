@@ -546,6 +546,75 @@ PSD``. You should see the following window.
 	Power spectral density from the simulation shows a larger beta than alpha amplitude in the
 	L5 (middle panel) and aggregate PSD (bottom panel).
 
+Even Stronger Distal Weights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We will now demonstrate what happens if we increase the strength of the distal inputs too far. Instead of getting
+the usual alpha/beta events we will see activity dominated by neuronal spiking. This type of activity
+is not typically observed in the MEG data, supporting the notion that alpha/beta rhythms are created through
+subthreshold processes. Let's test this with the following simulation.
+
+We will use a param file with both rhythmic proximal and distal inputs provided at 10 Hz, with
+stronger distal inputs compared to the original AlphaAndBeta.param file used above. Download the
+new param file here: - `AlphaAndBetaSpike.param <../../param/AlphaAndBetaSpike.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below.
+
+.. |alphaandbetaspikedisttimingparamfig| image:: images/AlphaAndBetaSpikeDistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphaandbetaspikedistL2paramfig| image:: images/AlphaAndBetaSpikeDistL2param.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphaandbetaspikedistL5paramfig| image:: images/AlphaAndBetaSpikeDistL5param.png
+        :scale: 40%
+	:align: bottom
+
++---------------------------------------+-----------------------------------+-----------------------------------+
+| |alphaandbetaspikedisttimingparamfig| | |alphaandbetaspikedistL2paramfig| | |alphaandbetaspikedistL5paramfig| |
++---------------------------------------+-----------------------------------+-----------------------------------+
+
+Note the high weights of distal inputs to L2Pyr (40e-5 nS) and L5Pyr (40e-5 nS). These are sufficient
+to generate spiking activity in the neurons.
+
+Next, we will run the simulation. Click on ``Start Simulation`` from the main GUI window. Once
+completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaAndBetaSpikeOutput.png
+	:scale: 40%	
+	:align: center
+
+	This output reflects spiking activity from the pyramidal neurons which produces similarly sharp
+	spiking activity in the dipole signal. As a result the dipole spectrogram shows broadband spiking
+	from ~60-120 Hz. This type of activity is not typically seen in MEG data.
+
+
+Now we will use HNN to further verify that the simulation produces more beta than previously by looking
+at the simulation's power spectral density (PSD). To do so, click on the ``View menu`` -> ``View
+PSD``. You should see the following window.
+
+.. figure:: images/AlphaAndBetaSpikeViewPSD.png
+	:scale: 40%	
+	:align: center
+
+	PSD from the simulation shows high frequency activity caused by neuronal spiking.
+
+We can verify that the neurons are spiking by looking at the raster plots. 
+
+.. figure:: images/AlphaAndBetaSpikeViewSpiking.png
+	:scale: 40%	
+	:align: center
+
+	Neuronal spiking coincides with the high-frequency events seen in the spectrogram.
+	**Note the highly synchronous spikes in the raster plot.**
+
+We use this simulation to demonstrate that HNN can be used to test the limits of physiological
+variables and to test how simulations can be similar or dis-similar to experimental data. 
+
 Gamma Rhythms
 -------------
 
