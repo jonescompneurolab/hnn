@@ -659,6 +659,77 @@ canvas are generally *out-of-phase*. This rhythmic alternation of proximal and d
 10 Hz produces an alpha rhythm. In this case, the dipole signal is pushed both above and below
 0 nAm. However, the nearly continuous rhythm is not typically seen in MEG data. 
 
+Rhythmic inputs across multiple trials/jitter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When running MEG experiments, it's typical to run multiple trials, and then calculate
+the average spectrogram from the data obtained. This can produce the impression that
+oscillations are continuous, as shown in the figure below. 
+
+.. figure:: images/MEG_Alpha_Beta_Constant_100_Trials.png
+	:scale: 100%	
+	:align: center
+
+	Average spectrogram of MEG data from 100 trials shows nearly continuous
+	alpha and beta oscillations. Are these oscillations always present or
+	is this just an artifact of the averaging procedure?
+
+We can use HNN to test these averaging effects by running multiple trials with
+ongoing rhythmic inputs. Since the inputs have stochasticity, there will be some
+variation in when the transient alpha/beta events occur in differnet trials, and
+this could contribute to the temporal blurring across trials. We will test this in the
+next simulations.
+
+We will use a param file with rhythmic proximal and distal inputs provided at 10 Hz, with
+proximal and distal inputs in phase. These are the same parameters as in the AlphaAndBeta.param
+file, but with 10 trials instead of 1. Download the
+new param file here: - `AlphaAndBetaJitter0.param <../../param/AlphaAndBetaJitter0.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Run``, ``Rhythmic Proximal Inputs``, and ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below. 
+
+.. |alphabjitter0runparamfig| image:: images/AlphaAndBetaJitter0Runparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphabjitter0proxtimingparamfig| image:: images/AlphaAndBetaJitter0ProxTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphabjitter0disttimingparamfig| image:: images/AlphaAndBetaJitter0DistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
++----------------------------+-----------------------------------+-----------------------------------+
+| |alphabjitter0runparamfig| | |alphabjitter0proxtimingparamfig| | |alphabjitter0disttimingparamfig| |
++----------------------------+-----------------------------------+-----------------------------------+
+
+Note that there are 10 trials in the ``Run Parameters`` and the ``Start time stdev (ms)`` is set
+to 0.0 for both proximal and distal inputs.
+
+Let's run the simulation. Click on ``Start Simulation``
+from the main GUI window. This simulation will take longer to run because it uses 10 trials.
+Once completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaAndBetaJitter0Output.png
+	:scale: 40%	
+	:align: center
+
+	Average spectrogram from 10 trials of ongoing rhythmic inputs produces blurring of alpha/beta
+	events across time. **Note that the dipole signals were not averaged; rather tha individual 
+	spectrograms were averaged across trials.** This averaging produces a nearly continuous band
+	of alpha oscillations and more continuous beta events. Running more simulations will increase blurring. 
+
+We can refine control of the amount of temporal blurring by modulating a jitter parameter. 
+This jitter parameter modulates the start time of the rhythmic inputs, adding more variability
+to when the transient alpha/beta events occur, and producing even more temporal blurring.
+
+To demonstrate this, ...
+
+As an exercise, try decreasing or increasing the number of trials in both of these simulations to see how that
+impacts the absence/presence of continuous alpha/beta oscillations.
+
 Gamma Rhythms
 -------------
 
