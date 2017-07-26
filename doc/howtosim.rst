@@ -310,11 +310,6 @@ and selecting the file you just downloaded. To view the new parameters,
 click on ``Set Paramters``, and then ``Rhythmic Proximal Inputs``.
 You should see the values displayed in the dialogs below.
 
-Next, click on ``Start Simulation`` from the main GUI window. This simulation
-runs for 700 ms of simulation time, so will take a little longer to run than
-the ERP simulations. Once completed, you will see output similar to that shown below.
-
-
 .. |rhythproxonlytimingparamfig| image:: images/OnlyRhythmicProxTimingparam.png
         :scale: 40%
 	:align: bottom
@@ -331,7 +326,15 @@ the ERP simulations. Once completed, you will see output similar to that shown b
 | |rhythproxonlytimingparamfig| | |rhythproxonlyl2paramfig| | |rhythproxonlyl5paramfig| |
 +-------------------------------+---------------------------+---------------------------+
 
-As shown below, rhythmic proximal input is provided at ~10 Hz -- this is seen in the red
+Next, click on ``Start Simulation`` from the main GUI window. This simulation
+runs for 700 ms of simulation time, so will take a little longer to run than
+the ERP simulations. Once completed, you will see output similar to that shown below.
+
+.. figure:: images/OnlyRhythmicProxOutput.png
+	:scale: 40%	
+	:align: center
+
+As shown above, rhythmic proximal input is provided at ~10 Hz -- this is seen in the red
 histogram at the top of the output canvas. Due to the stochastic nature of the inputs, there
 is some variability in the input times. The rhythmic inputs  generate ongoing alpha oscillations
 in the model centered around 10 Hz. However, the current in the pyramidal neurons is only *pushed*
@@ -339,16 +342,52 @@ towards the supragranular layers, causing the dipole signal to only deviate abov
 the experimental data accurately. In addition,  the ongoing alpha oscillation, throughout the simulation is
 not realistic, since in the experiments alpha events are transient. 
 
-.. figure:: images/OnlyRhythmicProxOutput.png
-	:scale: 40%	
-	:align: center
-
-
 Only Rhythmic Distal Inputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Having seen that proximal inputs alone push the current flow only in a single direction, what
-will happen if we instead provide rhythmic distal inputs?
+Having seen that proximal inputs alone push the current flow only in a single direction, we
+can confirm that the same occurs if we provide only rhythmic distal inputs, with the current
+flowing largely in the opposite direction.
+
+We will use a param file with rhythmic distal inputs provided at the alpha frequency (10 Hz).
+Download the relevant param file
+here: - `OnlyRhythmicDist.param <../../param/OnlyRhythmicDist.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below.
+
+.. |rhythdistonlytimingparamfig| image:: images/OnlyRhythmicDistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |rhythdistonlyl2paramfig| image:: images/OnlyRhythmicDistL2param.png
+        :scale: 40%
+	:align: bottom
+
+.. |rhythdistonlyl5paramfig| image:: images/OnlyRhythmicDistL5param.png
+        :scale: 40%
+	:align: bottom
+
++-------------------------------+---------------------------+---------------------------+
+| |rhythdistonlytimingparamfig| | |rhythdistonlyl2paramfig| | |rhythdistonlyl5paramfig| |
++-------------------------------+---------------------------+---------------------------+
+
+Next, click on ``Start Simulation`` from the main GUI window.
+Once completed, you will see output similar to that shown below.
+
+.. figure:: images/OnlyRhythmicDistOutput.png
+	:scale: 40%	
+	:align: center
+
+As shown here, rhythmic distal input is provided at ~10 Hz -- this is seen in the green
+histogram at the top of the output canvas. The stochasticity of of the inputs provides
+variability in the input times. The rhythmic inputs generate ongoing alpha oscillations in the
+model centered around 10 Hz. In this simulation the current in the pyramidal neurons is *pushed*
+towards the infragranular layers, causing the dipole signal to only deviate below 0 nAm. This
+simulation therefore also does not match the experimental data accurately. Once again, the
+ongoing alpha oscillation throughout the simulation (seen in the 10 Hz band in the
+spectrogram) is not realistic.
 
 Combined Rhythmic Proximal/Distal Inputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
