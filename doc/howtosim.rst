@@ -381,7 +381,7 @@ Once completed, you will see output similar to that shown below.
 	:align: center
 
 As shown here, rhythmic distal input is provided at ~10 Hz -- this is seen in the green
-histogram at the top of the output canvas. The stochasticity of of the inputs provides
+histogram at the top of the output canvas. The stochasticity of the inputs provides
 variability in the input times. The rhythmic inputs generate ongoing alpha oscillations in the
 model centered around 10 Hz. In this simulation the current in the pyramidal neurons is *pushed*
 towards the infragranular layers, causing the dipole signal to only deviate below 0 nAm. This
@@ -392,9 +392,106 @@ spectrogram) is not realistic.
 Combined Rhythmic Proximal/Distal Inputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Next, we'll look at providing both rhythmic proximal and rhythmic distal inputs. We will
+use the same synaptic weights as used in the previous two simulations. 
+
+We will use a param file with both rhythmic proximal and distal inputs provided at the alpha
+frequency (10 Hz). Download the relevant param file
+here: - `AlphaAndBeta.param <../../param/AlphaAndBeta.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then ``Rhythmic Proximal Inputs`` and ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below.
+
+.. |alphaandbetaproxtimingparamfig| image:: images/AlphaAndBetaProxTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphaandbetadisttimingparamfig| image:: images/AlphaAndBetaDistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
++----------------------------------+----------------------------------+
+| |alphaandbetaproxtimingparamfig| | |alphaandbetadisttimingparamfig| | 
++----------------------------------+----------------------------------+
+
+Note that the ``Start time mean (ms)`` values for both proximal and distal inputs are
+set to 50.0 ms. This allows for the proximal and distal inputs to overlap temporally
+and produce either alpha or beta events. Alpha events are produced when the inputs occur
+*out of phase* - which happens stocahstically. The reason this contributes to alpha is
+that proximal inputs push the current flow in one direction and later distal
+inputs push the current flow in the other direction; since both inputs are provided
+rhythmically at 10 Hz. In contrast, when the proximal and distal events are *in phase*,
+the proximal events push current flow upward (towards supragranular layers); while the
+current is flowing upward the strong distal inputs push the current flow downward, cutting
+the period in half and producing a beta event. We will look at this more closely in
+later simulations.
+
+Next, click on ``Start Simulation`` from the main GUI window.
+Once completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaAndBetaOutput.png
+	:scale: 40%	
+	:align: center
+
+As shown here, both rhythmic proximal and distal inputs are provided at ~10 Hz -- seen in the
+green (distal input) and red (proximal input) histograms at the top of the output canvas. The
+stochasticity of the inputs provides variability in the input times. The rhythmic inputs generate
+transient alpha and beta events, which depend on the relative temporal alignment of proximal and
+distal events. In this simulation the current in the pyramidal neurons is *pushed* both above
+(towards supragranular layers) and below (towards infragranular layers) zero nAm, closely
+matching the experimental data. The model's transient alpha/beta events also provide additional
+similarity to the experimental data. 
+
+We can now check whether the network is generating any spiking activity. To do so, 
+click on the ``View menu`` -> ``View Simulation Spiking Activity``. You should see the
+following window.
+
+.. figure:: images/AlphaAndBetaViewSpiking.png
+	:scale: 40%	
+	:align: center
+
+	Rhythmic distal (green/top) and proximal (red/middle) inputs produce the alpha
+	and beta events through *subthreshold* processes. There is no spiking
+	produced in the network (no dots present in the bottom raster plot). 
+
+Next, we will use HNN to look at the simulation's power spectral density (PSD) -- the time
+average of the spectrogram. To do so, click on the ``View menu`` -> ``View PSD``. You should see
+the following window.
+
+.. figure:: images/AlphaAndBetaViewPSD.png
+	:scale: 40%	
+	:align: center
+
+	Power spectral density from the simulation shows a strong peak at alpha (10 Hz), with
+	a lower power in beta (~20 Hz). Top/middle/bottom panels show the PSD contributions
+	from layer 2, layer 5, and the aggregate from layer 2 and layer 5.
+
+We can also use HNN to compare to experimental PSD data. To do so, you will need time-series
+of MEG data in a format that HNN can read (more details provided in data format section). Once
+you have such data, you can load it with the HNN PSD viewer by clicking
+``File menu`` -> ``Load data``, and then picking the file. Then HNN will calculate the PSD
+from the time-series data and overlay it on the simulation PSD for comparison.
+Below is an example.
+
+.. figure:: images/AlphaAndBetaViewPSDCompare.png
+	:scale: 40%	
+	:align: center
+
+	Strong similarity of PSD generated by model (bottom white traces) and PSD from experimental
+	MEG data (bottom yellow traces). Solid/dotted lines are mean+/-standard error. This data is
+	from primary somatosensory cortex from spontaneous prestimulus activity.
+
 Stronger Beta
 ^^^^^^^^^^^^^
 
+Above we mentioned that the timing of proximal and distal inputs can lead to either alpha
+(when events are out of phase phase) or beta (when events are in phase).  Another factor
+that contributes to the prevalence of beta events is the *strength* and *synchrony*
+of the distal inputs. This is because stronger and more synchronous distal inputs are more
+effective in opposing the proximal inputs, and in pushing the current flow towards infragranular
+layers, which contributes to the typical 20 Hz waveform seen in the dipole. We will demonstrate
+this in the next simulation. 
 
 Gamma Rhythms
 -------------
