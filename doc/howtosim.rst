@@ -615,6 +615,50 @@ We can verify that the neurons are spiking by looking at the raster plots.
 We use this simulation to demonstrate that HNN can be used to test the limits of physiological
 variables and to test how simulations can be similar or dis-similar to experimental data. 
 
+Alpha through out of phase inputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We mentioned above that the relative timing of proximal and distal inputs is an important
+factor in determining whether alpha or beta events would arise. We will now demonstrate
+that out of phase inputs tends to produce ongoing alpha rhythms.
+
+We will use a param file with rhythmic proximal and distal inputs provided at 10 Hz, with
+and proximal out of phase with distal inputs. Download the
+new param file here: - `Alpha.param <../../param/Alpha.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Rhythmic Proximal Inputs`` and ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below.
+
+.. |alphaproxtimingparamfig| image:: images/AlphaProxTimingparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |alphadisttimingparamfig| image:: images/AlphaDistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
++---------------------------+---------------------------+
+| |alphaproxtimingparamfig| | |alphadisttimingparamfig| |
++---------------------------+---------------------------+
+
+Note that the proximal inputs have a ``Start time mean (ms)`` of 50.0
+while the distal inputs have a ``Start time mean (ms)`` of 100.0. Since
+both have ``Frequency mean (Hz)`` of 10.0, the proximal and distal inputs
+are on average 1/2 cycle out of phase. 
+
+To see how this impacts the model output, we will run the simulation. Click on ``Start Simulation``
+from the main GUI window. Once completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaOutput.png
+	:scale: 40%	
+	:align: center
+
+As seen, the peaks of the distal (green) and proximal (red) histograms at the top of the output
+canvas are generally *out-of-phase*. This rhythmic alternation of proximal and distal inputs at
+10 Hz produces an alpha rhythm. In this case, the dipole signal is pushed both above and below
+0 nAm. However, the nearly continuous rhythm is not typically seen in MEG data. 
+
 Gamma Rhythms
 -------------
 
