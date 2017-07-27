@@ -774,3 +774,116 @@ impacts the blurring of alpha/beta power over time.
 Gamma Rhythms
 -------------
 
+Next we will look at using HNN to model low gamma (40-60 Hz) rhythms. The network will generate
+gamma through the PING (pyramidal interneuron network gamma) mechanism . PING involves activation of
+pyramidal neurons, which then drive interneurons to fire. Mutual inhibition between interneurons leads
+to their synchronized firing, with the population firing rate determined by the GABAA synaptic decay time
+constant. Feedback from interneurons to pyramidal neurons causes the pyramidal neurons to delay firing until
+the next gamma cycle. 
+
+In order to achieve these effects, we will drive pyramidal neurons with Poisson inputs,
+targeting their soma. This will initiate the PING mechanism. We will use a param file which
+sets Poisson inputs to L2 and L5 pyramidal neurons. Download the
+new param file here: - `gamma_L5weak_L2weak.param <../../../param/gamma_L5weak_L2weak.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Poisson Inputs``.
+You should see the values displayed in the dialogs below. 
+
+.. |gammawL2L5L2Pfig| image:: images/gammaweakL2L5_L2Poissonparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |gammawL2L5L5Pfig| image:: images/gammaweakL2L5_L5Poissonparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |gammawL2L5TPfig| image:: images/gammaweakL2L5_TimingPoissonparam.png
+        :scale: 40%
+	:align: bottom
+
++--------------------+--------------------+-------------------+
+| |gammawL2L5L2Pfig| | |gammawL2L5L5Pfig| | |gammawL2L5TPfig| |
++--------------------+--------------------+-------------------+
+
+The 3 dialogs above show the weights and rates of synaptic inputs to each cell type.
+These synaptic inputs follow a Poisson process defined by the rate. Note that in
+this simulation only the L2 and L5 Pyramidal neurons receive Poisson process input.
+The 3rd dialog (Timing) defines when the Poisson inputs begin and end. In this case,
+a ``Start time (ms)`` of 0 means that the inputs may begin at the start
+of the simulation. The ``Stop time (ms)`` value of -1 indicates that the Poisson
+inputs are provided throughout the duration of the simulation.
+
+The model used in this simulation also has altered microcircuit connectivity - with
+connections between pyramidal neurons shut off. This was done for illustration
+purposes, and to prevent pyramidal to pyramidal interactions from disrupting the gamma
+rhythm. The following dialog boxes, accessible through ``Set Parameters`` -> ``Local Network``
+show how the local microcircuit synaptic weights were set.
+
+.. |gammawL2L5L5L2PCfig| image:: images/gammaweakL2L5_L2Pyrconnparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |gammawL2L5L5L5PCfig| image:: images/gammaweakL2L5_L5Pyrconnparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |gammawL2L5L5L2BCfig| image:: images/gammaweakL2L5_L2Basconnparam.png
+        :scale: 40%
+	:align: bottom
+
+.. |gammawL2L5L5L5BCfig| image:: images/gammaweakL2L5_L5Basconnparam.png
+        :scale: 40%
+	:align: bottom
+
++-----------------------+-----------------------+-----------------------+-----------------------+
+| |gammawL2L5L5L2PCfig| | |gammawL2L5L5L5PCfig| | |gammawL2L5L5L2BCfig| | |gammawL2L5L5L5BCfig| |
++-----------------------+-----------------------+-----------------------+-----------------------+
+
+In these dialog boxes L2Pyr->L2Pyr AMPA weight (nS) of 0.0 indicates that the recurrent AMPA weights between
+L2Pyr neurons are turned **off**.
+
+Now that we've looked through some of the important parameters, let's run the simulation. Click on ``Start Simulation``
+from the main GUI window. This simulation runs for 550 ms. Once completed, you will see output similar to that shown below.
+
+.. figure:: images/gammaweakL2L5_Output.png
+	:scale: 40%	
+	:align: center
+
+In the output canvas the proximal/distal input histograms are missing. This is because this simulation does
+not utilize either rhythmic or evoked inputs. Instead, it utilizes only Poisson inputs, which drive each
+neuron independently. At the top of the output canvas, the dipole signal is seen, and it displays gamma
+oscillations, with rapid spike-like features. The spectrogram below confirms that the dipole signal contains
+strong oscillatory components in the gamma range (~40-60 Hz).
+
+We can further confirm that gamma plays a dominant role in the oscillations with the PSD viewer:
+click on the ``View menu`` -> ``View PSD``. You should see the following window.
+
+.. figure:: images/gammaweakL2L5_ViewPSD.png
+	:scale: 40%	
+	:align: center
+
+Finally, we can look at the spiking activity in the network: 
+click on the ``View menu`` -> ``View Simulation Spiking Activity``. You should see the
+following window.
+
+.. figure:: images/gammaweakL2L5_ViewSpiking.png
+	:scale: 40%	
+	:align: center
+
+As shown, the basket interneurons (white, blue dots/lines) are oscillating rhythmically
+at the gamma frequency with relatively high synchrony. In contrast, the pyramidal neurons
+(green, red) are firing periodically, but with lower synchrony. This is why the param
+file has the name *weak* - since this is considered weak PING. The line-plots which show
+spike counts over time also demonstrate rhythmicity - note the sharp peaks and valleys.
+
+Gamma Rhythm Exercises
+^^^^^^^^^^^^^^^^^^^^^^
+
+You can try the following exercises to learn other features of HNN:
+
+ #. Replace the Poisson inputs with equivalent ``Tonic Inputs``; can you obtain similar gamma rhythms?
+ #. Adjust the synaptic time constants of GABAA synapses; can you alter the peak gamma frequency?
+ #. Replace the Poisson inputs with rhythmic inputs at the gamma frequency; how does that influence the dipole waveform and spiking/synchrony of neurons within the network?
+ #. Restore recurrent connectivity between pyramidal neurons; how does that influence the gamma rhythm?
+ #. We have also provided a set of param files that show different types of gamma rhythms (based on. `Lee et al., 2013 <http://journal.frontiersin.org/article/10.3389/fnhum.2013.00869/full>`_ ). You can find these param files in the param subdirectory under hnn's root install location. Try them out. 
