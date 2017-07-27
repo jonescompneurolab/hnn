@@ -716,19 +716,60 @@ Once completed, you will see output similar to that shown below.
 	:scale: 40%	
 	:align: center
 
-	Average spectrogram from 10 trials of ongoing rhythmic inputs produces blurring of alpha/beta
-	events across time. **Note that the dipole signals were not averaged; rather tha individual 
-	spectrograms were averaged across trials.** This averaging produces a nearly continuous band
-	of alpha oscillations and more continuous beta events. Running more simulations will increase blurring. 
+At the top of the figure we see the input histograms for distal (green) and proximal (red) inputs. Since we
+have run 10 trials, the histogram counts are now higher than before (up to ~20). We can still see clear rhythmicity
+in the timing of the distal and proximal inputs (note the symmetric profile). However, on any individual trial,
+the coincidence of inputs leading to alpha or beta events displays variability. This is confirmed in the bottom
+panel of the output canvas - the average spectrogram from 10 trials of ongoing rhythmic inputs produces blurring
+of alpha/beta events across time. **Note that the dipole signals were not averaged; rather the individual 
+spectrograms were averaged across trials.** This averaging produces a nearly continuous band
+of alpha oscillations and more continuous beta events. Running more trials will increase blurring. 
 
-We can refine control of the amount of temporal blurring by modulating a jitter parameter. 
-This jitter parameter modulates the start time of the rhythmic inputs, adding more variability
-to when the transient alpha/beta events occur, and producing even more temporal blurring.
+Next we will *jitter* the start times of rhythmic inputs across trials. This will add additional variability
+to the timing of the transient alpha/beta events, and produce more temporal blurring.
+We will use a param file with the same rhythmic proximal and distal inputs provided at 10 Hz, with
+10 trials. However, we will increase the rhythmic input start time variability.  Download the
+new param file here: - `AlphaAndBetaJitter50.param <../../param/AlphaAndBetaJitter50.param>`_
+Then load the parameter file values by clicking ``Set Parameters From File``
+and selecting the file you just downloaded. To view the new parameters,
+click on ``Set Paramters``, and then click ``Rhythmic Proximal Inputs``, and ``Rhythmic Distal Inputs``.
+You should see the values displayed in the dialogs below. 
 
-To demonstrate this, ...
+.. |alphabjitter50proxtimingparamfig| image:: images/AlphaAndBetaJitter50ProxTimingparam.png
+        :scale: 40%
+	:align: bottom
 
-As an exercise, try decreasing or increasing the number of trials in both of these simulations to see how that
-impacts the absence/presence of continuous alpha/beta oscillations.
+.. |alphabjitter50disttimingparamfig| image:: images/AlphaAndBetaJitter50DistTimingparam.png
+        :scale: 40%
+	:align: bottom
+
++------------------------------------+------------------------------------+
+| |alphabjitter50proxtimingparamfig| | |alphabjitter50disttimingparamfig| |
++------------------------------------+------------------------------------+
+
+Note that the ``Start time stdev (ms)`` is now increased to 50.0 milliseconds for both proximal and distal inputs.
+
+Let's run the simulation. Click on ``Start Simulation``
+from the main GUI window.  Once completed, you will see output similar to that shown below.
+
+.. figure:: images/AlphaAndBetaJitter50Output.png
+	:scale: 40%	
+	:align: center
+
+At the top of the figure we see the input histograms for distal (green) and proximal (red)
+inputs. If we were to look at an individual trial we would still see rhythmicity. However, since
+we are looking at input histograms across 10 trials with different start times for
+proximal/distal inputs, there is no rhythmicity present. Therefore, we would expect that
+start/stop times of alpha/beta events will be even more spread out temporally than before. This
+is confirmed in the bottom panel of the output canvas - the average spectrogram from 10 trials of
+ongoing rhythmic inputs with *jittered* start times produces additional blurring of alpha/beta
+events across time. **We emphasize again that the dipole signals were not averaged; rather the
+individual spectrograms were averaged across trials.** Running more trials will further increase
+blurring. This simulation has more similarity to the average spectrogram from 100 MEG trials
+shown above.
+
+**Exercise:** try decreasing or increasing the number of trials in both of these simulations to see how that
+impacts the blurring of alpha/beta power over time.
 
 Gamma Rhythms
 -------------
