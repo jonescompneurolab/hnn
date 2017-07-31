@@ -18,6 +18,32 @@ netParams = specs.NetParams()   # object of class NetParams to store the network
 # Cell parameters
 ###############################################################################
 
+# L2Pyr params
+cellRule = netParams.importCellParams(label='L2Pyr',conds={'cellType':'Pyr','cellModel':'HH_reduced'},
+                                      fileName='L2_pyramidal.py',cellName='L2Pyr')
+
+cellRule['secLists']['alldend'] = []
+cellRule['secLists']['apicdend'] = []
+cellRule['secLists']['basaldend'] = []
+
+
+# L2Bas params
+cellRule = netParams.importCellParams(label='L2Bas',conds={'cellType':'Bas','cellModel':'SingleComp'},
+                                      fileName='L2_basket.py',cellName='L2Basket')
+
+
+
+# L5Pyr params
+cellRule = netParams.importCellParams(label='L5Pyr',conds={'cellType':'Pyr','cellModel':'HH_reduced'},
+                                      fileName='L5_pyramidal.py',cellName='L5Pyr')
+
+
+# L5Bas params
+cellRule = netParams.importCellParams(label='L5Bas',conds={'cellType':'Bas','cellModel':'SingleComp'},
+                                      fileName='L5_basket.py',cellName='L5Basket')
+
+
+"""
 # PT cell params (6-comp)
 cellRule = netParams.importCellParams(label='PT_6comp', conds={'cellType': 'PT', 'cellModel': 'HH_reduced'},
   fileName='cells/SPI6.py', cellName='SPI6')
@@ -29,7 +55,7 @@ for secName,sec in cellRule['secs'].iteritems():
 	sec['vinit'] = -75.0413649414  # set vinit for all secs
 	if secName in cellRule['secLists']['alldend']:  
 		sec['mechs']['nax']['gbar'] = cfg.dendNa  # set dend Na gmax for all dends
-
+"""
 
 ###############################################################################
 # Population parameters
