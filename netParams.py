@@ -19,7 +19,7 @@ netParams = specs.NetParams()   # object of class NetParams to store the network
 ###############################################################################
 
 # L2Pyr params
-cellRule = netParams.importCellParams(label='L2Pyr',conds={'cellType':'Pyr','cellModel':'HH_reduced'},
+cellRule = netParams.importCellParams(label='L2Pyr',conds={'cellType':'L2Pyr','cellModel':'HH_reduced'},
                                       fileName='L2_pyramidal.py',cellName='L2Pyr')
 
 cellRule['secLists']['alldend'] = []
@@ -28,18 +28,18 @@ cellRule['secLists']['basaldend'] = []
 
 
 # L2Bas params
-cellRule = netParams.importCellParams(label='L2Bas',conds={'cellType':'Bas','cellModel':'SingleComp'},
+cellRule = netParams.importCellParams(label='L2Bas',conds={'cellType':'L2Bas','cellModel':'HH_simple'},
                                       fileName='L2_basket.py',cellName='L2Basket')
 
 
 
 # L5Pyr params
-cellRule = netParams.importCellParams(label='L5Pyr',conds={'cellType':'Pyr','cellModel':'HH_reduced'},
+cellRule = netParams.importCellParams(label='L5Pyr',conds={'cellType':'L5Pyr','cellModel':'HH_reduced'},
                                       fileName='L5_pyramidal.py',cellName='L5Pyr')
 
 
 # L5Bas params
-cellRule = netParams.importCellParams(label='L5Bas',conds={'cellType':'Bas','cellModel':'SingleComp'},
+cellRule = netParams.importCellParams(label='L5Bas',conds={'cellType':'L5Bas','cellModel':'HH_simple'},
                                       fileName='L5_basket.py',cellName='L5Basket')
 
 
@@ -60,13 +60,37 @@ for secName,sec in cellRule['secs'].iteritems():
 ###############################################################################
 # Population parameters
 ###############################################################################
-netParams.popParams['PT5B'] =	{'cellModel': 'HH_reduced', 'cellType': 'PT', 'numCells': 1}
+#netParams.popParams['PT5B'] =	{'cellModel': 'HH_reduced', 'cellType': 'PT', 'numCells': 1}
+
+num = {
+  'E': 100,
+  'I': 35
+}
+
+p = 1.0 
+
+netParams.popParams['L2Bas'] = {'cellModel': 'HH_simple', 'cellType': 'L2Bas', 'numCells': int(p*num['E'])}
+netParams.popParams['L2Pyr'] = {'cellModel': 'HH_reduced', 'cellType': 'L2Pyr', 'numCells': int(p*num['I'])}
+netParams.popParams['L5Bas'] = {'cellModel': 'HH_simple', 'cellType': 'L5Bas', 'numCells': int(p*num['E'])}
+netParams.popParams['L5Pyr'] = {'cellModel': 'HH_reduced', 'cellType': 'L5Pyr', 'numCells': int(p*num['I'])}
+
 
 
 ###############################################################################
 # Synaptic mechanism parameters
 ###############################################################################
-netParams.synMechParams['NMDA'] = {'mod': 'MyExp2SynNMDABB', 'tau1NMDA': cfg.tau1NMDA, 'tau2NMDA': 150, 'e': 0}
+# netParams.synMechParams['NMDA'] = {'mod': 'MyExp2SynNMDABB', 'tau1NMDA': cfg.tau1NMDA, 'tau2NMDA': 150, 'e': 0}
+
+#------------------------------------------------------------------------------
+# Synaptic mechanism parameters
+#------------------------------------------------------------------------------
+netParams.synMechParams['NMDA'] = {'mod': 'NMDA'} #, 'tau1NMDA': 15, 'tau2NMDA': 150, 'e': 0}
+netParams.synMechParams['AMPA'] = {'mod':'AMPA'}#, 'tau1': 0.05, 'tau2': 5.3, 'e': 0}
+netParams.synMechParams['GABAA'] = {'mod':'GABAA'}#, 'tau1': 0.07, 'tau2': 18.2, 'e': -80}
+
+ESynMech = ['AMPA','NMDA']
+
+
 
 
 ###############################################################################
