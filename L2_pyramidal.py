@@ -19,7 +19,7 @@ import params_default as p_default
 # Layer 2 pyramidal cell class
 class L2Pyr(Pyr):
 
-    def __init__(self, gid, pos, p={}):
+    def __init__(self, gid = -1, pos = -1, p={}):
         # Get default L2Pyr params and update them with any corresponding params in p
         p_all_default = p_default.get_L2Pyr_params_default()
         self.p_all = paramrw.compare_dictionaries(p_all_default, p)

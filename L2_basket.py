@@ -12,7 +12,7 @@ from cell import BasketSingle
 
 # Layer 2 basket cell class
 class L2Basket(BasketSingle):
-    def __init__(self, gid, pos):
+    def __init__(self, gid = -1, pos = -1):
         # BasketSingle.__init__(self, pos, L, diam, Ra, cm)
         # Note: Basket cell properties set in BasketSingle())
         BasketSingle.__init__(self, gid, pos, 'L2Basket')
