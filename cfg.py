@@ -3,6 +3,8 @@ from netpyne import specs
 
 cfg = specs.SimConfig()  
 
+cfg.checkErrors = True
+
 
 ###############################################################################
 #
