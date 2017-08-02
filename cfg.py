@@ -44,7 +44,7 @@ cfg.saveDataInclude = ['simData', 'simConfig', 'netParams', 'net']
 ###############################################################################
 # Analysis and plotting 
 ###############################################################################
-cfg.analysis['plotTraces'] = {'include': ['PT5B'], 'oneFigPer': 'cell', 'saveFig': True, 
+cfg.analysis['plotTraces'] = {'include': ['L2Pyr','L5Pyr'], 'oneFigPer': 'cell', 'saveFig': True, 
 							  'showFig': False, 'figSize': (10,8), 'timeRange': [0,cfg.duration]}
 
 
@@ -58,7 +58,7 @@ cfg.tau1NMDA = 15
 ###############################################################################
 # Current inputs 
 ###############################################################################
-cfg.addIClamp = 1
+cfg.addIClamp = 0
 
 cfg.IClamp1 = {'pop': 'PT5B', 'sec': 'soma', 'loc': 0.5, 'start': 1, 'dur': 1000, 'amp': 0.0}
 
@@ -66,7 +66,7 @@ cfg.IClamp1 = {'pop': 'PT5B', 'sec': 'soma', 'loc': 0.5, 'start': 1, 'dur': 1000
 ###############################################################################
 # NetStim inputs 
 ###############################################################################
-cfg.addNetStim = 1
+cfg.addNetStim = 0
 
 cfg.NetStim1 = {'pop': 'PT5B', 'sec': 'soma', 'loc': 0.5, 'synMech': 'NMDA', 'start': 500, 
 				'interval': 1000, 'noise': 0.0, 'number': 1, 'weight': 0.0, 'delay': 1}

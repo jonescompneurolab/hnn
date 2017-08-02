@@ -92,7 +92,7 @@ ESynMech = ['AMPA','NMDA']
 
 
 
-
+"""
 ###############################################################################
 # Current inputs (IClamp)
 ###############################################################################
@@ -123,3 +123,5 @@ if cfg.addNetStim:
 		netParams.stimTargetParams[nslabel+'_'+ns['pop']] = \
 			{'source': nslabel, 'conds': {'pop': ns['pop']}, 'sec': ns['sec'], 'loc': ns['loc'],
 			 'synMech': ns['synMech'], 'weight': ns['weight'], 'delay': ns['delay']}
+"""
+
