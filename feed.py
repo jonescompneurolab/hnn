@@ -54,13 +54,13 @@ class ParFeedAll ():
     if hasattr(self,'seed2'): self.prng2 = np.random.RandomState(self.seed2)
     #print('ty,seed:',self.ty,self.seed)
 
-  def set_event_times (self):
+  def set_event_times (self, inc_evinput = 0.0):
     # print('self.p_ext:',self.p_ext)
     # each of these methods creates self.eventvec for playback
     if self.ty == 'extpois':
       self.__create_extpois()
     elif self.ty.startswith(('evprox', 'evdist')):
-      self.__create_evoked()
+      self.__create_evoked(inc_evinput)
     elif self.ty == 'extgauss':
       self.__create_extgauss()
     elif self.ty == 'extinput':
@@ -104,13 +104,13 @@ class ParFeedAll ():
     return self.eventvec.size() > 0
 
   # mu and sigma vals come from p
-  def __create_evoked (self):
+  def __create_evoked (self, inc=0.0):
     # print("__create_evoked")
     if self.celltype in self.p_ext.keys():
       # assign the params
-      mu = self.p_ext['t0']
+      mu = self.p_ext['t0'] + inc
       sigma = self.p_ext[self.celltype][2]
-      # print('mu:',mu,'sigma:',sigma)
+      # print('mu:',mu,'sigma:',sigma,'inc:',inc)
       # if a non-zero sigma is specified
       if sigma:
         val_evoked = self.prng.normal(mu, sigma, 1)

@@ -240,7 +240,8 @@ class NetworkOnNode ():
     """
 
     # reset src (source/external) event times
-    def reset_src_event_times (self, seed=None,debug=False):
+    # evinputinc is an offset for evoked inputs (added to mean start time - e.g. per trial increment)
+    def reset_src_event_times (self, seed=None,debug=False, inc_evinput = 0.0):
       if debug:
         print('in reset_src_input_times')
         print('self.extinput_list:',self.extinput_list)
@@ -251,7 +252,7 @@ class NetworkOnNode ():
           feed.inc_prng(1000)
         else:
           feed.set_prng(seed)
-        feed.set_event_times() # uses feed.seed
+        feed.set_event_times(inc_evinput) # uses feed.seed
 
       for k,lfeed in self.ext_list.items(): # dictionary of lists...
         for feed in lfeed: # of feeds
@@ -259,7 +260,7 @@ class NetworkOnNode ():
             feed.inc_prng(1)
           else:
             feed.set_prng(seed)
-          feed.set_event_times() # uses feed.seed
+          feed.set_event_times(inc_evinput) # uses feed.seed
 
     # parallel create cells AND external inputs (feeds)
     # these are spike SOURCES but cells are also targets

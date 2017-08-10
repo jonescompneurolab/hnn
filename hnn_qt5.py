@@ -497,6 +497,8 @@ class EvokedInputParamDialog (QDialog):
           self.chksync.setChecked(False)
         elif float(v)==1.0:
           self.chksync.setChecked(True)
+      elif k == 'inc_evinput':
+        self.incedit.setText(str(v).strip())
   
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -526,7 +528,18 @@ class EvokedInputParamDialog (QDialog):
     self.chksync.setChecked(True)
     self.button_box.addWidget(self.chksync)
 
+    self.incbox = QHBoxLayout()
+    self.inclabel = QLabel(self)
+    self.inclabel.setText('Increment start time (ms)')
+    self.inclabel.adjustSize()
+    self.inclabel.setToolTip('Increment mean evoked input start time(s) by this amount on each trial.')
+    self.incedit = QLineEdit(self)
+    self.incedit.setText('0.0')
+    self.incbox.addWidget(self.inclabel)
+    self.incbox.addWidget(self.incedit)
+
     self.layout.addLayout(self.button_box)
+    self.layout.addLayout(self.incbox)
 
     self.tabs.resize(425,200) 
 
@@ -574,6 +587,7 @@ class EvokedInputParamDialog (QDialog):
     for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
     if self.chksync.isChecked(): s += 'sync_evinput: 1'+os.linesep
     else: s += 'sync_evinput: 0'+os.linesep
+    s += 'inc_evinput: ' + self.incedit.text().strip() + os.linesep
     return s
 
   def addRemoveInputButton (self):

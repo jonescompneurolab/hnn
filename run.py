@@ -308,7 +308,9 @@ def cattrialoutput ():
   del lspk,ldpl,dspec # do not need these variables; returned for testing
 
 # run individual trials via runsim, then calc/save average dipole/specgram
-def runtrials (ntrial):
+# evinputinc is an increment (in milliseconds) that gets added to the evoked inputs on each
+# successive trial. the default value is 0.0.
+def runtrials (ntrial, inc_evinput=0.0):
   global doutf
   if pcID==0: print('Running', ntrial, 'trials.')
   for i in range(ntrial):
@@ -317,7 +319,7 @@ def runtrials (ntrial):
     # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     net.state_init() # initialize voltages
     runsim() # run the simulation
-    net.reset_src_event_times() # adjusts the rng seeds and then the feed/event input times
+    net.reset_src_event_times(inc_evinput = inc_evinput * (i + 1)) # adjusts the rng seeds and then the feed/event input times
   doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
 
@@ -386,7 +388,7 @@ def runsim ():
 
 if __name__ == "__main__":
   if dconf['dorun']:
-    if ntrial > 1: runtrials(ntrial)
+    if ntrial > 1: runtrials(ntrial,p['inc_evinput'])
     else: runsim()
     pc.runworker()
     pc.done()

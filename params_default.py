@@ -124,6 +124,7 @@ def get_params_default (nprox = 2, ndist = 1):
         'dt_evprox0_evdist': -1, # not used in GUI
         'dt_evprox0_evprox1': -1, # not used in GUI
         'sync_evinput': 1, # whether evoked inputs arrive at same time to all cells
+        'inc_evinput': 0.0, # increment (ms) for avg evoked input start (for trial n, avg start time is n * evinputinc
 
         # analysis
         'save_spec_data': 0,
