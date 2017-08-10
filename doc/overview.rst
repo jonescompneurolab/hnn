@@ -5,9 +5,23 @@ Overview
 HNN Description
 ---------------
 
-The Human Neocortical Neurosolver (HNN) is an open-source
-neural modeling tool designed to help researchers/clinicians interpret human brain imaging data. HNN
-presents a convenient GUI to an anatomically and biophysically detailed model of human
+The Human Neocortical Neurosolver (HNN) is an open-source neural modeling tool designed by
+researchers at Brown University to help researchers/clinicians interpret the neural origin of
+their human EEG, MEG, or ECoG imaging data. Our goal is to design HNN to be useful to researchers
+with no formal computational neural modeling or coding experience who want to develop and test
+hypotheses on the cellular and circuit level generators of source localized human data. We will
+integrate HNN with the source localization software (MNE; minimum-norm-estimate) so researchers
+can compute the location, time course and circuit origin of their data all in one software
+package
+
+Our neural model is unique in that it goes beyond a mean field representation and includes the
+morphology and physiology of neocortical neurons across the cortical layers, and layer specific
+synaptic inputs, that contribute to the recorded signals. The neurmodel biophysics generating the
+primary electric currents underlying such data, so simulation results are directly comparable to
+source localized data (nano-Ampere-meters). The software allows for interpretation,
+visualization, and manipulation of cellular and circuit level dynamics.
+
+HNN presents a convenient GUI to an anatomically and biophysically detailed model of human
 thalamocortical brain circuits, which makes it easier to generate and evaluate hypotheses of the
 mechanistic origin of signals measured with MEG/EEG or intracranial ECoG. A unique feature of
 HNN’s model is that it accounts for the biophysics generating the primary electric currents
@@ -26,4 +40,3 @@ documentation and a user forum for interaction between users and developers. We 
 initial construction of our tool and describe its use in studying the circuit-level origin of
 some of the most commonly measured MEG/EEG and ECoG signal: event related potentials (ERPs) and
 low frequency rhythms (alpha/beta/gamma).
-
