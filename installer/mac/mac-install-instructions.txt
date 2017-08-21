@@ -1,0 +1,28 @@
+echo 'export TMPDIR=/private/tmp' >> ~/.bash_profile
+
+xcode-select --install
+# click install
+# click agree
+
+# go to xquartz.org, download and install latest XQuartz dmg
+
+# reboot (yes, really)
+
+# go to https://www.continuum.io/downloads and download and install the Python 3.x version (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
+
+# go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON (currently nrn-7.5.master-1620.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
+
+# go to https://www.open-mpi.org/software/ and download the current .tar.gz file (currently openmpi-2.1.1.tar.gz)
+# change to the directory you downloaded it to (e.g. "cd ~/Downloads")
+tar -zxvf openmpi*
+cd openmpi*
+./configure
+make all -j4
+sudo make install -j4
+
+git clone https://bitbucket.org/samnemo/hnn
+# the above will prompt for your password
+cd hnn
+make
+
+# at this point you can run hnn via ./hnn
