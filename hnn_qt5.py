@@ -174,7 +174,7 @@ class DictDialog (QDialog):
 
     for i in range(len(self.ldict)): self.ltabs.append(QWidget())
 
-    self.tabs.resize(425,200) 
+    self.tabs.resize(575,200) 
 
     # create tabs and their layouts
     for tab,s in zip(self.ltabs,self.ltitle):
@@ -193,7 +193,7 @@ class DictDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
 
-    self.setGeometry(150, 150, 475, 300)
+    self.setGeometry(150, 150, 625, 300)
     self.setWindowTitle(self.stitle)  
 
   def TurnOff (self): pass
@@ -852,17 +852,25 @@ class CellParamDialog (DictDialog):
                                        ('L5Pyr_dend_gbar_cat', 2e-4),
                                        ('L5Pyr_dend_gbar_ar', 1e-6)])
 
+    dtrans = {'gkbar':'Kv', 'gnabar':'Na', 'km':'Km', 'gl':'leak',\
+              'ca':'Ca', 'kca':'KCa','cat':'CaT','ar':'HCN','dend':'Dendrite',\
+              'soma':'Soma','apicaltrunk':'Apical Dendrite Trunk',\
+              'apical1':'Apical Dendrite 1','apical2':'Apical Dendrite 2',\
+              'apical3':'Apical Dendrite 3','apicaltuft':'Apical Dendrite Tuft',\
+              'apicaloblique':'Oblique Apical Dendrite','basal1':'Basal Dendrite 1',\
+              'basal2':'Basal Dendrite 2','basal3':'Basal Dendrite 3'}
+
     for d in [self.dL2PyrGeom, self.dL5PyrGeom]:
       for k in d.keys():
         lk = k.split('_')
         if lk[-1] == 'L':
-          self.addtransvar(k,lk[1] + ' ' + r'length (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'length (micron)')
         elif lk[-1] == 'diam':
-          self.addtransvar(k,lk[1] + ' ' + r'diameter (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'diameter (micron)')
         elif lk[-1] == 'cm':
-          self.addtransvar(k,lk[1] + ' ' + r'capacitive density (F/cm^2)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'capacitive density (F/cm2)')
         elif lk[-1] == 'Ra':
-          self.addtransvar(k,lk[1] + ' ' + r'resistivity (ohm-cm)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'resistivity (ohm-cm)')
 
     for d in [self.dL2PyrSyn, self.dL5PyrSyn]:
       for k in d.keys():
@@ -878,14 +886,14 @@ class CellParamDialog (DictDialog):
       for k in d.keys():
         lk = k.split('_')
         if lk[2].count('g') > 0:
-          nv = lk[0] + ' ' + lk[1] + ' ' + lk[2] + ' ' + lk[3] + ' density '
-          """
-          if lk[3] == 'hh':
-            nv += ' '
+          if lk[3]=='km' or lk[3]=='ca' or lk[3]=='kca' or lk[3]=='cat' or lk[3]=='ar':
+            nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
-            nv += ' (pS/micron^2)'
-          """
-          self.addtransvar(k,nv)
+            nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
+          if lk[3] == 'hh': nv += '(S/cm2)'
+          else: nv += '(pS/micron2)'
+        elif lk[2].count('el') > 0: nv = dtrans[lk[1]] + ' leak reversal (mV)'
+        self.addtransvar(k,nv)
 
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
