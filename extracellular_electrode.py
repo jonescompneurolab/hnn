@@ -150,10 +150,13 @@ def re_insert_elec():
       
       rc_part1 =  exp(-1.0 *(time_const/RC)) * s.area(0.5)
 
+      # https://www.neuron.yale.edu/neuron/static/new_doc/simctrl/cvode.html#CVode.use_fast_imem
+      # not clear LFPsim works with networks/MPI
+
       # for (x,0) goes through segments but the 0 means skip endpoint segments (with locations of 0,1)
       for seg in s:
         if seg.x == 0.0 or seg.x == 1.0: continue
-        h.setpointer( seg._ref_i_membrance, 'transmembrane_current', seg.lfp) 
+        h.setpointer( seg._ref_i_membrane, 'transmembrane_current', seg.lfp) 
         # setpointer transmembrane_current_lfp(x), i_membrane(x) # lfp transmembrance current observes i_membrane
         # initial_part_point_lfp(x) = point_part1
         # initial_part_line_lfp(x) = line_part1
