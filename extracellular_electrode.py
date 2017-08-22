@@ -150,154 +150,157 @@ def re_insert_elec():
       
       rc_part1 =  exp(-1.0 *(time_const/RC)) * s.area(0.5)
 
-      for (x, 0):
-        setpointer transmembrane_current_lfp(x), i_membrane(x)
-        initial_part_point_lfp(x) = point_part1
-        initial_part_line_lfp(x) = line_part1
-        initial_part_rc_lfp(x) = rc_part1
+      # for (x,0) goes through segments but the 0 means skip endpoint segments (with locations of 0,1)
+      for seg in s:
+        if seg.x == 0.0 or seg.x == 1.0: continue
+        h.setpointer( seg._ref_i_membrance, 'transmembrane_current', seg.lfp) 
+        # setpointer transmembrane_current_lfp(x), i_membrane(x) # lfp transmembrance current observes i_membrane
+        # initial_part_point_lfp(x) = point_part1
+        # initial_part_line_lfp(x) = line_part1
+        # initial_part_rc_lfp(x) = rc_part1
+
+        """
+        The hoc setpointer statement is effected in Python as a function call with a syntax for
+        POINT_PROCESS and SUFFIX (density)mechanisms respectively of
+        
+        h.setpointer(_ref_hocvar, 'POINTER_name', point_proces_object)
+        h.setpointer(_ref_hocvar, 'POINTER_name', nrn.Mechanism_object)
+
+        See nrn/share/examples/nrniv/nmodl/(tstpnt1.py and tstpnt2.py) for examples of usage. For
+        a density mechanism, the 'POINTER_name' cannot have the SUFFIX appended. For example if a
+        mechanism with suffix foo has a POINTER bar and you want it to point to t use
+
+        h.setpointer(_ref_t, 'bar', sec(x).foo)
+
+        """
 
 
 vrec = 0 
-#  function to sum field potential calculated for PSA schema
-func fieldrec_point() { local sum
-	sum = 0
-	forall {
-	  if (ismembrane("lfp")) {
-              for (x,0) sum += lfp_point_lfp(x)
-	  }
-	}
-	return sum
-}
 
-#  function to sum field potential calculated for LSA schema
-func fieldrec_line() { local sum
-	sum = 0
-	forall {
-	  if (ismembrane("lfp")) {
-		for (x,0) sum += lfp_line_lfp(x)
-	  }
-	}
-	return sum
-}
+# function to sum field potential calculated for PSA schema
+def fieldrec_point ():
+  sum = 0
+  lsec = getallSections()
+  for s in lsec:
+    if h.ismembrane("lfp",sec=s):
+      for seg in s:
+        if seg.x == 0.0 or seg.x == 1.0: continue
+        sum += seg.lfp.lfp_point
+  return sum
 
+# function to sum field potential calculated for LSA schema
+def fieldrec_line ():
+  sum = 0
+  lsec = getallSections()
+  for s in lsec:
+    if h.ismembrane("lfp",sec=s):
+      for seg in s:
+        if seg.x == 0.0 or seg.x == 1.0: continue
+        sum += seg.lfp.lfp_line
+  return sum
 
-#  function to sum field potential calculated for RC filter schema
-func fieldrec_RC() { local sum
-	sum = 0
-	forall {
-	  if (ismembrane("lfp")) {
-		for (x,0) sum += lfp_rc_lfp(x)
-	  }
-	}
-	return sum
-}
+# function to sum field potential calculated for RC filter schema
+def fieldrec_RC ():
+  sum = 0
+  lsec = getallSections()
+  for s in lsec:
+    if h.ismembrane("lfp",sec=s):
+      for seg in s:
+        if seg.x == 0.0 or seg.x == 1.0: continue
+        sum += seg.lfp.lfp_rc
+  return sum
 
+def init (): #  Initializing all variables
+  h.finitialize(h.v_init)
+  h.fcurrent()
+  Point_source = fieldrec_point()
+  Line_source = fieldrec_line()
+  Simple_RC_filter = fieldrec_RC()
 
-proc init() { #  Initializing all variables
-        finitialize(v_init)
-        fcurrent()
-	Point_source = fieldrec_point()
-	Line_source = fieldrec_line()
-	Simple_RC_filter = fieldrec_RC()
-}
-
-proc advance() {
-        fadvance()
-	Point_source = fieldrec_point()
-	Line_source = fieldrec_line()
-	Simple_RC_filter = fieldrec_RC()
-}
+def advance ():
+  h.fadvance()
+  Point_source = fieldrec_point()
+  Line_source = fieldrec_line()
+  Simple_RC_filter = fieldrec_RC()
 
 # Recording summed LFP using NEURON's record function
-objref total_lfp
-total_lfp = new Vector()
+total_lfp = h.Vector()
 total_lfp.record(&Line_source)
 
-
-objref total_point
-total_point = new Vector()
+total_point = h.Vector()
 total_point.record(&Point_source)
 
-objref total_RC
-total_RC = new Vector()
+total_RC = h.Vector()
 total_RC.record(&Simple_RC_filter)
 
-
-xopen("move_electrode.hoc")
+# h.xopen("move_electrode.hoc")
 
 #  Initializing tool interface 
-xopen("tool_interface.hoc")
+h.xopen("tool_interface.hoc")
+
+# Function for setting electrode position
+def setelec (x,y,z):
+  global elec_x, elec_y, elec_z
+  elec_x = x
+  elec_y = y
+  elec_z = z
+	
+  # Do calculation
+  # get_included_comp(xe, ye, ze)
+  # drawelec(elec_x, elec_y, elec_z)
+  re_insert_elec() # re-define pointers
+
 
 #  Funtion to display electrode position
-func change_electrode_pos() {
-	
-	if($1 == 2) {
-		
-		setelec($2, $3, 0)	
-		# drawelec($2, $3, 0)
-		print "x, y = ",$2,$3	
-	}				
-	
-	return (0)
-	
-}	
+def change_electrode_pos (toset, x, y):
+  if toset == 2:
+    setelec(x, y, 0)	
+    print("x, y = ",x,y)
+  return (0)
 
-
-/*Single electrode location may be set both manually and interactively. To set manually, the user needs to provide values for x,y,z of electrode location in panel D. Interactive LFP electrode implemented using NEURON's menu tool. To access this funtionality, the user needs to move the mouse pointer on "Morphology view" window and right click on the plot, then select "LFP_electrode" and move mouse pointer to move electrode and click on the point on the plot area to record the extracellular potential from that point.
-*/
+"""
+Single electrode location may be set both manually and interactively. To set manually, the user
+needs to provide values for x,y,z of electrode location in panel D. Interactive LFP electrode
+implemented using NEURON's menu tool. To access this funtionality, the user needs to move the
+mouse pointer on "Morphology view" window and right click on the plot, then select
+"LFP_electrode" and move mouse pointer to move electrode and click on the point on the plot area
+to record the extracellular potential from that point.
+"""
 
 MoveElec.menu_tool("LFP_electrode", "change_electrode_pos","1")
 
-
-
 #  Write the calculated LFP as files in "LFP_traces" directory
-objref f
-proc file_write(){
-	f = new File()
+def file_write ():
+  f = h.File()
+  f.wopen("LFP_traces/Line_source.dat") 
+  for i in range(int(total_lfp.size())):
+    f.printf("%e",total_lfp.x[i]) 
+    f.printf("\n")
+  f.close()	
 
-	f.wopen("LFP_traces/Line_source.dat") 
-		for i=0, total_lfp.size()-1 { 
+  f.wopen("LFP_traces/Point_source.dat") 
+  for i in range(int(total_point.size())):
+    f.printf("%e",total_point.x[i]) 
+    f.printf("\n")
+  f.close()
 
-			f.printf("%e",total_lfp.x[i]) 
-			f.printf("\n")
-		}
-	f.close()	
-
-
-
-	f.wopen("LFP_traces/Point_source.dat") 
-		for i=0, total_point.size()-1 { 
-
-			f.printf("%e",total_point.x[i]) 
-			f.printf("\n")
-		}
-	f.close()
-
-
-	f.wopen("LFP_traces/RC.dat") 
-		for i=0, total_RC.size()-1 { 
-
-			f.printf("%e",total_RC.x[i]) 
-			f.printf("\n")
-		}
-	f.close()
-	xpanel("Simulation complete!", 0)
-	xlabel("Traces are saved to LFP_traces directory. Run GNU Octave/Matlab scripts to save as .ps for later use.")
-	xpanel(494,468)
-}
+  f.wopen("LFP_traces/RC.dat") 
+  for i in range(int(total_RC.size())):      
+    f.printf("%e",total_RC.x[i]) 
+    f.printf("\n")
+  f.close()
+  xpanel("Simulation complete!", 0)
+  xlabel("Traces are saved to LFP_traces directory. Run GNU Octave/Matlab scripts to save as .ps for later use.")
+  xpanel(494,468)
 
 
+"""
 #  Funtion to set electrode location for Multi Electrode Array simualtion (MEA)
-proc run_multi_button(){
-
-	if (place_mea_electrode == 1){
-		mea_run_control()
-		
-	}else{
-		xpanel("")
-		xlabel("Please set electrode location by clicking on \"Set Multiple Electrodes\". Run MEA simulation!")
-		xpanel(494,468)
-
-	}
-}
-
+def run_multi_button ():
+  if (place_mea_electrode == 1):
+    mea_run_control()		
+  else:
+    xpanel("")
+    xlabel("Please set electrode location by clicking on \"Set Multiple Electrodes\". Run MEA simulation!")
+    xpanel(494,468)
+"""
