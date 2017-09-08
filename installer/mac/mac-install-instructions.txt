@@ -1,3 +1,6 @@
+#Open a terminal window on your MAC 
+#type to following 
+
 echo 'export TMPDIR=/private/tmp' >> ~/.bash_profile
 
 xcode-select --install
@@ -8,21 +11,28 @@ xcode-select --install
 
 # reboot (yes, really)
 
-# go to https://www.continuum.io/downloads and download and install the Python 3.x version (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
+# go to https://www.continuum.io/downloads and download and install the Python 3.x version into your Applications folder (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
 
-# go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON (currently nrn-7.5.master-1620.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
+# go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1620.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
 
 # go to https://www.open-mpi.org/software/ and download the current .tar.gz file (currently openmpi-2.1.1.tar.gz)
-# change to the directory you downloaded it to (e.g. "cd ~/Downloads")
+# change to the directory you downloaded it to (e.g. "cd ~/Downloads") (Note: be sure to use the newly installed XQuartz version of X11 as your terminal window, found in Applications/Utilities),
+# type the following
 tar -zxvf openmpi*
+
 cd openmpi*
 ./configure
 make all -j4
 sudo make install -j4
 
+#move the new openmpi-2.1.1 folder into your Applications folder
+#change directories to your Applications folders and type the following
+
 git clone https://bitbucket.org/samnemo/hnn
 # the above will prompt for your password
+
 cd hnn
 make
 
-# at this point you can run hnn via ./hnn
+# at this point you can run hnn by typing the command 
+./hnn
