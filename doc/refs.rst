@@ -13,23 +13,24 @@ cutting EEG 2017 Material
 We presented the initial version of the HNN software at the cutting EEG 2017 conference in Glasgow, Scotland.
 The  materials from the conference are available here.
 
-- `Overview (slides) from Cutting EEG 2017 Workshop <https://www.dropbox.com/preview/HNN/CuttingEEG-Workshop/CuttingEEG-workshop-6-19-17.pdf?role=work>`_
+- `Overview (slides) from Cutting EEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/CuttingEEG-workshop-6-19-17.pdf>`_
 
-- `Tutorial (slides) from Cutting EEG 2017 Workshop <https://www.dropbox.com/home/HNN/CuttingEEG-Workshop?preview=slides_workshop_coding.pdf>`_
+- `Tutorial (slides) from Cutting EEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/slides_workshop_coding.pdf>`_
 
-- `Poster from Cutting EEG 2017 conference <https://www.dropbox.com/home/HNN/CuttingEEG-Poster?preview=CuttingEEG-poster.pdf>`_ 
-
-References
-^^^^^^^^^^
-
-Different versions of the neocortical model used in HNN have been used in the following publications:
-
+- `Poster from Cutting EEG 2017 conference <http://hnn.brown.edu/doc/pdf/CuttingEEG-poster.pdf>`_ 
 
 Google Group
 ^^^^^^^^^^^^
 
 To stay up to date on the latest HNN developments, join the HNNSolver Google Group: `HNNSolver Google Group <https://groups.google.com/forum/#!forum/hnnsolver>`_ .
 
+References
+^^^^^^^^^^
+
+Several versions of the neocortical model used in HNN are described in the following publications:
+ 1. Neural correlates of tactile detection: a combined magnetoencephalography and biophysically based computational modeling study. SR Jones, DL Pritchett, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of Neuroscience* 27(40):10751-10764.
+ 2. Quantitative analysis and biophysically realistic neural modeling of the MEG mu rhythm: rhythmogenesis and modulation of sensory-evoked responses. SR Jones, DL Pritchett, MA Sikora, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of neurophysiology* 102(6):3554-3572.
+ 3. Neural mechanisms of transient neocortical beta rhythms: Converging evidence from humans, computational modeling, monkeys, and mice. MA Sherman, S Lee, R Law, S Haegens, CA Thorn, MS Hämäläinen, CI Moore, SR Jones. *Proceedings of the National Academy of Sciences* 2016:04135.
 
 Contact
 ^^^^^^^^^^
