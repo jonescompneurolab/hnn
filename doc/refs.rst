@@ -28,9 +28,10 @@ References
 ^^^^^^^^^^
 
 Several versions of the neocortical model used in HNN are described in the following publications:
- 1. Neural correlates of tactile detection: a combined magnetoencephalography and biophysically based computational modeling study. SR Jones, DL Pritchett, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of Neuroscience* 27(40):10751-10764.
- 2. Quantitative analysis and biophysically realistic neural modeling of the MEG mu rhythm: rhythmogenesis and modulation of sensory-evoked responses. SR Jones, DL Pritchett, MA Sikora, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of neurophysiology* 102(6):3554-3572.
- 3. Neural mechanisms of transient neocortical beta rhythms: Converging evidence from humans, computational modeling, monkeys, and mice. MA Sherman, S Lee, R Law, S Haegens, CA Thorn, MS Hämäläinen, CI Moore, SR Jones. *Proceedings of the National Academy of Sciences* 2016:04135.
+ #. Neural correlates of tactile detection: a combined magnetoencephalography and biophysically based computational modeling study. SR Jones, DL Pritchett, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of Neuroscience* 27(40):10751-10764, 2007.
+ #. Quantitative analysis and biophysically realistic neural modeling of the MEG mu rhythm: rhythmogenesis and modulation of sensory-evoked responses. SR Jones, DL Pritchett, MA Sikora, SM Stufflebeam, M Hämäläinen, CI Moore. *Journal of neurophysiology* 102(6):3554-3572, 2009.
+ #. Distinguishing mechanisms of gamma frequency oscillations in human current source signals using a computational model of a laminar neocortical network. S Lee, SR Jones. *Frontiers in human neuroscience* 7:869, 2013.
+ #. Neural mechanisms of transient neocortical beta rhythms: Converging evidence from humans, computational modeling, monkeys, and mice. MA Sherman, S Lee, R Law, S Haegens, CA Thorn, MS Hämäläinen, CI Moore, SR Jones. *Proceedings of the National Academy of Sciences* 2016:04135.
 
 Contact
 ^^^^^^^^^^
