@@ -37,7 +37,7 @@ Contact
 ^^^^^^^^^^
 
 HNN is under active development by the Jones lab (https://www.brown.edu/research/labs/jones/) 
-and supported by a NIH BRAIN grant. 
+and supported by NIH BRAIN grant R01-EB022889-01.
 
 HNN is open source and available at https://bitbucket.com/samnemo/hnn .
 
