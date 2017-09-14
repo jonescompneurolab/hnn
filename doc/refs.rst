@@ -10,14 +10,14 @@ repository at https://bitbucket.org/samnemo/hnn .
 cutting EEG 2017 Material
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We presented the initial version of the HNN software at the cutting EEG 2017 conference in Glasgow, Scotland.
-The  materials from the conference are available here.
+We presented the initial version of the HNN software at the `cuttingEEG 2017 <http://cuttingeeg.ccni.gla.ac.uk/>`_ 
+conference in Glasgow, Scotland. The  materials from the conference are available here.
 
-- `Overview (slides) from Cutting EEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/CuttingEEG-workshop-6-19-17.pdf>`_
+- `Overview (slides) from cuttingEEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/CuttingEEG-workshop-6-19-17.pdf>`_
 
-- `Tutorial (slides) from Cutting EEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/slides_workshop_coding.pdf>`_
+- `Tutorial (slides) from cuttingEEG 2017 Workshop <http://hnn.brown.edu/doc/pdf/slides_workshop_coding.pdf>`_
 
-- `Poster from Cutting EEG 2017 conference <http://hnn.brown.edu/doc/pdf/CuttingEEG-poster.pdf>`_ 
+- `Poster from cuttingEEG 2017 conference <http://hnn.brown.edu/doc/pdf/CuttingEEG-poster.pdf>`_ 
 
 Google Group
 ^^^^^^^^^^^^
