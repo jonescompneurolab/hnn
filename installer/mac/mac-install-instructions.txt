@@ -1,7 +1,7 @@
 #Open a terminal window on your MAC 
 #type to following 
 
-echo 'export TMPDIR=/private/tmp' >> ~/.bash_profile
+echo 'export TMPDIR=/private/tmp' >> ~/.bash_profile  
 
 xcode-select --install
 # click install
@@ -25,14 +25,26 @@ cd openmpi*
 make all -j4
 sudo make install -j4
 
-#move the new openmpi-2.1.1 folder into your Applications folder
-#change directories to your Applications folders and type the following
+#move the new openmpi-2.1.1 folder into your hard drives Applications folder 
+#change directories to your hard drives Applications folders  - you may need to type cd ../../Applications
+#verify that anaconda, NEURON-7.5 and openmpi-2.1.X are in the Applications folder you are in by typing 
+ls 
+# if you don't see the above folders you are not in the right directory, change directories to hard drive Applications
 
+#to make sure all of the correct paths are followed type the following 
+export PYTHONPATH=/Applications/NEURON-7.5/nrn/lib/python
+export PATH=/Applications/NEURON-7.5/nrn/x86_64/bin:$PATH
+export PYTHONHOME="/Applications/anaconda"
+export NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
+
+#now type the following
 git clone https://bitbucket.org/samnemo/hnn
 # the above will prompt for your password
 
 cd hnn
 make
+
+
 
 # at this point you can run hnn by typing the command 
 ./hnn
