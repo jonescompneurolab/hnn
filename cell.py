@@ -7,6 +7,9 @@
 import numpy as np
 from neuron import h
 
+# global variables, should be node-independent
+h("dp_total_L2 = 0."); h("dp_total_L5 = 0.") # put here since these variables used in cells
+
 # Units for e: mV
 # Units for gbar: S/cm^2
 
