@@ -19,6 +19,7 @@ doquit = 1
 debug = 0
 [paths]
 paramindir = param
+homeout = 1
 [sim]
 simf = run.py
 paramf = param/default.param
@@ -133,18 +134,21 @@ def readconf (fn="hnn.cfg"):
 
   d = {}
 
+  d['homeout'] = confint("paths","homeout",1) # whether user home directory for output
+
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
 
-  # duser = os.path.expanduser('~') # user home directory - use cwd instead for compatability with NSG
-  #d['datdir'] = os.path.join(duser, 'hnn', 'data') # data output directory
-  dcwd = os.getcwd()
-  d['datdir'] = os.path.join(dcwd,'data') # data output directory
-  d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location
-  #d['paramoutdir'] = os.path.join(duser,'hnn', 'param')
-  d['paramoutdir'] = os.path.join(dcwd, 'param')
+  if d['homeout']: # user home directory for output
+    dbase = os.path.join(os.path.expanduser('~'),'hnn') # user home directory
+    if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
+  else: # cwd for output
+    dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG
 
-  #if not safemkdir(os.path.join(duser,'hnn')): sys.exit(1) # check existence of base hnn output dir
+  d['datdir'] = os.path.join(dbase,'data') # data output directory
+  d['paramoutdir'] = os.path.join(dbase, 'param')
+  d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location  
+
   for k in ['datdir', 'paramindir', 'paramoutdir']: # need these directories
     if not safemkdir(d[k]): sys.exit(1)
 
