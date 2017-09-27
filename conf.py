@@ -81,13 +81,10 @@ def str2bool (v): return v.lower() in ("true", "t", "1")
 def readconf (fn="hnn.cfg"):
   config = ConfigParser()
   config.optionxform = str
-  #config.read(fn)
   
   with open(fn, 'r') as cfg_file:
     cfg_txt = os.path.expandvars(cfg_file.read())
 
-  #config = ConfigParser.ConfigParser()
-  #config.readfp(StringIO.StringIO(cfg_txt))
   config.readfp(StringIO(cfg_txt))
 
   def conffloat (base,var,defa): # defa is default value
@@ -121,13 +118,7 @@ def readconf (fn="hnn.cfg"):
     lout = []
     if not config.has_section(base): return lout
     lin = config.options(base)    
-    """
-    if config.has_option(base,'fpath'):
-      fn = config.get(base,'fpath')
-      d = pickle.load(open(fn))
-      print('read dprm from ' , fn)
-      return d    
-    """
+
     for i,prm in enumerate(lin):
       s = config.get(base,prm)
       sp = s.split()
@@ -145,16 +136,15 @@ def readconf (fn="hnn.cfg"):
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
 
-  #d['dlg'] = getlparam('dialog', dlgparam)
-  #d['tab'] = getlparam('tab', tabparam)
-  #d['param'] = getlparam('param', param)
-
-  duser = os.path.expanduser('~') # user home directory
-  d['datdir'] = os.path.join(duser, 'hnn', 'data') # data output directory
+  # duser = os.path.expanduser('~') # user home directory - use cwd instead for compatability with NSG
+  #d['datdir'] = os.path.join(duser, 'hnn', 'data') # data output directory
+  dcwd = os.getcwd()
+  d['datdir'] = os.path.join(dcwd,'data') # data output directory
   d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location
-  d['paramoutdir'] = os.path.join(duser,'hnn', 'param')
+  #d['paramoutdir'] = os.path.join(duser,'hnn', 'param')
+  d['paramoutdir'] = os.path.join(dcwd, 'param')
 
-  if not safemkdir(os.path.join(duser,'hnn')): sys.exit(1) # check existence of base hnn output dir
+  #if not safemkdir(os.path.join(duser,'hnn')): sys.exit(1) # check existence of base hnn output dir
   for k in ['datdir', 'paramindir', 'paramoutdir']: # need these directories
     if not safemkdir(d[k]): sys.exit(1)
 
@@ -167,18 +157,6 @@ def readconf (fn="hnn.cfg"):
 
   readtips(d) # read tooltips for parameters
 
-  """
-  recstr = confstr('run','recordV','')
-  d['recordV'] = recstr.split(',') # voltage recording locations
-  d['recordSpike'] = confstr('run','recordSpike','')
-  d['tstop'] = conffloat('run','tstop',2000)
-  d['baset'] = conffloat('run','baset',500)
-  d['stimdel'] = conffloat('run','stimdel',500)
-  d['stimdur'] = conffloat('run','stimdur',1000)
-  d['postassign'] = confstr('run','postassign','')
-  d['usecvode'] = confbool('run','usecvode','True')
-  """
-
   return d
 
 # determine config file name
@@ -189,17 +167,6 @@ def setfcfg ():
       fcfg = sys.argv[i]
   print("hnn config file is " , fcfg)
   return fcfg
-
-"""
-# backup the config file
-def backupcfg (simstr):
-  safemkdir('backupcfg')
-  fout = 'backupcfg/' + simstr + '.cfg'
-  if os.path.exists(fout):
-    print 'removing prior cfg file' , fout
-    os.system('rm ' + fout)  
-  os.system('cp ' + fcfg + ' ' + fout) # fcfg created in geom.py via conf.py
-"""
 
 fcfg = setfcfg() # config file name
 dconf = readconf(fcfg)
