@@ -15,11 +15,11 @@ xcode-select --install
 
 # go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1620.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
 
-# go to https://www.open-mpi.org/software/ and download the current .tar.gz file (currently openmpi-2.1.1.tar.gz)
-# change to the directory you downloaded it to (e.g. "cd ~/Downloads") (Note: be sure to use the newly installed XQuartz version of X11 as your terminal window, found in Applications/Utilities),
-# type the following
+# go to https://www.open-mpi.org/software/ and download the tar.gz file of the 2.1.1 version of openmpi (openmpi-2.1.1.tar.gz)
+# (note: the latest version of openmpi 3 may cause problems for certain versions of mac)
+# next, change to the directory you downloaded the tar.gz file to (e.g. "cd ~/Downloads") (Note: be sure to use the newly installed XQuartz version of X11 as your terminal window, found in Applications/Utilities),
+# type the following:
 tar -zxvf openmpi*
-
 cd openmpi*
 ./configure
 make all -j4
