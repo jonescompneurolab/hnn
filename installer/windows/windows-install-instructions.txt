@@ -1,6 +1,6 @@
 # go to https://www.continuum.io/downloads and download and install the Python 3.x version (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website; just say "no thanks") (NOTE: Select the "Add Anaconda to the system PATH environment variable" option) (NOTE: a later step assumes that this is installed system-wide; if not, you'll need to adapt the instructions below to the true location of python36.dll)
 
-# go to http://neuron.yale.edu/neuron/download and download and install NEURON -- NOTE: be sure to select the "Set DOS environment" checkbox during the install)
+# go to http://neuron.yale.edu/neuron/download and download and install NEURON (click big blue button) -- NOTE: be sure to select the "Set DOS environment" checkbox during the install)
 
 # go to https://msdn.microsoft.com/en-us/library/bb524831.aspx download and install Microsoft MPI (current version: MS-MPI v8.1... when asked MSMpiSetup.exe)
 
@@ -23,6 +23,3 @@ copy mod\nrnmech.dll .
 
 # run HNN:
 python hnn.py hnn.cfg
-
-# UNFORTUNATELY, WHEN YOU ACTUALLY GO TO RUN THIS, MESSAGES APPEAR ON THE TERMINAL
-
