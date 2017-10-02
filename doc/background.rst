@@ -28,6 +28,15 @@ circuit/cellular-level generators.
 Linking noninvasive human brain imaging signals to cell/circuit level electrophysiology
 ---------------------------------------------------------------------------------------
 
+Brain rhythms and event-related potentials (ERPs) are the most prominent signals measured noninvasively
+in humans with MEG/EEG. These signals have been shown to relevant for different perceptual and cognitive
+processes and signature changes are used as markers of disease states. Despite the importance of understanding
+the underlying neural mechanisms creating these signals, relatively little is known about their *in vivo*
+origin in humans. There are obvious challenges in linking the extracranially measured signals directly to
+neural activity with invasive studies in healthy humans, and although animal models are well suited for such studies,
+the connection to human brain function under cognitively relevant tasks is often lacking. Biophysically
+principled computational neural modeling provides an attractive means to bridge this critical gap. 
+
 .. |megeegschemefig| image:: images/megeegscheme.png
         :scale: 45%
 	:align: bottom
