@@ -200,7 +200,15 @@ def test ():
   #h.cvode_active(1)
   #h('create soma[5]')
 
-  h.tstop=10.0
+  ns = h.NetStim()
+  ns.number = 10
+  ns.start = 100
+  ns.interval=50.0
+
+  nc = h.NetCon(ns,cell.apicaltuft_ampa)
+  nc.weight[0] = 0.05
+
+  h.tstop=2000.0
   lfp_setup()
   lfp_init()
   h.run()
