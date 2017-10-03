@@ -25,10 +25,109 @@ place_mea_electrode = 0
 
 MoveElec = h.Shape(0)  #  Created morphology view plot, didn't map it to the screen
 
+resistivity_of_cytoplasm = 1000 #ohm-cm
+nelectrode = 6
+lfp_t = h.Vector()
+lfp_v = [h.Vector() for _ in range(nelectrode)]
+#e_coord = [[0, 4000, 6000], [0, 4000, 5500], [0, 4000, 6500], [0, -4000, 6000], [0, -4000, 5500], [0, -4000, 6500]]
+e_coord = [[0, 100.0, 100.0]]
+
+imem_ptrvec = None
+imem_vec = None
+
+def transfer_resistance (cell, exyz):
+  xyz = [cell.x, cell.y, cell.z]
+  for i, x in enumerate(exyz):
+    xyz[i] -= x
+    xyz[i] *= xyz[i]
+  d = sqrt(sum(xyz))
+  rx = resistivity_of_cytoplasm/d * (0.01)
+  return rx
+
+def lfp_init ():
+  global imem_ptrvec, imem_vec, rx, vx
+  n = len(gidinfo) #or else count the segments
+  imem_ptrvec = h.PtrVector(n)
+  imem_vec = h.Vector(n)
+  for i, cellinfo in enumerate(gidinfo.values()):
+    seg = cellinfo.cell.soma(0.5)
+    imem_ptrvec.pset(i, seg._ref_i_membrane_)
+  rx = h.Matrix(nelectrode, n)
+  vx = h.Vector(nelectrode)
+  for i in range(nelectrode):
+    for j, cellinfo in enumerate(gidinfo.values()):
+      rx.setval(i, j, transfer_resistance(cellinfo.cell, e_coord[i]))
+    #rx.setval(i,1,1.0)
+
+def lfp ():
+  # print 'ecg t=%g' % pc.t(0)
+  imem_ptrvec.gather(imem_vec)
+  #s = pc.allreduce(imem_vec.sum(), 1) #verify sum i_membrane_ == stimulus
+  #if rank == 0: print pc.t(0), s
+
+  #sum up the weighted i_membrane_. Result in vx
+  rx.mulv(imem_vec, vx)
+    
+  # append to Vector
+  lfp_t.append(pc.t(0))
+  for i in range(nelectrode): 
+    lfp_v[i].append(vx.x[i])
+
+def lfp_setup ():
+  global bscallback, fih
+  h.cvode.use_fast_imem(1)
+  bscallback = h.beforestep_callback(h.cas()(.5))
+  bscallback.set_callback(lfp)
+  fih = h.FInitializeHandler(1, lfp_init)
+
+def lfp_final ():
+  #return
+  for i in range(nelectrode):
+    pc.allreduce(lfp_v[i], 1)
+    #return
+
+def lfpout (append=0.0):
+  fmode = 'w' if append is 0.0 else 'a'
+  lfp_final()
+  if rank is  0:
+    print('len(lfp_t) is %d' % len(lfp_t))
+    f = open('lfp.txt', fmode)
+    for i in range(len(lfp_t)):
+      line = '%g'%lfp_t.x[i]
+      for j in range(nelectrode):
+        line += ' %g' % lfp_v[j].x[i]
+      f.write(line + '\n')
+    f.close()
+  lfp_t.resize(0)
+  for j in range(nelectrode):
+    lfp_v[j].resize(0)
+
+def test():
+  h.load_file("stdgui.hoc")
+  #h.cvode_active(1)
+  h('create soma[5]')
+
+  h.tstop=.2
+  lfp_setup()
+  lfp_init()
+  h.run()
+  lfp_final()
+  
+
+if __name__ == '__main__':
+  # test() invalid test
+  for i in range(len(lfp_t)):
+    print(lfp_t.x[i],)
+    for j in range(nelectrode):
+      print(lfp_v[j].x[i],)
+    print("")
+
+
+# h.allsec()
+
 # get all Sections
 def getallSections ():
-  allsecs=h.SectionList() # no .clear() command
-  roots=h.SectionList()
+  roots = h.SectionList()
   roots.allroots()
   for s in roots:
     s.push()
