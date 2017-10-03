@@ -31,23 +31,6 @@ def getallSections (ty='Pyr'):
   ls = h.allsec()
   ls = [s for s in ls if s.name().count(ty)>0 or len(ty)==0]
   return ls
-  """
-  allsecs = h.SectionList()
-  roots = h.SectionList()
-  roots.allroots()
-  for s in roots:
-    s.push()
-    allsecs.wholetree()
-  return allsecs
-  """
-
-# Set default electrode position
-elec_x = -100
-elec_y = 50
-elec_z = 0
-place_mea_electrode = 0
-
-MoveElec = h.Shape(0)  #  Created morphology view plot, didn't map it to the screen
 
 resistivity_of_cytoplasm = 1000 #ohm-cm
 nelectrode = 6
@@ -63,6 +46,7 @@ def transfer_resistance (exyz):
   vres = h.Vector()
   lsec = getallSections()
   for s in lsec:
+
     x = (h.x3d(0,sec=s) + h.x3d(1,sec=s)) / 2.0
     y = (h.y3d(0,sec=s) + h.y3d(1,sec=s)) / 2.0 
     z = (h.z3d(0,sec=s) + h.z3d(1,sec=s)) / 2.0 
@@ -113,6 +97,80 @@ def transfer_resistance (exyz):
 
   return vres
 
+def getcoordinf (s):
+  lcoord = []; ldist = []; lend = []; lsegloc = []
+  if s.nseg == 1:
+    i = 1
+    x0, y0, z0 = s.x3d(i-1,sec=s), s.y3d(i-1, sec=s), s.z3d(i-1, sec=s)
+    x1, y1, z1 = s.x3d(i,sec=s), s.y3d(i, sec=s), s.z3d(i, sec=s)
+    lcoord.append([(x0+x1)/2.0,(y0+y1)/2.0,(z0+z1)/2.0])
+    dist = sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2) 
+    ldist.append( dist )    
+    lend.append([x1, y1, z1])
+    lsegloc.append(0.5)
+  else:
+    for i in range(1,s.n3d(),1):
+      x0, y0, z0 = s.x3d(i-1,sec=s), s.y3d(i-1, sec=s), s.z3d(i-1, sec=s)
+      x1, y1, z1 = s.x3d(i,sec=s), s.y3d(i, sec=s), s.z3d(i, sec=s)
+      lcoord.append( [(x0+x1)/2.,(y0+y1)/2.(z0+z1)/2.] )
+      dist = sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2) 
+      ldist.append( dist )  
+      lend.append([x1, y1, z1])
+      lsegloc.append()
+  return lcoord, ldist, lend, lsegloc
+
+def transfer_resistance2 (exyz):
+  vres = h.Vector()
+  lsec = getallSections()
+
+  sigma = 0.3    
+
+  for s in lsec:
+
+    lcoord, ldist, lend = getcoordinf(s)
+
+    for i in range(len(lcoord)):
+      
+      x,y,z = lcoord[i]
+
+      dis = sqrt((exyz[0] - x)**2 + (exyz[1] - y)**2 + (exyz[2] - z)**2 )
+
+      # setting radius limit
+      if(dis<(s.diam/2.0)): dis = (s.diam/2.0) + 0.1
+
+      dist_comp = ldist[i] # length of the compartment
+      sum_dist_comp = sqrt(dist_comp[0]**2  + dist_comp[0]**2 + dist_comp[0]**2)
+
+      # print "sum_dist_comp=",sum_dist_comp, secname(), area(0.5)
+
+      #  setting radius limit
+      if sum_dist_comp < s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
+
+      long_dist_x = exyz[0] - lend[i][0]
+      long_dist_y = exyz[1] - lend[i][1]
+      long_dist_z = exyz[2] - lend[i][2]
+
+      sum_HH = long_dist_x*dist_comp_x + long_dist_y*dist_comp_y + long_dist_z*dist_comp_z
+
+      final_sum_HH = sum_HH / sum_dist_comp
+
+      sum_temp1 = long_dist_x**2 + long_dist_y**2 + long_dist_z**2
+      r_sq = sum_temp1 - (final_sum_HH * final_sum_HH)
+
+      Length_vector = final_sum_HH + sum_dist_comp                
+
+      if final_sum_HH < 0 and Length_vector <= 0:
+        phi=log((sqrt(final_sum_HH**2 + r_sq) - final_sum_HH)/(sqrt(Length_vector**2+r_sq)-Length_vector))
+      elif final_sum_HH > 0  and Length_vector > 0:
+        phi=log((sqrt(Length_vector**2+r_sq) + Length_vector)/(sqrt(final_sum_HH**2+r_sq) + final_sum_HH))
+      else:
+        phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
+
+      line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * h.area(0.5,sec=s)
+      vres.append(line_part1)
+
+  return vres
+
 vres = transfer_resistance(e_coord[0])
 vx = h.Vector(nelectrode)
 
@@ -122,13 +180,10 @@ def lfp_init ():
   n = len(lsec)
   imem_ptrvec = h.PtrVector(n) # 
   imem_vec = h.Vector(n)  
-  i = 0
-  for s in lsec:
+  for i,s in enumerate(lsec):
     seg = s(0.5)
-    #for seg in s:
+    #for seg in s # so do not need to use segments...? more accurate to use segments and their neighbors
     imem_ptrvec.pset(i, seg._ref_i_membrane_)
-    #i += 1
-    i += 1
 
   #for i, cellinfo in enumerate(gidinfo.values()):
   #  seg = cellinfo.cell.soma(0.5)
@@ -167,10 +222,8 @@ def lfp_setup ():
   fih = h.FInitializeHandler(1, lfp_init)
 
 def lfp_final ():
-  #return
   for i in range(nelectrode):
     pc.allreduce(lfp_v[i], 1)
-    #return
 
 def lfpout (append=0.0):
   fmode = 'w' if append is 0.0 else 'a'
