@@ -15,7 +15,7 @@ translated to Python by Sam Neymotin
 """
 
 from neuron import h
-from math import sqrt, log, PI, exp
+from math import sqrt, log, pi, exp
 
 # Set default electrode position
 elec_x = -100
@@ -236,7 +236,7 @@ def re_insert_elec():
       else:
         phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
 
-      line_part1 = 1.0 / (4.0*PI*sum_dist_comp*sigma) * phi * s.area(0.5)
+      line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * s.area(0.5)
 
       #  RC algorithm implementation
       capa = 1.0 #  set to specific capacitance, Johnston and Wu 1995
@@ -319,26 +319,28 @@ def init (): #  Initializing all variables
   Line_source = fieldrec_line()
   Simple_RC_filter = fieldrec_RC()
 
+h('Point_source = Line_source = Simple_RC_filter = 0.0')
+
 def advance ():
   h.fadvance()
-  Point_source = fieldrec_point()
-  Line_source = fieldrec_line()
-  Simple_RC_filter = fieldrec_RC()
+  h.Point_source = fieldrec_point()
+  h.Line_source = fieldrec_line()
+  h.Simple_RC_filter = fieldrec_RC()
 
 # Recording summed LFP using NEURON's record function
 total_lfp = h.Vector()
-total_lfp.record(&Line_source)
+total_lfp.record(h._ref_Line_source)
 
 total_point = h.Vector()
-total_point.record(&Point_source)
+total_point.record(h._ref_Point_source)
 
 total_RC = h.Vector()
-total_RC.record(&Simple_RC_filter)
+total_RC.record(h._ref_Simple_RC_filter)
 
 # h.xopen("move_electrode.hoc")
 
 #  Initializing tool interface 
-h.xopen("tool_interface.hoc")
+# h.xopen("tool_interface.hoc")
 
 # Function for setting electrode position
 def setelec (x,y,z):
