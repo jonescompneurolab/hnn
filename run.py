@@ -359,21 +359,21 @@ def runsim ():
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
 
+  if testLFP:
+    elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
+    elec.setup()
+    elec.LFPinit()
+
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
   
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
-
-  if testLFP:
-    elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
-    elec.setup()
-    elec.LFPinit()
-
   pc.psolve(h.tstop) # actual simulation - run the solver
   pc.barrier()
 
+  # these calls aggregate data across procs/nodes
   pc.allreduce(dp_rec_L2, 1); 
   pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
   if testLFP: elec.lfp_final()

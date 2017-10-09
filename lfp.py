@@ -183,6 +183,7 @@ class LFPElectrode ():
   def LFPinit (self):
     lsec = getallSections()
     n = len(lsec)
+    # print('In LFPinit - pc.id = ',self.pc.id(),'len(lsec)=',n)
     self.imem_ptrvec = h.PtrVector(n) # 
     self.imem_vec = h.Vector(n)  
     for i,s in enumerate(lsec):
@@ -205,7 +206,7 @@ class LFPElectrode ():
     #  #rx.setval(i,1,1.0)
 
   def callback (self):
-    # print 'ecg t=%g' % pc.t(0)
+    # print('In lfp callback - pc.id = ',self.pc.id(),' t=',self.pc.t(0))
     self.imem_ptrvec.gather(self.imem_vec)
     #s = pc.allreduce(imem_vec.sum(), 1) #verify sum i_membrane_ == stimulus
     #if rank == 0: print pc.t(0), s
