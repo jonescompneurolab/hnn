@@ -17,7 +17,7 @@ based on mh code
 
 from neuron import h
 from math import sqrt, log, pi, exp
-
+from seg3d import *
 from pylab import *
 ion()
 
@@ -42,7 +42,7 @@ e_coord = [[0, 100.0, 100.0]]
 imem_ptrvec = None
 imem_vec = None
 
-def transfer_resistance (exyz):
+def transfer_resistance (exyz,usePoint=True):
   vres = h.Vector()
   lsec = getallSections()
   for s in lsec:
@@ -58,42 +58,48 @@ def transfer_resistance (exyz):
     # setting radius limit
     if(dis<(s.diam/2.0)): dis = (s.diam/2.0) + 0.1
 
-    # calculate length of the compartment
-    dist_comp = sqrt((h.x3d(1,sec=s) - h.x3d(0,sec=s))**2 + (h.y3d(1,sec=s) - h.y3d(0,sec=s))**2 + (h.z3d(1,sec=s) - h.z3d(0,sec=s))**2)
+    if usePoint:
+      point_part1 = (1.0 / (4.0 * 3.141 * dis * sigma)) * h.area(0.5,sec=s)    
+      vres.append(point_part1)
 
-    dist_comp_x = (h.x3d(1,sec=s) - h.x3d(0,sec=s)) # * 1e-6
-    dist_comp_y = (h.y3d(1,sec=s) - h.y3d(0,sec=s)) # * 1e-6
-    dist_comp_z = (h.z3d(1,sec=s) - h.z3d(0,sec=s)) # * 1e-6
-
-    sum_dist_comp = sqrt(dist_comp_x**2  + dist_comp_y**2 + dist_comp_z**2)
-
-    # print "sum_dist_comp=",sum_dist_comp, secname(), area(0.5)
-
-    #  setting radius limit
-    if sum_dist_comp< s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
-
-    long_dist_x = exyz[0] - h.x3d(1,sec=s)
-    long_dist_y = exyz[1] - h.y3d(1,sec=s)
-    long_dist_z = exyz[2] - h.z3d(1,sec=s)
-
-    sum_HH = long_dist_x*dist_comp_x + long_dist_y*dist_comp_y + long_dist_z*dist_comp_z
-
-    final_sum_HH = sum_HH / sum_dist_comp
-
-    sum_temp1 = long_dist_x**2 + long_dist_y**2 + long_dist_z**2
-    r_sq = sum_temp1 -(final_sum_HH * final_sum_HH)
-
-    Length_vector = final_sum_HH + sum_dist_comp                
-
-    if final_sum_HH < 0 and Length_vector <= 0:
-      phi=log((sqrt(final_sum_HH**2 + r_sq) - final_sum_HH)/(sqrt(Length_vector**2+r_sq)-Length_vector))
-    elif final_sum_HH > 0  and Length_vector > 0:
-      phi=log((sqrt(Length_vector**2+r_sq) + Length_vector)/(sqrt(final_sum_HH**2+r_sq) + final_sum_HH))
     else:
-      phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
 
-    line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * h.area(0.5,sec=s)
-    vres.append(line_part1)
+      # calculate length of the compartment
+      dist_comp = sqrt((h.x3d(1,sec=s) - h.x3d(0,sec=s))**2 + (h.y3d(1,sec=s) - h.y3d(0,sec=s))**2 + (h.z3d(1,sec=s) - h.z3d(0,sec=s))**2)
+
+      dist_comp_x = (h.x3d(1,sec=s) - h.x3d(0,sec=s)) # * 1e-6
+      dist_comp_y = (h.y3d(1,sec=s) - h.y3d(0,sec=s)) # * 1e-6
+      dist_comp_z = (h.z3d(1,sec=s) - h.z3d(0,sec=s)) # * 1e-6
+
+      sum_dist_comp = sqrt(dist_comp_x**2  + dist_comp_y**2 + dist_comp_z**2)
+
+      # print "sum_dist_comp=",sum_dist_comp, secname(), area(0.5)
+
+      #  setting radius limit
+      if sum_dist_comp< s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
+
+      long_dist_x = exyz[0] - h.x3d(1,sec=s)
+      long_dist_y = exyz[1] - h.y3d(1,sec=s)
+      long_dist_z = exyz[2] - h.z3d(1,sec=s)
+
+      sum_HH = long_dist_x*dist_comp_x + long_dist_y*dist_comp_y + long_dist_z*dist_comp_z
+
+      final_sum_HH = sum_HH / sum_dist_comp
+
+      sum_temp1 = long_dist_x**2 + long_dist_y**2 + long_dist_z**2
+      r_sq = sum_temp1 -(final_sum_HH * final_sum_HH)
+
+      Length_vector = final_sum_HH + sum_dist_comp                
+
+      if final_sum_HH < 0 and Length_vector <= 0:
+        phi=log((sqrt(final_sum_HH**2 + r_sq) - final_sum_HH)/(sqrt(Length_vector**2+r_sq)-Length_vector))
+      elif final_sum_HH > 0  and Length_vector > 0:
+        phi=log((sqrt(Length_vector**2+r_sq) + Length_vector)/(sqrt(final_sum_HH**2+r_sq) + final_sum_HH))
+      else:
+        phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
+
+      line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * h.area(0.5,sec=s)
+      vres.append(line_part1)
 
   return vres
 
