@@ -21,9 +21,6 @@ from seg3d import *
 from pylab import *
 ion()
 
-from L5_pyramidal import L5Pyr
-cell = L5Pyr()
-
 # get all Sections
 def getallSections (ty='Pyr'):
   ls = h.allsec()
@@ -245,6 +242,10 @@ class LFPElectrode ():
   """
 
 def test ():
+
+  from L5_pyramidal import L5Pyr
+  cell = L5Pyr()
+
   h.load_file("stdgui.hoc")
   h.cvode_active(1)
 
