@@ -197,6 +197,7 @@ def get_ev_params_default (n,isprox):
   dout = {}#OrderedDict()
   if isprox: pref = 'evprox'
   else: pref = 'evdist'
+  # print('isprox:',isprox,'n:',n)
   for i in range(n):
     tystr = pref + '_' + str(i+1)
     dout['gbar_' + tystr + '_L2Pyr'] =  0. # feed strength

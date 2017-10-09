@@ -65,12 +65,12 @@ class RunSimThread (QThread):
   def runsim (self):
     global ddat,dfile
     self.killed = False
-    print("Running simulation using",self.ncore,"cores.")
+    if debug: print("Running simulation using",self.ncore,"cores.")
     cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
     dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd)
-    print("cmd:",cmd,"cmdargs:",cmdargs)
+    if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
     else:
@@ -1166,7 +1166,7 @@ class BaseParamDialog (QDialog):
       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
       if msg.exec_() == QMessageBox.Ok: oktosave = True
     if oktosave:
-      print('Saving params to ',  tmpf)
+      if debug: print('Saving params to ',  tmpf)
       try:
         with open(tmpf,'w') as fp: fp.write(str(self))
         paramf = dconf['paramf'] = tmpf # success? update paramf

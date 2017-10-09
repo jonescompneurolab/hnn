@@ -45,15 +45,15 @@ for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.param'):
     f_psim = sys.argv[i]
     foundprm = True
-    if pcID==0: print('using ',f_psim,' param file.')
+    if pcID==0 and debug: print('using ',f_psim,' param file.')
   elif sys.argv[i] == 'ntrial' and i+1<len(sys.argv):
     ntrial = int(sys.argv[i+1])
     if ntrial == 1: ntrial = 0
-    if pcID==0: print('ntrial:',ntrial)
+    if pcID==0 and debug: print('ntrial:',ntrial)
 
 if not foundprm:
   f_psim = os.path.join('param','default.param')
-  if pcID==0: print(f_psim)
+  if pcID==0 and debug: print(f_psim)
 
 simstr = f_psim.split(os.path.sep)[-1].split('.param')[0]
 datdir = os.path.join(dproj,simstr)
@@ -151,7 +151,7 @@ def runanalysis (prm, fparam, fdpl, fspec):
              }
   t_start_analysis = time.time()
   specfn.analysis_simp(spec_opts, fparam, fdpl, fspec) # run the spectral analysis
-  if pcID==0: print("time: %4.4f s" % (time.time() - t_start_analysis))
+  if pcID==0 and debug: print("time: %4.4f s" % (time.time() - t_start_analysis))
 
 #
 def savefigs (ddir, prm, p_exp):
@@ -162,7 +162,7 @@ def savefigs (ddir, prm, p_exp):
   # because it's not necessarily saved
   xlim_plot = (0., prm['tstop'])
   plotfn.pallsimp(datdir, p_exp, doutf, xlim_plot)
-  print("time: %4.4f s" % (time.time() - plot_start))
+  if debug: print("time: %4.4f s" % (time.time() - plot_start))
 
 #
 def setupsimdir (f_psim,p_exp,rank):
@@ -211,7 +211,7 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   # if pcID==0: print(doutf)
   return doutf
 
-p_exp = paramrw.ExpParams(f_psim) # creates p_exp.sim_prefix and other param structures
+p_exp = paramrw.ExpParams(f_psim, debug=debug) # creates p_exp.sim_prefix and other param structures
 ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
 # create rotating data files
 doutf = setoutfiles(ddir)
@@ -388,8 +388,8 @@ def runsim ():
   savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
   if pcID == 0:
-    print("Simulation run time: %4.4f s" % (time.time()-t0))
-    print("Simulation directory is: %s" % ddir.dsim)    
+    if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
+    if debug: print("Simulation directory is: %s" % ddir.dsim)    
     if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
       runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
     if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures

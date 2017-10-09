@@ -171,7 +171,7 @@ def setfcfg ():
   for i in range(len(sys.argv)):
     if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
       fcfg = sys.argv[i]
-  print("hnn config file is " , fcfg)
+  # print("hnn config file is " , fcfg)
   return fcfg
 
 fcfg = setfcfg() # config file name

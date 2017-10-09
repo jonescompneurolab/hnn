@@ -112,7 +112,10 @@ def usingTonicInputs (fparam):
 
 # class controlling multiple simulation files (.param)
 class ExpParams():
-    def __init__ (self, f_psim):
+    def __init__ (self, f_psim, debug=False):
+
+        self.debug = debug
+
         self.expmt_group_params = []
 
         # self.prng_seedcore = {}
@@ -325,7 +328,7 @@ class ExpParams():
         }
 
     # create the dict based on the default param dict
-    def __create_dict_from_default(self, p_all_input):
+    def __create_dict_from_default (self, p_all_input):
         nprox, ndist = countEvokedInputs(p_all_input)
         # print('found nprox,ndist ev inputs:', nprox, ndist)
 
@@ -343,7 +346,7 @@ class ExpParams():
 
         # now display extraneous keys, if there were any
         if len(p_all_input):
-            print("Invalid keys from param file not found in default params: %s" % str(p_all_input.keys()))
+            if self.debug: print("Invalid keys from param file not found in default params: %s" % str(p_all_input.keys()))
 
         return p_all
 
@@ -734,6 +737,6 @@ def diffdict (d1, d2, verbose=True):
 # debug test function
 if __name__ == '__main__':
   fparam = 'param/debug.param'
-  p = ExpParams(fparam)
+  p = ExpParams(fparam,debug=True)
   # print(find_param(fparam, 'WhoDat')) # ?
 
