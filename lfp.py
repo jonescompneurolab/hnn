@@ -28,7 +28,6 @@ def getallSections (ty='Pyr'):
   return ls
 
 resistivity_of_cytoplasm = 1000 #ohm-cm
-e_coord = [[0, 100.0, 100.0]]
 
 def getcoordinf (s):
   lcoord = []; ldist = []; lend = []; lsegloc = []
@@ -99,9 +98,10 @@ def transfer_resistance2 (exyz):
 
 class LFPElectrode ():
 
-  def __init__ (self, pc = None, usePoint = True):
+  def __init__ (self, coord, sigma = 0.3, pc = None, usePoint = True):
 
-    self.coord = [0, 100.0, 100.0]
+    self.sigma = sigma
+    self.coord = coord
     self.vres = None
     self.vx = None
 
@@ -128,7 +128,7 @@ class LFPElectrode ():
       y = (h.y3d(0,sec=s) + h.y3d(1,sec=s)) / 2.0 
       z = (h.z3d(0,sec=s) + h.z3d(1,sec=s)) / 2.0 
 
-      sigma = 0.3    
+      sigma = self.sigma
 
       dis = sqrt((exyz[0] - x)**2 + (exyz[1] - y)**2 + (exyz[2] - z)**2 )
 
@@ -259,7 +259,7 @@ def test ():
 
   h.tstop=2000.0
 
-  elec = LFPElectrode(h.ParallelContext())
+  elec = LFPElectrode([0, 100.0, 100.0], pc = h.ParallelContext())
   elec.setup()
   elec.LFPinit()
   h.run()
