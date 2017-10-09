@@ -27,6 +27,7 @@ from L5_pyramidal import L5Pyr
 from L2_pyramidal import L2Pyr
 from L2_basket import L2Basket
 from L5_basket import L5Basket
+from lfp import LFPElectrode
 
 dconf = readconf()
 
@@ -350,6 +351,8 @@ def initrands (s=0): # fix to use s
 
 initrands(0) # init once
 
+testLFP = dconf['testlfp']; elec = None
+
 # All units for time: ms
 def runsim ():
   t0 = time.time() # clock start time
@@ -359,14 +362,21 @@ def runsim ():
   h.finitialize() # initialize cells to -65 mV, after all the NetCon delays have been specified
   if pcID == 0: 
     for tt in range(0,int(h.tstop),printdt): h.cvode.event(tt, prsimtime) # print time callbacks
-
+  
   h.fcurrent()  
   h.frecord_init() # set state variables if they have been changed since h.finitialize
+
+  if testLFP:
+    elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
+    elec.setup()
+    elec.LFPinit()
+
   pc.psolve(h.tstop) # actual simulation - run the solver
   pc.barrier()
 
   pc.allreduce(dp_rec_L2, 1); 
   pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
+  if testLFP: elec.lfp_final()
   net.aggregate_currents() # aggregate the currents independently on each proc
   # combine net.current{} variables on each proc
   pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
@@ -383,6 +393,7 @@ def runsim ():
     if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
       runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
     if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures
+    if testLFP: elec.lfpout()
 
   pc.barrier() # make sure all done in case multiple trials
 
