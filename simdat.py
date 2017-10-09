@@ -26,6 +26,7 @@ def rmse (a1, a2):
   return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
 
 def readdpltrials (basedir,ntrial):
+  if debug: print('in readdpltrials',basedir,ntrial)
   ldpl = []
   for i in range(ntrial):
     fn = os.path.join(basedir,'dpl_'+str(i+1)+'.txt')
@@ -98,6 +99,7 @@ class SIMCanvas (FigureCanvas):
 
   def plotinputhist (self,xl): # plot input histograms
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
+    # print('xlim_new:',xlim_new)
     # set number of bins (150 bins per 1000ms)
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
     if debug: print('bins:',bins)
@@ -133,7 +135,8 @@ class SIMCanvas (FigureCanvas):
           axdist.invert_yaxis()
           self.invertedhistax = True
         for ax in [axdist,axprox]:
-          ax.set_xlim(xl)
+          # ax.set_xlim(xl)
+          ax.set_xlim(xlim_new)
           ax.legend()          
         return True
 

@@ -22,7 +22,7 @@ from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
-from simdat import SIMCanvas, getinputfiles
+from simdat import SIMCanvas, getinputfiles, readdpltrials
 
 prtime = True
 
@@ -63,12 +63,12 @@ class RunSimThread (QThread):
 
   # run sim command via mpi, then delete the temp file. returns job index and fitness.
   def runsim (self):
-    global ddat,dfile
+    import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
     cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
-    dfile = getinputfiles(paramf)
+    simdat.dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd)
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
@@ -91,18 +91,19 @@ class RunSimThread (QThread):
       except: print('could not communicate') # Process finished.
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
-        ddat['dpl'] = np.loadtxt(dfile['dpl'])
-        if os.path.isfile(dfile['spec']):
-          ddat['spec'] = np.load(dfile['spec'])
+        simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
+        if os.path.isfile(simdat.dfile['spec']):
+          simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
         else:
-          ddat['spec'] = None
-        ddat['spk'] = np.loadtxt(dfile['spk'])
-        ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]))
-        print("Read simulation outputs:",dfile.values())
+          simdat.ddat['spec'] = None
+        simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
+        simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
+        if debug: print("Read simulation outputs:",simdat.dfile.values())
       except:
-        print('WARN: could not read simulation outputs:',dfile.values())
+        print('WARN: could not read simulation outputs:',simdat.dfile.values())
     else:
       self.killproc()
+    print('')
 
 # for signaling
 class Communicate (QObject):    
