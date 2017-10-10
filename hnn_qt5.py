@@ -1393,22 +1393,22 @@ class HNNGUI (QMainWindow):
 
     self.locbtn = QPushButton('Local Network'+os.linesep+'Connections',self)
     self.locbtn.setIcon(QIcon("res/connfig.png"))
-    # self.locbtn.clicked.connect(self.shownetparamwin)
+    self.locbtn.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.locbtn,gRow,0,1,1)
 
     self.proxbtn = QPushButton('Proximal Drive'+os.linesep+'Thalamus',self)
     self.proxbtn.setIcon(QIcon("res/proxfig.png"))
-    # self.proxbtn.clicked.connect(self.showproxparamwin)
+    self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
     self.distbtn = QPushButton('Distal Drive NonLemniscal'+os.linesep+'Thal./Cortical Feedback',self)
     self.distbtn.setIcon(QIcon("res/distfig.png"))
-    # self.distbtn.clicked.connect(self.showdistparamwin)
+    self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
     self.netbtn = QPushButton('Model Visualization',self)
     self.netbtn.setIcon(QIcon("res/netfig.png"))
-    # self.netbtn.clicked.connect(self.showvisnet)
+    self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
 
     gRow += 1
