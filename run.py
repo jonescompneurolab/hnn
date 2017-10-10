@@ -38,6 +38,7 @@ pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
 ntrial = 0
+testLFP = dconf['testlfp']; elec = None
 
 # reads the specified param file
 foundprm = False
@@ -140,6 +141,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
   if p['save_vsoma']: save_vsoma()
+  if testLFP: elec.lfpout(fn=doutf['file_lfp'])
 
 #
 def runanalysis (prm, fparam, fdpl, fspec):
@@ -188,7 +190,8 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'figspec': ('spec','.png'),
                'figspk': ('spk','.png'),
                'param': ('param','.txt'),
-               'vsoma': ('vsoma','.pkl')
+               'vsoma': ('vsoma','.pkl'),
+               'lfp': ('lfp', '.txt')
              }
   if ntrial == 0 or key == 'param': # param file currently identical for all trials
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
@@ -208,6 +211,7 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
   doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
+  if testLFP: doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
   # if pcID==0: print(doutf)
   return doutf
 
@@ -351,8 +355,6 @@ def initrands (s=0): # fix to use s
 
 initrands(0) # init once
 
-testLFP = dconf['testlfp']; elec = None
-
 # All units for time: ms
 def runsim ():
   t0 = time.time() # clock start time
@@ -360,6 +362,7 @@ def runsim ():
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
 
   if testLFP:
+    global elec
     elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
     elec.setup()
     elec.LFPinit()
@@ -387,13 +390,14 @@ def runsim ():
   # only execute this statement on one proc
   savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
+  print('end; t_vec.size()',t_vec.size(),'elec.lfp_t.size()',elec.lfp_t.size())
+
   if pcID == 0:
     if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
     if debug: print("Simulation directory is: %s" % ddir.dsim)    
     if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
       runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
     if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures
-    if testLFP: elec.lfpout()
 
   pc.barrier() # make sure all done in case multiple trials
 
