@@ -1,15 +1,16 @@
+from PyQt5.QtCore import QCoreApplication
 from PyQt5 import QtGui
 
 # use pyqt5 to get screen resolution
 def getscreengeom ():
   width,height = 2880, 1620 # default width,height - used for development
-  app = QtGui.QGuiApplication([])
+  app = QCoreApplication.instance() # can only have 1 instance of qtapp; get that instance
   app.setDesktopSettingsAware(True)
-  try:
+  if len(app.screens()) > 0:
     screen = app.screens()[0]
     geom = screen.geometry()
     return geom.width(), geom.height()
-  except:
+  else:
     return width, height
 
 # get new window width, height scaled by current screen resolution relative to original development resolution
