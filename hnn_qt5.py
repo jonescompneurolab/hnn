@@ -23,6 +23,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
+from gutils import scalegeom, scalefont, setscalegeom
 
 prtime = True
 
@@ -193,8 +194,7 @@ class DictDialog (QDialog):
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
-
-    self.setGeometry(150, 150, 625, 300)
+    setscalegeom(self, 150, 150, 625, 300)
     self.setWindowTitle(self.stitle)  
 
   def TurnOff (self): pass
@@ -362,7 +362,7 @@ class SynGainParamDialog (QDialog):
     grid.addWidget(self.btncancel, row, 1, 1, 1); 
 
     self.setLayout(grid)  
-    self.setGeometry(150, 150, 270, 180)
+    setscalegeom(self, 150, 150, 270, 180)
     self.setWindowTitle("Synaptic Gains")  
 
 # widget to specify tonic inputs
@@ -548,7 +548,7 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
 
-    self.setGeometry(150, 150, 475, 300)
+    setscalegeom(self, 150, 150, 475, 300)
     self.setWindowTitle('Evoked Inputs')
 
     self.addRemoveInputButton()
@@ -961,7 +961,8 @@ class HelpDialog (QDialog):
     self.layout = QVBoxLayout(self)
     # Add stretch to separate the form layout from the button
     self.layout.addStretch(1)
-    self.setGeometry(100, 100, 300, 100)
+
+    setscalegeom(self, 100, 100, 300, 100)
     self.setWindowTitle('HNN Help')    
 
 # dialog for visualizing model
@@ -1017,7 +1018,8 @@ class VisnetDialog (QDialog):
 
     self.layout.addLayout(self.button_box)
         
-    self.setGeometry(100, 100, 300, 100)
+    setscalegeom(self, 100, 100, 300, 100)
+
     self.setWindowTitle('Visualize Model')
 
 # base widget for specifying params (contains buttons to create other widgets
@@ -1150,7 +1152,8 @@ class BaseParamDialog (QDialog):
 
     self.setLayout(grid) 
         
-    self.setGeometry(100, 100, 400, 100)
+    setscalegeom(self, 100, 100, 400, 100)
+
     self.setWindowTitle('Set Parameters')    
 
   def saveparams (self):
@@ -1442,7 +1445,9 @@ class HNNGUI (QMainWindow):
 
     self.initMenu()
     self.statusBar()
-    self.setGeometry(300, 300, 1300, 1100)
+
+    setscalegeom(self, 300, 300, 1300, 1100)
+
     self.setWindowTitle('HNN - ' + paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
 

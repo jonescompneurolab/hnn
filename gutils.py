@@ -21,6 +21,12 @@ def scalegeom (width, height):
   heightnew = int((screenheight / devheight) * height)
   return widthnew, heightnew
 
+# set dialog's position (x,y) and rescale geometry based on original width and height and development resolution
+def setscalegeom (dlg, x, y, origw, origh):
+  nw, nh = scalegeom(origw, origh)
+  # print('origw,origh:',origw, origh,'nw,nh:',nw, nh)
+  dlg.setGeometry(x, y, int(nw), int(nh))
+
 # scale font size
 def scalefont (fsize):
   pass # devfont
