@@ -1187,9 +1187,43 @@ class BaseParamDialog (QDialog):
 
 # clickable label
 class ClickLabel (QLabel):
+  """
+  def __init__(self, *args, **kwargs):
+    QLabel.__init__(self)
+    # self._pixmap = QPixmap(self.pixmap())
+    # spolicy = QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.MinimumExpanding)
+    spolicy = QSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed)
+    # spolicy = QSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred)
+    # spolicy.setHorizontalStretch(0)
+    # spolicy.setVerticalStretch(0)
+    self.setSizePolicy(spolicy)
+    self.setMinimumWidth(150)
+    self.setMinimumHeight(150)
+  def setPixmap (self, pm):
+    QLabel.setPixmap(self,pm)
+    self._pixmap = pm
+  """
   clicked = pyqtSignal()
   def mousePressEvent(self, event):
     self.clicked.emit()
+  """
+  def resizeEvent(self, event):
+    self.setPixmap(self._pixmap.scaled(
+      self.width(), self.height(),
+      QtCore.Qt.KeepAspectRatio))
+  """
+
+"""
+class ScaledLabel(QtGui.QLabel):
+    def __init__(self, *args, **kwargs):
+        QtGui.QLabel.__init__(self)
+        self._pixmap = QtGui.QPixmap(self.pixmap())
+
+    def resizeEvent(self, event):
+        self.setPixmap(self._pixmap.scaled(
+            self.width(), self.height(),
+            QtCore.Qt.KeepAspectRatio))
+"""
 
 # main GUI class
 class HNNGUI (QMainWindow):
@@ -1418,24 +1452,29 @@ class HNNGUI (QMainWindow):
 
     self.pixConn = QPixmap("res/connfig.png")
     self.pixConnlbl = ClickLabel(self)
-    self.pixConnlbl.setPixmap(self.pixConn)
+    self.pixConnlbl.setScaledContents(True)
+    #self.pixConnlbl.resize(self.pixConnlbl.size())
+    self.pixConnlbl.setPixmap(self.pixConn)    
     # self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
     self.pixProx = QPixmap("res/proxfig.png")
     self.pixProxlbl = ClickLabel(self)
+    self.pixProxlbl.setScaledContents(True)
     self.pixProxlbl.setPixmap(self.pixProx)
     # self.pixProxlbl.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.pixProxlbl,gRow,1,1,1)
 
     self.pixDist = QPixmap("res/distfig.png")
     self.pixDistlbl = ClickLabel(self)
+    self.pixDistlbl.setScaledContents(True)
     self.pixDistlbl.setPixmap(self.pixDist)
     # self.pixDistlbl.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.pixDistlbl,gRow,2,1,1)
 
     self.pixNet = QPixmap("res/netfig.png")
     self.pixNetlbl = ClickLabel(self)
+    self.pixNetlbl.setScaledContents(True)
     self.pixNetlbl.setPixmap(self.pixNet)
     # self.pixNetlbl.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
