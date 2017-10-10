@@ -23,7 +23,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom
+from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay
 
 prtime = True
 
@@ -109,6 +109,14 @@ class RunSimThread (QThread):
 # for signaling
 class Communicate (QObject):    
   finishSim = pyqtSignal()
+
+# look up resource adjusted for screen resolution
+def lookupresource (fn):
+  lowres = lowresdisplay() # low resolution display
+  if lowres:
+    return os.path.join('res',fn+'2.png')
+  else:
+    return os.path.join('res',fn+'.png')
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
 # specifiable via cfg file format - then can customize gui without changing py code
@@ -237,8 +245,8 @@ class OngoingInputParamDialog (DictDialog):
 
   # add png cartoons to tabs
   def addImages (self):
-    if self.isprox: self.pix = QPixmap("res/proxfig.png")
-    else: self.pix = QPixmap("res/distfig.png")
+    if self.isprox: self.pix = QPixmap(lookupresource('proxfig'))
+    else: self.pix = QPixmap(lookupresource('distfig'))
     for tab in self.ltabs:      
       pixlbl = ClickLabel(self)
       pixlbl.setPixmap(self.pix)
@@ -650,7 +658,7 @@ class EvokedInputParamDialog (QDialog):
     self.ld.append(dprox)
     self.addtransvarfromdict(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
-    self.ltabs[-1].layout.addRow(self.makePixLabel('res/proxfig.png'))
+    self.ltabs[-1].layout.addRow(self.makePixLabel(lookupresource('proxfig')))
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
@@ -667,7 +675,7 @@ class EvokedInputParamDialog (QDialog):
     self.ld.append(ddist)
     self.addtransvarfromdict(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
-    self.ltabs[-1].layout.addRow(self.makePixLabel('res/distfig.png'))
+    self.ltabs[-1].layout.addRow(self.makePixLabel(lookupresource('distfig')))
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
@@ -1429,28 +1437,28 @@ class HNNGUI (QMainWindow):
   def addParamImageButtons (self,gRow):
 
     self.locbtn = QPushButton('Local Network'+os.linesep+'Connections',self)
-    self.locbtn.setIcon(QIcon("res/connfig.png"))
+    self.locbtn.setIcon(QIcon(lookupresource('connfig')))
     self.locbtn.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.locbtn,gRow,0,1,1)
 
     self.proxbtn = QPushButton('Proximal Drive'+os.linesep+'Thalamus',self)
-    self.proxbtn.setIcon(QIcon("res/proxfig.png"))
+    self.proxbtn.setIcon(QIcon(lookupresource('proxfig')))
     self.proxbtn.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.proxbtn,gRow,1,1,1)
 
     self.distbtn = QPushButton('Distal Drive NonLemniscal'+os.linesep+'Thal./Cortical Feedback',self)
-    self.distbtn.setIcon(QIcon("res/distfig.png"))
+    self.distbtn.setIcon(QIcon(lookupresource('distfig')))
     self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
     self.netbtn = QPushButton('Model Visualization',self)
-    self.netbtn.setIcon(QIcon("res/netfig.png"))
+    self.netbtn.setIcon(QIcon(lookupresource('netfig')))
     self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
 
     gRow += 1
 
-    self.pixConn = QPixmap("res/connfig.png")
+    self.pixConn = QPixmap(lookupresource('connfig'))
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setScaledContents(True)
     #self.pixConnlbl.resize(self.pixConnlbl.size())
@@ -1458,21 +1466,21 @@ class HNNGUI (QMainWindow):
     # self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
-    self.pixProx = QPixmap("res/proxfig.png")
+    self.pixProx = QPixmap(lookupresource('proxfig'))
     self.pixProxlbl = ClickLabel(self)
     self.pixProxlbl.setScaledContents(True)
     self.pixProxlbl.setPixmap(self.pixProx)
     # self.pixProxlbl.clicked.connect(self.showproxparamwin)
     self.grid.addWidget(self.pixProxlbl,gRow,1,1,1)
 
-    self.pixDist = QPixmap("res/distfig.png")
+    self.pixDist = QPixmap(lookupresource('distfig'))
     self.pixDistlbl = ClickLabel(self)
     self.pixDistlbl.setScaledContents(True)
     self.pixDistlbl.setPixmap(self.pixDist)
     # self.pixDistlbl.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.pixDistlbl,gRow,2,1,1)
 
-    self.pixNet = QPixmap("res/netfig.png")
+    self.pixNet = QPixmap(lookupresource('netfig'))
     self.pixNetlbl = ClickLabel(self)
     self.pixNetlbl.setScaledContents(True)
     self.pixNetlbl.setPixmap(self.pixNet)
