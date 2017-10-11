@@ -24,7 +24,9 @@ def runnrnui ():
 def runqt5 ():
   app = QApplication(sys.argv)
   ex = HNNGUI()
-  sys.exit(app.exec_()) 
+  #sys.exit(app.exec_()) 
+  app.exec_()
+  # print('\n'.join(repr(w) for w in app.allWidgets()))
 
 if __name__ == '__main__':
   useqt5 = True

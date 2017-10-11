@@ -33,6 +33,17 @@ def setscalegeom (dlg, x, y, origw, origh):
   nw, nh = scalegeom(origw, origh)
   # print('origw,origh:',origw, origh,'nw,nh:',nw, nh)
   dlg.setGeometry(x, y, int(nw), int(nh))
+  return int(nw), int(nh)
+
+# set dialog in center of screen and rescale size based on original width and height and development resolution
+def setscalegeomcenter (dlg, origw, origh):
+  nw, nh = scalegeom(origw, origh)
+  # print('origw,origh:',origw, origh,'nw,nh:',nw, nh)
+  sw, sh = getscreengeom()
+  x = (sw-nw)/2
+  y = (sh-nh)/2
+  dlg.setGeometry(x, y, int(nw), int(nh))
+  return int(nw), int(nh)
 
 # scale font size
 def scalefont (fsize):

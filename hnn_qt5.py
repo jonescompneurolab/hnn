@@ -23,7 +23,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay
+from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter
 
 prtime = True
 
@@ -62,7 +62,7 @@ class RunSimThread (QThread):
     except:
       print('ERR: could not stop simulation process.')
 
-  # run sim command via mpi, then delete the temp file. returns job index and fitness.
+  # run sim command via mpi, then delete the temp file.
   def runsim (self):
     import simdat
     self.killed = False
@@ -172,7 +172,7 @@ class DictDialog (QDialog):
 
   def initExtra (self): self.dqextra = OrderedDict() # extra items not written to param file
 
-  def initUI (self):         
+  def initUI (self):
     self.layout = QVBoxLayout(self)
 
     # Add stretch to separate the form layout from the button
@@ -202,8 +202,15 @@ class DictDialog (QDialog):
     # Add tabs to widget        
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
-    setscalegeom(self, 150, 150, 625, 300)
     self.setWindowTitle(self.stitle)  
+    nw, nh = setscalegeom(self, 150, 150, 625, 300)
+    #nx = parent.rect().x()+parent.rect().width()/2-nw/2
+    #ny = parent.rect().y()+parent.rect().height()/2-nh/2
+    #print(parent.rect(),nx,ny)
+    #self.move(nx, ny)
+    #self.move(self.parent.
+    #self.move(self.parent.widget.rect().x+self.parent.widget.rect().width()/2-nw,
+    #          self.parent.widget.rect().y+self.parent.widget.rect().height()/2-nh)
 
   def TurnOff (self): pass
 
@@ -1268,17 +1275,28 @@ class ClickLabel (QLabel):
       QtCore.Qt.KeepAspectRatio))
   """
 
-"""
-class ScaledLabel(QtGui.QLabel):
-    def __init__(self, *args, **kwargs):
-        QtGui.QLabel.__init__(self)
-        self._pixmap = QtGui.QPixmap(self.pixmap())
+class WaitSimDialog (QDialog):
+  def __init__ (self, parent):
+    super(WaitSimDialog, self).__init__(parent)
+    self.initUI()
 
-    def resizeEvent(self, event):
-        self.setPixmap(self._pixmap.scaled(
-            self.width(), self.height(),
-            QtCore.Qt.KeepAspectRatio))
-"""
+  def initUI (self):
+    self.layout = QVBoxLayout(self)
+    self.layout.addStretch(1)
+
+    self.stopbtn = stopbtn = QPushButton('Stop Simulation', self)
+    stopbtn.setToolTip('Set parameters')
+    stopbtn.resize(stopbtn.sizeHint())
+    stopbtn.clicked.connect(self.stopsim)
+    self.layout.addWidget(stopbtn)
+
+    setscalegeomcenter(self, 375, 60)
+    self.setWindowTitle("Simulation Running...") 
+
+  def stopsim (self):
+    self.parent().stopsim()
+    self.hide()
+
 
 # main GUI class
 class HNNGUI (QMainWindow):
@@ -1295,6 +1313,7 @@ class HNNGUI (QMainWindow):
     self.helpwin = HelpDialog(self)
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
+    self.waitsimwin = WaitSimDialog(self)
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1544,7 +1563,7 @@ class HNNGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
 
-    setscalegeom(self, 300, 300, 1300, 1100)
+    setscalegeomcenter(self, 1300, 1100) # start GUI in center of screen
 
     self.setWindowTitle('HNN - ' + paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
@@ -1625,6 +1644,7 @@ class HNNGUI (QMainWindow):
 
   def stopsim (self):
     if self.runningsim:
+      self.waitsimwin.hide()
       print('Terminating simulation. . .')
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
@@ -1657,8 +1677,11 @@ class HNNGUI (QMainWindow):
     # self.btn_start.setEnabled(False)
     self.qbtn.setEnabled(False)
 
+    self.waitsimwin.show()
+
   def done (self):
     self.runningsim = False
+    self.waitsimwin.hide()
     self.statusBar().showMessage("")
     self.btnsim.setText("Start Simulation")
     self.qbtn.setEnabled(True)
