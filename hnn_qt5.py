@@ -76,29 +76,17 @@ class RunSimThread (QThread):
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
     else: 
-      #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd())
+      #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd()) # may want to read/display stderr too
       self.proc = Popen(cmdargs,stdout=PIPE,cwd=os.getcwd(),universal_newlines=True)
     cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
 
       for stdout_line in iter(self.proc.stdout.readline, ""):
         self.waitsimwin.qtxt.append(stdout_line.strip())
-        #cursor = self.waitsimwin.qtxt.textCursor()
-        #cursor.movePosition(cursor.End)
-        #cursor.insertText(stdout_line.strip())
-
-
-        # print(stdout_line.strip())
         if self.killed:
           self.killproc()
           return
       self.proc.stdout.close()
-
-      #try:
-      #  outs, errs = self.proc.communicate()
-      #  print(outs[0])#,errs[0])
-      #except:
-      #  print('could not communicate A')
       sleep(1)
       """ do not need to set upper bound on sim run time
       cend = time(); rtime = cend - cstart
@@ -108,10 +96,6 @@ class RunSimThread (QThread):
         self.killproc()
       """
     if not self.killed:
-      #try:
-      #  self.proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
-      #except: 
-      #  print('could not communicate B') # Process finished.
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
