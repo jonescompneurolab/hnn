@@ -4,7 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QCheckBox, QTextEdit
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
 from PyQt5 import QtCore
@@ -25,7 +25,7 @@ from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter
 
-prtime = True
+prtime = False
 
 simf = dconf['simf']
 paramf = dconf['paramf']
@@ -35,13 +35,14 @@ defncore = multiprocessing.cpu_count() # default number of cores
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore):
+  def __init__ (self,c,ntrial,ncore,waitsimwin):
     QThread.__init__(self)
     self.c = c
     self.killed = False
     self.proc = None
     self.ntrial = ntrial
     self.ncore = ncore
+    self.waitsimwin = waitsimwin
 
   def stop (self): self.killed = True
 
@@ -74,11 +75,30 @@ class RunSimThread (QThread):
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
-    else:
-      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd())
-    if False: print("proc:",self.proc)
+    else: 
+      #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd())
+      self.proc = Popen(cmdargs,stdout=PIPE,cwd=os.getcwd(),universal_newlines=True)
     cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
+
+      for stdout_line in iter(self.proc.stdout.readline, ""):
+        self.waitsimwin.qtxt.append(stdout_line.strip())
+        #cursor = self.waitsimwin.qtxt.textCursor()
+        #cursor.movePosition(cursor.End)
+        #cursor.insertText(stdout_line.strip())
+
+
+        # print(stdout_line.strip())
+        if self.killed:
+          self.killproc()
+          return
+      self.proc.stdout.close()
+
+      #try:
+      #  outs, errs = self.proc.communicate()
+      #  print(outs[0])#,errs[0])
+      #except:
+      #  print('could not communicate A')
       sleep(1)
       """ do not need to set upper bound on sim run time
       cend = time(); rtime = cend - cstart
@@ -88,8 +108,10 @@ class RunSimThread (QThread):
         self.killproc()
       """
     if not self.killed:
-      try: self.proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
-      except: print('could not communicate') # Process finished.
+      #try:
+      #  self.proc.communicate() # avoids deadlock due to stdout/stderr buffer overfill
+      #except: 
+      #  print('could not communicate B') # Process finished.
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
@@ -1284,13 +1306,20 @@ class WaitSimDialog (QDialog):
     self.layout = QVBoxLayout(self)
     self.layout.addStretch(1)
 
+    self.qlbl = QLabel()
+    self.qlbl.setText('Simulation Output:')
+    self.layout.addWidget(self.qlbl)
+
+    self.qtxt = QTextEdit(self)
+    self.layout.addWidget(self.qtxt)
+
     self.stopbtn = stopbtn = QPushButton('Stop Simulation', self)
     stopbtn.setToolTip('Set parameters')
     stopbtn.resize(stopbtn.sizeHint())
     stopbtn.clicked.connect(self.stopsim)
     self.layout.addWidget(stopbtn)
 
-    setscalegeomcenter(self, 375, 60)
+    setscalegeomcenter(self, 500, 250)
     self.setWindowTitle("Simulation Running...") 
 
   def stopsim (self):
@@ -1665,7 +1694,7 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore)
+    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
