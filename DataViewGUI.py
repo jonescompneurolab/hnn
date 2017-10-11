@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from gutils import getmplDPI
 
 # GUI for viewing data from individual/all trials
 class DataViewGUI (QMainWindow):
@@ -42,7 +43,7 @@ class DataViewGUI (QMainWindow):
       self.m = self.toolbar = None
     except:
       pass
-    self.m = self.CanvasType(self.paramf, self.index, parent = self, width=12, height=10)
+    self.m = self.CanvasType(self.paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)

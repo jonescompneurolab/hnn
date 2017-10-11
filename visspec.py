@@ -85,7 +85,7 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
 
 class SpecCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Spectrogram Viewer'):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Spectrogram Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)

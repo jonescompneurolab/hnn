@@ -21,6 +21,7 @@ from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
 from conf import dconf
+from gutils import getmplDPI
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -170,7 +171,7 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
   return lax
 
 class SpikeCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='Spike Viewer'):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Spike Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
@@ -236,7 +237,7 @@ class SpikeGUI (QMainWindow):
       self.m = self.toolbar = None
     except:
       pass
-    self.m = SpikeCanvas(paramf, self.index, parent = self, width=12, height=10)
+    self.m = SpikeCanvas(paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)

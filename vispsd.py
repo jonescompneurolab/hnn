@@ -106,7 +106,7 @@ def drawpsd (dspec, fig, G, ltextra=''):
 
 
 class PSDCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=100, title='PSD Viewer'):
+  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='PSD Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
