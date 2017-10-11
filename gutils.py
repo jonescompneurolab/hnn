@@ -22,7 +22,7 @@ def lowresdisplay ():
 
 # get DPI for use in matplotlib figures (part of simulation output canvas - in simdat.py)
 def getmplDPI ():
-  if lowresdisplay(): return 40
+  if lowresdisplay(): return 60
   return 120
 
 # get new window width, height scaled by current screen resolution relative to original development resolution
