@@ -315,15 +315,15 @@ class EvokedOrRhythmicDialog (QDialog):
     # Add stretch to separate the form layout from the button
     self.layout.addStretch(1)
 
-    self.btnevoked = QPushButton(self.prefix + ' Evoked Inputs',self)
-    self.btnevoked.resize(self.btnevoked.sizeHint())
-    self.btnevoked.clicked.connect(self.showevokedwin)
-    self.layout.addWidget(self.btnevoked)
-
-    self.btnrhythmic = QPushButton(self.prefix + ' Rhythmic Inputs',self)
+    self.btnrhythmic = QPushButton('Rhythmic ' + self.prefix + ' Inputs',self)
     self.btnrhythmic.resize(self.btnrhythmic.sizeHint())
     self.btnrhythmic.clicked.connect(self.showrhythmicwin)
     self.layout.addWidget(self.btnrhythmic)
+
+    self.btnevoked = QPushButton('Evoked Inputs',self)
+    self.btnevoked.resize(self.btnevoked.sizeHint())
+    self.btnevoked.clicked.connect(self.showevokedwin)
+    self.layout.addWidget(self.btnevoked)
 
     self.addHideButton()
 
