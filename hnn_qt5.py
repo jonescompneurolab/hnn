@@ -301,6 +301,53 @@ class OngoingInputParamDialog (DictDialog):
     self.addtransvar('events_per_cycle'+self.postfix,'Events/cycle')
     self.addtransvar('repeats'+self.postfix,'Repeats')
 
+class EvokedOrRhythmicDialog (QDialog):
+  def __init__ (self, parent, distal, evwin, rhythwin):
+    super(EvokedOrRhythmicDialog, self).__init__(parent)
+    if distal: self.prefix = 'Distal'
+    else: self.prefix = 'Proximal'
+    self.evwin = evwin
+    self.rhythwin = rhythwin
+    self.initUI()
+
+  def initUI (self):
+    self.layout = QVBoxLayout(self)
+    # Add stretch to separate the form layout from the button
+    self.layout.addStretch(1)
+
+    self.btnevoked = QPushButton(self.prefix + ' Evoked Inputs',self)
+    self.btnevoked.resize(self.btnevoked.sizeHint())
+    self.btnevoked.clicked.connect(self.showevokedwin)
+    self.layout.addWidget(self.btnevoked)
+
+    self.btnrhythmic = QPushButton(self.prefix + ' Rhythmic Inputs',self)
+    self.btnrhythmic.resize(self.btnrhythmic.sizeHint())
+    self.btnrhythmic.clicked.connect(self.showrhythmicwin)
+    self.layout.addWidget(self.btnrhythmic)
+
+    self.addHideButton()
+
+    setscalegeom(self, 150, 150, 270, 120)
+    self.setWindowTitle("Pick Input Type")     
+
+  def showevokedwin (self):
+    self.evwin.show()
+    self.hide()
+
+  def showrhythmicwin (self):
+    self.rhythwin.show()
+    self.hide()
+
+  def addHideButton (self):
+    self.bbhidebox = QHBoxLayout() 
+    self.btnhide = QPushButton('Hide Window',self)
+    self.btnhide.resize(self.btnhide.sizeHint())
+    self.btnhide.clicked.connect(self.hide)
+    self.btnhide.setToolTip('Hide Window')
+    self.bbhidebox.addWidget(self.btnhide)
+    self.layout.addLayout(self.bbhidebox)
+
+
 class SynGainParamDialog (QDialog):
   def __init__ (self, parent, netparamwin):
     super(SynGainParamDialog, self).__init__(parent)
@@ -1246,6 +1293,8 @@ class HNNGUI (QMainWindow):
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
     self.helpwin = HelpDialog(self)
+    self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
+    self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1427,11 +1476,13 @@ class HNNGUI (QMainWindow):
     
   def shownetparamwin (self): self.baseparamwin.netparamwin.show()
   def showdistparamwin (self):
-    self.baseparamwin.evparamwin.show()
-    self.baseparamwin.evparamwin.tabs.setCurrentIndex(1)
+    self.erselectdistal.show()
+    #self.baseparamwin.evparamwin.show()
+    #self.baseparamwin.evparamwin.tabs.setCurrentIndex(1)
   def showproxparamwin (self):
-    self.baseparamwin.evparamwin.show()
-    self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
+    self.erselectprox.show()
+    #self.baseparamwin.evparamwin.show()
+    #self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
   def showvisnet (self): self.visnetwin.show() 
 
   def addParamImageButtons (self,gRow):
