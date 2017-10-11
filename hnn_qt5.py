@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialo
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtGui import QIcon, QFont, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
 from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import multiprocessing
@@ -1604,6 +1604,18 @@ class HNNGUI (QMainWindow):
       self.m.plotextdat()
       self.m.draw()
 
+  # set cursors of self and children
+  def setcursors (self,cursor):
+    self.setCursor(cursor)
+    self.update()
+    kids = self.children()
+    for k in kids:
+      try:
+        k.setCursor(cursor)
+        k.update()
+      except:
+        pass
+
   def controlsim (self):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
@@ -1619,10 +1631,13 @@ class HNNGUI (QMainWindow):
       self.btnsim.setText("Start Simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
+      self.setcursors(Qt.ArrowCursor)
 
   def startsim (self, ntrial, ncore):
 
     if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
+
+    self.setcursors(Qt.WaitCursor)
 
     print('Starting simulation. . .')
     self.runningsim = True
@@ -1650,6 +1665,7 @@ class HNNGUI (QMainWindow):
     # self.m.plot()
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+    self.setcursors(Qt.ArrowCursor)
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle('HNN - ' + paramf)
 
