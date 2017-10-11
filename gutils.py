@@ -20,6 +20,11 @@ def lowresdisplay ():
   w, h = getscreengeom()
   return w < 1400 or h < 700
 
+# get DPI for use in matplotlib figures (part of simulation output canvas - in simdat.py)
+def getmplDPI ():
+  if lowresdisplay(): return 40
+  return 120
+
 # get new window width, height scaled by current screen resolution relative to original development resolution
 def scalegeom (width, height):
   devwidth, devheight = 2880.0, 1620.0 # resolution used for development - used to scale window height/width

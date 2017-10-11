@@ -23,7 +23,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter
+from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI
 
 prtime = False
 
@@ -1622,7 +1622,7 @@ class HNNGUI (QMainWindow):
     except:
       pass
     if debug: print('paramf in initSimCanvas:',paramf)
-    self.m = SIMCanvas(paramf, parent = self, width=10, height=1)
+    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     gCol = 0 # 2

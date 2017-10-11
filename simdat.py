@@ -84,7 +84,7 @@ def drawraster ():
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class SIMCanvas (FigureCanvas): 
 
-  def __init__ (self, paramf, parent=None, width=5, height=4, dpi=100, title='Simulation Viewer'):
+  def __init__ (self, paramf, parent=None, width=5, height=4, dpi=40, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.lextdatobj = []
