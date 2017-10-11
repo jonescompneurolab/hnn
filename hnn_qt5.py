@@ -1609,6 +1609,7 @@ class HNNGUI (QMainWindow):
     self.setCursor(cursor)
     self.update()
     kids = self.children()
+    kids.append(self.m) # matplotlib simcanvas
     for k in kids:
       try:
         k.setCursor(cursor)
