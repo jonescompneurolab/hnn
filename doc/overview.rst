@@ -88,10 +88,10 @@ freely using and expanding the software through the
 `Neuroscience Gateway Portal <https://www.nsgportal.org/>`_, and online
 documentation and a user forum for interaction between users and developers. 
 
-Conclusions
------------
+Next steps
+----------
 
-Here, we present the construction of our tool and describe its use in studying the circuit-level origin of
+In the rest of the documentation, we present the construction of our tool and describe its use in studying the circuit-level origin of
 some of the most commonly measured MEG/EEG and ECoG signal: event related potentials (ERPs) and
 low frequency rhythms (alpha/beta/gamma).
 
