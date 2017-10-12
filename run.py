@@ -141,7 +141,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
   if p['save_vsoma']: save_vsoma()
-  if testLFP: elec.lfpout(fn=doutf['file_lfp'])
+  if testLFP: elec.lfpout(fn=doutf['file_lfp'],tvec = t_vec)
 
 #
 def runanalysis (prm, fparam, fdpl, fspec):
