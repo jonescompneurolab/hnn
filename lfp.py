@@ -224,16 +224,21 @@ class LFPElectrode ():
   def lfp_final (self):
     self.pc.allreduce(self.lfp_v, 1)
 
-  def lfpout (self,fn = 'LFP.txt', append=False):
+  def lfpout (self,fn = 'LFP.txt', append=False, tvec = None):
     fmode = 'w'
     if append: fmode = 'a'
     if int(self.pc.id()) == 0:
       print('len(lfp_t) is %d' % len(self.lfp_t))
       f = open(fn, fmode)
-      for i in range(1, len(self.lfp_t), 1):
-        # line = '%g'%self.lfp_t.x[i]
-        line = '%g' % self.lfp_v.x[i]
-        f.write(line + '\n')
+      if tvec is None:
+        for i in range(1, len(self.lfp_t), 1):
+          line = '%g' % self.lfp_v.x[i]
+          f.write(line + '\n')
+      else:
+        for i in range(1, len(self.lfp_t), 1):
+          line = '%g'%self.lfp_t.x[i]
+          line += ' %g' % self.lfp_v.x[i]
+          f.write(line + '\n')
       f.close()
 
 def test ():
