@@ -41,8 +41,8 @@ class L2Pyr(Pyr):
         self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
 
         # # biophysics
-        # self.__biophys_soma()
-        # self.__biophys_dends()
+        self.__biophys_soma()
+        self.__biophys_dends()
 
         # # dipole_insert() comes from Cell()
         # self.yscale = self.get_sectnames()
