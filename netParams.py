@@ -27,20 +27,20 @@ cellRule['secLists']['apicdend'] = []
 cellRule['secLists']['basaldend'] = []
 
 
-# L2Bas params
-cellRule = netParams.importCellParams(label='L2Bas',conds={'cellType':'L2Bas','cellModel':'HH_simple'},
-                                      fileName='L2_basket.py',cellName='L2Basket')
+# # L2Bas params
+# cellRule = netParams.importCellParams(label='L2Bas',conds={'cellType':'L2Bas','cellModel':'HH_simple'},
+#                                       fileName='L2_basket.py',cellName='L2Basket')
 
 
 
-# L5Pyr params
-cellRule = netParams.importCellParams(label='L5Pyr',conds={'cellType':'L5Pyr','cellModel':'HH_reduced'},
-                                      fileName='L5_pyramidal.py',cellName='L5Pyr')
+# # L5Pyr params
+# cellRule = netParams.importCellParams(label='L5Pyr',conds={'cellType':'L5Pyr','cellModel':'HH_reduced'},
+#                                       fileName='L5_pyramidal.py',cellName='L5Pyr')
 
 
-# L5Bas params
-cellRule = netParams.importCellParams(label='L5Bas',conds={'cellType':'L5Bas','cellModel':'HH_simple'},
-                                      fileName='L5_basket.py',cellName='L5Basket')
+# # L5Bas params
+# cellRule = netParams.importCellParams(label='L5Bas',conds={'cellType':'L5Bas','cellModel':'HH_simple'},
+#                                       fileName='L5_basket.py',cellName='L5Basket')
 
 
 """
