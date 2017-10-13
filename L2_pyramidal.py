@@ -37,23 +37,23 @@ class L2Pyr(Pyr):
         # geometry
         # creates dict of dends: self.dends
         self.create_dends(p_dend)
-        self.topol() # sets the connectivity between sections
-        self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
+        # self.topol() # sets the connectivity between sections
+        # self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
 
-        # biophysics
-        self.__biophys_soma()
-        self.__biophys_dends()
+        # # biophysics
+        # self.__biophys_soma()
+        # self.__biophys_dends()
 
-        # dipole_insert() comes from Cell()
-        self.yscale = self.get_sectnames()
-        self.dipole_insert(self.yscale)
+        # # dipole_insert() comes from Cell()
+        # self.yscale = self.get_sectnames()
+        # self.dipole_insert(self.yscale)
 
-        # create synapses
-        self.__synapse_create(p_syn)
-        # self.__synapse_create()
+        # # create synapses
+        # self.__synapse_create(p_syn)
+        # # self.__synapse_create()
 
-        # run record_current_soma(), defined in Cell()
-        self.record_current_soma()
+        # # run record_current_soma(), defined in Cell()
+        # self.record_current_soma()
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
