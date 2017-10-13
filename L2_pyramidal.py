@@ -37,8 +37,8 @@ class L2Pyr(Pyr):
         # geometry
         # creates dict of dends: self.dends
         self.create_dends(p_dend)
-        # self.topol() # sets the connectivity between sections
-        # self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
+        self.topol() # sets the connectivity between sections
+        self.geom(p_dend) # sets geom properties; adjusted after translation from hoc (2009 model)
 
         # # biophysics
         # self.__biophys_soma()
