@@ -49,11 +49,11 @@ class L2Pyr(Pyr):
         # self.dipole_insert(self.yscale)
 
         # # create synapses
-        # self.__synapse_create(p_syn)
-        # # self.__synapse_create()
+        self.__synapse_create(p_syn)
+        # self.__synapse_create()
 
-        # # run record_current_soma(), defined in Cell()
-        # self.record_current_soma()
+        # run record_current_soma(), defined in Cell()
+        self.record_current_soma()
 
     # insert IClamps in all situations
     # temporarily an external function taking the p dict
