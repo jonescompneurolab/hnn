@@ -4,5 +4,6 @@
 
 from netpyne import sim
 cfg, netParams = sim.readCmdLineArgs('cfg.py','netParams.py') # read cfg and netParams from command line arguments
-sim.createSimulateAnalyze(simConfig = cfg, netParams = netParams) 
+sim.create(simConfig=cfg, netParams=netParams)
+#sim.createSimulateAnalyze(simConfig = cfg, netParams = netParams) 
 
