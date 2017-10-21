@@ -390,7 +390,7 @@ def runsim ():
   # only execute this statement on one proc
   savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
-  print('end; t_vec.size()',t_vec.size(),'elec.lfp_t.size()',elec.lfp_t.size())
+  if testLFP: print('end; t_vec.size()',t_vec.size(),'elec.lfp_t.size()',elec.lfp_t.size())
 
   if pcID == 0:
     if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
