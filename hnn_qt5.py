@@ -82,7 +82,10 @@ class RunSimThread (QThread):
     while not self.killed and self.proc.poll() is None: # job is not done
 
       for stdout_line in iter(self.proc.stdout.readline, ""):
-        self.waitsimwin.qtxt.append(stdout_line.strip())
+        try:
+          self.waitsimwin.qtxt.append(stdout_line.strip())
+        except:
+          pass # this prevents most, but not all crashes - see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
         if self.killed:
           self.killproc()
           return
