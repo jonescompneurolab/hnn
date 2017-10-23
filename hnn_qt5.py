@@ -33,6 +33,14 @@ debug = dconf['debug']
 
 defncore = multiprocessing.cpu_count() # default number of cores
 
+# for signaling
+class Communicate (QObject):    
+  finishSim = pyqtSignal()
+
+# for signaling - passing text
+class TextSignal (QObject):
+  tsig = pyqtSignal(str)
+
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
   def __init__ (self,c,ntrial,ncore,waitsimwin):
@@ -43,6 +51,13 @@ class RunSimThread (QThread):
     self.ntrial = ntrial
     self.ncore = ncore
     self.waitsimwin = waitsimwin
+
+    self.txtComm = TextSignal()
+    self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
+
+  def updatewaitsimwin (self, txt):
+    # print('RunSimThread updatewaitsimwin, txt=',txt)
+    self.txtComm.tsig.emit(txt)
 
   def stop (self): self.killed = True
 
@@ -82,10 +97,11 @@ class RunSimThread (QThread):
     while not self.killed and self.proc.poll() is None: # job is not done
 
       for stdout_line in iter(self.proc.stdout.readline, ""):
-        try:
-          self.waitsimwin.qtxt.append(stdout_line.strip())
+        try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
+          self.updatewaitsimwin(stdout_line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
         except:
-          pass # this prevents most, but not all crashes - see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
+          if debug: print('RunSimThread updatewaitsimwin exception...')
+          pass # catch exception in case anything else goes wrong
         if self.killed:
           self.killproc()
           return
@@ -114,10 +130,6 @@ class RunSimThread (QThread):
     else:
       self.killproc()
     print('')
-
-# for signaling
-class Communicate (QObject):    
-  finishSim = pyqtSignal()
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -1288,6 +1300,12 @@ class WaitSimDialog (QDialog):
   def __init__ (self, parent):
     super(WaitSimDialog, self).__init__(parent)
     self.initUI()
+    self.txt = '' # text for display
+
+  def updatetxt (self,txt):
+    #self.txt = txt
+    #print('updatetxt')
+    self.qtxt.append(txt)
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
