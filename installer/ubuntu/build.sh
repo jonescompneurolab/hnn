@@ -4,11 +4,13 @@ sudo apt install -y git
 git clone https://bitbucket.org/samnemo/hnn.git
 
 # packages neded for NEURON and graphics
-sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 
+sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 
 
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
 # version (1.5) which does not have set_facecolor
 sudo pip3 install matplotlib
+# make sure matplotlib version 2 is used -- is this strictly needed?
+sudo pip3 install --upgrade matplotlib
 
 # save dir installing hnn to
 startdir=$(pwd)
