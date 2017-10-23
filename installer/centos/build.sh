@@ -12,6 +12,8 @@ sudo yum -y install xorg-x11-fonts-100dpi
 sudo yum -y install Cython
 sudo yum -y install python34-pip python-tools
 sudo pip3 install matplotlib
+# make sure matplotlib version 2 is used -- is this strictly needed?
+sudo pip3 install --upgrade matplotlib
 sudo pip3 install scipy
 sudo yum -y install ncurses-devel
 sudo yum -y install openmpi openmpi-devel
