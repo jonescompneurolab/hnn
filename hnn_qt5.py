@@ -1303,29 +1303,23 @@ class WaitSimDialog (QDialog):
     self.txt = '' # text for display
 
   def updatetxt (self,txt):
-    #self.txt = txt
-    #print('updatetxt')
     self.qtxt.append(txt)
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
     self.layout.addStretch(1)
 
-    self.qlbl = QLabel()
-    self.qlbl.setText('Simulation Output:')
-    self.layout.addWidget(self.qlbl)
-
     self.qtxt = QTextEdit(self)
     self.layout.addWidget(self.qtxt)
 
-    self.stopbtn = stopbtn = QPushButton('Stop Simulation', self)
+    self.stopbtn = stopbtn = QPushButton('Stop All Simulations', self)
     stopbtn.setToolTip('Set parameters')
     stopbtn.resize(stopbtn.sizeHint())
     stopbtn.clicked.connect(self.stopsim)
     self.layout.addWidget(stopbtn)
 
     setscalegeomcenter(self, 500, 250)
-    self.setWindowTitle("Simulation Running...") 
+    self.setWindowTitle("Simulation Log")
 
   def stopsim (self):
     self.parent().stopsim()
@@ -1430,6 +1424,9 @@ class HNNGUI (QMainWindow):
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
+  def showwaitsimwin (self):
+    self.waitsimwin.show()
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -1483,14 +1480,14 @@ class HNNGUI (QMainWindow):
     viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data.')
     viewSpecAction.triggered.connect(self.showSpecPlot)
     viewMenu.addAction(viewSpecAction)
-    #viewSomaVAction = QAction('View Soma Voltages',self)
-    #viewSomaVAction.setStatusTip('View Simulation Soma Voltages.')
-    #viewSomaVAction.triggered.connect(self.showSomaVPlot)
-    #viewMenu.addAction(viewSomaVAction)
     viewNetAction = QAction('View Local Network (3D)',self)
     viewNetAction.setStatusTip('View Local Network Model (3D).')
     viewNetAction.triggered.connect(self.showvisnet)
     viewMenu.addAction(viewNetAction)
+    viewSimLogAction = QAction('View Simulation Log',self)
+    viewSimLogAction.setStatusTip('View Detailed Simulation Logging.')
+    viewSimLogAction.triggered.connect(self.showwaitsimwin)
+    viewMenu.addAction(viewSimLogAction)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN.',self)
