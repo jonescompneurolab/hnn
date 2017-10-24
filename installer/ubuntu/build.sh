@@ -44,19 +44,22 @@ export PATH=$PATH:/usr/local/nrn/$CPU/bin
 make
 cd ..
 
-# setup the icon
-sudo ln -s hnn/hnn.png /usr/share/pixmaps
-sudo ln -s /usr/local/hnn/hnn.desktop /usr/share/applications/hnn.desktop
+# cleanup these folders (we've already installed them: they're in /usr/local)
+sudo rm -rf iv
+sudo rm -rf nrn
+
+# delete the installed hnn folder in the event that it already exists
+sudo rm -rf /usr/local/hnn
 
 # move the hnn folder to the programs directory
 sudo mv hnn /usr/local
 
-# cleanup these folders (we've already installed them: they're in /usr/local)
-rm -rf iv
-rm -rf nrn
+# setup the icon and register the program with the system
+sudo ln -fs /usr/local/hnn/hnn.png /usr/share/pixmaps
+sudo ln -fs /usr/local/hnn/hnn.desktop /usr/share/applications/hnn.desktop
 
 # make the program accessable via the terminal command 'hnn'
-sudo ln -s /usr/local/hnn/hnn /usr/local/bin/hnn
+sudo ln -fs /usr/local/hnn/hnn /usr/local/bin/hnn
 sudo updatedb
 
 echo 'export CPU=$(uname -m)' >> ~/.bashrc
