@@ -138,9 +138,7 @@ class LFPElectrode ():
       if usePoint:
         point_part1 = (1.0 / (4.0 * 3.141 * dis * sigma)) * h.area(0.5,sec=s)    
         vres.append(point_part1)
-
       else:
-
         # calculate length of the compartment
         dist_comp = sqrt((h.x3d(1,sec=s) - h.x3d(0,sec=s))**2 + (h.y3d(1,sec=s) - h.y3d(0,sec=s))**2 + (h.z3d(1,sec=s) - h.z3d(0,sec=s))**2)
 
