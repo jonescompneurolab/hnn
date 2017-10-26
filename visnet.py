@@ -187,10 +187,10 @@ def drawcells3dgl (ty,widget,width=2.2):
     widget.addItem(plt)
 
 def drawallcells3dgl (wcells):
-  drawcells3dgl(L5Pyr,wcells)
-  drawcells3dgl(L2Pyr,wcells)
-  drawcells3dgl(L5Basket,wcells,width=28)
-  drawcells3dgl(L2Basket,wcells,width=28)
+  drawcells3dgl(L5Pyr,wcells,width=15.0)
+  drawcells3dgl(L2Pyr,wcells,width=15.0)
+  drawcells3dgl(L5Basket,wcells,width=40.0)
+  drawcells3dgl(L2Basket,wcells,width=40.0)
   wcells.opts['distance'] = 4320.9087386478195
   wcells.opts['elevation']=105
   wcells.opts['azimuth']=-71

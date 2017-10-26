@@ -62,6 +62,20 @@ class Cell ():
           ldiam.append(s.diam3d(i))
       return lx,ly,lz,ldiam
 
+    # get cell's bounding box
+    def getbbox (self):
+      lx,ly,lz,ldiam = self.get3dinfo()
+      minx,miny,minz = 1e9,1e9,1e9
+      maxx,maxy,maxz = -1e9,-1e9,-1e9
+      for x,y,z in zip(lx,ly,lz):
+        minx = min(x,minx)
+        miny = min(y,miny)
+        minz = min(z,minz)
+        maxx = max(x,maxx)
+        maxy = max(y,maxy)
+        maxz = max(z,maxz)
+      return ((minx,maxx), (miny,maxy), (minz,maxz))
+
     def translate3d (self, dx, dy, dz):
       #s = self.soma
       #for i in range(s.n3d()):          

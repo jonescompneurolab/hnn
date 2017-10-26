@@ -28,6 +28,7 @@ from L2_pyramidal import L2Pyr
 from L2_basket import L2Basket
 from L5_basket import L5Basket
 from lfp import LFPElectrode
+from morphology import shapeplot, getshapecoords
 
 dconf = readconf()
 
@@ -243,13 +244,37 @@ dp_rec_L5 = h.Vector(); dp_rec_L5.record(h._ref_dp_total_L5) # L5 dipole recordi
 
 net.movecellstopos() # position cells in 2D grid
 
+def expandbbox (boxA, boxB):
+  return [(min(boxA[i][0],boxB[i][0]),max(boxA[i][1],boxB[i][1]))  for i in range(3)]
+
 def arrangelayers ():
   # offsets for L2, L5 cells so that L5 below L2 in display
   dyoff = {L2Pyr: 1000, 'L2_pyramidal' : 1000,
-           L5Pyr: -1000, 'L5_pyramidal' : -1000,
+           L5Pyr: -1000-149.39990234375, 'L5_pyramidal' : -1000-149.39990234375,
            L2Basket: 1000, 'L2_basket' : 1000,
-           L5Basket: -1000, 'L5_basket' : -1000}
+           L5Basket: -1000-149.39990234375, 'L5_basket' : -1000-149.39990234375}
   for cell in net.cells: cell.translate3d(0,dyoff[cell.celltype],0)
+  dcheck = {x:False for x in dyoff.keys()}
+  dbbox = {x:[[1e9,-1e9],[1e9,-1e9],[1e9,-1e9]] for x in dyoff.keys()}
+  for cell in net.cells:
+
+    dbbox[cell.celltype] = expandbbox(dbbox[cell.celltype], cell.getbbox())
+    #if dcheck[cell.celltype]: continue
+    """
+    bbox = cell.getbbox()
+    lx,ly,lz = getshapecoords(h,cell.get_sections())  
+    if cell.celltype == L2Pyr or cell.celltype == 'L2_pyramidal':
+      print('L2Pyr bbox:',bbox)#,lx,ly,lz)
+    elif cell.celltype == L5Pyr or cell.celltype == 'L5_pyramidal':
+      print('L5Pyr bbox:',bbox)#,lx,ly,lz)
+    elif cell.celltype == L2Basket or cell.celltype == 'L2_basket':
+      print('L2Basket bbox:',bbox)#,lx,ly,lz)
+    elif cell.celltype == L5Basket or cell.celltype == 'L5_basket':
+      print('L5Basket bbox:',bbox)#,lx,ly,lz)
+    dcheck[cell.celltype]=True
+    """
+  for ty in ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal']:
+    print(ty, dbbox[ty])
 
 arrangelayers() # arrange cells in layers - for visualization purposes
 
