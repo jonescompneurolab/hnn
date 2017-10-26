@@ -49,7 +49,7 @@ def readLFPs (basedir, ntrial):
   for f in lfile:
     if f.count('lfp_') > 0 and f.endswith('.txt'):
       lf = f.split('.txt')[0].split('_')
-      print(lf,ntrial)
+      #print(lf,ntrial)
       if ntrial > 0:
         trial = int(lf[1])
         nlfp = int(lf[2])
@@ -57,17 +57,17 @@ def readLFPs (basedir, ntrial):
         trial = 0
         nlfp = int(lf[1])
       maxlfp = max(nlfp,maxlfp)
-      print(trial,nlfp,maxlfp)
+      #print(trial,nlfp,maxlfp)
       fullpath = os.path.join(basedir,f)
-      print(fullpath)
+      #print(fullpath)
       try:
         k2 = (trial,nlfp)
-        print('k2:',k2)
+        #print('k2:',k2)
         ddat['lfp'][k2] = np.loadtxt(fullpath)
       except:
         print('exception!')
-      print(ddat['lfp'].keys())
-  print('ddat:',ddat,maxlfp)
+      #print(ddat['lfp'].keys())
+  #print('ddat:',ddat,maxlfp)
   return ddat, maxlfp
 
 try:
@@ -92,7 +92,7 @@ def extractspec (dat, fmax=120.0):
   ntrial = len(lspec)
   #avgdipole = np.mean(dat[:,1:-1],axis=1)
   #avgspec = MorletSpec(tvec,avgdipole,None,None,prm)
-  return ms.f, lspec, avgdipole, avgspec
+  return ms.f, lspec # , avgdipole, avgspec
 
 class LFPCanvas (FigureCanvas):
 
@@ -130,13 +130,14 @@ class LFPCanvas (FigureCanvas):
     if ntrial > 0: lpatch = [white_patch,gray_patch]
 
     yl = [1e9,-1e9]
+
+    minx = 100
     
     for i in [1]:
       print('ddat[lfp].keys():',ddat['lfp'].keys())
       for k in ddat['lfp'].keys():
-        print('drawkey',k)
-        yl[0] = min(yl[0],ddat['lfp'][k][:,i].min())
-        yl[1] = max(yl[1],ddat['lfp'][k][:,i].max())
+        yl[0] = min(yl[0],ddat['lfp'][k][minx:-1,i].min())
+        yl[1] = max(yl[1],ddat['lfp'][k][minx:-1,i].max())
       """
       if len(ddat['dpltrials']) > 0: # plot LFP from individual trials
         for dpltrial in ddat['dpltrials']:
@@ -172,7 +173,7 @@ class LFPCanvas (FigureCanvas):
             ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
       """
 
-      if self.index == 0: ax.plot(ddat['lfp'][k][:,0],ddat['lfp'][k][:,i],'w',linewidth=5)
+      if self.index == 0: ax.plot(ddat['lfp'][k][:,0],ddat['lfp'][k][:,i],'w',linewidth=3)
 
       # ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
       if tstop != -1: ax.set_xlim((0,tstop))
@@ -187,6 +188,21 @@ class LFPCanvas (FigureCanvas):
       gdx += 1
 
       # plot wavelet transform here
+
+      tvec = ddat['lfp'][k][:,0]
+
+      prm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
+
+      ms = MorletSpec(tvec, ddat['lfp'][k][:,1],None,None,prm)
+
+      ax = fig.add_subplot(nrow,ncol,gdx)
+      self.lax.append(ax)
+
+      ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+
+      ax.set_xlim(tvec[0],tvec[-1])
+      ax.set_xlabel('Time (ms)')
+      ax.set_ylabel('Frequency (Hz)');
 
   def plot (self):
     self.drawLFP(self.figure)
