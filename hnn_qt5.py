@@ -30,6 +30,7 @@ prtime = False
 simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
+testLFP = dconf['testlfp']
 
 defncore = multiprocessing.cpu_count() # default number of cores
 
@@ -1404,6 +1405,13 @@ class HNNGUI (QMainWindow):
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
+  def showLFPPlot (self):
+    global basedir
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+    lcmd = ['python3', 'vislfp.py',paramf]
+    if debug: print('vislfp cmd:',lcmd)
+    Popen(lcmd) # nonblocking
+
   def showSpecPlot (self):
     lcmd = ['python3', 'visspec.py']
     if debug: print('visspec cmd:',lcmd)
@@ -1476,6 +1484,13 @@ class HNNGUI (QMainWindow):
     viewPSDAction.setStatusTip('View PSD.')
     viewPSDAction.triggered.connect(self.showPSDPlot)
     viewMenu.addAction(viewPSDAction)
+
+    if testLFP:
+      viewLFPAction = QAction('View Simulation LFPs',self)
+      viewLFPAction.setStatusTip('View LFP.')
+      viewLFPAction.triggered.connect(self.showLFPPlot)
+      viewMenu.addAction(viewLFPAction)
+
     viewSpecAction = QAction('View Experiment Spectrograms',self)
     viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data.')
     viewSpecAction.triggered.connect(self.showSpecPlot)
