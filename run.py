@@ -384,8 +384,8 @@ initrands(0) # init once
 
 if testLFP:
   lelec = []
-  elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
-  lelec.append(elec)
+  lelec.append(LFPElectrode([370.0, 1050.0, 450.0], pc = pc))
+  lelec.append(LFPElectrode([370.0, 208.0, 450.0], pc = pc))
   
 # All units for time: ms
 def runsim ():
