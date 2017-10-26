@@ -39,7 +39,8 @@ pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
 ntrial = 0
-testLFP = dconf['testlfp']; elec = None
+testLFP = dconf['testlfp']; 
+lelec = [] # list of LFP electrodes
 
 # reads the specified param file
 foundprm = False
@@ -142,7 +143,8 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
   if p['save_vsoma']: save_vsoma()
-  if testLFP: elec.lfpout(fn=doutf['file_lfp'],tvec = t_vec)
+  for i,elec in enumerate(lelec):
+    elec.lfpout(fn=doutf['file_lfp'].split('.txt')[0]+'_'+str(i)+'.txt',tvec = t_vec)
 
 #
 def runanalysis (prm, fparam, fdpl, fspec):
@@ -212,7 +214,7 @@ def setoutfiles (ddir,trial=0,ntrial=0):
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
   doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
-  if testLFP: doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
+  doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
   # if pcID==0: print(doutf)
   return doutf
 
@@ -380,15 +382,18 @@ def initrands (s=0): # fix to use s
 
 initrands(0) # init once
 
+if testLFP:
+  lelec = []
+  elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
+  lelec.append(elec)
+  
 # All units for time: ms
 def runsim ():
   t0 = time.time() # clock start time
 
   pc.set_maxstep(10) # sets the default max solver step in ms (purposefully large)
 
-  if testLFP:
-    global elec
-    elec = LFPElectrode([0, 100.0, 100.0], pc = pc)
+  for elec in lelec:
     elec.setup()
     elec.LFPinit()
 
@@ -404,7 +409,7 @@ def runsim ():
   # these calls aggregate data across procs/nodes
   pc.allreduce(dp_rec_L2, 1); 
   pc.allreduce(dp_rec_L5, 1) # combine dp_rec on every node, 1=add contributions together  
-  if testLFP: elec.lfp_final()
+  for elec in lelec: elec.lfp_final()
   net.aggregate_currents() # aggregate the currents independently on each proc
   # combine net.current{} variables on each proc
   pc.allreduce(net.current['L5Pyr_soma'], 1); pc.allreduce(net.current['L2Pyr_soma'], 1)
@@ -415,7 +420,7 @@ def runsim ():
   # only execute this statement on one proc
   savedat(p, pcID, t_vec, dp_rec_L2, dp_rec_L5, net)
 
-  if testLFP: print('end; t_vec.size()',t_vec.size(),'elec.lfp_t.size()',elec.lfp_t.size())
+  for elec in lelec: print('end; t_vec.size()',t_vec.size(),'elec.lfp_t.size()',elec.lfp_t.size())
 
   if pcID == 0:
     if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
