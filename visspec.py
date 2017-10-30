@@ -37,7 +37,7 @@ def extractspec (dat, fmax=120.0):
     lspec.append(ms)
   ntrial = len(lspec)
   avgdipole = np.mean(dat[:,1:-1],axis=1)
-  avgspec = MorletSpec(tvec,avgdipole,None,None,prm)
+  avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
   return ms.f, lspec, avgdipole, avgspec
 
 def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
