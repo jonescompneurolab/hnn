@@ -136,7 +136,7 @@ class LFPElectrode ():
       if(dis<(s.diam/2.0)): dis = (s.diam/2.0) + 0.1
 
       if usePoint:
-        point_part1 = 10.0 * (1.0 / (4.0 * pi * dis * sigma)) # x10 for units of mV : nA/(microm*(mS/cm)) -> mV
+        point_part1 = 10000.0 * (1.0 / (4.0 * pi * dis * sigma)) # x10000 for units of microV : nA/(microm*(mS/cm)) -> microV
         vres.append(point_part1)
       else:
         # calculate length of the compartment
@@ -173,7 +173,7 @@ class LFPElectrode ():
         else:
           phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
 
-        line_part1 = 10.0 * (1.0 / (4.0*pi*sum_dist_comp*sigma) * phi) # x10 for units of mV
+        line_part1 = 10000.0 * (1.0 / (4.0*pi*sum_dist_comp*sigma) * phi) # x10000 for units of microV
         vres.append(line_part1)
 
     return vres
