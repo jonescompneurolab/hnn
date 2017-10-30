@@ -21,7 +21,6 @@ import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
-from simdat import readdpltrials
 from conf import dconf
 from specfn import MorletSpec
 
@@ -38,18 +37,17 @@ for i in range(len(sys.argv)):
         
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 
-ddat = {}
-ddat['dpltrials'] = readdpltrials(basedir,ntrial)
+ddat = {}; tvec = None; davg = None
 
 def readLFPs (basedir, ntrial):
   ddat = {'lfp':{}}
   lfile = os.listdir(basedir)
-  maxlfp = 0
+  maxlfp = 0; tvec = None
   print(lfile)
   for f in lfile:
     if f.count('lfp_') > 0 and f.endswith('.txt'):
       lf = f.split('.txt')[0].split('_')
-      #print(lf,ntrial)
+      print(lf,ntrial)
       if ntrial > 0:
         trial = int(lf[1])
         nlfp = int(lf[2])
@@ -57,21 +55,35 @@ def readLFPs (basedir, ntrial):
         trial = 0
         nlfp = int(lf[1])
       maxlfp = max(nlfp,maxlfp)
-      #print(trial,nlfp,maxlfp)
+      print(trial,nlfp,maxlfp)
       fullpath = os.path.join(basedir,f)
-      #print(fullpath)
+      print(fullpath)
       try:
         k2 = (trial,nlfp)
         #print('k2:',k2)
         ddat['lfp'][k2] = np.loadtxt(fullpath)
+        if tvec is None: tvec = ddat['lfp'][k2][:,0]
       except:
         print('exception!')
       #print(ddat['lfp'].keys())
-  #print('ddat:',ddat,maxlfp)
-  return ddat, maxlfp
+  print('ddat:',ddat,maxlfp)
+  return ddat, maxlfp, tvec
 
 try:
-  ddat, maxlfp = readLFPs(basedir,ntrial) # np.loadtxt(os.path.join(basedir,'lfp.txt'))
+  ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
+  if ntrial > 0:
+    davg = {}
+    for i in range(maxlfp+1):
+      print(i,maxlfp,list(ddat['lfp'].keys())[0])
+      shp = len(ddat['lfp'][list(ddat['lfp'].keys())[0]])
+      print('shape:',shp)
+      davg[i] = np.zeros(shp,)
+      for trial in range(1,ntrial+1,1):
+        print('trial:',trial,ddat['lfp'][(trial,i)])
+        davg[i] += ddat['lfp'][(trial,i)][:,1]
+      davg[i] /= float(ntrial)
+    ddat['avglfp'] = davg
+
 except:
   print('Could not load LFPs')#,lfppath)
   quit()
@@ -104,6 +116,7 @@ class LFPCanvas (FigureCanvas):
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
+    self.drawwavelet = True
     self.plot()
 
   def clearaxes (self):
@@ -127,83 +140,73 @@ class LFPCanvas (FigureCanvas):
     gray_patch = mpatches.Patch(color='gray', label='Individual')
     lpatch = []
 
-    if ntrial > 0: lpatch = [white_patch,gray_patch]
+    print('ntrial:',ntrial)
+
+    if ntrial > 0:
+      lpatch = [white_patch,gray_patch]
 
     yl = [1e9,-1e9]
 
     minx = 100
     
-    for i in [1]:
+    for i in [1]: # this gets min,max LFP values
       print('ddat[lfp].keys():',ddat['lfp'].keys())
       for k in ddat['lfp'].keys():
         yl[0] = min(yl[0],ddat['lfp'][k][minx:-1,i].min())
         yl[1] = max(yl[1],ddat['lfp'][k][minx:-1,i].max())
-      """
-      if len(ddat['dpltrials']) > 0: # plot LFP from individual trials
-        for dpltrial in ddat['dpltrials']:
-          yl[0] = min(yl[0],dpltrial[:,i].min())
-          yl[1] = max(yl[1],dpltrial[:,i].max())
-      """
 
-    yl = tuple(yl)
+    yl = tuple(yl) # y-axis range
 
     self.lax = []
 
-    for k in ddat['lfp'].keys():
-      trial,nlfp = k
+    for nlfp in range(maxlfp+1):
       gdx = nlfp * 2 + 1
       title = ltitle[nlfp]
 
       i = 1
 
-      print('row,col,gdx',nrow,ncol,gdx)
+      print('row,col,gdx,index',nrow,ncol,gdx,self.index)
 
       ax = fig.add_subplot(nrow,ncol,gdx)
       self.lax.append(ax)
 
       if i == 1: ax.set_xlabel('Time (ms)');
 
-      lw = 2
-      if self.index != 0: lw = 5
+      if self.index == 0: # draw all along with average
+        for j in range(1,ntrial+1,1): ax.plot(tvec,ddat['lfp'][(j,nlfp)][:,1],color='gray',linewidth=2)
+        ax.plot(tvec,davg[nlfp],'w',linewidth=3)
+        if i == 1 and nlfp == 0: ax.legend(handles=lpatch)
+      else: # draw individual trial
+        ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='gray',linewidth=2)
 
-      """
-      if len(ddat['dpltrials']) > 0: # plot LFP from individual trials
-        for ddx,dpltrial in enumerate(ddat['dpltrials']):
-          if self.index == 0 or ddx == self.index-1:
-            ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
-      """
-
-      if self.index == 0: ax.plot(ddat['lfp'][k][:,0],ddat['lfp'][k][:,i],'w',linewidth=3)
-
-      # ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
       ax.set_ylabel(r'$\mu V$')
       if tstop != -1: ax.set_xlim((0,tstop))
       ax.set_ylim(yl)
 
-      # if i == 2 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
-
-      ax.set_facecolor('k')
-      ax.grid(True)
-      ax.set_title(title)
+      ax.set_facecolor('k'); ax.grid(True); ax.set_title(title)
 
       gdx += 1
 
       # plot wavelet transform here
 
-      tvec = ddat['lfp'][k][:,0]
-
       prm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
 
-      ms = MorletSpec(tvec, ddat['lfp'][k][:,1],None,None,prm)
+      if self.drawwavelet:
 
-      ax = fig.add_subplot(nrow,ncol,gdx)
-      self.lax.append(ax)
+        ms = MorletSpec(tvec, ddat['lfp'][k][:,1],None,None,prm)
 
-      ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+        ax = fig.add_subplot(nrow,ncol,gdx)
+        self.lax.append(ax)
 
-      ax.set_xlim(tvec[0],tvec[-1])
-      ax.set_xlabel('Time (ms)')
-      ax.set_ylabel('Frequency (Hz)');
+        ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+
+        ax.set_xlim(tvec[0],tvec[-1])
+        ax.set_xlabel('Time (ms)')
+        ax.set_ylabel('Frequency (Hz)');
+
+    self.drawwavelet = False
+
+    gdx += 1
 
   def plot (self):
     self.drawLFP(self.figure)
