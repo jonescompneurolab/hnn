@@ -72,7 +72,7 @@ def readLFPs (basedir, ntrial):
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
   ddat['spec'] = {}
-  waveprm = {'f_max_spec':80.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
+  waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
   minwavet = 50.0
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
