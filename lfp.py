@@ -54,7 +54,8 @@ def getcoordinf (s):
 def transfer_resistance2 (exyz):
   vres = h.Vector()
   lsec = getallSections()
-  sigma = 0.3    
+  sigma = 3.0 # extracellular conductivity in mS/cm
+  # see http://jn.physiology.org/content/104/6/3388.long shows table of values with conductivity
   for s in lsec:
     lcoord, ldist, lend = getcoordinf(s)
     for i in range(len(lcoord)):      
@@ -66,7 +67,7 @@ def transfer_resistance2 (exyz):
       dist_comp = ldist[i] # length of the compartment
       sum_dist_comp = sqrt(dist_comp[0]**2  + dist_comp[0]**2 + dist_comp[0]**2)
 
-      # print "sum_dist_comp=",sum_dist_comp, secname(), area(0.5)
+      # print "sum_dist_comp=",sum_dist_comp, secname()
 
       #  setting radius limit
       if sum_dist_comp < s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
@@ -91,16 +92,17 @@ def transfer_resistance2 (exyz):
       else:
         phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
 
-      line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * h.area(0.5,sec=s)
+      line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi 
       vres.append(line_part1)
 
   return vres
 
 class LFPElectrode ():
 
-  def __init__ (self, coord, sigma = 0.3, pc = None, usePoint = True):
+  def __init__ (self, coord, sigma = 3.0, pc = None, usePoint = True):
 
-    self.sigma = sigma
+    self.sigma = sigma # extracellular conductivity in mS/cm (uniform for simplicity)
+    # see http://jn.physiology.org/content/104/6/3388.long shows table of values with conductivity
     self.coord = coord
     self.vres = None
     self.vx = None
@@ -108,13 +110,11 @@ class LFPElectrode ():
     self.imem_ptrvec = self.imem_vec = self.rx = self.vx = self.vres = None
     self.bscallback = self.fih = None
 
-    if pc is None:
-      self.pc = h.ParallelContext()
-    else:
-      self.pc = pc
+    if pc is None: self.pc = h.ParallelContext()
+    else: self.pc = pc
 
   def setup (self):
-    h.cvode.use_fast_imem(1)
+    h.cvode.use_fast_imem(1) # enables fast calculation of transmembrane current (nA) at each segment 
     self.bscallback = h.beforestep_callback(h.cas()(.5))
     self.bscallback.set_callback(self.callback)
     fih = h.FInitializeHandler(1, self.LFPinit)
@@ -136,22 +136,22 @@ class LFPElectrode ():
       if(dis<(s.diam/2.0)): dis = (s.diam/2.0) + 0.1
 
       if usePoint:
-        point_part1 = (1.0 / (4.0 * 3.141 * dis * sigma)) * h.area(0.5,sec=s)    
+        point_part1 = 10.0 * (1.0 / (4.0 * pi * dis * sigma)) # x10 for units of mV : nA/(microm*(mS/cm)) -> mV
         vres.append(point_part1)
       else:
         # calculate length of the compartment
         dist_comp = sqrt((h.x3d(1,sec=s) - h.x3d(0,sec=s))**2 + (h.y3d(1,sec=s) - h.y3d(0,sec=s))**2 + (h.z3d(1,sec=s) - h.z3d(0,sec=s))**2)
 
-        dist_comp_x = (h.x3d(1,sec=s) - h.x3d(0,sec=s)) # * 1e-6
-        dist_comp_y = (h.y3d(1,sec=s) - h.y3d(0,sec=s)) # * 1e-6
-        dist_comp_z = (h.z3d(1,sec=s) - h.z3d(0,sec=s)) # * 1e-6
+        dist_comp_x = (h.x3d(1,sec=s) - h.x3d(0,sec=s)) 
+        dist_comp_y = (h.y3d(1,sec=s) - h.y3d(0,sec=s)) 
+        dist_comp_z = (h.z3d(1,sec=s) - h.z3d(0,sec=s)) 
 
         sum_dist_comp = sqrt(dist_comp_x**2  + dist_comp_y**2 + dist_comp_z**2)
 
-        # print "sum_dist_comp=",sum_dist_comp, secname(), area(0.5)
+        # print "sum_dist_comp=",sum_dist_comp, secname()
 
         #  setting radius limit
-        if sum_dist_comp< s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
+        if sum_dist_comp < s.diam/2.0: sum_dist_comp = s.diam/2.0 + 0.1
 
         long_dist_x = exyz[0] - h.x3d(1,sec=s)
         long_dist_y = exyz[1] - h.y3d(1,sec=s)
@@ -173,7 +173,7 @@ class LFPElectrode ():
         else:
           phi=log(((sqrt(Length_vector**2+r_sq)+Length_vector) * (sqrt(final_sum_HH**2+r_sq)-final_sum_HH))/r_sq)
 
-        line_part1 = 1.0 / (4.0*pi*sum_dist_comp*sigma) * phi * h.area(0.5,sec=s)
+        line_part1 = 10.0 * (1.0 / (4.0*pi*sum_dist_comp*sigma) * phi) # x10 for units of mV
         vres.append(line_part1)
 
     return vres

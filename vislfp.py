@@ -176,6 +176,7 @@ class LFPCanvas (FigureCanvas):
       if self.index == 0: ax.plot(ddat['lfp'][k][:,0],ddat['lfp'][k][:,i],'w',linewidth=3)
 
       # ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
+      ax.set_ylabel('mV')
       if tstop != -1: ax.set_xlim((0,tstop))
       ax.set_ylim(yl)
 
