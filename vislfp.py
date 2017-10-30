@@ -43,11 +43,11 @@ def readLFPs (basedir, ntrial):
   ddat = {'lfp':{}}
   lfile = os.listdir(basedir)
   maxlfp = 0; tvec = None
-  print(lfile)
+  #print(lfile)
   for f in lfile:
     if f.count('lfp_') > 0 and f.endswith('.txt'):
       lf = f.split('.txt')[0].split('_')
-      print(lf,ntrial)
+      #print(lf,ntrial)
       if ntrial > 0:
         trial = int(lf[1])
         nlfp = int(lf[2])
@@ -55,9 +55,9 @@ def readLFPs (basedir, ntrial):
         trial = 0
         nlfp = int(lf[1])
       maxlfp = max(nlfp,maxlfp)
-      print(trial,nlfp,maxlfp)
+      #print(trial,nlfp,maxlfp)
       fullpath = os.path.join(basedir,f)
-      print(fullpath)
+      #print(fullpath)
       try:
         k2 = (trial,nlfp)
         #print('k2:',k2)
@@ -66,28 +66,38 @@ def readLFPs (basedir, ntrial):
       except:
         print('exception!')
       #print(ddat['lfp'].keys())
-  print('ddat:',ddat,maxlfp)
+  #print('ddat:',ddat,maxlfp)
   return ddat, maxlfp, tvec
 
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
   ddat['spec'] = {}
-  waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
+  waveprm = {'f_max_spec':80.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
+  minwavet = 50.0
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
     if ntrial > 0:
       for trial in range(1,ntrial+1,1):
-        ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1],None,None,waveprm,1.0)
+        ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1],None,None,waveprm,minwavet)
     else:
-      ddat['spec'][(0,i)] = MorletSpec(tvec, ddat['lfp'][(0,i)][:,1],None,None,waveprm,1.0)
+      ddat['spec'][(0,i)] = MorletSpec(tvec, ddat['lfp'][(0,i)][:,1],None,None,waveprm,minwavet)
   if ntrial > 0:
+    print('here')
     davglfp = {}; davgspec = {}
     for i in range(maxlfp+1):
       print(i,maxlfp,list(ddat['lfp'].keys())[0])
       davglfp[i] = np.zeros(len(ddat['lfp'][list(ddat['lfp'].keys())[0]]),)
+      try:
+        ms = ddat['spec'][(1,0)]
+        print('shape',ms.TFR.shape,ms.tmin,ms.f[0],ms.f[-1])
+        davgspec[i] = [np.zeros(ms.TFR.shape), ms.tmin, ms.f]
+      except:
+        print('err in davgspec[i]=')
       for trial in range(1,ntrial+1,1):
         davglfp[i] += ddat['lfp'][(trial,i)][:,1]
+        davgspec[i][0] += ddat['spec'][(trial,i)].TFR
       davglfp[i] /= float(ntrial)
+      davgspec[i][0] /= float(ntrial)
     ddat['avglfp'] = davglfp
     ddat['avgspec'] = davgspec
 except:
@@ -155,7 +165,7 @@ class LFPCanvas (FigureCanvas):
     minx = 100
     
     for i in [1]: # this gets min,max LFP values
-      print('ddat[lfp].keys():',ddat['lfp'].keys())
+      # print('ddat[lfp].keys():',ddat['lfp'].keys())
       for k in ddat['lfp'].keys():
         yl[0] = min(yl[0],ddat['lfp'][k][minx:-1,i].min())
         yl[1] = max(yl[1],ddat['lfp'][k][minx:-1,i].max())
@@ -170,22 +180,20 @@ class LFPCanvas (FigureCanvas):
 
       i = 1
 
-      print('row,col,gdx,index',nrow,ncol,gdx,self.index)
+      # print('row,col,gdx,index',nrow,ncol,gdx,self.index)
 
       ax = fig.add_subplot(nrow,ncol,gdx)
       self.lax.append(ax)
-
-      if i == 1: ax.set_xlabel('Time (ms)');
 
       if self.index == 0 and ntrial > 0: # draw all along with average
         for j in range(1,ntrial+1,1): ax.plot(tvec,ddat['lfp'][(j,nlfp)][:,1],color='gray',linewidth=2)
         ax.plot(tvec,ddat['avglfp'][nlfp],'w',linewidth=3)
         if i == 1 and nlfp == 0: ax.legend(handles=lpatch)
       else: # draw individual trial
-        ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='gray',linewidth=2)
+        ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='white',linewidth=2)
 
       ax.set_ylabel(r'$\mu V$')
-      if tstop != -1: ax.set_xlim((0,tstop))
+      if tstop != -1: ax.set_xlim((minwavet,tstop))
       ax.set_ylim(yl)
 
       ax.set_facecolor('k'); ax.grid(True); ax.set_title(title)
@@ -193,12 +201,16 @@ class LFPCanvas (FigureCanvas):
       gdx += 1
 
       # plot wavelet spectrogram
-      ms = ddat['spec'][(1,0)]
       ax = fig.add_subplot(nrow,ncol,gdx)
       self.lax.append(ax)
-      ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
-      ax.set_xlim(tvec[0],tvec[-1])
-      ax.set_xlabel('Time (ms)')
+      if self.index == 0 and ntrial > 0:
+        TFR,tmin,F = ddat['avgspec'][nlfp]
+        ax.imshow(TFR, extent=[tmin, tvec[-1], F[-1], F[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+      else:
+        ms = ddat['spec'][(self.index,nlfp)]
+        ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+      ax.set_xlim(minwavet,tvec[-1])
+      if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
       ax.set_ylabel('Frequency (Hz)');
 
     gdx += 1
