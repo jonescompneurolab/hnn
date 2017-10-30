@@ -37,7 +37,7 @@ for i in range(len(sys.argv)):
         
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 
-ddat = {}; tvec = None; davg = None
+ddat = {}; tvec = None; dspec = None
 
 def readLFPs (basedir, ntrial):
   ddat = {'lfp':{}}
@@ -71,21 +71,27 @@ def readLFPs (basedir, ntrial):
 
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
+  ddat['spec'] = {}
+  waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
+  print('Extracting Wavelet spectrogram(s).')
+  for i in range(maxlfp+1):
+    if ntrial > 0:
+      for trial in range(1,ntrial+1,1):
+        ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1],None,None,waveprm,1.0)
+    else:
+      ddat['spec'][(0,i)] = MorletSpec(tvec, ddat['lfp'][(0,i)][:,1],None,None,waveprm,1.0)
   if ntrial > 0:
-    davg = {}
+    davglfp = {}; davgspec = {}
     for i in range(maxlfp+1):
       print(i,maxlfp,list(ddat['lfp'].keys())[0])
-      shp = len(ddat['lfp'][list(ddat['lfp'].keys())[0]])
-      print('shape:',shp)
-      davg[i] = np.zeros(shp,)
+      davglfp[i] = np.zeros(len(ddat['lfp'][list(ddat['lfp'].keys())[0]]),)
       for trial in range(1,ntrial+1,1):
-        print('trial:',trial,ddat['lfp'][(trial,i)])
-        davg[i] += ddat['lfp'][(trial,i)][:,1]
-      davg[i] /= float(ntrial)
-    ddat['avglfp'] = davg
-
+        davglfp[i] += ddat['lfp'][(trial,i)][:,1]
+      davglfp[i] /= float(ntrial)
+    ddat['avglfp'] = davglfp
+    ddat['avgspec'] = davgspec
 except:
-  print('Could not load LFPs')#,lfppath)
+  print('Could not load LFPs')
   quit()
 
 # assumes column 0 is time, rest of columns are time-series
@@ -133,7 +139,6 @@ class LFPCanvas (FigureCanvas):
     ncol = 1
     gdx = 1
 
-    # ltitle = ['Layer2', 'Layer5', 'Aggregate']
     ltitle = ['LFP'+str(x) for x in range(nrow)]
 
     white_patch = mpatches.Patch(color='white', label='Average')
@@ -172,9 +177,9 @@ class LFPCanvas (FigureCanvas):
 
       if i == 1: ax.set_xlabel('Time (ms)');
 
-      if self.index == 0: # draw all along with average
+      if self.index == 0 and ntrial > 0: # draw all along with average
         for j in range(1,ntrial+1,1): ax.plot(tvec,ddat['lfp'][(j,nlfp)][:,1],color='gray',linewidth=2)
-        ax.plot(tvec,davg[nlfp],'w',linewidth=3)
+        ax.plot(tvec,ddat['avglfp'][nlfp],'w',linewidth=3)
         if i == 1 and nlfp == 0: ax.legend(handles=lpatch)
       else: # draw individual trial
         ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='gray',linewidth=2)
@@ -187,24 +192,14 @@ class LFPCanvas (FigureCanvas):
 
       gdx += 1
 
-      # plot wavelet transform here
-
-      prm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
-
-      if self.drawwavelet:
-
-        ms = MorletSpec(tvec, ddat['lfp'][k][:,1],None,None,prm)
-
-        ax = fig.add_subplot(nrow,ncol,gdx)
-        self.lax.append(ax)
-
-        ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
-
-        ax.set_xlim(tvec[0],tvec[-1])
-        ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Frequency (Hz)');
-
-    self.drawwavelet = False
+      # plot wavelet spectrogram
+      ms = ddat['spec'][(1,0)]
+      ax = fig.add_subplot(nrow,ncol,gdx)
+      self.lax.append(ax)
+      ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+      ax.set_xlim(tvec[0],tvec[-1])
+      ax.set_xlabel('Time (ms)')
+      ax.set_ylabel('Frequency (Hz)');
 
     gdx += 1
 
