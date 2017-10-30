@@ -22,7 +22,7 @@ import axes_create as ac
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
-    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None):
+    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None, tmin = 50.0):
         # Save variable portion of fdata_spec as identifying attribute
         # self.name = fdata_spec
 
@@ -44,7 +44,7 @@ class MorletSpec():
             self.f_max = f_max + 1
 
         # cutoff time in ms
-        self.tmin = 50.
+        self.tmin = tmin
 
         # truncate these vectors appropriately based on tmin
         if self.p_dict['tstop'] > self.tmin:
