@@ -294,9 +294,6 @@ def lowpassFIR(data, freq, samp_rate=200, winlen=2048):
     #beta implies Kaiser
     myh = fft.fftshift(h) * get_window(beta, winlen)
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
- 
-# $Id: filt.py,v 1.12 2010/12/11 01:24:21 billl Exp $
-# http://www.scipy.org/Cookbook/FiltFilt
 
 def lfilter_zi (b,a):
     #compute the zi state from the filter parameters. see [Gust96].
@@ -322,6 +319,7 @@ def lfilter_zi (b,a):
 
     return array(zi_return)
 
+# http://www.scipy.org/Cookbook/FiltFilt
 def filtfilt (b,a,x):
     #For now only accepting 1d arrays
     ntaps=max(len(a),len(b))
