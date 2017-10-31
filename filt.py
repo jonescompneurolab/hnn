@@ -326,11 +326,11 @@ def filtfilt (b,a,x):
     edge=ntaps*3
 
     if x.ndim != 1:
-        raise ValueError, "Filiflit is only accepting 1 dimension arrays."
+        raise ValueError("Filiflit is only accepting 1 dimension arrays.")
 
     #x must be bigger than edge
     if x.size < edge:
-        raise ValueError, "Input vector needs to be bigger than 3 * max(len(a),len(b)."
+        raise ValueError("Input vector needs to be bigger than 3 * max(len(a),len(b).")
 
     if len(a) < ntaps:
         a=r_[a,zeros(len(b)-len(a))]
