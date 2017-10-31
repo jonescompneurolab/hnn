@@ -386,7 +386,7 @@ initrands(0) # init once
 def setupLFPelectrodes ():
   lelec = []
   if testlaminarLFP:
-    for y in np.linspace(-72.0,1466.0,16): lelec.append(LFPElectrode([370.0, y, 450.0], pc = pc))
+    for y in np.linspace(1466.0,-72.0,16): lelec.append(LFPElectrode([370.0, y, 450.0], pc = pc))
   elif testLFP:
     lelec.append(LFPElectrode([370.0, 1050.0, 450.0], pc = pc))
     lelec.append(LFPElectrode([370.0, 208.0, 450.0], pc = pc))
