@@ -39,6 +39,20 @@ basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.par
 
 ddat = {}; tvec = None; dspec = None
 
+# lowpass filter the items in lfps. lfps is a list or numpy array of LFPs arranged spatially by column
+def getlowpass (lfps,sampr,maxf):
+  datlow = []
+  for i in range(len(lfps[0])): datlow.append(lowpass(lfps[:,i],maxf,df=sampr,zerophase=True))
+  datlow = numpy.array(datlow)
+  return datlow
+
+# get CSD - first do a lowpass filter. lfps is a list or numpy array of LFPs arranged spatially by column
+def getCSD (lfps,sampr,minf=0.1,maxf=300):
+  # datband = getbandpass(lfps,sampr,minf,maxf)
+  datband = getlowpass(lfps,sampr,maxf)
+  CSD = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
+  return CSD
+
 def readLFPs (basedir, ntrial):
   ddat = {'lfp':{}}
   lfile = os.listdir(basedir)
