@@ -202,7 +202,7 @@ class LFPCanvas (FigureCanvas):
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
       if not laminar: ax.set_ylabel('Frequency (Hz)');
 
-    #self.figure.tight_layout()
+    self.figure.subplots_adjust(bottom=0.04, left=0.04, right=1.0, top=0.99, wspace=0.1, hspace=0.01)
 
   def plot (self):
     self.drawLFP(self.figure)
