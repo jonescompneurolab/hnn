@@ -104,24 +104,6 @@ except:
   print('Could not load LFPs')
   quit()
 
-# assumes column 0 is time, rest of columns are time-series
-def extractspec (dat, fmax=120.0):
-  global ntrial
-  print('extractspec',dat.shape)
-  lspec = []
-  tvec = dat[:,0]
-  dt = tvec[1] - tvec[0]
-  tstop = tvec[-1]
-  print('tstop is ', tstop)
-  prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
-  for col in range(1,dat.shape[1],1):
-    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
-    lspec.append(ms)
-  ntrial = len(lspec)
-  #avgdipole = np.mean(dat[:,1:-1],axis=1)
-  #avgspec = MorletSpec(tvec,avgdipole,None,None,prm)
-  return ms.f, lspec # , avgdipole, avgspec
-
 class LFPCanvas (FigureCanvas):
 
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='LFP Viewer'):
@@ -145,11 +127,18 @@ class LFPCanvas (FigureCanvas):
 
   def drawLFP (self, fig):
 
-    nrow = (maxlfp+1) * 2
-    ncol = 1
-    gdx = 1
-
-    ltitle = ['LFP'+str(x) for x in range(nrow)]
+    laminar = False
+    if maxlfp > 1: laminar = True
+    if laminar:
+      nrow = maxlfp+1
+      ncol = 2
+      gdx = 1
+      ltitle = ['' for x in range(nrow*ncol)]
+    else:
+      nrow = (maxlfp+1) * 2
+      ncol = 1
+      gdx = 1
+      ltitle = ['LFP'+str(x) for x in range(nrow)]
 
     white_patch = mpatches.Patch(color='white', label='Average')
     gray_patch = mpatches.Patch(color='gray', label='Individual')
@@ -211,9 +200,9 @@ class LFPCanvas (FigureCanvas):
         ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_xlim(minwavet,tvec[-1])
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
-      ax.set_ylabel('Frequency (Hz)');
+      if not laminar: ax.set_ylabel('Frequency (Hz)');
 
-    gdx += 1
+    #self.figure.tight_layout()
 
   def plot (self):
     self.drawLFP(self.figure)
