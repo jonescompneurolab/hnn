@@ -324,7 +324,7 @@ class SIMCanvas (FigureCanvas):
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
     except:
       print('ERR: in plotsimdat')
-    self.figure.subplots_adjust(left=0.1,right=1.0-0.02,bottom=0.08,top=0.99) # reduce padding
+    self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
   def plot (self):
     self.plotsimdat()
