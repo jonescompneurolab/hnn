@@ -111,7 +111,7 @@ class DipoleCanvas (FigureCanvas):
       if tstop != -1: ax.set_xlim((0,tstop))
       ax.set_ylim(yl)
 
-      if i == 2 and len(ddat['dpltrials']) > 0: plt.legend(handles=lpatch)
+      if i == 2 and len(ddat['dpltrials']) > 0: ax.legend(handles=lpatch)
 
       ax.set_facecolor('k')
       ax.grid(True)
