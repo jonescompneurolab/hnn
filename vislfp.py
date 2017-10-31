@@ -181,7 +181,7 @@ class LFPCanvas (FigureCanvas):
       else: # draw individual trial
         ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='white',linewidth=2)
 
-      ax.set_ylabel(r'$\mu V$')
+      if not laminar: ax.set_ylabel(r'$\mu V$')
       if tstop != -1: ax.set_xlim((minwavet,tstop))
       ax.set_ylim(yl)
 

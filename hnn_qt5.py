@@ -30,7 +30,7 @@ prtime = False
 simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
-testLFP = dconf['testlfp']
+testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
 defncore = multiprocessing.cpu_count() # default number of cores
 
