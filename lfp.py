@@ -12,22 +12,19 @@ Email: harilalp@am.amrita.edu; shyam@amrita.edu
 www.amrita.edu/compneuro 
 
 translated to Python and modified to use use_fast_imem by Sam Neymotin
-based on mh code
+based on mhines code
 """
 
 from neuron import h
 from math import sqrt, log, pi, exp
 from seg3d import *
 from pylab import *
-ion()
 
 # get all Sections
 def getallSections (ty='Pyr'):
   ls = h.allsec()
   ls = [s for s in ls if s.name().count(ty)>0 or len(ty)==0]
   return ls
-
-resistivity_of_cytoplasm = 1000 #ohm-cm
 
 def getcoordinf (s):
   lcoord = []; ldist = []; lend = []; lsegloc = []
@@ -51,6 +48,7 @@ def getcoordinf (s):
       lsegloc.append()
   return lcoord, ldist, lend, lsegloc
 
+# this function not used ... yet
 def transfer_resistance2 (exyz):
   vres = h.Vector()
   lsec = getallSections()
@@ -97,6 +95,7 @@ def transfer_resistance2 (exyz):
 
   return vres
 
+# represents a simple LFP electrode
 class LFPElectrode ():
 
   def __init__ (self, coord, sigma = 3.0, pc = None, usePoint = True):
@@ -240,7 +239,6 @@ class LFPElectrode ():
       f.close()
 
 def test ():
-
   from L5_pyramidal import L5Pyr
   cell = L5Pyr()
 
@@ -262,6 +260,7 @@ def test ():
   elec.LFPinit()
   h.run()
   elec.lfp_final()
+  ion()
   plot(elec.lfp_t, elec.lfp_v)
   
 if __name__ == '__main__':

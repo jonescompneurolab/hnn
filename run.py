@@ -40,6 +40,7 @@ pcID = int(pc.id())
 f_psim = ''
 ntrial = 0
 testLFP = dconf['testlfp']; 
+testlaminarLFP = dconf['testlaminarlfp']
 lelec = [] # list of LFP electrodes
 
 # reads the specified param file
@@ -382,10 +383,16 @@ def initrands (s=0): # fix to use s
 
 initrands(0) # init once
 
-if testLFP:
+def setupLFPelectrodes ():
   lelec = []
-  lelec.append(LFPElectrode([370.0, 1050.0, 450.0], pc = pc))
-  lelec.append(LFPElectrode([370.0, 208.0, 450.0], pc = pc))
+  if testlaminarLFP:
+    for y in np.linspace(-72.0,1466.0,16): lelec.append(LFPElectrode([370.0, y, 450.0], pc = pc))
+  elif testLFP:
+    lelec.append(LFPElectrode([370.0, 1050.0, 450.0], pc = pc))
+    lelec.append(LFPElectrode([370.0, 208.0, 450.0], pc = pc))
+  return lelec
+
+lelec = setupLFPelectrodes()
   
 # All units for time: ms
 def runsim ():

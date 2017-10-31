@@ -18,6 +18,7 @@ dorun = 1
 doquit = 1
 debug = 0
 testlfp = 0
+testlaminarlfp = 0
 [paths]
 paramindir = param
 homeout = 1
@@ -157,6 +158,7 @@ def readconf (fn="hnn.cfg"):
   d['doquit'] = confint("run","doquit",1)
   d['debug'] = confint("run","debug",0)
   d['testlfp'] = confint("run","testlfp",0)
+  d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawindivrast'] = confint("draw","drawindivrast",1)
