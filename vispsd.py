@@ -177,6 +177,8 @@ class PSDCanvas (FigureCanvas):
         ddat['spec'+str(self.index)] = np.load(specpath)
       self.lax=drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));
 
+    self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98, top=0.97, wspace=0.1, hspace=0.09)
+
     self.draw()
 
 class PSDViewGUI (DataViewGUI):

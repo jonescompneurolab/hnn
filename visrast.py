@@ -209,6 +209,8 @@ class SpikeCanvas (FigureCanvas):
       self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
       self.lax.append(drawhist(dhisttrial,self.lax[-1]))
 
+    self.figure.subplots_adjust(bottom=0.0, left=0.06, right=1.0, top=0.97, wspace=0.1, hspace=0.09)
+
     self.draw()
 
 class SpikeGUI (QMainWindow):

@@ -119,6 +119,8 @@ class DipoleCanvas (FigureCanvas):
 
       gdx += 1
 
+    self.figure.subplots_adjust(bottom=0.06, left=0.06, right=1.0, top=0.97, wspace=0.1, hspace=0.09)
+
   def plot (self):
     self.drawdipole(self.figure)
     self.draw()
