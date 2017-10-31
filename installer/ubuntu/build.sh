@@ -6,6 +6,15 @@ git clone https://bitbucket.org/samnemo/hnn.git
 # packages neded for NEURON and graphics
 sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 
 
+# fixes the issue where importing OpenGL in python throws an error
+# (I assume that this works by installing the OpenGL for qt4 and then updating? it's not clear...)
+# I think that this is an error in the repos, not our fault.
+sudo apt install python3-pyqt4.qtopengl
+sudo pip3 install PyOpenGL
+sudo pip3 install --upgrade PyOpenGL
+
+# first, we make sure that another older version isn't installed 
+sudo apt remove python3-matplotlib
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
 # version (1.5) which does not have set_facecolor
 sudo pip3 install matplotlib
