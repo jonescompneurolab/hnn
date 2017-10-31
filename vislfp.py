@@ -39,20 +39,6 @@ basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.par
 
 ddat = {}; tvec = None; dspec = None
 
-# lowpass filter the items in lfps. lfps is a list or numpy array of LFPs arranged spatially by column
-def getlowpass (lfps,sampr,maxf):
-  datlow = []
-  for i in range(len(lfps[0])): datlow.append(lowpass(lfps[:,i],maxf,df=sampr,zerophase=True))
-  datlow = numpy.array(datlow)
-  return datlow
-
-# get CSD - first do a lowpass filter. lfps is a list or numpy array of LFPs arranged spatially by column
-def getCSD (lfps,sampr,minf=0.1,maxf=300):
-  # datband = getbandpass(lfps,sampr,minf,maxf)
-  datband = getlowpass(lfps,sampr,maxf)
-  CSD = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
-  return CSD
-
 def readLFPs (basedir, ntrial):
   ddat = {'lfp':{}}
   lfile = os.listdir(basedir)
@@ -83,11 +69,37 @@ def readLFPs (basedir, ntrial):
   #print('ddat:',ddat,maxlfp)
   return ddat, maxlfp, tvec
 
+# lowpass filter the items in lfps. lfps is a list or numpy array of LFPs arranged spatially by column
+def getlowpass (lfps,sampr,maxf):
+  datlow = []
+  for i in range(len(lfps[0])): datlow.append(lowpass(lfps[:,i],maxf,df=sampr,zerophase=True))
+  datlow = numpy.array(datlow)
+  return datlow
+
+# get CSD - first do a lowpass filter. lfps is a list or numpy array of LFPs arranged spatially by column
+def getCSD (lfps,sampr,minf=0.1,maxf=300):
+  # datband = getbandpass(lfps,sampr,minf,maxf)
+  """
+  if ntrial > 0:
+    for trial in range(1,ntrial+1,1):
+      lfps = []
+      for i in range(maxlfp+1):
+        lfps.append(ddat['lfp'][(trial,i)][:,1])
+  else:
+    lfps = []
+    for i in range(maxlfp+1):
+      lfps.append(ddat['lfp'][(0,i)][:,1])
+  """
+  datband = getlowpass(lfps,sampr,maxf)
+  CSD = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
+  return CSD
+
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
   ddat['spec'] = {}
   waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
   minwavet = 50.0
+  sampr = 1e3 / (tvec[1]-tvec[0])
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
     if ntrial > 0:
