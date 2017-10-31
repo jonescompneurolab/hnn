@@ -2,6 +2,7 @@ import sys, os
 import pyqtgraph as pg        
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
+import pyqtgraph as pg
 import numpy as np
 
 from morphology import shapeplot, getshapecoords
