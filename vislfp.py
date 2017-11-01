@@ -18,7 +18,7 @@ from DataViewGUI import DataViewGUI
 from neuron import h
 from run import net
 import paramrw
-from filt import boxfilt, hammfilt
+from filt import boxfilt, hammfilt, lowpass
 import spikefn
 from math import ceil
 from conf import dconf
@@ -69,30 +69,28 @@ def readLFPs (basedir, ntrial):
   #print('ddat:',ddat,maxlfp)
   return ddat, maxlfp, tvec
 
-# lowpass filter the items in lfps. lfps is a list or numpy array of LFPs arranged spatially by column
+# lowpass filter the items in lfps. lfps is a list or numpy array of LFPs arranged spatially by row
 def getlowpass (lfps,sampr,maxf):
-  datlow = []
-  for i in range(len(lfps[0])): datlow.append(lowpass(lfps[:,i],maxf,df=sampr,zerophase=True))
-  datlow = numpy.array(datlow)
-  return datlow
+  return np.array([lowpass(lfp,maxf,df=sampr,zerophase=True) for lfp in lfps])
 
-# get CSD - first do a lowpass filter. lfps is a list or numpy array of LFPs arranged spatially by column
-def getCSD (lfps,sampr,minf=0.1,maxf=300):
-  # datband = getbandpass(lfps,sampr,minf,maxf)
-  """
+# gets 2nd spatial derivative of voltage as approximation of CSD.
+# performs lowpass filter on voltages before taking spatial derivative
+# input dlfp is dictionary of LFP voltage time-series keyed by (trial, electrode)
+# output dCSD is keyed by trial
+def getCSD (dlfp,sampr,minf=0.1,maxf=300):
+  print('getCSD:',sampr,ntrial,maxlfp)
+  dCSD = {}
   if ntrial > 0:
     for trial in range(1,ntrial+1,1):
-      lfps = []
-      for i in range(maxlfp+1):
-        lfps.append(ddat['lfp'][(trial,i)][:,1])
+      lfps = [dlfp[(trial,i)][:,1] for i in range(maxlfp+1)]
+      datband = getlowpass(lfps,sampr,maxf)
+      dCSD[trial] = -np.diff(datband,n=2,axis=1)#,axis=0) # now each row is an electrode -- CSD along electrodes
   else:
-    lfps = []
-    for i in range(maxlfp+1):
-      lfps.append(ddat['lfp'][(0,i)][:,1])
-  """
-  datband = getlowpass(lfps,sampr,maxf)
-  CSD = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
-  return CSD
+    print(dlfp.keys())
+    lfps = [dlfp[(0,i)][:,1] for i in range(maxlfp+1)]
+    datband = getlowpass(lfps,sampr,maxf)
+    dCSD[0] = -np.diff(datband,n=2,axis=1)#,axis=0) # now each row is an electrode -- CSD along electrodes
+  return dCSD
 
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
@@ -100,6 +98,15 @@ try:
   waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
   minwavet = 50.0
   sampr = 1e3 / (tvec[1]-tvec[0])
+
+  """
+  ddat['CSD'] = getCSD(ddat['lfp'],sampr)
+  plt.ion(); 
+  plt.figure(); 
+  plt.imshow(ddat['CSD'][0])  
+  plt.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+  """
+
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
     if ntrial > 0:
@@ -235,6 +242,6 @@ class LFPCanvas (FigureCanvas):
     self.draw()
 
 if __name__ == '__main__':
-  app = QApplication(sys.argv)
+  #app = QApplication(sys.argv)
   ex = DataViewGUI(LFPCanvas,paramf,ntrial,'HNN LFP Viewer')
-  sys.exit(app.exec_())  
+  #sys.exit(app.exec_())  
