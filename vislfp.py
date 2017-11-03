@@ -24,7 +24,7 @@ from math import ceil
 from conf import dconf
 from specfn import MorletSpec
 
-tstop = -1; ntrial = 0; maxlfp = 0; scalefctr = 30e3; lfppath = ''; paramf = ''
+tstop = -1; ntrial = 0; maxlfp = 0; scalefctr = 30e3; lfppath = ''; paramf = ''; laminar = False
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     lfppath = sys.argv[i]
@@ -77,35 +77,33 @@ def getlowpass (lfps,sampr,maxf):
 # performs lowpass filter on voltages before taking spatial derivative
 # input dlfp is dictionary of LFP voltage time-series keyed by (trial, electrode)
 # output dCSD is keyed by trial
-def getCSD (dlfp,sampr,minf=0.1,maxf=300):
+def getCSD (dlfp,sampr,minf=0.1,maxf=300.0):
   print('getCSD:',sampr,ntrial,maxlfp)
   dCSD = {}
   if ntrial > 0:
     for trial in range(1,ntrial+1,1):
       lfps = [dlfp[(trial,i)][:,1] for i in range(maxlfp+1)]
       datband = getlowpass(lfps,sampr,maxf)
-      dCSD[trial] = -np.diff(datband,n=2,axis=1)#,axis=0) # now each row is an electrode -- CSD along electrodes
+      dCSD[trial] = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
   else:
     print(dlfp.keys())
     lfps = [dlfp[(0,i)][:,1] for i in range(maxlfp+1)]
     datband = getlowpass(lfps,sampr,maxf)
-    dCSD[0] = -np.diff(datband,n=2,axis=1)#,axis=0) # now each row is an electrode -- CSD along electrodes
+    dCSD[0] = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
   return dCSD
 
 try:
   ddat, maxlfp, tvec = readLFPs(basedir,ntrial) 
+  if maxlfp > 1: laminar = True
   ddat['spec'] = {}
   waveprm = {'f_max_spec':40.0,'dt':tvec[1]-tvec[0],'tstop':tvec[-1]}
   minwavet = 50.0
   sampr = 1e3 / (tvec[1]-tvec[0])
 
-  """
   ddat['CSD'] = getCSD(ddat['lfp'],sampr)
   plt.ion(); 
   plt.figure(); 
-  plt.imshow(ddat['CSD'][0])  
-  plt.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
-  """
+  plt.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
 
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
@@ -160,8 +158,6 @@ class LFPCanvas (FigureCanvas):
 
   def drawLFP (self, fig):
 
-    laminar = False
-    if maxlfp > 1: laminar = True
     if laminar:
       nrow = maxlfp+1
       ncol = 2
@@ -242,6 +238,6 @@ class LFPCanvas (FigureCanvas):
     self.draw()
 
 if __name__ == '__main__':
-  app = QApplication(sys.argv)
+  #app = QApplication(sys.argv)
   ex = DataViewGUI(LFPCanvas,paramf,ntrial,'HNN LFP Viewer')
-  sys.exit(app.exec_())  
+  #sys.exit(app.exec_())  
