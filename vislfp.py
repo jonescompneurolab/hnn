@@ -86,7 +86,7 @@ def getCSD (dlfp,sampr,minf=0.1,maxf=300.0):
       datband = getlowpass(lfps,sampr,maxf)
       dCSD[trial] = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
   else:
-    print(dlfp.keys())
+    #print(dlfp.keys())
     lfps = [dlfp[(0,i)][:,1] for i in range(maxlfp+1)]
     datband = getlowpass(lfps,sampr,maxf)
     dCSD[0] = -np.diff(datband,n=2,axis=0) # now each row is an electrode -- CSD along electrodes
@@ -157,6 +157,25 @@ class LFPCanvas (FigureCanvas):
         ax.cla()
     except:
       pass
+
+  def drawCSD (self, fig, G):
+    ax = fig.add_subplot(G[:,2])
+    ax.set_yticks([])
+    lw = 3; clr = 'k'
+    if ntrial > 0:
+      if self.index == 0:
+        cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        for i in range(ddat['avgCSD'].shape[0]): ax.plot(tvec,ddat['avgCSD'][i,:]+i+0.5,clr,linewidth=lw)
+      else:
+        cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        for i in range(ddat['CSD'][self.index].shape[0]): ax.plot(tvec,ddat['CSD'][self.index][i,:]+i+0.5,clr,linewidth=lw)
+    else:
+      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      ax.plot(tvec,ddat['CSD'][0][0,:])
+      for i in range(ddat['CSD'][0].shape[0]): ax.plot(tvec,ddat['CSD'][0][i,:]+i+0.5,clr,linewidth=lw)
+    cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
+    fig.colorbar(cax, cax=cbaxes, orientation='vertical')
+    ax.set_xlim((minwavet,tstop))
 
   def drawLFP (self, fig):
 
@@ -231,20 +250,7 @@ class LFPCanvas (FigureCanvas):
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
       if not laminar: ax.set_ylabel('Frequency (Hz)');
 
-
-    if laminar:
-      ax = fig.add_subplot(G[:,2])
-      ax.set_yticks([])
-      if ntrial > 0:
-        if self.index == 0:
-          cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-        else:
-          cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')        
-      else:
-        cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-      cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
-      fig.colorbar(cax, cax=cbaxes, orientation='vertical')
-      ax.set_xlim((minwavet,tstop))
+    if laminar: self.drawCSD(fig, G)
 
     self.figure.subplots_adjust(bottom=0.04, left=0.04, right=1.0, top=0.99, wspace=0.1, hspace=0.01)
 
