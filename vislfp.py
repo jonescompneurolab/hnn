@@ -100,7 +100,12 @@ try:
   minwavet = 50.0
   sampr = 1e3 / (tvec[1]-tvec[0])
 
-  ddat['CSD'] = getCSD(ddat['lfp'],sampr)
+  if laminar:
+    ddat['CSD'] = getCSD(ddat['lfp'],sampr)
+    if ntrial > 0:
+      ddat['avgCSD'] = np.zeros(ddat['CSD'][1].shape)
+      for i in range(1,ntrial+1,1): ddat['avgCSD'] += ddat['CSD'][i]
+      ddat['avgCSD']/=float(ntrial)
 
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
@@ -230,8 +235,11 @@ class LFPCanvas (FigureCanvas):
     if laminar:
       ax = fig.add_subplot(G[:,2])
       ax.set_yticks([])
-      if self.index == 0 and ntrial > 0:
-        cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      if ntrial > 0:
+        if self.index == 0:
+          cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        else:
+          cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')        
       else:
         cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
       cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
