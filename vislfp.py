@@ -101,9 +101,12 @@ try:
   sampr = 1e3 / (tvec[1]-tvec[0])
 
   ddat['CSD'] = getCSD(ddat['lfp'],sampr)
+  """
   plt.ion(); 
   plt.figure(); 
   plt.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+  plt.colorbar()
+  """
 
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
@@ -161,13 +164,13 @@ class LFPCanvas (FigureCanvas):
     if laminar:
       nrow = maxlfp+1
       ncol = 2
-      gdx = 1
       ltitle = ['' for x in range(nrow*ncol)]
     else:
       nrow = (maxlfp+1) * 2
       ncol = 1
-      gdx = 1
       ltitle = ['LFP'+str(x) for x in range(nrow)]
+
+    G = gridspec.GridSpec(nrow,ncol)
 
     white_patch = mpatches.Patch(color='white', label='Average')
     gray_patch = mpatches.Patch(color='gray', label='Individual')
@@ -193,14 +196,13 @@ class LFPCanvas (FigureCanvas):
     self.lax = []
 
     for nlfp in range(maxlfp+1):
-      gdx = nlfp * 2 + 1
       title = ltitle[nlfp]
 
       i = 1
 
-      # print('row,col,gdx,index',nrow,ncol,gdx,self.index)
-
-      ax = fig.add_subplot(nrow,ncol,gdx)
+      if laminar: ax = fig.add_subplot(G[nlfp, 0])
+      else: ax = fig.add_subplot(G[nlfp*2])
+        
       self.lax.append(ax)
 
       if self.index == 0 and ntrial > 0: # draw all along with average
@@ -216,10 +218,9 @@ class LFPCanvas (FigureCanvas):
 
       ax.set_facecolor('k'); ax.grid(True); ax.set_title(title)
 
-      gdx += 1
-
       # plot wavelet spectrogram
-      ax = fig.add_subplot(nrow,ncol,gdx)
+      if laminar: ax = fig.add_subplot(G[nlfp, 1])
+      else: ax = fig.add_subplot(G[nlfp*2+1])
       self.lax.append(ax)
       if self.index == 0 and ntrial > 0:
         TFR,tmin,F = ddat['avgspec'][nlfp]
@@ -238,6 +239,6 @@ class LFPCanvas (FigureCanvas):
     self.draw()
 
 if __name__ == '__main__':
-  #app = QApplication(sys.argv)
+  app = QApplication(sys.argv)
   ex = DataViewGUI(LFPCanvas,paramf,ntrial,'HNN LFP Viewer')
-  #sys.exit(app.exec_())  
+  sys.exit(app.exec_())  
