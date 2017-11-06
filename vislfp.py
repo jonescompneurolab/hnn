@@ -101,12 +101,6 @@ try:
   sampr = 1e3 / (tvec[1]-tvec[0])
 
   ddat['CSD'] = getCSD(ddat['lfp'],sampr)
-  """
-  plt.ion(); 
-  plt.figure(); 
-  plt.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-  plt.colorbar()
-  """
 
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
@@ -163,7 +157,7 @@ class LFPCanvas (FigureCanvas):
 
     if laminar:
       nrow = maxlfp+1
-      ncol = 2
+      ncol = 3
       ltitle = ['' for x in range(nrow*ncol)]
     else:
       nrow = (maxlfp+1) * 2
@@ -231,6 +225,17 @@ class LFPCanvas (FigureCanvas):
       ax.set_xlim(minwavet,tvec[-1])
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
       if not laminar: ax.set_ylabel('Frequency (Hz)');
+
+
+    if laminar:
+      ax = fig.add_subplot(G[:,2])
+      ax.set_yticks([])
+      if self.index == 0 and ntrial > 0:
+        cax = ax.imshow(ddat['CSD'][self.index],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      else:
+        cax = ax.imshow(ddat['CSD'][0],extent=[0, 710, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
+      fig.colorbar(cax, cax=cbaxes, orientation='vertical')
 
     self.figure.subplots_adjust(bottom=0.04, left=0.04, right=1.0, top=0.99, wspace=0.1, hspace=0.01)
 
