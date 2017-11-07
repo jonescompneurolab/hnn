@@ -161,21 +161,30 @@ class LFPCanvas (FigureCanvas):
   def drawCSD (self, fig, G):
     ax = fig.add_subplot(G[:,2])
     ax.set_yticks([])
-    lw = 3; clr = 'k'
+    lw = 2; clr = 'k'
     if ntrial > 0:
       if self.index == 0:
         cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-        for i in range(ddat['avgCSD'].shape[0]): ax.plot(tvec,ddat['avgCSD'][i,:]+i+0.5,clr,linewidth=lw)
+        # overlay the time-series
+        for i in range(ddat['avgCSD'].shape[0]):
+          yoff = maxlfp - 1 - (i + 1) + 0.5
+          ax.plot(tvec,ddat['avgCSD'][i,:]+yoff,clr,linewidth=lw)
       else:
         cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-        for i in range(ddat['CSD'][self.index].shape[0]): ax.plot(tvec,ddat['CSD'][self.index][i,:]+i+0.5,clr,linewidth=lw)
+        # overlay the time-series
+        for i in range(ddat['CSD'][self.index].shape[0]):
+          yoff = maxlfp - 1 - (i + 1) + 0.5
+          ax.plot(tvec,ddat['CSD'][self.index][i,:]+yoff,clr,linewidth=lw)
     else:
+      # draw CSD as image; blue/red corresponds to excit/inhib
       cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
-      ax.plot(tvec,ddat['CSD'][0][0,:])
-      for i in range(ddat['CSD'][0].shape[0]): ax.plot(tvec,ddat['CSD'][0][i,:]+i+0.5,clr,linewidth=lw)
+      # overlay the time-series
+      for i in range(ddat['CSD'][0].shape[0]):
+        yoff = maxlfp - 1 - (i + 1) + 0.5
+        ax.plot(tvec,ddat['CSD'][0][i,:]+yoff,clr,linewidth=lw)
     cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
     fig.colorbar(cax, cax=cbaxes, orientation='vertical')
-    ax.set_xlim((minwavet,tstop))
+    ax.set_xlim((minwavet,tstop)); ax.set_ylim((0,maxlfp-1))
 
   def drawLFP (self, fig):
 
