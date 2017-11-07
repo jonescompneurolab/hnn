@@ -284,4 +284,4 @@ class LFPCanvas (FigureCanvas):
 if __name__ == '__main__':
   app = QApplication(sys.argv)
   ex = DataViewGUI(LFPCanvas,paramf,ntrial,'HNN LFP Viewer')
-  #sys.exit(app.exec_())  
+  sys.exit(app.exec_())  
