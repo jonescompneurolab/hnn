@@ -137,6 +137,17 @@ except:
   print('Could not load LFPs')
   quit()
 
+def getnorm (yin):
+  yout = yin - min(yin)
+  return yout / max(yout)
+
+def getrngfctroff (dat):
+  yrng = [max(dat[i,:])-min(dat[i,:]) for i in range(dat.shape[0])]
+  mxrng = np.amax(yrng)
+  yfctr = [yrng[i]/mxrng for i in range(len(yrng))]
+  yoff = [maxlfp - 1 - (i + 1) for i in range(len(yrng))]
+  return yrng,yfctr,yoff
+
 class LFPCanvas (FigureCanvas):
 
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='LFP Viewer'):
@@ -166,22 +177,25 @@ class LFPCanvas (FigureCanvas):
       if self.index == 0:
         cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
         # overlay the time-series
+        yrng,yfctr,yoff = getrngfctroff(ddat['avgCSD'])
         for i in range(ddat['avgCSD'].shape[0]):
-          yoff = maxlfp - 1 - (i + 1) + 0.5
-          ax.plot(tvec,ddat['avgCSD'][i,:]+yoff,clr,linewidth=lw)
+          y = yfctr[i] * getnorm(ddat['avgCSD'][i,:]) + yoff[i]
+          ax.plot(tvec,y,clr,linewidth=lw)
       else:
         cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
         # overlay the time-series
+        yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][self.index])
         for i in range(ddat['CSD'][self.index].shape[0]):
-          yoff = maxlfp - 1 - (i + 1) + 0.5
-          ax.plot(tvec,ddat['CSD'][self.index][i,:]+yoff,clr,linewidth=lw)
+          y = yfctr[i] * getnorm(ddat['CSD'][self.index][i,:]) + yoff[i]
+          ax.plot(tvec,y,clr,linewidth=lw)
     else:
       # draw CSD as image; blue/red corresponds to excit/inhib
       cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
       # overlay the time-series
+      yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][0])
       for i in range(ddat['CSD'][0].shape[0]):
-        yoff = maxlfp - 1 - (i + 1) + 0.5
-        ax.plot(tvec,ddat['CSD'][0][i,:]+yoff,clr,linewidth=lw)
+        y = yfctr[i] * getnorm(ddat['CSD'][0][i,:]) + yoff[i]
+        ax.plot(tvec,y,clr,linewidth=lw)
     cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
     fig.colorbar(cax, cax=cbaxes, orientation='vertical')
     ax.set_xlim((minwavet,tstop)); ax.set_ylim((0,maxlfp-1))
@@ -270,4 +284,4 @@ class LFPCanvas (FigureCanvas):
 if __name__ == '__main__':
   app = QApplication(sys.argv)
   ex = DataViewGUI(LFPCanvas,paramf,ntrial,'HNN LFP Viewer')
-  sys.exit(app.exec_())  
+  #sys.exit(app.exec_())  
