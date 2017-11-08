@@ -180,7 +180,7 @@ class LFPCanvas (FigureCanvas):
           y = yfctr[i] * getnorm(ddat['avgCSD'][i,:]) + yoff[i]
           ax.plot(tvec,y,clr,linewidth=lw)
       else:
-        cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        cax = ax.imshow(ddat['CSD'][self.index-1],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
         # overlay the time-series
         yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][self.index-1])
         for i in range(ddat['CSD'][self.index-1].shape[0]):
