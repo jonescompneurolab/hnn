@@ -206,7 +206,7 @@ class SpikeCanvas (FigureCanvas):
       self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
       self.lax.append(drawhist(dhist,self.lax[-1]))
     else:
-      spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index)+'.txt') 
+      spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index-1)+'.txt') 
       dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
       extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
       extinputs.add_delay_times()
