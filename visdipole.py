@@ -104,7 +104,8 @@ class DipoleCanvas (FigureCanvas):
 
       if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for ddx,dpltrial in enumerate(ddat['dpltrials']):
-          ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
+          if self.index == 0 or (self.index > 0 and ddx == self.index-1):
+            ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
 
       if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5) # average dipole (across trials)
 

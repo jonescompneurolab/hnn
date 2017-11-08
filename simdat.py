@@ -31,7 +31,7 @@ def readdpltrials (basedir,ntrial):
   if debug: print('in readdpltrials',basedir,ntrial)
   ldpl = []
   for i in range(ntrial):
-    fn = os.path.join(basedir,'dpl_'+str(i+1)+'.txt')
+    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
     if not os.path.exists(fn): break    
     ldpl.append(np.loadtxt(fn))
     if debug: print('loaded ', fn)
