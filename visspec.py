@@ -16,6 +16,9 @@ import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 from specfn import MorletSpec
+from conf import dconf
+
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
 ntrial = 0; paramf = ''
 for i in range(len(sys.argv)):

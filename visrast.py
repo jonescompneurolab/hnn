@@ -23,6 +23,10 @@ from math import ceil
 from conf import dconf
 from gutils import getmplDPI
 
+#plt.rcParams['lines.markersize'] = 15
+#plt.rcParams['lines.linewidth'] = 4
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
         'L5_pyramidal' : 'r',

@@ -24,6 +24,8 @@ from math import ceil
 from conf import dconf
 from specfn import MorletSpec
 
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+
 tstop = -1; ntrial = 0; maxlfp = 0; scalefctr = 30e3; lfppath = ''; paramf = ''; laminar = False
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):

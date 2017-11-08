@@ -14,6 +14,8 @@ from scipy import signal
 
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+
 debug = dconf['debug']
 
 ddat = {}

@@ -24,6 +24,8 @@ from math import ceil
 from simdat import readdpltrials
 from conf import dconf
 
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+
 tstop = -1; ntrial = 0; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
