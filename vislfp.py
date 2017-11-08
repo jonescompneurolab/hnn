@@ -28,7 +28,7 @@ if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
 debug = True
 
-tstop = -1; ntrial = 0; maxlfp = 0; scalefctr = 30e3; lfppath = ''; paramf = ''; laminar = False
+tstop = -1; ntrial = 1; maxlfp = 0; scalefctr = 30e3; lfppath = ''; paramf = ''; laminar = False
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     lfppath = sys.argv[i]
@@ -57,7 +57,7 @@ def readLFPs (basedir, ntrial):
         trial = int(lf[1])
         nlfp = int(lf[2])
       else:
-        trial = 1
+        trial = 0
         nlfp = int(lf[1])
       maxlfp = max(nlfp,maxlfp)
       if debug: print('readLFPs:',trial,nlfp,maxlfp)
@@ -85,7 +85,7 @@ def getlowpass (lfps,sampr,maxf):
 def getCSD (dlfp,sampr,minf=0.1,maxf=300.0):
   if debug: print('getCSD:','sampr=',sampr,'ntrial=',ntrial,'maxlfp=',maxlfp)
   dCSD = {}
-  for trial in range(1,ntrial+1,1):
+  for trial in range(ntrial):
     if debug: print('trial:',trial)
     lfps = [dlfp[(trial,i)][:,1] for i in range(maxlfp+1)]
     datband = getlowpass(lfps,sampr,maxf)
@@ -105,12 +105,12 @@ try:
     ddat['CSD'] = getCSD(ddat['lfp'],sampr)
     if ntrial > 1:
       ddat['avgCSD'] = np.zeros(ddat['CSD'][1].shape)
-      for i in range(1,ntrial+1,1): ddat['avgCSD'] += ddat['CSD'][i]
+      for i in range(ntrial): ddat['avgCSD'] += ddat['CSD'][i]
       ddat['avgCSD']/=float(ntrial)
 
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
-    for trial in range(1,ntrial+1,1):
+    for trial in range(ntrial):
       ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1],None,None,waveprm,minwavet)
   if ntrial > 1:
     if debug: print('here')
@@ -119,12 +119,12 @@ try:
       if debug: print(i,maxlfp,list(ddat['lfp'].keys())[0])
       davglfp[i] = np.zeros(len(ddat['lfp'][list(ddat['lfp'].keys())[0]]),)
       try:
-        ms = ddat['spec'][(1,0)]
+        ms = ddat['spec'][(0,0)]
         if debug: print('shape',ms.TFR.shape,ms.tmin,ms.f[0],ms.f[-1])
         davgspec[i] = [np.zeros(ms.TFR.shape), ms.tmin, ms.f]
       except:
         print('err in davgspec[i]=')
-      for trial in range(1,ntrial+1,1):
+      for trial in range(ntrial):
         davglfp[i] += ddat['lfp'][(trial,i)][:,1]
         davgspec[i][0] += ddat['spec'][(trial,i)].TFR
       davglfp[i] /= float(ntrial)
@@ -182,17 +182,17 @@ class LFPCanvas (FigureCanvas):
       else:
         cax = ax.imshow(ddat['CSD'][self.index],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
         # overlay the time-series
-        yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][self.index])
-        for i in range(ddat['CSD'][self.index].shape[0]):
-          y = yfctr[i] * getnorm(ddat['CSD'][self.index][i,:]) + yoff[i]
+        yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][self.index-1])
+        for i in range(ddat['CSD'][self.index-1].shape[0]):
+          y = yfctr[i] * getnorm(ddat['CSD'][self.index-1][i,:]) + yoff[i]
           ax.plot(tvec,y,clr,linewidth=lw)
     else:
       # draw CSD as image; blue/red corresponds to excit/inhib
-      cax = ax.imshow(ddat['CSD'][1],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
       # overlay the time-series
-      yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][1])
-      for i in range(ddat['CSD'][1].shape[0]):
-        y = yfctr[i] * getnorm(ddat['CSD'][1][i,:]) + yoff[i]
+      yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][0])
+      for i in range(ddat['CSD'][0].shape[0]):
+        y = yfctr[i] * getnorm(ddat['CSD'][0][i,:]) + yoff[i]
         ax.plot(tvec,y,clr,linewidth=lw)
     cbaxes = fig.add_axes([0.69, 0.88, 0.005, 0.1]) 
     fig.colorbar(cax, cax=cbaxes, orientation='vertical')
@@ -244,12 +244,12 @@ class LFPCanvas (FigureCanvas):
       if self.index == 0: # draw all along with average
         if ntrial > 1: clr = 'gray'
         else: clr = 'white'
-        for i in range(1,ntrial+1,1): ax.plot(tvec,ddat['lfp'][(i,nlfp)][:,1],color=clr,linewidth=2)
+        for i in range(ntrial): ax.plot(tvec,ddat['lfp'][(i,nlfp)][:,1],color=clr,linewidth=2)
         if ntrial > 1: 
           ax.plot(tvec,ddat['avglfp'][nlfp],'w',linewidth=3)
           if nlfp == 0: ax.legend(handles=lpatch)
       else: # draw individual trial
-        ax.plot(tvec,ddat['lfp'][(self.index,nlfp)][:,1],color='white',linewidth=2)
+        ax.plot(tvec,ddat['lfp'][(self.index-1,nlfp)][:,1],color='white',linewidth=2)
 
       if not laminar: ax.set_ylabel(r'$\mu V$')
       if tstop != -1: ax.set_xlim((minwavet,tstop))
@@ -266,10 +266,10 @@ class LFPCanvas (FigureCanvas):
           TFR,tmin,F = ddat['avgspec'][nlfp]
           ax.imshow(TFR, extent=[tmin, tvec[-1], F[-1], F[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
         else:
-          ms = ddat['spec'][(1,nlfp)]
+          ms = ddat['spec'][(0,nlfp)]
           ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
       else:
-        ms = ddat['spec'][(self.index,nlfp)]
+        ms = ddat['spec'][(self.index-1,nlfp)]
         ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
       ax.set_xlim(minwavet,tvec[-1])
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')

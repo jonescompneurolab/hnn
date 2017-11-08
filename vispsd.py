@@ -26,7 +26,7 @@ from conf import dconf
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
-ntrial = 0; specpath = ''; paramf = ''
+ntrial = 1; specpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     specpath = sys.argv[i]

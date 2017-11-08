@@ -152,7 +152,7 @@ class SIMCanvas (FigureCanvas):
       pass
 
   def getNTrials (self):
-    N_trials = 0
+    N_trials = 1
     try:
       xx = quickgetprm(self.paramf,'N_trials',int)
       if type(xx) == int: N_trials = xx
@@ -296,7 +296,7 @@ class SIMCanvas (FigureCanvas):
 
       yl = [np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])]
 
-      if N_trials>0 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+      if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
           yl[0] = min(yl[0],dpltrial[:,1].min())

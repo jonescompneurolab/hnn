@@ -38,7 +38,7 @@ debug = dconf['debug']
 pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
-ntrial = 0
+ntrial = 1
 testLFP = dconf['testlfp']; 
 testlaminarLFP = dconf['testlaminarlfp']
 lelec = [] # list of LFP electrodes
@@ -52,7 +52,7 @@ for i in range(len(sys.argv)):
     if pcID==0 and debug: print('using ',f_psim,' param file.')
   elif sys.argv[i] == 'ntrial' and i+1<len(sys.argv):
     ntrial = int(sys.argv[i+1])
-    if ntrial == 1: ntrial = 0
+    if ntrial < 1: ntrial = 1
     if pcID==0 and debug: print('ntrial:',ntrial)
 
 if not foundprm:
@@ -179,7 +179,7 @@ def setupsimdir (f_psim,p_exp,rank):
     copy_paramfile(ddir.dsim, f_psim, ddir.str_date)
   return ddir
 
-def getfname (ddir,key,trial=0,ntrial=0):
+def getfname (ddir,key,trial=0,ntrial=1):
   datatypes = {'rawspk': ('spk','.txt'),
                'rawdpl': ('rawdpl','.txt'),
                'normdpl': ('dpl','.txt'), # same output name - do not need both raw and normalized dipole - unless debugging
@@ -197,14 +197,14 @@ def getfname (ddir,key,trial=0,ntrial=0):
                'vsoma': ('vsoma','.pkl'),
                'lfp': ('lfp', '.txt')
              }
-  if ntrial == 0 or key == 'param': # param file currently identical for all trials
+  if ntrial == 1 or key == 'param': # param file currently identical for all trials
     return os.path.join(datdir,datatypes[key][0]+datatypes[key][1])
   else:
     return os.path.join(datdir,datatypes[key][0] + '_' + str(trial) + datatypes[key][1])
     
 
 # create file names
-def setoutfiles (ddir,trial=0,ntrial=0):
+def setoutfiles (ddir,trial=0,ntrial=1):
   # if pcID==0: print('setoutfiles:',trial,ntrial)
   doutf = {}
   doutf['file_dpl'] = getfname(ddir,'rawdpl',trial,ntrial)
@@ -285,7 +285,7 @@ pc.barrier()
 
 # save spikes from the individual trials in a single file
 def catspks ():
-  lf = [os.path.join(datdir,'spk_'+str(i+1)+'.txt') for i in range(ntrial)]
+  lf = [os.path.join(datdir,'spk_'+str(i)+'.txt') for i in range(ntrial)]
   if debug: print('catspk lf:',lf)
   lspk = [[],[]]
   for f in lf:
@@ -306,7 +306,7 @@ def catspks ():
 def catdpl ():
   ldpl = []
   for pre in ['dpl','rawdpl']:
-    lf = [os.path.join(datdir,pre+'_'+str(i+1)+'.txt') for i in range(ntrial)]
+    lf = [os.path.join(datdir,pre+'_'+str(i)+'.txt') for i in range(ntrial)]
     dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
     with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
       for i in range(dpl.shape[0]):
@@ -319,7 +319,7 @@ def catdpl ():
 
 # save average spectrogram from individual trials in a single file
 def catspec ():
-  lf = [os.path.join(datdir,'rawspec_'+str(i+1)+'.npz') for i in range(ntrial)]
+  lf = [os.path.join(datdir,'rawspec_'+str(i)+'.npz') for i in range(ntrial)]
   dspecin = {}
   dout = {}
   try:
@@ -348,12 +348,12 @@ def runtrials (ntrial, inc_evinput=0.0):
   if pcID==0: print('Running', ntrial, 'trials.')
   for i in range(ntrial):
     if pcID==0: print('Running trial',i+1,'...')
-    doutf = setoutfiles(ddir,i+1,ntrial)
+    doutf = setoutfiles(ddir,i,ntrial)
     # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     net.state_init() # initialize voltages
     runsim() # run the simulation
     net.reset_src_event_times(inc_evinput = inc_evinput * (i + 1)) # adjusts the rng seeds and then the feed/event input times
-  doutf = setoutfiles(ddir,0,0) # reset output files based on sim name
+  doutf = setoutfiles(ddir,0,1) # reset output files based on sim name
   if pcID==0: cattrialoutput() # get/save the averages
 
 def initrands (s=0): # fix to use s
@@ -363,7 +363,7 @@ def initrands (s=0): # fix to use s
   prng_tmp = np.random.RandomState()
   if pcID == 0:
     r = h.Vector(1, s) # initialize vector to 1 element, with a 0
-    if ntrial == 0:
+    if ntrial == 1:
       prng_base = np.random.RandomState(pcID + s)
     else:
       # Create a random seed value

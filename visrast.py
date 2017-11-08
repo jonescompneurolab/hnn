@@ -33,7 +33,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; 
+ntrial = 1; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; 
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
@@ -109,7 +109,7 @@ def getdspk (fn):
 def drawhist (dhist,ax):
   ax2 = ax.twinx()
   fctr = 1.0
-  if ntrial > 1:
+  if ntrial > 0:
     fctr = 1.0 / ntrial
   for ty in dhist.keys():
     ax2.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
@@ -261,7 +261,7 @@ class SpikeGUI (QMainWindow):
     self.cb = QComboBox(self)
     self.grid.addWidget(self.cb,2,0,1,4)
 
-    if ntrial > 0:
+    if ntrial > 1:
       self.cb.addItem('Show All Trials')
       for i in range(ntrial):
         self.cb.addItem('Show Trial ' + str(i+1))

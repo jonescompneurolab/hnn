@@ -768,7 +768,7 @@ class RunParamDialog (DictDialog):
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
                              ('dt', 0.025), # timestep
                              # ('celsius',6.3), # temperature
-                             ('N_trials',0)]) # number of trials
+                             ('N_trials',1)]) # number of trials
                              # cvode - not currently used by simulation
 
     # analysis    

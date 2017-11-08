@@ -26,7 +26,7 @@ from conf import dconf
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
-tstop = -1; ntrial = 0; scalefctr = 30e3; dplpath = ''; paramf = ''
+tstop = -1; ntrial = 1; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
     dplpath = sys.argv[i]
@@ -104,10 +104,9 @@ class DipoleCanvas (FigureCanvas):
 
       if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for ddx,dpltrial in enumerate(ddat['dpltrials']):
-          if self.index == 0 or ddx == self.index-1:
-            ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
+          ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
 
-      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5)
+      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5) # average dipole (across trials)
 
       ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
       if tstop != -1: ax.set_xlim((0,tstop))

@@ -52,7 +52,7 @@ class DataViewGUI (QMainWindow):
 
   def updateCB (self):
     self.cb.clear()
-    if self.ntrial > 0:
+    if self.ntrial > 1:
       self.cb.addItem('Show All Trials')
       for i in range(self.ntrial):
         self.cb.addItem('Show Trial ' + str(i+1))

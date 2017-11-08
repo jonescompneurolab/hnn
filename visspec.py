@@ -20,7 +20,7 @@ from conf import dconf
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
-ntrial = 0; paramf = ''
+ntrial = 1; paramf = ''
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]

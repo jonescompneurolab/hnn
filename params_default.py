@@ -158,8 +158,8 @@ def get_params_default (nprox = 2, ndist = 1):
         'Itonic_T_L5Basket': -1.,
 
         # numerics
-        # N_trials of 0 means that seed is set by rank, will still run 1 trial (obviously)
-        'N_trials': 0,
+        # N_trials of 1 means that seed is set by rank
+        'N_trials': 1,
 
         # prng_state is a string for a filename containing the random state one wants to use
         # prng seed cores are the base integer seed for the specific

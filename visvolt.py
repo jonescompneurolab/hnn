@@ -29,7 +29,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 0; tstop = -1; outparamf = voltpath = paramf = ''; 
+ntrial = 1; tstop = -1; outparamf = voltpath = paramf = ''; 
 
 maxperty = 10 # how many cells of a type to draw
 
