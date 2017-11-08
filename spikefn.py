@@ -208,7 +208,7 @@ class ExtInputs (Spikes):
     if not xlim:
       xlim = (0., p_dict['tstop'])
     if len(self.inputs[extinput]):
-      #print("bins:",bins,type(bins))
+      #print("plot_hist bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput, histtype=hty,linewidth=lw)
     else:
       hist = None
@@ -260,7 +260,6 @@ def hist_bin_opt(x, N_trials):
   # find the bin size corresponding to a minimization of the costs
   bin_opt_list = bin_checks[costs.min() == costs]
   bin_opt = bin_opt_list[0]
-  print(bin_opt)
   return bin_opt
 
 # "purely" from files, this is the new way to replace the old way
