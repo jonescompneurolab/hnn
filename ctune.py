@@ -10,6 +10,7 @@ import pickle
 
 ion()
 
+
 # determine config file name
 def setfcfg ():
   fcfg = "sim.cfg" # default config file name

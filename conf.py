@@ -19,6 +19,7 @@ doquit = 1
 debug = 0
 testlfp = 0
 testlaminarlfp = 0
+optrun = 0
 [paths]
 paramindir = param
 homeout = 1
@@ -34,39 +35,38 @@ tstop = Simulation duration; Evoked response simulations typically take 170 ms w
 dt = Simulation timestep - shorter timesteps mean more accuracy but longer runtimes.
 """
 
-class baseparam:
-  pass
-
-class dlgparam (baseparam):
-  def __init__ (self, title, dID, ntab):
-    self.title = title # displayed text
-    self.ID = dID # dialog ID
-    self.ntab = ntab # number of tabs (-1 means not using tabs)
-
-class tabparam (baseparam):
-  def __init__ (self, title, dID, tID):
-    self.title = title # displayed text
-    self.dID = dID # dialog ID
-    self.tID = tID # tab ID
-
-class param (baseparam):
-  def __init__ (self, title, dID, tID, val, ty, rng=None):
-    self.title = title
-    self.dID = dID
-    self.tID = tID # tab ID (-1 means not in a tab)
-    self.val = val # value
-    self.ty = ty # type (0==number, 1==string)
-    self.rng = rng
-    if rng: self.bounded=True
-    else: self.bounded=False
-
-  # check if value is within bounds
-  def inbounds (self,val):
-    if not bounded: return True
-    return val >= self.rng[0] and val <= self.rng[1]
-
+# parameter used for optimization
+class param:
+  def __init__ (self, origval, minval, maxval, bounded, var, bestval=None):
+    self.origval = origval
+    self.minval = minval
+    self.maxval = maxval
+    self.bounded = bounded
+    self.bestval = bestval
+    if var.count(',') > 0: self.var = var.split(',')
+    else: self.var = var
   def __str__ (self):
-    return str(self.val)
+    sout = ''
+    for s in [self.var, self.minval, self.maxval, self.origval, self.bounded, self.bestval]:
+      sout += str(s)
+      sout += ' '
+    return sout
+  def assignstr (self, val):  # generates string for execution
+    if type(self.var) == list:
+      astr = ''
+      for var in self.var: astr += var + ' = ' + str(val) + ';'
+      return astr
+    else:
+      return self.var + ' = ' + str(val)
+  def inbounds (self,val):   # check if value is within bounds
+    if not bounded: return True
+    return val >= self.minval and val <= self.maxval
+  # only return assignstr if val is within bounds
+  def checkassign (self,val):
+    if self.inbounds(val):
+      return self.assignstr(val)
+    else:
+      return None
 
 # write config file starting with defaults and new entries
 # specified in section (sec) , option (opt), and value (val)
@@ -118,22 +118,23 @@ def readconf (fn="hnn.cfg"):
     for i,prm in enumerate(ltips):
       d[prm] = config.get('tips',prm).strip()      
 
-  def getlparam (base, ty):
-    lout = []
-    if not config.has_section(base): return lout
-    lin = config.options(base)    
-
-    for i,prm in enumerate(lin):
-      s = config.get(base,prm)
+  def readoptprm (d):
+    dparams = {}
+    d['params'] = dparams
+    if not config.has_section('params'): return False
+    lprm = config.options('params')
+    #print 'params:', lprm
+    for i,prm in enumerate(lprm):
+      #print prm
+      s = config.get('params',prm)    
       sp = s.split()
-      try:
-        lout.append( (prm, ty(*sp)) )
-      except:
-        print('config skipping ' , s)
-        pass
-    return lout
-
-  lsec = config.sections()
+      if len(sp) > 4:
+        minval,maxval,origval,bounded,bestval = float(sp[0]),float(sp[1]),float(sp[2]),str2bool(sp[3]),float(sp[4])
+        p = param(origval,minval,maxval,bounded,prm,bestval)
+      else:
+        minval,maxval,origval,bounded = float(sp[0]),float(sp[1]),float(sp[2]),str2bool(sp[3])
+        p = param(origval,minval,maxval,bounded,prm)
+      dparams[prm] = p
 
   d = {}
 
@@ -151,6 +152,7 @@ def readconf (fn="hnn.cfg"):
   d['datdir'] = os.path.join(dbase,'data') # data output directory
   d['paramoutdir'] = os.path.join(dbase, 'param')
   d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location  
+  d['dataf'] = confstr('paths','dataf','')
 
   for k in ['datdir', 'paramindir', 'paramoutdir']: # need these directories
     if not safemkdir(d[k]): sys.exit(1)
@@ -160,12 +162,15 @@ def readconf (fn="hnn.cfg"):
   d['debug'] = confint("run","debug",0)
   d['testlfp'] = confint("run","testlfp",0)
   d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
+  d['optrun'] = confint("run","optrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawindivrast'] = confint("draw","drawindivrast",1)
   d['fontsize'] = confint("draw","fontsize",0)
 
   readtips(d) # read tooltips for parameters
+
+  if d['optrun']: readoptprm(d)
 
   return d
 
