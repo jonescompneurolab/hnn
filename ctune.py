@@ -1,3 +1,6 @@
+from math import log, exp
+
+"""
 from neuron import h
 # h.load_file("stdrun.hoc")
 import numpy
@@ -133,6 +136,7 @@ def clampval (prm, nval):
 
 #
 def clampvals (vec,lparam): return [clampval(prm,x) for prm,x in zip(lparam,vec)] 
+"""
 
 # exponentiates value
 def expval (prm, val):
@@ -152,6 +156,8 @@ def logval (prm, val):
 #
 def logvals (vec,lparam): return [logval(prm,x) for prm,x in zip(lparam,vec)] 
 
+
+"""
 #
 def assignparams (vparam,lparam,useExp=False):
   if useExp:
@@ -352,3 +358,4 @@ def runsaveopt ():
 
 if __name__ == '__main__':
   if dconf['runopt']: runsaveopt()
+"""

@@ -4,6 +4,7 @@ import pickle
 import os
 import sys
 from fileio import safemkdir
+from collections import OrderedDict
 
 try:
   from StringIO import StringIO
@@ -119,7 +120,7 @@ def readconf (fn="hnn.cfg"):
       d[prm] = config.get('tips',prm).strip()      
 
   def readoptprm (d):
-    dparams = {}
+    dparams = OrderedDict()
     d['params'] = dparams
     if not config.has_section('params'): return False
     lprm = config.options('params')
