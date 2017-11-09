@@ -97,6 +97,7 @@ class SIMCanvas (FigureCanvas):
     self.paramf = paramf
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
+    self.errtot = 0.0
     self.plot()
 
   def plotinputhist (self,xl): # plot input histograms
@@ -245,6 +246,7 @@ class SIMCanvas (FigureCanvas):
       txt='Avg. RMSE:' + str(round(errtot,2))
       self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
       print(txt)
+      self.errtot = errtot
 
     except:
       print('simdat ERR: could not plotextdat')

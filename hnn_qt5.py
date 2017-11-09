@@ -1240,11 +1240,11 @@ class BaseParamDialog (QDialog):
 
     self.setWindowTitle('Set Parameters')    
 
-  def saveparams (self):
+  def saveparams (self, checkok = True):
     global paramf,basedir
     tmpf = os.path.join(dconf['paramoutdir'],self.qle.text() + '.param')
     oktosave = True
-    if os.path.isfile(tmpf):
+    if os.path.isfile(tmpf) and checkok:
       self.show()
       oktosave = False
       msg = QMessageBox()
@@ -1466,10 +1466,17 @@ class HNNGUI (QMainWindow):
     runSimAct.setStatusTip('Run simulation.')
     runSimAct.triggered.connect(self.controlsim)
 
+    if dconf['optrun']:
+      optSimAct = QAction('Optimize model.', self)
+      optSimAct.setShortcut('Ctrl+O')
+      optSimAct.setStatusTip('Optimize Model.')
+      optSimAct.triggered.connect(self.startoptmodel)
+
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(runSimAct)
+    if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
@@ -1691,6 +1698,12 @@ class HNNGUI (QMainWindow):
       except:
         pass
 
+  def startoptmodel (self):
+    if self.runningsim:
+      self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
+    else:
+      self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
+
   def controlsim (self):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
@@ -1708,6 +1721,78 @@ class HNNGUI (QMainWindow):
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
       self.setcursors(Qt.ArrowCursor)
+
+  def optmodel (self, ntrial, ncore):
+    from neuron import h # for praxis
+
+    # exponentiates value
+    def expval (prm, val):
+      if prm.minval > 0: return exp(val)
+      elif prm.maxval < 0: return -exp(val)
+      else: return val
+
+    def expvals (vec,lparam): return [expval(prm,x) for prm,x in zip(lparam,vec)] 
+
+    def logval (prm, val):
+      if prm.minval > 0: return log(val)
+      elif prm.maxval < 0: return log(-val)
+      else: return val
+
+    def logvals (vec,lparam): return [logval(prm,x) for prm,x in zip(lparam,vec)] 
+
+    def optrun (vparam):
+      self.runningsim = True
+      self.statusBar().showMessage("Optimizing model. . .")
+      self.btnsim.setText("Stop Optimization") 
+      self.qbtn.setEnabled(False)
+      self.waitsimwin.show()
+      # create parameter dictionary of current values to test
+      lparam = list(dconf['params'].values())
+      dtest = {} # parameter values to test      
+      for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
+        if val >= prm.minval and val <= prm.maxval:
+          dtest[prm.var] = val
+        else:
+          print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
+          return 1e9
+      if type(vparam)==list: print('set params:', vparam)
+      else: print('set params:', vparam.as_numpy())
+      # update parameter values in GUI (so user can see and so GUI will save these param values)
+      for win in self.baseparamwin.lsubwin: win.setfromdin(dtest)
+      # save parameters - do not ask if can over-write the param file
+      self.baseparamwin.saveparams(checkok = False)
+      # run the simulation as usual
+      self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
+      # start the simulation 
+      self.runthread.start()
+      while self.runningsim: sleep(1)
+      # check output, & calculate/return error -- error calculated during plotting, use that for now
+      return self.m.errtot
+
+    self.setcursors(Qt.WaitCursor)
+    print('Starting model optimization. . .')
+
+    tol = 1e-5; nstep = 100; stepsz = 0.5
+    h.attr_praxis(tol, stepsz, 3)
+    h.stop_praxis(nstep) # 
+
+    lparam = list(dconf['params'].values())
+    vparam = h.Vector()
+    # read current parameters from GUI
+    s = str(self.baseparamwin)
+    for l in s.split(os.linesep):
+      #print('l=',l)
+      if l.count(': ') < 1: continue
+      k,v = l.split(': ')
+      if k in lparam:
+        prm = lparam[lparam.index(k)]
+        vparam.append(logval(prm,float(v)))
+
+    x = h.fit_praxis(optrun, vparam)
+
+
+
+
 
   def startsim (self, ntrial, ncore):
 
