@@ -1723,39 +1723,47 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('')
       self.setcursors(Qt.ArrowCursor)
 
-  def optrun (self, vparam):
-    if debug: print('in optrun')
-    self.runningsim = True
-    self.statusBar().showMessage("Optimizing model. . .")
-    self.btnsim.setText("Stop Optimization") 
-    self.qbtn.setEnabled(False)
-    #self.waitsimwin.show()
-    # create parameter dictionary of current values to test
-    lparam = list(dconf['params'].values())
-    dtest = {} # parameter values to test      
-    for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
-      if val >= prm.minval and val <= prm.maxval:
-        dtest[prm.var] = val
-      else:
-        print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
-        return 1e9
-    if type(vparam)==list: print('set params:', vparam)
-    else: print('set params:', vparam.as_numpy())
-    # update parameter values in GUI (so user can see and so GUI will save these param values)
-    for win in self.baseparamwin.lsubwin: win.setfromdin(dtest)
-    # save parameters - do not ask if can over-write the param file
-    self.baseparamwin.saveparams(checkok = False)
-    # run the simulation as usual
-    #self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
-    # start the simulation 
-    #self.runthread.start()
-    self.waitsimwin.show()
-    while self.runningsim: sleep(1)
-    # check output, & calculate/return error -- error calculated during plotting, use that for now
-    return self.m.errtot
-
   def optmodel (self, ntrial, ncore):
     from neuron import h # for praxis
+
+    def optrun (vparam):
+      if debug: print('in optrun')
+      self.runningsim = True
+      self.statusBar().showMessage("Optimizing model. . .")
+      self.btnsim.setText("Stop Optimization") 
+      self.qbtn.setEnabled(False)
+      #self.waitsimwin.show()
+      # create parameter dictionary of current values to test
+      lparam = list(dconf['params'].values())
+      dtest = {} # parameter values to test      
+      for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
+        if val >= prm.minval and val <= prm.maxval:
+          dtest[prm.var] = val
+        else:
+          print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
+          return 1e9
+      if type(vparam)==list: print('set params:', vparam)
+      else: print('set params:', vparam.as_numpy())
+      # update parameter values in GUI (so user can see and so GUI will save these param values)
+      for win in self.baseparamwin.lsubwin: win.setfromdin(dtest)
+      # save parameters - do not ask if can over-write the param file
+      if debug: print('optrun: saving params')
+      self.baseparamwin.saveparams(checkok = False)
+      # run the simulation as usual
+      if debug: print('optrun: creating runsimthread')
+      self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
+      # start the simulation 
+      if debug: print('optrun: runthread starting')
+      self.runthread.start()
+      if debug: print('optrun: waitsimwin.show')
+      self.waitsimwin.show()
+      while self.runningsim:
+        if debug: print('optrun: waiting for sim to finish...')
+        sleep(1)
+      # check output, & calculate/return error -- error calculated during plotting, use that for now
+      if debug: print('optrun: sim finished; errtot=',self.m.errtot)
+      return self.m.errtot
+
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
     tol = 1e-5; nstep = 100; stepsz = 0.5
@@ -1775,7 +1783,7 @@ class HNNGUI (QMainWindow):
         prm = lparam[lvar.index(k)]
         vparam.append(logval(prm,float(v)))
         print('k',k,'in lparam')
-    x = h.fit_praxis(self.optrun, vparam)
+    x = h.fit_praxis(optrun, vparam)
 
   def startsim (self, ntrial, ncore):
 
