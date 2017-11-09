@@ -1359,21 +1359,26 @@ class HNNGUI (QMainWindow):
       # self.m.plot() # replot data
       self.setWindowTitle('HNN - ' + paramf)
 
-  def loadDataFileDialog (self):
+  def loadDataFile (self, fn):
     import simdat
+    try:
+      self.dextdata[fn] = np.loadtxt(fn)
+      simdat.ddat['dextdata'] = self.dextdata
+      print('Loaded data in ', fn)
+    except:
+      print('Could not load data in ', fn)
+      return False
+    try:
+      self.m.plotextdat()
+      self.m.draw() # make sure new lines show up in plot
+      return True
+    except:
+      print('Could not plot data from ', fn)
+      return False
+
+  def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
-    if fn[0]:
-      try:
-        self.dextdata[fn[0]] = np.loadtxt(fn[0])
-        simdat.ddat['dextdata'] = self.dextdata
-        print('Loaded data in ', fn[0])
-      except:
-        print('Could not load data in ', fn[0])
-      try:
-        self.m.plotextdat()
-        self.m.draw() # make sure new lines show up in plot
-      except:
-        print('Could not plot data from ', fn[0])
+    if fn[0]: self.loadDataFile(fn[0])
 
   def clearDataFile (self):
     import simdat
@@ -1644,6 +1649,10 @@ class HNNGUI (QMainWindow):
     self.setCentralWidget(widget);
 
     self.show()
+
+    if 'dataf' in dconf:
+      if os.path.isfile(dconf['dataf']):
+        self.loadDataFile(dconf['dataf'])
 
   def initSimCanvas (self,gRow=1):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
