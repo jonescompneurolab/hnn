@@ -5,31 +5,17 @@ from pylab import *
 from time import time, clock
 import collections
 import os
-from conf import *
+from conf import dconf
 import pickle
 
-ion()
-
-
-# determine config file name
-def setfcfg ():
-  fcfg = "sim.cfg" # default config file name
-  for i in xrange(len(sys.argv)):
-    if sys.argv[i].endswith(".cfg") and os.path.exists(sys.argv[i]):
-      fcfg = sys.argv[i]
-  #print "config file is " , fcfg
-  return fcfg
-
-fcfg=setfcfg() # config file name
-dconf = readconf(fcfg)
 dprm = dconf['params']
 sampr = dconf['sampr'] # 10KHz sampling rate in txt,npy file (data/15jun12_BS0284_subthreshandspikes_A0.npy)
 
 vtime = h.Vector()
 vtime.record(h._ref_t)
 
-tinit = 1000 
-tstop = h.tstop = 2000 + tinit
+tinit = 0.0
+tstop = h.tstop
 
 gtmp=h.Vector()
 
@@ -90,22 +76,6 @@ ltrace=ltracedxsubth
 def issubth (tdx): return ltracedxsubth.count(tdx) > 0
 def issuperth (tdx): return not issubth(tdx)
 
-#
-def ficompare (uselegend=True): 
-  td = collections.OrderedDict(sorted(SimSpks.items()))
-  plot(Iexp,Fexp,'b'); 
-  plot(td.keys(), td.values(), 'r',linewidth=2)
-  if uselegend: legend(['experiment','simulation'],loc='best')
-  plot(Iexp,Fexp,'bo',markersize=8); 
-  plot(td.keys(), td.values(), 'ro',markersize=8)
-  xlabel('Somatic current injection (nA)',fontsize=16); ylabel('Frequency (Hz)',fontsize=16);
-
-#
-def looprun ():
-  for inj in lstimamp:
-    print('inj is ' , inj)
-    myrun(reconfig=False,inj=inj)
-
 # simple normalization - with a maximum cap
 def getnormval (val,maxval,scale=1.0):
   if val > maxval: return scale
@@ -157,14 +127,6 @@ def lparamindex (lp,s):
   for i,p in enumerate(lp):
     if p.var == s: return i
   return -1
-
-# add rmp-related params
-def addrmpparams ():
-  global lparam
-  lparam.append( param(42.0, 20.0, 55.0, True, 'h.p_ena', 42.0))
-  lparam.append( param(-104.0, -115.0, -65.0, True, 'h.p_ek', -104.0))
-  lparam.append( param(-92.4878979644, -100.0, -60.0, True, 'h.Vrest', -92.4878979644 ))
-  lparam.append( param(-37.0, -47.0, -20.0, True, 'h.erev_ih', -37.0 ))
 
 #
 def prmnames (): return [prm.var for prm in lparam]
