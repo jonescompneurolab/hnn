@@ -1,9 +1,8 @@
 from neuron import h
-h.load_file("stdrun.hoc")
+# h.load_file("stdrun.hoc")
 import numpy
 from pylab import *
 from time import time, clock
-import collections
 import os
 from conf import dconf
 import pickle
@@ -24,12 +23,10 @@ def myrun (reconfig=True,inj=0.0,prtime=False):
   if reconfig: safereconfig() # makes sure params set within cell
   stim.amp = inj
   if prtime: clockStart = time()
-  h.run()
+  # h.run()
   if prtime:
     clockEnd = time()
     print('\nsim runtime:',str(round(clockEnd-clockStart,2)),'secs')
-  nspks = countspks()
-  SimSpks[inj] = nspks
 
 y = h.Vector()
 drawOut = False
@@ -67,9 +64,6 @@ nstims_fi = len(Iexp) # was 7
 alltrace = [i for i in xrange(nstims_fi)]
 targSpikes = numpy.load(dconf['spiket']) # just using this for spike frequency - not timing!!
 Fexp = [len(arr) for arr in targSpikes] # assumes 1 s stimulus duration
-#Fexp = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 13.0, 19.0, 24.0, 29.0, 33.0, 38.0] # experimental f values, at position 0
-SimSpks = {}
-#ltracedxsubth = [0,1,4,5,6,7,8] # traces that have subthreshold activity (no spikes); 2 excluded due to jump; 3 excluded due to 0 amp -- used that for PTcell
 ltracedxsubth = [i for i in xrange(len(Fexp)) if Fexp[i] <= 0.0 and Iexp[i] != 0.0]
 ltrace=ltracedxsubth
 
@@ -133,12 +127,9 @@ def prmnames (): return [prm.var for prm in lparam]
 
 # clamps nval (which is between 0,1) to valid param range
 def clampval (prm, nval):
-  if nval < 0.0:
-    return prm.minval
-  elif nval > 1.0:
-    return prm.maxval
-  else:
-    return prm.minval + (prm.maxval - prm.minval) * nval
+  if nval < 0.0: return prm.minval
+  elif nval > 1.0: return prm.maxval
+  else: return prm.minval + (prm.maxval - prm.minval) * nval
 
 #
 def clampvals (vec,lparam): return [clampval(prm,x) for prm,x in zip(lparam,vec)] 
@@ -261,18 +252,12 @@ def voltcomprun (ltrace=None,prtime=False):
     myrun(reconfig=False,inj=lstimamp[tracedx],prtime=prtime) 
     voltcompare(tracedx)  
 
-# frequency error for a given trace (tdx)
-maxFIfit = 1600.0 # not absolute max error - just ballpark based on bad fits
-def Ferr (tdx): return (SimSpks[lstimamp[tdx]] - Fexp[tdx])**2
-
 # mean squared error of voltage
 lvoltwin = [] # can use to specify time ranges for volterr
 lvoltscale = [] # can use to scale errors (matches to lvoltwin indices)
-exsupvolterr = False # exclude superthresh traces in volterr error
-maxVOLTfit = 400.0 # 400 for average of 20mV^2
+
 #
 def volterr (tdx):
-  if exsupvolterr and issuperth(tdx): return 0.0
   it,iv = interpvolt(vtime,vsoma,1e3/sampr)
   dd,tt = cuttrace(dat,tdx)
   npt = len(dd)
@@ -314,24 +299,23 @@ def randopt (lparam,nstep,errfunc,saveevery=0,fout=None):
   if fout is not None: nqp.sv(fout)
 
 # performs praxis optimization using specified params and error function (errfunc)
-def praxismatch (vparam,nstep,tol,stepsz,ActiveOFF,errfunc):
+def praxismatch (vparam,nstep,tol,stepsz,errfunc):
   global myerrfunc, nqp
   h.nqsdel(nqp)
   nqp = makeprmnq()
   myerrfunc = errfunc
-  if ActiveOFF: activeoff()   # turn off na,kdr,ka 
   print('using these traces:', ltrace)
   h.attr_praxis(tol, stepsz, 3)
   h.stop_praxis(nstep) # 
   return h.fit_praxis(optrun, vparam)
 
 # use praxis to match voltage traces
-def voltmatch (vparam,nstep=10,tol=0.001,stepsz=0.5,ActiveOFF=False):
+def voltmatch (vparam,nstep=10,tol=0.001,stepsz=0.5):
   global tstop
   if len(lvoltwin) > 0:
     tstop = tinit + amax(lvoltwin)
     print('reset tstop to ' , tstop)
-  return praxismatch(vparam,nstep,tol,stepsz,ActiveOFF,volterr)
+  return praxismatch(vparam,nstep,tol,stepsz,volterr)
 
 # get the original param values (stored in lparam)
 def getparamorig ():
