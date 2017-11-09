@@ -109,13 +109,7 @@ class RunSimThread (QThread):
           return
       self.proc.stdout.close()
       sleep(1)
-      """ do not need to set upper bound on sim run time
-      cend = time(); rtime = cend - cstart
-      if rtime >= maxruntime:
-        self.killed = True
-        print(' ran for ' , round(rtime,2) , 's. too slow , killing.')
-        self.killproc()
-      """
+      # cend = time(); rtime = cend - cstart
     if not self.killed:
       # no output to read yet
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
