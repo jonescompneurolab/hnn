@@ -163,15 +163,17 @@ class RunSimThread (QThread):
       dtest = {} # parameter values to test      
       for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
         if val >= prm.minval and val <= prm.maxval:
+          if debug: print('prm:',prm.var,prm.minval,prm.maxval,val)
           dtest[prm.var] = val
         else:
-          print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
+          if debug: print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
           return 1e9
-      if type(vparam)==list: print('set params:', vparam)
-      else: print('set params:', vparam.as_numpy())
+      if debug:
+        if type(vparam)==list: print('set params:', vparam)
+        else: print('set params:', vparam.as_numpy())
 
       self.updatebaseparamwin(dtest)
-      sleep(1)
+      sleep(2)
 
       # run the simulation as usual
       self.runsim()
