@@ -145,7 +145,7 @@ class RunSimThread (QThread):
     print('')
   
   def optmodel (self):
-    print('runsimthread optimizing model')
+    self.updatewaitsimwin('Optimizing model. . .')
     from neuron import h # for praxis
 
     def optrun (vparam):
@@ -168,7 +168,7 @@ class RunSimThread (QThread):
       # run the simulation as usual
       self.runsim()
       # check output, & calculate/return error -- error calculated during plotting, use that for now
-      if debug: print('optrun: sim finished; errtot=',self.m.errtot)
+      if debug: self.updatewaitsimwin('Simulation finished: error='+str(simdat.ddat['errtot']))
       return simdat.ddat['errtot']
 
     tol = 1e-5; nstep = 100; stepsz = 0.5
@@ -176,18 +176,18 @@ class RunSimThread (QThread):
     h.stop_praxis(nstep) # 
     lparam = list(dconf['params'].values())
     lvar = [p.var for p in lparam]
-    print('lparam=',lparam)
+    if debug: print('lparam=',lparam)
     vparam = h.Vector()
     # read current parameters from GUI
     s = str(self.baseparamwin)
     for l in s.split(os.linesep):
       if l.count(': ') < 1: continue
       k,v = l.split(': ')
-      print('k=',k,'v=',v)
+      if debug: print('k=',k,'v=',v)
       if k in lvar:
         prm = lparam[lvar.index(k)]
         vparam.append(logval(prm,float(v)))
-        print('k',k,'in lparam')
+        if debug: print('k',k,'in lparam')
     x = h.fit_praxis(optrun, vparam)
 
 
@@ -1324,10 +1324,10 @@ class BaseParamDialog (QDialog):
     return oktosave
 
   def updatesaveparams (self, dtest):
+    if debug: print('BaseParamDialog updatesaveparams: dtest=',dtest)
     # update parameter values in GUI (so user can see and so GUI will save these param values)
     for win in self.lsubwin: win.setfromdin(dtest)
     # save parameters - do not ask if can over-write the param file
-    #if debug: print('optrun: saving params')
     self.saveparams(checkok = False)
 
   def __str__ (self):
