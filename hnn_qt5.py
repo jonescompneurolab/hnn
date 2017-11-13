@@ -43,9 +43,13 @@ class Communicate (QObject):
 class TextSignal (QObject):
   tsig = pyqtSignal(str)
 
+# for signaling - updating GUI & param file during optimization
+class ParamSignal (QObject):
+  psig = pyqtSignal(dict)
+
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore,waitsimwin):
+  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None):
     QThread.__init__(self)
     self.c = c
     self.killed = False
@@ -53,13 +57,22 @@ class RunSimThread (QThread):
     self.ntrial = ntrial
     self.ncore = ncore
     self.waitsimwin = waitsimwin
+    self.opt = opt
+    self.baseparamwin = baseparamwin
 
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
 
+    self.prmComm = ParamSignal()
+    if self.baseparamwin is not None:
+      self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
+
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
     self.txtComm.tsig.emit(txt)
+
+  def updatebaseparamwin (self, d):
+    self.prmComm.psig.emit(d)
 
   def stop (self): self.killed = True
 
@@ -68,7 +81,10 @@ class RunSimThread (QThread):
     self.wait()
 
   def run (self):
-    self.runsim() # run simulation
+    if self.opt and self.baseparamwin is not None:
+      self.optmodel() # run optimization
+    else:
+      self.runsim() # run simulation
     self.c.finishSim.emit() # send the finish signal
 
   def killproc (self):
@@ -125,7 +141,56 @@ class RunSimThread (QThread):
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
     else:
       self.killproc()
+    if debug: print('returning from runsim')
     print('')
+  
+  def optmodel (self):
+    print('runsimthread optimizing model')
+    from neuron import h # for praxis
+
+    def optrun (vparam):
+      import simdat
+      # create parameter dictionary of current values to test
+      lparam = list(dconf['params'].values())
+      dtest = {} # parameter values to test      
+      for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
+        if val >= prm.minval and val <= prm.maxval:
+          dtest[prm.var] = val
+        else:
+          print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
+          return 1e9
+      if type(vparam)==list: print('set params:', vparam)
+      else: print('set params:', vparam.as_numpy())
+
+      self.updatebaseparamwin(dtest)
+      sleep(1)
+
+      # run the simulation as usual
+      self.runsim()
+      # check output, & calculate/return error -- error calculated during plotting, use that for now
+      if debug: print('optrun: sim finished; errtot=',self.m.errtot)
+      return simdat.ddat['errtot']
+
+    tol = 1e-5; nstep = 100; stepsz = 0.5
+    h.attr_praxis(tol, stepsz, 3)
+    h.stop_praxis(nstep) # 
+    lparam = list(dconf['params'].values())
+    lvar = [p.var for p in lparam]
+    print('lparam=',lparam)
+    vparam = h.Vector()
+    # read current parameters from GUI
+    s = str(self.baseparamwin)
+    for l in s.split(os.linesep):
+      if l.count(': ') < 1: continue
+      k,v = l.split(': ')
+      print('k=',k,'v=',v)
+      if k in lvar:
+        prm = lparam[lvar.index(k)]
+        vparam.append(logval(prm,float(v)))
+        print('k',k,'in lparam')
+    x = h.fit_praxis(optrun, vparam)
+
+
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -1258,6 +1323,13 @@ class BaseParamDialog (QDialog):
         print('Exception in saving param file!',tmpf)
     return oktosave
 
+  def updatesaveparams (self, dtest):
+    # update parameter values in GUI (so user can see and so GUI will save these param values)
+    for win in self.lsubwin: win.setfromdin(dtest)
+    # save parameters - do not ask if can over-write the param file
+    #if debug: print('optrun: saving params')
+    self.saveparams(checkok = False)
+
   def __str__ (self):
     s = 'sim_prefix: ' + self.qle.text() + os.linesep
     s += 'expmt_groups: {' + self.qle.text() + '}' + os.linesep
@@ -1320,7 +1392,6 @@ class WaitSimDialog (QDialog):
   def stopsim (self):
     self.parent().stopsim()
     self.hide()
-
 
 # main GUI class
 class HNNGUI (QMainWindow):
@@ -1718,66 +1789,25 @@ class HNNGUI (QMainWindow):
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
-    from neuron import h # for praxis
-
-    def optrun (vparam):
-      if debug: print('in optrun')
-      self.runningsim = True
-      self.statusBar().showMessage("Optimizing model. . .")
-      self.btnsim.setText("Stop Optimization") 
-      self.qbtn.setEnabled(False)
-      #self.waitsimwin.show()
-      # create parameter dictionary of current values to test
-      lparam = list(dconf['params'].values())
-      dtest = {} # parameter values to test      
-      for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
-        if val >= prm.minval and val <= prm.maxval:
-          dtest[prm.var] = val
-        else:
-          print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
-          return 1e9
-      if type(vparam)==list: print('set params:', vparam)
-      else: print('set params:', vparam.as_numpy())
-      # update parameter values in GUI (so user can see and so GUI will save these param values)
-      for win in self.baseparamwin.lsubwin: win.setfromdin(dtest)
-      # save parameters - do not ask if can over-write the param file
-      if debug: print('optrun: saving params')
-      self.baseparamwin.saveparams(checkok = False)
-      # run the simulation as usual
-      if debug: print('optrun: creating runsimthread')
-      self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
-      # start the simulation 
-      if debug: print('optrun: runthread starting')
-      self.runthread.start()
-      if debug: print('optrun: waitsimwin.show')
-      self.waitsimwin.show()
-      while self.runningsim:
-        if debug: print('optrun: waiting for sim to finish...')
-        sleep(1)
-      # check output, & calculate/return error -- error calculated during plotting, use that for now
-      if debug: print('optrun: sim finished; errtot=',self.m.errtot)
-      return self.m.errtot
-
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
-    tol = 1e-5; nstep = 100; stepsz = 0.5
-    h.attr_praxis(tol, stepsz, 3)
-    h.stop_praxis(nstep) # 
-    lparam = list(dconf['params'].values())
-    lvar = [p.var for p in lparam]
-    print('lparam=',lparam)
-    vparam = h.Vector()
-    # read current parameters from GUI
-    s = str(self.baseparamwin)
-    for l in s.split(os.linesep):
-      if l.count(': ') < 1: continue
-      k,v = l.split(': ')
-      print('k=',k,'v=',v)
-      if k in lvar:
-        prm = lparam[lvar.index(k)]
-        vparam.append(logval(prm,float(v)))
-        print('k',k,'in lparam')
-    x = h.fit_praxis(optrun, vparam)
+
+    if debug: print('in optmodel')
+    self.runningsim = True
+
+    self.statusBar().showMessage("Optimizing model. . .")
+    self.btnsim.setText("Stop Optimization") 
+    self.qbtn.setEnabled(False)
+
+    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin)
+
+    # We have all the events we need connected we can start the thread
+    self.runthread.start()
+    # At this point we want to allow user to stop/terminate the thread
+    # so we enable that button
+    self.btnsim.setText("Stop Optimization") 
+    self.qbtn.setEnabled(False)
+    self.waitsimwin.show()    
 
   def startsim (self, ntrial, ncore):
 

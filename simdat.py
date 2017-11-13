@@ -246,7 +246,7 @@ class SIMCanvas (FigureCanvas):
       txt='Avg. RMSE:' + str(round(errtot,2))
       self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
       print(txt)
-      self.errtot = errtot
+      self.errtot = ddat['errtot'] = errtot
 
     except:
       print('simdat ERR: could not plotextdat')
