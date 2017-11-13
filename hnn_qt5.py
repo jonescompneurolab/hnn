@@ -82,6 +82,9 @@ class RunSimThread (QThread):
   def updatebaseparamwin (self, d):
     self.prmComm.psig.emit(d)
 
+  def updatedrawerr (self):
+    self.canvComm.csig.emit()
+
   def stop (self): self.killed = True
 
   def __del__ (self):
@@ -175,11 +178,12 @@ class RunSimThread (QThread):
       self.updatebaseparamwin(dtest)
       sleep(2)
 
-      # run the simulation as usual
-      self.runsim()
-      # check output, & calculate/return error -- error calculated during plotting, use that for now
-      if debug: self.updatewaitsimwin('Simulation finished: error='+str(simdat.ddat['errtot']))
-      return simdat.ddat['errtot']
+      self.runsim() # run the simulation as usual and read its output
+      # calculate -- error calculated during plotting, use that for now
+      self.updatedrawerr() # draw/update error
+      self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
+      print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)
+      return simdat.ddat['errtot'] # return error to praxis
 
     tol = 1e-5; nstep = 100; stepsz = 0.5
     h.attr_praxis(tol, stepsz, 3)
@@ -1756,6 +1760,7 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
     if len(self.dextdata.keys()) > 0:
+      print('did a redraw!')
       import simdat
       simdat.ddat['dextdata'] = self.dextdata
       self.m.plotextdat()
