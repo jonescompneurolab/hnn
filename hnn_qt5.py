@@ -47,9 +47,12 @@ class TextSignal (QObject):
 class ParamSignal (QObject):
   psig = pyqtSignal(dict)
 
+class CanvSignal (QObject):
+  csig = pyqtSignal()
+
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None):
+  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None):
     QThread.__init__(self)
     self.c = c
     self.killed = False
@@ -59,6 +62,7 @@ class RunSimThread (QThread):
     self.waitsimwin = waitsimwin
     self.opt = opt
     self.baseparamwin = baseparamwin
+    self.mainwin = mainwin
 
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
@@ -66,6 +70,10 @@ class RunSimThread (QThread):
     self.prmComm = ParamSignal()
     if self.baseparamwin is not None:
       self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
+
+    self.canvComm = CanvSignal()
+    if self.mainwin is not None:
+      self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -1799,7 +1807,7 @@ class HNNGUI (QMainWindow):
     self.btnsim.setText("Stop Optimization") 
     self.qbtn.setEnabled(False)
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin)
+    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
