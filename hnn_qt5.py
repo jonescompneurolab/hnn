@@ -45,10 +45,10 @@ class TextSignal (QObject):
 
 # for signaling - updating GUI & param file during optimization
 class ParamSignal (QObject):
-  psig = pyqtSignal(dict)
+  psig = pyqtSignal(OrderedDict)
 
 class CanvSignal (QObject):
-  csig = pyqtSignal()
+  csig = pyqtSignal(bool)
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
@@ -83,7 +83,7 @@ class RunSimThread (QThread):
     self.prmComm.psig.emit(d)
 
   def updatedrawerr (self):
-    self.canvComm.csig.emit()
+    self.canvComm.csig.emit(False) # False means do not recalculate error
 
   def stop (self): self.killed = True
 
@@ -122,9 +122,8 @@ class RunSimThread (QThread):
     else: 
       #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd()) # may want to read/display stderr too
       self.proc = Popen(cmdargs,stdout=PIPE,cwd=os.getcwd(),universal_newlines=True)
-    cstart = time(); 
+    #cstart = time(); 
     while not self.killed and self.proc.poll() is None: # job is not done
-
       for stdout_line in iter(self.proc.stdout.readline, ""):
         try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
           self.updatewaitsimwin(stdout_line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
@@ -137,10 +136,12 @@ class RunSimThread (QThread):
       self.proc.stdout.close()
       sleep(1)
       # cend = time(); rtime = cend - cstart
-    if not self.killed:
-      # no output to read yet
+    print('sim finished')
+    if not self.killed:  
+      print('not self.killed')
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
+        print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
         if os.path.isfile(simdat.dfile['spec']):
           simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
         else:
@@ -148,41 +149,41 @@ class RunSimThread (QThread):
         simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
         simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
         if debug: print("Read simulation outputs:",simdat.dfile.values())
-      except:
+      except: # no output to read yet
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
     else:
+      print('self.killproc')
       self.killproc()
-    if debug: print('returning from runsim')
-    print('')
+    print(''); self.updatewaitsimwin('')
   
   def optmodel (self):
     self.updatewaitsimwin('Optimizing model. . .')
     from neuron import h # for praxis
 
     def optrun (vparam):
-      import simdat
       # create parameter dictionary of current values to test
       lparam = list(dconf['params'].values())
-      dtest = {} # parameter values to test      
+      dtest = OrderedDict() # parameter values to test      
       for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
         if val >= prm.minval and val <= prm.maxval:
-          if debug: print('prm:',prm.var,prm.minval,prm.maxval,val)
+          if debug: print('optrun prm:',prm.var,prm.minval,prm.maxval,val)
           dtest[prm.var] = val
         else:
-          if debug: print(val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
-          return 1e9
+          if debug: print('optrun:', val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
+          return 1e9 # invalid param value -> large error
       if debug:
         if type(vparam)==list: print('set params:', vparam)
         else: print('set params:', vparam.as_numpy())
 
-      self.updatebaseparamwin(dtest)
-      sleep(2)
+      self.updatebaseparamwin(dtest) # put new param values into GUI
+      sleep(1)
 
       self.runsim() # run the simulation as usual and read its output
-      # calculate -- error calculated during plotting, use that for now
-      self.updatedrawerr() # draw/update error
+      import simdat
+      simdat.calcerr(simdat.ddat) # make sure error re-calculated (synchronously)
+      self.updatedrawerr() # send event to draw updated error (asynchronously)
       self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
-      print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)
+      print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)#,'time=',time())
       return simdat.ddat['errtot'] # return error to praxis
 
     tol = 1e-5; nstep = 100; stepsz = 0.5
@@ -201,9 +202,8 @@ class RunSimThread (QThread):
       if k in lvar:
         prm = lparam[lvar.index(k)]
         vparam.append(logval(prm,float(v)))
-        if debug: print('k',k,'in lparam')
-    x = h.fit_praxis(optrun, vparam)
-
+        if debug: print('optmodel: k',k,'in lparam')
+    x = h.fit_praxis(optrun, vparam) #x = optrun(vparam)    
 
 
 # look up resource adjusted for screen resolution
@@ -1741,7 +1741,7 @@ class HNNGUI (QMainWindow):
       if os.path.isfile(dconf['dataf']):
         self.loadDataFile(dconf['dataf'])
 
-  def initSimCanvas (self,gRow=1):
+  def initSimCanvas (self,gRow=1,recalcErr=True):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
       self.grid.removeWidget(self.toolbar)
@@ -1760,10 +1760,10 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
     if len(self.dextdata.keys()) > 0:
-      print('did a redraw!')
       import simdat
       simdat.ddat['dextdata'] = self.dextdata
-      self.m.plotextdat()
+      self.m.plotextdat(recalcErr)
+      # self.m.plotsimdat()
       self.m.draw()
 
   # set cursors of self and children

@@ -276,8 +276,7 @@ def arrangelayers ():
       print('L5Basket bbox:',bbox)#,lx,ly,lz)
     dcheck[cell.celltype]=True
     """
-  for ty in ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal']:
-    print(ty, dbbox[ty])
+  # for ty in ['L2_basket', 'L2_pyramidal', 'L5_basket', 'L5_pyramidal']: print(ty, dbbox[ty])
 
 arrangelayers() # arrange cells in layers - for visualization purposes
 

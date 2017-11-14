@@ -73,7 +73,7 @@ def getscalefctr (paramf):
     return dconf['dipole_scalefctr']
   return 30e3
 
-# draw raster to standalone matplotlib figure
+# draw raster to standalone matplotlib figure - for debugging
 def drawraster ():  
   if 'spk' in ddat:
     # print('spk shape:',ddat['spk'].shape)
@@ -82,6 +82,28 @@ def drawraster ():
     for pair in ddat['spk']:
       plt.plot([pair[0]],[pair[1]],'ko',markersize=10)
     plt.xlabel('Time (ms)'); plt.ylabel('ID')
+
+# calculates RMSE error from ddat dictionary
+def calcerr (ddat):
+  try:
+    NSig = errtot = 0.0; lerr = []
+    for fn,dat in ddat['dextdata'].items():
+      shp = dat.shape
+      # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
+      dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
+      for c in range(1,shp[1],1): 
+        err0 = rmse(dat[:,c], dpldown)
+        lerr.append(err0)
+        errtot += err0
+        print('RMSE: ',err0)
+        NSig += 1
+    errtot /= NSig
+    print('Avg. RMSE:' + str(round(errtot,2)))
+    ddat['errtot'] = errtot
+    ddat['lerr'] = lerr
+    return lerr, errtot
+  except:
+    return [],-1.0
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
 class SIMCanvas (FigureCanvas): 
@@ -97,7 +119,6 @@ class SIMCanvas (FigureCanvas):
     self.paramf = paramf
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
-    self.errtot = 0.0
     self.plot()
 
   def plotinputhist (self,xl): # plot input histograms
@@ -200,10 +221,11 @@ class SIMCanvas (FigureCanvas):
       pass
     return EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs
 
-  def plotextdat (self): # plot 'external' data (e.g. from experiment/other simulation)
+  def plotextdat (self, recalcErr=True): # plot 'external' data (e.g. from experiment/other simulation)
     try:
+      if recalcErr: calcerr(ddat) # recalculate/save the error?
+      lerr, errtot = ddat['lerr'], ddat['errtot']
 
-      NSig = errtot = 0.0
       ax = self.axdipole
       yl = ax.get_ylim()
 
@@ -211,42 +233,29 @@ class SIMCanvas (FigureCanvas):
       csm = plt.cm.ScalarMappable(cmap=cmap);
       csm.set_clim((0,100))
 
-      self.clearlextdatobj()
-      # print(ddat['dextdata'].keys())
+      self.clearlextdatobj() # clear annotation objects
 
       for fn,dat in ddat['dextdata'].items():
         shp = dat.shape
-
-        # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
-        dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
 
         for c in range(1,shp[1],1): 
           clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
           self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
           yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
-          err0 = rmse(dat[:,c], dpldown)
-          errtot += err0
-          print('RMSE: ',err0)
-
           fx = int(shp[0] * float(c) / shp[1])
 
           tx,ty=dat[fx,0],dat[fx,c]
-          txt='RMSE:' + str(round(err0,2))
+          txt='RMSE:' + str(round(lerr[c-1],2))
           self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
           self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
-
-          NSig += 1
 
       ax.set_ylim(yl)
       self.lextdatobj.append(ax.legend(handles=self.lpatch))
 
       tx,ty=0,0
-      errtot /= NSig
       txt='Avg. RMSE:' + str(round(errtot,2))
       self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
-      print(txt)
-      self.errtot = ddat['errtot'] = errtot
 
     except:
       print('simdat ERR: could not plotextdat')
