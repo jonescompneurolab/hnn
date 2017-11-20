@@ -71,5 +71,7 @@ sudo ln -fs /usr/local/hnn/hnn.desktop /usr/share/applications/hnn.desktop
 sudo ln -fs /usr/local/hnn/hnn /usr/local/bin/hnn
 sudo updatedb
 
+# create the global session variables
+echo '# these lines define global session variables for HNN'
 echo 'export CPU=$(uname -m)' >> ~/.bashrc
 echo 'export PATH=$PATH:/usr/local/nrn/$CPU/bin' >> ~/.bashrc
