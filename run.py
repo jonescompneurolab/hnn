@@ -236,7 +236,7 @@ h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
 # Set tstop before instantiating any classes
 h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
-#h.celsius = p['celsius'] # set temperature
+h.celsius = p['celsius'] # 37.0 # p['celsius'] # set temperature
 # spike file needs to be known by all nodes
 file_spikes_tmp = fio.file_spike_tmp(dproj)  
 net = network.NetworkOnNode(p) # create node-specific network

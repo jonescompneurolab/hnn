@@ -479,6 +479,7 @@ class L5Pyr(Pyr):
                     'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
                     'A_delay': 1.,
                     'lamtha': 3.,
+                    'threshold': p['threshold']
                 }
 
                 # ampa connections
@@ -491,6 +492,7 @@ class L5Pyr(Pyr):
                     'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
                     'A_delay': 1.,
                     'lamtha': 3.,
+                    'threshold': p['threshold']
                 }
 
                 # nmda connections
@@ -505,6 +507,7 @@ class L5Pyr(Pyr):
                 'A_weight': p['gbar_L5Basket_L5Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 70.,
+                'threshold': p['threshold']
             }
 
             nc_dict['gabab'] = {
@@ -512,6 +515,7 @@ class L5Pyr(Pyr):
                 'A_weight': p['gbar_L5Basket_L5Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 70.,
+                'threshold': p['threshold']
             }
 
             # soma synapses are defined in Pyr()
@@ -526,6 +530,7 @@ class L5Pyr(Pyr):
                 'A_weight': p['gbar_L2Pyr_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 3.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.basal2_ampa))
@@ -540,6 +545,7 @@ class L5Pyr(Pyr):
                 'A_weight': p['gbar_L2Basket_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.apicaltuft_gabaa))
@@ -553,7 +559,8 @@ class L5Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p_src['L5Pyr_ampa'][0],
                     'A_delay': p_src['L5Pyr_ampa'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # Proximal feed AMPA synapses
@@ -574,7 +581,8 @@ class L5Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p_src['L5Pyr_nmda'][0],
                     'A_delay': p_src['L5Pyr_nmda'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # Proximal feed NMDA synapses
@@ -600,7 +608,8 @@ class L5Pyr(Pyr):
                     'pos_src': pos_dict[type][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 #print('L5pyr:',type,'w:',nc_dict['A_weight'])
@@ -632,7 +641,8 @@ class L5Pyr(Pyr):
                     'pos_src': pos_dict['extgauss'][gid],
                     'A_weight': p_ext['L5_pyramidal'][0],
                     'A_delay': p_ext['L5_pyramidal'][1],
-                    'lamtha': p_ext['lamtha']
+                    'lamtha': p_ext['lamtha'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
@@ -647,7 +657,8 @@ class L5Pyr(Pyr):
                     'pos_src': pos_dict['extpois'][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))

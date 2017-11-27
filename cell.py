@@ -241,9 +241,9 @@ class Cell ():
 
     # connect_to_target created for pc, used in Network()
     # these are SOURCES of spikes
-    def connect_to_target (self, target):
+    def connect_to_target (self, target, threshold):
       nc = h.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
-      nc.threshold = 0
+      nc.threshold = threshold
       return nc
 
     # parallel receptor-centric connect FROM presyn TO this cell, based on GID
@@ -253,7 +253,7 @@ class Cell ():
       # calculate distance between cell positions with pardistance()
       d = self.__pardistance(nc_dict['pos_src'])
       # set props here
-      nc.threshold = 0
+      nc.threshold = nc_dict['threshold']
       nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
       nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
       # print("parconnect_from_src in cell.py, weight = ",nc.weight[0])

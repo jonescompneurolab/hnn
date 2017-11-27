@@ -841,8 +841,9 @@ class RunParamDialog (DictDialog):
 
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
                              ('dt', 0.025), # timestep
-                             # ('celsius',6.3), # temperature
-                             ('N_trials',1)]) # number of trials
+                             ('celsius',6.3), # temperature
+                             ('N_trials',1), # number of trials
+                             ('threshold',0.0)]) # firing threshold
                              # cvode - not currently used by simulation
 
     # analysis    
@@ -850,8 +851,8 @@ class RunParamDialog (DictDialog):
                                   ('save_spec_data', 0),
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
-                                  ('dipole_smooth_win',15.0)])#,
-                                  #('save_vsoma',0)])
+                                  ('dipole_smooth_win',15.0),
+                                  ('save_vsoma',0)])
 
     self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
@@ -868,7 +869,8 @@ class RunParamDialog (DictDialog):
 
     self.addtransvar('tstop','Duration (ms)')
     self.addtransvar('dt','Integration timestep (ms)')
-    #self.addtransvar('celsius','Temperature (C)')
+    self.addtransvar('celsius','Temperature (C)')
+    self.addtransvar('threshold','Firing threshold (mV)')
     self.addtransvar('N_trials','Trials')
     self.addtransvar('save_spec_data','Save spectral data')
     self.addtransvar('save_figs','Save figures')
@@ -1576,6 +1578,12 @@ class HNNGUI (QMainWindow):
     viewPSDAction.setStatusTip('View PSD.')
     viewPSDAction.triggered.connect(self.showPSDPlot)
     viewMenu.addAction(viewPSDAction)
+
+    viewSomaVAction = QAction('View Somatic Voltage',self)
+    viewSomaVAction.setStatusTip('View Somatic Voltage.')
+    viewSomaVAction.triggered.connect(self.showSomaVPlot)
+    viewMenu.addAction(viewSomaVAction)
+
 
     if testLFP:
       viewLFPAction = QAction('View Simulation LFPs',self)

@@ -355,6 +355,7 @@ class L2Pyr(Pyr):
                     'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
                     'A_delay': 1.,
                     'lamtha': 3.,
+                    'threshold': p['threshold']
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -368,6 +369,7 @@ class L2Pyr(Pyr):
                     'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
                     'A_delay': 1.,
                     'lamtha': 3.,
+                    'threshold': p['threshold']
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -383,6 +385,7 @@ class L2Pyr(Pyr):
                 'A_weight': p['gbar_L2Basket_L2Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 50.,
+                'threshold': p['threshold']
             }
 
             nc_dict['gabab'] = {
@@ -390,6 +393,7 @@ class L2Pyr(Pyr):
                 'A_weight': p['gbar_L2Basket_L2Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 50.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict['gabaa'], self.synapses['soma_gabaa']))
@@ -416,7 +420,8 @@ class L2Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p_src['L2Pyr_ampa'][0],
                     'A_delay': p_src['L2Pyr_ampa'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # Proximal feed AMPA synapses
@@ -435,7 +440,8 @@ class L2Pyr(Pyr):
                     'pos_src': pos,
                     'A_weight': p_src['L2Pyr_nmda'][0],
                     'A_delay': p_src['L2Pyr_nmda'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # Proximal feed NMDA synapses
@@ -459,7 +465,8 @@ class L2Pyr(Pyr):
                     'pos_src': pos_dict[type][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 if p_ext['loc'] is 'proximal':
@@ -487,7 +494,8 @@ class L2Pyr(Pyr):
                     'pos_src': pos_dict['extgauss'][gid],
                     'A_weight': p_ext['L2_pyramidal'][0],
                     'A_delay': p_ext['L2_pyramidal'][1],
-                    'lamtha': p_ext['lamtha']
+                    'lamtha': p_ext['lamtha'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
@@ -502,7 +510,8 @@ class L2Pyr(Pyr):
                     'pos_src': pos_dict['extpois'][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
 

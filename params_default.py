@@ -174,7 +174,8 @@ def get_params_default (nprox = 2, ndist = 1):
         't0_pois': 0.,
         'T_pois': -1,
         'dt': 0.025,
-        #'celsius': 6.3
+        'celsius': 6.3,
+        'threshold': 0.0 # firing threshold
     }
 
     # grab cell-specific params and update p accordingly

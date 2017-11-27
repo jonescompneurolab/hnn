@@ -78,6 +78,7 @@ class L5Basket(BasketSingle):
                     'A_weight': p['gbar_L5Basket_L5Basket'],
                     'A_delay': 1.,
                     'lamtha': 20.,
+                    'threshold': p['threshold']
                 }
 
                 self.ncfrom_L5Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
@@ -89,6 +90,7 @@ class L5Basket(BasketSingle):
                 'A_weight': p['gbar_L5Pyr_L5Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L5Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -100,6 +102,7 @@ class L5Basket(BasketSingle):
                 'A_weight': p['gbar_L2Pyr_L5Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -113,7 +116,8 @@ class L5Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p_src['L5Basket_ampa'][0],
                     'A_delay': p_src['L5Basket_ampa'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # AMPA synapse
@@ -125,7 +129,8 @@ class L5Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p_src['L5Basket_nmda'][0],
                     'A_delay': p_src['L5Basket_nmda'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # NMDA synapse
@@ -142,7 +147,8 @@ class L5Basket(BasketSingle):
                     'pos_src': pos_dict[type][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
@@ -159,7 +165,8 @@ class L5Basket(BasketSingle):
                     'pos_src': pos_dict['extgauss'][gid],
                     'A_weight': p_ext['L5_basket'][0],
                     'A_delay': p_ext['L5_basket'][1],
-                    'lamtha': p_ext['lamtha']
+                    'lamtha': p_ext['lamtha'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))
@@ -172,7 +179,8 @@ class L5Basket(BasketSingle):
                     'pos_src': pos_dict['extpois'][gid],
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
-                    'lamtha': p_ext['lamtha_space']
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))

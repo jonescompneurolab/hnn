@@ -534,7 +534,7 @@ def feed_validate(p_ext, d, tstop):
             d['tstop'] = tstop
 
         # if stdev is zero, increase synaptic weights 5 fold to make
-        # single input equivalent to 5 simultaneous input to prevent spiking
+        # single input equivalent to 5 simultaneous input to prevent spiking    <<---- SN: WHAT IS THIS RULE!?!?!?
         if not d['stdev'] and d['distribution'] != 'uniform':
             for key in d.keys():
                 if key.endswith('Pyr'):
@@ -543,8 +543,8 @@ def feed_validate(p_ext, d, tstop):
                 elif key.endswith('Basket'):
                     d[key] = (d[key][0] * 5., d[key][1])
 
-        # if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1.
-        if d['L5Pyr_ampa'][1] == -1:
+        # if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1. <<---- SN: WHAT IS THIS RULE!?!?!?
+        if d['L5Pyr_ampa'][1] == -1:                                  
             for key in d.keys():
                 if key.startswith('L5'):
                     if d['L2Pyr'][1] != 0.1:
@@ -586,7 +586,8 @@ def create_pext (p, tstop):
         'lamtha': 100.,
         'loc': 'proximal',
         'repeats': p['repeats_prox'],
-        't0_stdev': p['t0_input_stdev_prox']
+        't0_stdev': p['t0_input_stdev_prox'],
+        'threshold': p['threshold']
     }
 
     # ensures time interval makes sense
@@ -609,7 +610,8 @@ def create_pext (p, tstop):
         'lamtha': 100.,
         'loc': 'distal',
         'repeats': p['repeats_dist'],
-        't0_stdev': p['t0_input_stdev_dist']
+        't0_stdev': p['t0_input_stdev_dist'],
+        'threshold': p['threshold']
     }
 
     p_ext = feed_validate(p_ext, feed_dist, tstop)
@@ -630,7 +632,8 @@ def create_pext (p, tstop):
           'prng_seedcore': int(p['prng_seedcore_' + skey]),
           'lamtha_space': 3.,
           'loc': 'proximal',
-          'sync_evinput': p['sync_evinput']
+          'sync_evinput': p['sync_evinput'],
+          'threshold': p['threshold']
       }
 
     # Create distal evoked response parameters
@@ -645,7 +648,8 @@ def create_pext (p, tstop):
           'prng_seedcore': int(p['prng_seedcore_' + skey]),
           'lamtha_space': 3.,
           'loc': 'distal',
-          'sync_evinput': p['sync_evinput']
+          'sync_evinput': p['sync_evinput'],
+          'threshold': p['threshold']
       }
 
     # this needs to create many feeds
@@ -658,7 +662,8 @@ def create_pext (p, tstop):
         'L5_pyramidal': (p['L5Pyr_Gauss_A_weight'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
         'lamtha': 100.,
         'prng_seedcore': int(p['prng_seedcore_extgauss']),
-        'loc': 'proximal'
+        'loc': 'proximal',
+        'threshold': p['threshold']
     }
 
     # define T_pois as 0 or -1 to reset automatically to tstop
@@ -674,7 +679,8 @@ def create_pext (p, tstop):
         'lamtha_space': 100.,
         'prng_seedcore': int(p['prng_seedcore_extpois']),
         't_interval': (p['t0_pois'], p['T_pois']),
-        'loc': 'proximal'
+        'loc': 'proximal',
+        'threshold': p['threshold']
     }
 
     return p_ext, p_unique

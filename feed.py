@@ -215,8 +215,8 @@ class ParFeedAll ():
     return self.eventvec.size() > 0
 
   # for parallel, maybe be that postsyn for this is just nil (None)
-  def connect_to_target (self):
+  def connect_to_target (self, threshold):
     #print("connect_to_target")
     nc = h.NetCon(self.vs, None) # why is target always nil??
-    nc.threshold = 0
+    nc.threshold = threshold
     return nc

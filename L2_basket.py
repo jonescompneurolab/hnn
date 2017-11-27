@@ -76,6 +76,7 @@ class L2Basket(BasketSingle):
                 'A_weight': p['gbar_L2Pyr_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -89,6 +90,7 @@ class L2Basket(BasketSingle):
                 'A_weight': p['gbar_L2Basket_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 20.,
+                'threshold': p['threshold']
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
@@ -105,7 +107,8 @@ class L2Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p_src['L2Basket_ampa'][0],
                     'A_delay': p_src['L2Basket_ampa'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # AMPA synapse
@@ -117,7 +120,8 @@ class L2Basket(BasketSingle):
                     'pos_src': pos,
                     'A_weight': p_src['L2Basket_nmda'][0],
                     'A_delay': p_src['L2Basket_nmda'][1],
-                    'lamtha': p_src['lamtha']
+                    'lamtha': p_src['lamtha'],
+                    'threshold': p_src['threshold']
                 }
 
                 # NMDA synapse
@@ -135,6 +139,7 @@ class L2Basket(BasketSingle):
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
                     'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 # connections depend on location of input
@@ -165,6 +170,7 @@ class L2Basket(BasketSingle):
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
                     'lamtha': p_ext['lamtha'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))
@@ -178,6 +184,7 @@ class L2Basket(BasketSingle):
                     'A_weight': p_ext[self.celltype][0],
                     'A_delay': p_ext[self.celltype][1],
                     'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold']
                 }
 
                 self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))

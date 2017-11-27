@@ -281,26 +281,26 @@ class NetworkOnNode ():
           # creates a NetCon object internally to Neuron
           if type == 'L2_pyramidal':
             self.cells.append(L2Pyr(gid, pos, self.p))
-            self.pc.cell(gid, self.cells[-1].connect_to_target(None))
+            self.pc.cell(gid, self.cells[-1].connect_to_target(None, self.p['threshold']))
             # run the IClamp function here
             # create_all_IClamp() is defined in L2Pyr (etc)
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_pyramidal':
             self.cells.append(L5Pyr(gid, pos, self.p))
-            self.pc.cell(gid, self.cells[-1].connect_to_target(None))
+            self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L2_basket':
             self.cells.append(L2Basket(gid, pos))
-            self.pc.cell(gid, self.cells[-1].connect_to_target(None))
+            self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # also run the IClamp for L2_basket
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_basket':
             self.cells.append(L5Basket(gid, pos))
-            self.pc.cell(gid, self.cells[-1].connect_to_target(None))
+            self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
@@ -312,13 +312,13 @@ class NetworkOnNode ():
             # now use the param index in the params and create
             # the cell and artificial NetCon
             self.extinput_list.append(ParFeedAll(type, None, self.p_ext[p_ind], gid))
-            self.pc.cell(gid, self.extinput_list[-1].connect_to_target())
+            self.pc.cell(gid, self.extinput_list[-1].connect_to_target(self.p['threshold']))
           elif type in self.p_unique.keys():
             gid_post = gid - self.gid_dict[type][0]
             cell_type = self.gid_to_type(gid_post)
             # create dictionary entry, append to list
             self.ext_list[type].append(ParFeedAll(type, cell_type, self.p_unique[type], gid))
-            self.pc.cell(gid, self.ext_list[type][-1].connect_to_target())
+            self.pc.cell(gid, self.ext_list[type][-1].connect_to_target(self.p['threshold']))
           else:
             print("None of these types in Net()")
             exit()
