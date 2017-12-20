@@ -28,6 +28,19 @@ from ctune import expval, expvals, logval, logvals
 
 prtime = False
 
+def parseargs ():
+  for i in range(len(sys.argv)):
+    if sys.argv[i] == '-dataf' and i + 1 < len(sys.argv):
+      print('-dataf is ', sys.argv[i+1])
+      dconf['dataf'] = sys.argv[i+1]
+      i += 1
+    elif sys.argv[i] == '-paramf' and i + 1 < len(sys.argv):
+      print('-paramf is ', sys.argv[i+1])
+      dconf['paramf'] = sys.argv[i+1]
+      i += 1
+
+parseargs()
+
 simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
@@ -186,7 +199,7 @@ class RunSimThread (QThread):
       print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)#,'time=',time())
       return simdat.ddat['errtot'] # return error to praxis
 
-    tol = 1e-5; nstep = 100; stepsz = 0.5
+    tol = 1e-5; nstep = 100; stepsz = 1.0 #stepsz = 0.5
     h.attr_praxis(tol, stepsz, 3)
     h.stop_praxis(nstep) # 
     lparam = list(dconf['params'].values())
@@ -1414,7 +1427,7 @@ class HNNGUI (QMainWindow):
 
   def __init__ (self):
     global dfile, ddat, paramf
-    super().__init__()        
+    super().__init__()   
     self.runningsim = False
     self.runthread = None
     self.dextdata = OrderedDict() # external data
