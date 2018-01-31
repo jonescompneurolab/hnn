@@ -174,7 +174,7 @@ def get_params_default (nprox = 2, ndist = 1):
         't0_pois': 0.,
         'T_pois': -1,
         'dt': 0.025,
-        'celsius': 6.3,
+        'celsius': 37.0,
         'threshold': 0.0 # firing threshold
     }
 
@@ -262,17 +262,17 @@ def get_L2Pyr_params_default():
         'L2Pyr_gabab_tau2': 20.,
 
         # Biophysics soma
-        'L2Pyr_soma_gkbar_hh': 0.01,
-        'L2Pyr_soma_gnabar_hh': 0.18,
-        'L2Pyr_soma_el_hh': -65.,
-        'L2Pyr_soma_gl_hh': 4.26e-5,
+        'L2Pyr_soma_gkbar_hh2': 0.01,
+        'L2Pyr_soma_gnabar_hh2': 0.18,
+        'L2Pyr_soma_el_hh2': -65.,
+        'L2Pyr_soma_gl_hh2': 4.26e-5,
         'L2Pyr_soma_gbar_km': 250.,
 
         # Biophysics dends
-        'L2Pyr_dend_gkbar_hh': 0.01,
-        'L2Pyr_dend_gnabar_hh': 0.15,
-        'L2Pyr_dend_el_hh': -65.,
-        'L2Pyr_dend_gl_hh': 4.26e-5,
+        'L2Pyr_dend_gkbar_hh2': 0.01,
+        'L2Pyr_dend_gnabar_hh2': 0.15,
+        'L2Pyr_dend_el_hh2': -65.,
+        'L2Pyr_dend_gl_hh2': 4.26e-5,
         'L2Pyr_dend_gbar_km': 250.,
     }
 
@@ -331,10 +331,10 @@ def get_L5Pyr_params_default():
         'L5Pyr_gabab_tau2': 20.,
 
         # Biophysics soma
-        'L5Pyr_soma_gkbar_hh': 0.01,
-        'L5Pyr_soma_gnabar_hh': 0.16,
-        'L5Pyr_soma_el_hh': -65.,
-        'L5Pyr_soma_gl_hh': 4.26e-5,
+        'L5Pyr_soma_gkbar_hh2': 0.01,
+        'L5Pyr_soma_gnabar_hh2': 0.16,
+        'L5Pyr_soma_el_hh2': -65.,
+        'L5Pyr_soma_gl_hh2': 4.26e-5,
         'L5Pyr_soma_gbar_ca': 60.,
         'L5Pyr_soma_taur_cad': 20.,
         'L5Pyr_soma_gbar_kca': 2e-4,
@@ -343,10 +343,10 @@ def get_L5Pyr_params_default():
         'L5Pyr_soma_gbar_ar': 1e-6,
 
         # Biophysics dends
-        'L5Pyr_dend_gkbar_hh': 0.01,
-        'L5Pyr_dend_gnabar_hh': 0.14,
-        'L5Pyr_dend_el_hh': -71.,
-        'L5Pyr_dend_gl_hh': 4.26e-5,
+        'L5Pyr_dend_gkbar_hh2': 0.01,
+        'L5Pyr_dend_gnabar_hh2': 0.14,
+        'L5Pyr_dend_el_hh2': -71.,
+        'L5Pyr_dend_gl_hh2': 4.26e-5,
         'L5Pyr_dend_gbar_ca': 60.,
         'L5Pyr_dend_taur_cad': 20.,
         'L5Pyr_dend_gbar_kca': 2e-4,

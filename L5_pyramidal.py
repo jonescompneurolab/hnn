@@ -285,12 +285,12 @@ class L5Pyr(Pyr):
         # set soma biophysics specified in Pyr
         # self.pyr_biophys_soma()
 
-        # Insert 'hh' mechanism
-        self.soma.insert('hh')
-        self.soma.gkbar_hh = self.p_all['L5Pyr_soma_gkbar_hh']
-        self.soma.gnabar_hh = self.p_all['L5Pyr_soma_gnabar_hh']
-        self.soma.gl_hh = self.p_all['L5Pyr_soma_gl_hh']
-        self.soma.el_hh = self.p_all['L5Pyr_soma_el_hh']
+        # Insert 'hh2' mechanism
+        self.soma.insert('hh2')
+        self.soma.gkbar_hh2 = self.p_all['L5Pyr_soma_gkbar_hh2']
+        self.soma.gnabar_hh2 = self.p_all['L5Pyr_soma_gnabar_hh2']
+        self.soma.gl_hh2 = self.p_all['L5Pyr_soma_gl_hh2']
+        self.soma.el_hh2 = self.p_all['L5Pyr_soma_el_hh2']
 
         # insert 'ca' mechanism
         # Units: pS/um^2
@@ -320,29 +320,18 @@ class L5Pyr(Pyr):
         self.soma.insert('ar')
         self.soma.gbar_ar = self.p_all['L5Pyr_soma_gbar_ar']
 
-        # self.soma.gkbar_hh = 0.01
-        # self.soma.gnabar_hh = 0.16
-        # self.soma.gl_hh = 4.26e-5
-        # self.soma.el_hh = -65.
-        # self.soma.gbar_ca = 60.
-        # self.soma.taur_cad = 20.
-        # self.soma.gbar_kca = 2e-4
-        # self.soma.gbar_km = 200.
-        # self.soma.gbar_cat = 2e-4
-        # self.soma.gbar_ar = 1e-6
-
     def __biophys_dends(self):
         # set dend biophysics specified in Pyr()
         # self.pyr_biophys_dends()
 
         # set dend biophysics not specified in Pyr()
         for key in self.dends:
-            # Insert 'hh' mechanism
-            self.dends[key].insert('hh')
-            self.dends[key].gkbar_hh = self.p_all['L5Pyr_dend_gkbar_hh']
-            self.dends[key].gl_hh = self.p_all['L5Pyr_dend_gl_hh']
-            self.dends[key].gnabar_hh = self.p_all['L5Pyr_dend_gnabar_hh']
-            self.dends[key].el_hh = self.p_all['L5Pyr_dend_el_hh']
+            # Insert 'hh2' mechanism
+            self.dends[key].insert('hh2')
+            self.dends[key].gkbar_hh2 = self.p_all['L5Pyr_dend_gkbar_hh2']
+            self.dends[key].gl_hh2 = self.p_all['L5Pyr_dend_gl_hh2']
+            self.dends[key].gnabar_hh2 = self.p_all['L5Pyr_dend_gnabar_hh2']
+            self.dends[key].el_hh2 = self.p_all['L5Pyr_dend_el_hh2']
 
             # Insert 'ca' mechanims
             # Units: pS/um^2
@@ -384,59 +373,6 @@ class L5Pyr(Pyr):
                 seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x))
 
             h.pop_section()
-
-            # self.dends[key].gkbar_hh = 0.01
-            # self.dends[key].gl_hh = 4.26e-5
-            # self.dends[key].gnabar_hh = 0.14
-            # self.dends[key].el_hh = -71
-            # self.dends[key].gbar_ca = 60.
-            # self.dends[key].taur_cad = 20.
-            # self.dends[key].gbar_kca = 2e-4
-            # self.dends[key].gbar_km = 200.
-            #     seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x))
-            #     seg.gbar_cat = 2e-4 * np.exp(0 * h.distance(seg.x))
-
-        # for sec in self.list_dend:
-        #     # Insert 'hh' mechanism
-        #     sec.insert('hh')
-        #     sec.gkbar_hh = 0.01
-        #     sec.gl_hh = 4.26e-5
-        #     sec.gnabar_hh = 0.14
-        #     sec.el_hh = -71
-
-        #     # Insert 'ca' mechanims
-        #     # Units: pS/um^2
-        #     sec.insert('ca')
-        #     sec.gbar_ca = 60.
-
-        #     # Insert 'cad' mechanism
-        #     sec.insert('cad')
-        #     sec.taur_cad = 20.
-
-        #     # Insert 'kca' mechanism
-        #     sec.insert('kca')
-        #     sec.gbar_kca = 2e-4
-
-        #     # Insert 'km' mechansim
-        #     # Units: pS/um^2
-        #     sec.insert('km')
-        #     sec.gbar_km = 200.
-
-        #     # insert 'cat' and 'ar' mechanisms
-        #     sec.insert('cat')
-        #     sec.insert('ar')
-
-        # h.distance(sec=self.soma)
-
-        # for sec in self.list_dend:
-        #     sec.push()
-        #     for seg in sec:
-        #         seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x))
-
-        #         # this should always evaluate to 2e-4
-        #         sec.gbar_cat = 2e-4 * np.exp(0 * h.distance(seg.x))
-
-        #     h.pop_section()
 
     def __synapse_create(self, p_syn):
         # creates synapses onto this cell

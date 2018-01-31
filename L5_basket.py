@@ -65,7 +65,7 @@ class L5Basket(BasketSingle):
 
     # defines biophysics
     def __biophysics(self):
-        self.soma.insert('hh')
+        self.soma.insert('hh2')
 
     # connections FROM other cells TO this cell
     # there are no connections from the L2Basket cells. congrats!

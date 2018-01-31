@@ -954,16 +954,16 @@ class CellParamDialog (DictDialog):
                                   ('L2Pyr_gabab_tau1', 1.),
                                   ('L2Pyr_gabab_tau2', 20.)])
 
-    self.dL2PyrBiophys = OrderedDict([('L2Pyr_soma_gkbar_hh', 0.01), # Biophysics soma
-                                      ('L2Pyr_soma_gnabar_hh', 0.18),
-                                      ('L2Pyr_soma_el_hh', -65.),
-                                      ('L2Pyr_soma_gl_hh', 4.26e-5),
+    self.dL2PyrBiophys = OrderedDict([('L2Pyr_soma_gkbar_hh2', 0.01), # Biophysics soma
+                                      ('L2Pyr_soma_gnabar_hh2', 0.18),
+                                      ('L2Pyr_soma_el_hh2', -65.),
+                                      ('L2Pyr_soma_gl_hh2', 4.26e-5),
                                       ('L2Pyr_soma_gbar_km', 250.),
                                       # Biophysics dends
-                                      ('L2Pyr_dend_gkbar_hh', 0.01),
-                                      ('L2Pyr_dend_gnabar_hh', 0.15),
-                                      ('L2Pyr_dend_el_hh', -65.),
-                                      ('L2Pyr_dend_gl_hh', 4.26e-5),
+                                      ('L2Pyr_dend_gkbar_hh2', 0.01),
+                                      ('L2Pyr_dend_gnabar_hh2', 0.15),
+                                      ('L2Pyr_dend_el_hh2', -65.),
+                                      ('L2Pyr_dend_gl_hh2', 4.26e-5),
                                       ('L2Pyr_dend_gbar_km', 250.)])
 
 
@@ -1004,10 +1004,10 @@ class CellParamDialog (DictDialog):
                                   ('L5Pyr_gabab_tau1', 1.),
                                   ('L5Pyr_gabab_tau2', 20.)])
 
-    self.dL5PyrBiophys = OrderedDict([('L5Pyr_soma_gkbar_hh', 0.01), # Biophysics soma
-                                       ('L5Pyr_soma_gnabar_hh', 0.16),
-                                       ('L5Pyr_soma_el_hh', -65.),
-                                       ('L5Pyr_soma_gl_hh', 4.26e-5),
+    self.dL5PyrBiophys = OrderedDict([('L5Pyr_soma_gkbar_hh2', 0.01), # Biophysics soma
+                                       ('L5Pyr_soma_gnabar_hh2', 0.16),
+                                       ('L5Pyr_soma_el_hh2', -65.),
+                                       ('L5Pyr_soma_gl_hh2', 4.26e-5),
                                        ('L5Pyr_soma_gbar_ca', 60.),
                                        ('L5Pyr_soma_taur_cad', 20.),
                                        ('L5Pyr_soma_gbar_kca', 2e-4),
@@ -1015,10 +1015,10 @@ class CellParamDialog (DictDialog):
                                        ('L5Pyr_soma_gbar_cat', 2e-4),
                                        ('L5Pyr_soma_gbar_ar', 1e-6),
                                        # Biophysics dends
-                                       ('L5Pyr_dend_gkbar_hh', 0.01),
-                                       ('L5Pyr_dend_gnabar_hh', 0.14),
-                                       ('L5Pyr_dend_el_hh', -71.),
-                                       ('L5Pyr_dend_gl_hh', 4.26e-5),
+                                       ('L5Pyr_dend_gkbar_hh2', 0.01),
+                                       ('L5Pyr_dend_gnabar_hh2', 0.14),
+                                       ('L5Pyr_dend_el_hh2', -71.),
+                                       ('L5Pyr_dend_gl_hh2', 4.26e-5),
                                        ('L5Pyr_dend_gbar_ca', 60.),
                                        ('L5Pyr_dend_taur_cad', 20.),
                                        ('L5Pyr_dend_gbar_kca', 2e-4),
@@ -1064,7 +1064,7 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
-          if lk[3] == 'hh': nv += '(S/cm2)'
+          if lk[3] == 'hh2': nv += '(S/cm2)'
           else: nv += '(pS/micron2)'
         elif lk[2].count('el') > 0: nv = dtrans[lk[1]] + ' leak reversal (mV)'
         self.addtransvar(k,nv)

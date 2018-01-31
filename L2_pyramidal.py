@@ -244,12 +244,12 @@ class L2Pyr(Pyr):
         # set soma biophysics specified in Pyr
         # self.pyr_biophys_soma()
 
-        # Insert 'hh' mechanism
-        self.soma.insert('hh')
-        self.soma.gkbar_hh = self.p_all['L2Pyr_soma_gkbar_hh']
-        self.soma.gl_hh = self.p_all['L2Pyr_soma_gl_hh']
-        self.soma.el_hh = self.p_all['L2Pyr_soma_el_hh']
-        self.soma.gnabar_hh = self.p_all['L2Pyr_soma_gnabar_hh']
+        # Insert 'hh2' mechanism
+        self.soma.insert('hh2')
+        self.soma.gkbar_hh2 = self.p_all['L2Pyr_soma_gkbar_hh2']
+        self.soma.gl_hh2 = self.p_all['L2Pyr_soma_gl_hh2']
+        self.soma.el_hh2 = self.p_all['L2Pyr_soma_el_hh2']
+        self.soma.gnabar_hh2 = self.p_all['L2Pyr_soma_gnabar_hh2']
 
         # Insert 'km' mechanism
         # Units: pS/um^2
@@ -267,36 +267,16 @@ class L2Pyr(Pyr):
             # a for loop to iterate over all segments to set mech values
 
             # Insert 'hh' mechanism
-            self.dends[key].insert('hh')
-            self.dends[key].gkbar_hh = self.p_all['L2Pyr_dend_gkbar_hh']
-            self.dends[key].gl_hh = self.p_all['L2Pyr_dend_gl_hh']
-            self.dends[key].gnabar_hh = self.p_all['L2Pyr_dend_gnabar_hh']
-            self.dends[key].el_hh = self.p_all['L2Pyr_dend_el_hh']
+            self.dends[key].insert('hh2')
+            self.dends[key].gkbar_hh2 = self.p_all['L2Pyr_dend_gkbar_hh2']
+            self.dends[key].gl_hh2 = self.p_all['L2Pyr_dend_gl_hh2']
+            self.dends[key].gnabar_hh2 = self.p_all['L2Pyr_dend_gnabar_hh2']
+            self.dends[key].el_hh2 = self.p_all['L2Pyr_dend_el_hh2']
 
             # Insert 'km' mechanism
             # Units: pS/um^2
             self.dends[key].insert('km')
             self.dends[key].gbar_km = self.p_all['L2Pyr_dend_gbar_km']
-
-            # self.dends[key].gkbar_hh = 0.01
-            # self.dends[key].gl_hh = 4.26e-5
-            # self.dends[key].gnabar_hh = 0.15
-            # self.dends[key].el_hh = -65
-
-            # self.dends[key].gbar_km = 250
-
-        # for sec in self.list_dend:
-            # # Insert 'hh' mechanism
-            # sec.insert('hh')
-            # sec.gkbar_hh = 0.01
-            # sec.gl_hh = 4.26e-5
-            # sec.gnabar_hh = 0.15
-            # sec.el_hh = -65
-
-            # # Insert 'km' mechanism
-            # # Units: pS/um^2
-            # sec.insert('km')
-            # sec.gbar_km = 250
 
     def __synapse_create (self, p_syn):
         # creates synapses onto this cell

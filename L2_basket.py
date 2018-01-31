@@ -29,7 +29,7 @@ class L2Basket(BasketSingle):
         self.soma_nmda = self.syn_nmda_create(self.soma(0.5))
 
     def __biophysics(self):
-        self.soma.insert('hh')
+        self.soma.insert('hh2')
 
     # insert IClamps in all situations
     def create_all_IClamp(self, p):

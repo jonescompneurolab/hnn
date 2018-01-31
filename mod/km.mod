@@ -22,7 +22,7 @@ NEURON {
     RANGE n, gk, gbar
     RANGE ninf, ntau
     GLOBAL Ra, Rb
-    GLOBAL q10, temp, tadj, vmin, vmax
+    GLOBAL q10, temp, tadj, vmin, vmax, tshift
 }
 
 UNITS {
@@ -57,6 +57,8 @@ PARAMETER {
 
     : temp sensitivity
     q10  = 2.3
+
+    tshift = 30.7
 
     vmin = -120 (mV)
     vmax = 100  (mV)
@@ -118,7 +120,7 @@ PROCEDURE rates(v) {
     a = Ra * (v - tha) / (1 - exp(-(v - tha) / qa))
     b = -Rb * (v - tha) / (1 - exp((v - tha) / qa))
 
-    tadj = q10^((celsius - temp) / 10)
+    tadj = q10^((celsius - temp - tshift) / 10)
     ntau = 1/tadj/(a+b)
     ninf = a/(a+b)
 }

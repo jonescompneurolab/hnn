@@ -21,7 +21,7 @@ NEURON {
     USEION ca READ eca WRITE ica
     RANGE m, h, gca, gbar
     RANGE minf, hinf, mtau, htau
-    GLOBAL q10, temp, tadj, vmin, vmax, vshift
+    GLOBAL q10, temp, tadj, vmin, vmax, vshift, tshift
 }
 
 PARAMETER {
@@ -33,6 +33,7 @@ PARAMETER {
 
     temp = 23    (degC)   : original temp
     q10  = 2.3            : temperature sensitivity
+    tshift = 30.7
 
     v            (mV)
     dt           (ms)
@@ -109,7 +110,7 @@ PROCEDURE trates(v) {
 PROCEDURE rates(vm) {
     LOCAL a, b
 
-    tadj = q10^((celsius - temp)/10)
+    tadj = q10^((celsius - temp - tshift)/10)
 
     a = 0.055 * (-27 - vm) / (exp((-27 - vm) / 3.8) - 1)
     b = 0.94 * exp((-75 - vm) / 17)

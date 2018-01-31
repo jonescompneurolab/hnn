@@ -24,7 +24,7 @@ NEURON {
     RANGE n, gk, gbar
     RANGE ninf, ntau
     GLOBAL Ra, Rb, caix
-    GLOBAL q10, temp, tadj, vmin, vmax
+    GLOBAL q10, temp, tadj, vmin, vmax, tshift
 }
 
 UNITS {
@@ -53,6 +53,7 @@ PARAMETER {
     : original temp
     temp = 23   (degC)
     q10  = 2.3
+    tshift = 30.7
 
     vmin = -120 (mV)
     vmax = 100  (mV)
@@ -97,7 +98,7 @@ PROCEDURE rates(cai(mM)) {
     a = Ra * cai^caix
     b = Rb
 
-    tadj = q10^((celsius - temp) / 10)
+    tadj = q10^((celsius - temp - tshift) / 10)
 
     ntau = 1 / tadj / (a + b)
     ninf = a / (a + b)

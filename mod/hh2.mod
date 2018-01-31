@@ -1,16 +1,12 @@
-TITLE hh.mod   squid sodium, potassium, and leak channels
+TITLE hh2.mod   sodium, potassium, and leak channels
  
 COMMENT
- This is the original Hodgkin-Huxley treatment for the set of sodium, 
-  potassium, and leakage channels found in the squid giant axon membrane.
-  ("A quantitative description of membrane current and its application 
-  conduction and excitation in nerve" J.Physiol. (Lond.) 117:500-544 (1952).)
+ This is an adjusted Hodgkin-Huxley treatment for sodium, 
+  potassium, and leakage channels.
  Membrane voltage is in absolute mV and has been reversed in polarity
   from the original HH convention and shifted to reflect a resting potential
   of -65 mV.
- Remember to set celsius=6.3 (or whatever) in your HOC file.
- See squid.hoc for an example of a simulation using this model.
- SW Jaslove  6 March, 1992
+ Remember to set celsius in your HOC file.
 ENDCOMMENT
  
 UNITS {
@@ -21,12 +17,12 @@ UNITS {
  
 ? interface
 NEURON {
-        SUFFIX hh
+        SUFFIX hh2
         USEION na READ ena WRITE ina
         USEION k READ ek WRITE ik
         NONSPECIFIC_CURRENT il
         RANGE gnabar, gkbar, gl, el, gna, gk
-        GLOBAL minf, hinf, ninf, mtau, htau, ntau
+        GLOBAL minf, hinf, ninf, mtau, htau, ntau, tshift, temp
 	THREADSAFE : assigned GLOBALs will be per thread
 }
  
@@ -35,6 +31,8 @@ PARAMETER {
         gkbar = .036 (S/cm2)	<0,1e9>
         gl = .0003 (S/cm2)	<0,1e9>
         el = -54.3 (mV)
+        temp = 6.3
+        tshift = 30.7
 }
  
 STATE {
@@ -92,7 +90,7 @@ PROCEDURE rates(v(mV)) {  :Computes rate and other constants at current v.
         TABLE minf, mtau, hinf, htau, ninf, ntau DEPEND celsius FROM -100 TO 100 WITH 200
 
 UNITSOFF
-        q10 = 3^((celsius - 6.3)/10)
+        q10 = 3^((celsius - temp - tshift)/10)
                 :"m" sodium activation system
         alpha = .1 * vtrap(-(v+40),10)
         beta =  4 * exp(-(v+65)/18)
