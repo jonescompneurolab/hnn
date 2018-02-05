@@ -292,11 +292,15 @@ class SIMCanvas (FigureCanvas):
     try:
       ds = None
       xl = (0,find_param(dfile['outparam'],'tstop'))
+      dt = find_param(dfile['outparam'],'dt')
       if 'spec' in ddat:
         if ddat['spec'] is not None:
           ds = ddat['spec'] # spectrogram
           xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
       gRow = 0
+
+      sampr = 1e3/dt # dipole sampling rate
+      sidx, eidx = int(sampr*xl[0]/1e3), int(sampr*xl[1]/1e3) # use these indices to find dipole min,max
 
       EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
 
@@ -314,13 +318,13 @@ class SIMCanvas (FigureCanvas):
       N_trials = self.getNTrials()
       if debug: print('simdat: N_trials:',N_trials)
 
-      yl = [np.amin(ddat['dpl'][1:,1]),np.amax(ddat['dpl'][1:,1])]
+      yl = [np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1])]
 
       if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
-          yl[0] = min(yl[0],dpltrial[:,1].min())
-          yl[1] = max(yl[1],dpltrial[:,1].max())
+          yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
+          yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
       if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
 
@@ -334,7 +338,7 @@ class SIMCanvas (FigureCanvas):
       ax.set_xlim(xl); ax.set_ylim(yl)
 
       if DrawSpec: # 
-        if debug: print('ylim is : ', np.amin(ddat['dpl'][:,1]),np.amax(ddat['dpl'][:,1]))
+        if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
         cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
