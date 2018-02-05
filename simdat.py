@@ -208,9 +208,10 @@ class SIMCanvas (FigureCanvas):
 
   def drawEVInputTimes (self, ax, yl, h=0.1, w=15):
     ltprox, ltdist = self.getEVInputTimes()
-    yrange = yl[1] - yl[0]
-    for tt in ltprox: ax.arrow(tt,yl[0],0,h*yrange,head_width=w, head_length=w, fc='r', ec='r')
-    for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,head_width=w, head_length=w, fc='g', ec='g')
+    yrange = abs(yl[1] - yl[0])
+    #print('drawEVInputTimes:',yl,yrange,h,w,h*yrange,-h*yrange,yl[0]+h*yrange,yl[1]-h*yrange)
+    for tt in ltprox: ax.arrow(tt,yl[0],0,h*yrange,fc='r',ec='r', head_width=w,head_length=w)#head_length=w,head_width=1.)#w/4)#length_includes_head=True,
+    for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,fc='g',ec='g',head_width=w,head_length=w)#head_length=w,head_width=1.)#w/4)
 
   def getInputs (self):
     EvokedInputs = OngoingInputs = PoissonInputs = TonicInputs = False
@@ -321,7 +322,7 @@ class SIMCanvas (FigureCanvas):
           yl[0] = min(yl[0],dpltrial[:,1].min())
           yl[1] = max(yl[1],dpltrial[:,1].max())
 
-      if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)
+      if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       scalefctr = getscalefctr(self.paramf)
