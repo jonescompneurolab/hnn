@@ -87,6 +87,7 @@ def drawraster ():
 def calcerr (ddat):
   try:
     NSig = errtot = 0.0; lerr = []
+    ddat['errtot']=None; ddat['lerr']=None
     for fn,dat in ddat['dextdata'].items():
       shp = dat.shape
       # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
@@ -103,6 +104,7 @@ def calcerr (ddat):
     ddat['lerr'] = lerr
     return lerr, errtot
   except:
+    print('exception in calcerr')
     return [],-1.0
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
@@ -223,9 +225,12 @@ class SIMCanvas (FigureCanvas):
 
   def plotextdat (self, recalcErr=True): # plot 'external' data (e.g. from experiment/other simulation)
     try:
+      #print('in plotextdat')
+      #self.plotsimdat()
       if recalcErr: calcerr(ddat) # recalculate/save the error?
       lerr, errtot = ddat['lerr'], ddat['errtot']
 
+      #print('self.axdipole:',self.axdipole)
       ax = self.axdipole
       yl = ax.get_ylim()
 
@@ -338,6 +343,9 @@ class SIMCanvas (FigureCanvas):
         ax.set_ylim(ds['freq'][-1],ds['freq'][0])
         cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
+        if DrawSpec:
+          self.axdist.set_xlim(xl)
+          self.axprox.set_xlim(xl)
     except:
       print('ERR: in plotsimdat')
     self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
