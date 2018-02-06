@@ -104,7 +104,7 @@ def calcerr (ddat):
     ddat['lerr'] = lerr
     return lerr, errtot
   except:
-    print('exception in calcerr')
+    #print('exception in calcerr')
     return [],-1.0
 
 # based on https://pythonspot.com/en/pyqt5-matplotlib/
@@ -224,12 +224,37 @@ class SIMCanvas (FigureCanvas):
       pass
     return EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs
 
+  def setupaxdipole (self):
+    EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
+
+    # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
+    DrawSpec = False
+    try:
+      DrawSpec = find_param(dfile['outparam'],'save_spec_data') or OngoingInputs or PoissonInputs or TonicInputs
+    except:
+      pass
+
+    gRow = 0
+
+    if OngoingInputs or EvokedInputs: gRow = 2
+
+    if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
+      self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+    else:
+      self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
+
   def plotextdat (self, recalcErr=True): # plot 'external' data (e.g. from experiment/other simulation)
     try:
       #print('in plotextdat')
       #self.plotsimdat()
       if recalcErr: calcerr(ddat) # recalculate/save the error?
+      #print('ddat.keys():',ddat.keys())
       lerr, errtot = ddat['lerr'], ddat['errtot']
+      #print('lerr:',lerr,'errtot:',errtot)
+
+      hassimdata = self.hassimdata() # has the simulation been run yet?
+
+      if not hasattr(self,'axdipole'): self.setupaxdipole() # do we need an axis for drawing?
 
       #print('self.axdipole:',self.axdipole)
       ax = self.axdipole
@@ -251,22 +276,36 @@ class SIMCanvas (FigureCanvas):
 
           fx = int(shp[0] * float(c) / shp[1])
 
-          tx,ty=dat[fx,0],dat[fx,c]
-          txt='RMSE:' + str(round(lerr[c-1],2))
-          self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
+          if lerr:
+            tx,ty=dat[fx,0],dat[fx,c]
+            txt='RMSE:' + str(round(lerr[c-1],2))
+            self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
           self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
 
       ax.set_ylim(yl)
-      self.lextdatobj.append(ax.legend(handles=self.lpatch))
 
-      tx,ty=0,0
-      txt='Avg. RMSE:' + str(round(errtot,2))
-      self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
+      if self.lextdatobj and self.lpatch:
+        self.lextdatobj.append(ax.legend(handles=self.lpatch))
+
+      if errtot:
+        tx,ty=0,0
+        txt='Avg. RMSE:' + str(round(errtot,2))
+        self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
+
+      if not hassimdata: # need axis labels
+        ax.set_xlabel('Time (ms)')
+        ax.set_ylabel('Dipole (nAm)')
+        myxl = ax.get_xlim()
+        if myxl[0] < 0.0: ax.set_xlim((0.0,myxl[1]+myxl[0]))
+        self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
     except:
       print('simdat ERR: could not plotextdat')
       return False
     return True
+
+  def hassimdata (self):
+    return 'dpl' in ddat
 
   def clearlextdatobj (self):
     for o in self.lextdatobj:
@@ -276,7 +315,8 @@ class SIMCanvas (FigureCanvas):
         o[0].set_visible(False)
     del self.lextdatobj
     self.lextdatobj = []
-    self.lpatch = [mpatches.Patch(color='black', label='Simulation')]
+    self.lpatch = []
+    if self.hassimdata(): lpatch.append(mpatches.Patch(color='black', label='Simulation'))
     if hasattr(self,'annot_avg'):
       self.annot_avg.set_visible(False)
       del self.annot_avg
@@ -327,6 +367,7 @@ class SIMCanvas (FigureCanvas):
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
       if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
+      #if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)
 
       ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3)
       scalefctr = getscalefctr(self.paramf)
