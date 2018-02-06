@@ -397,14 +397,15 @@ class OngoingInputParamDialog (DictDialog):
     self.dL5[self.prefix + 'delay_L5'] = 0.1
 
     self.ldict = [self.dtiming, self.dL2, self.dL5]
-    self.ltitle = ['Timing', 'Layer2', 'Layer5']
+    self.ltitle = ['Timing', 'Layer 2/3', 'Layer 5']
     self.stitle = 'Set Rhythmic '+self.inty+' Inputs'
 
+    dtmp = {'L2':'L2/3 ','L5':'L5 '}
     for d in [self.dL2, self.dL5]:
       for k in d.keys():
         lk = k.split('_')
         if k.count('weight') > 0:
-          self.addtransvar(k, lk[-2]+' '+lk[-1].upper()+' weight (nS)')
+          self.addtransvar(k, dtmp[lk[-2][0:2]] + lk[-2][2:]+' '+lk[-1].upper()+' weight (nS)')
         else:
           self.addtransvar(k, 'Delay (ms)')
 
@@ -568,18 +569,20 @@ class TonicInputParamDialog (DictDialog):
       ('Itonic_t0_L5Basket', 0.),
       ('Itonic_T_L5Basket', -1.)])
 
+    dtmp = {'L2':'L2/3 ','L5':'L5 '} # temporary dictionary for string translation
     for d in [self.dL2, self.dL5]:
       for k in d.keys():
-        cty = k.split('_')[2]
+        cty = k.split('_')[2] # cell type
+        tcty = dtmp[cty[0:2]] + cty[2:] # translated cell type
         if k.count('A') > 0:
-          self.addtransvar(k, cty + ' amplitude (nA)')
+          self.addtransvar(k, tcty + ' amplitude (nA)')
         elif k.count('t0') > 0:
-          self.addtransvar(k, cty + ' start time (ms)')
+          self.addtransvar(k, tcty + ' start time (ms)')
         elif k.count('T') > 0:
-          self.addtransvar(k, cty + ' stop time (ms)')
+          self.addtransvar(k, tcty + ' stop time (ms)')
 
     self.ldict = [self.dL2, self.dL5]
-    self.ltitle = ['Layer2', 'Layer5']
+    self.ltitle = ['Layer 2/3', 'Layer 5']
     self.stitle = 'Set Tonic Inputs'
 
 # widget to specify ongoing poisson inputs
@@ -610,16 +613,18 @@ class PoissonInputParamDialog (DictDialog):
     self.addtransvar('t0_pois','Start time (ms)')
     self.addtransvar('T_pois','Stop time (ms)')
 
+    dtmp = {'L2':'L2/3 ','L5':'L5 '} # temporary dictionary for string translation
     for d in [self.dL2, self.dL5]:
       for k in d.keys():
-        cty = k.split('_')[0]
+        cty = k.split('_')[0] # cell type
+        tcty = dtmp[cty[0:2]] + cty[2:] # translated cell type
         if k.endswith('weight'):
-          self.addtransvar(k, cty+ ' weight (nS)')
+          self.addtransvar(k, tcty+ ' weight (nS)')
         elif k.endswith('lamtha'):
-          self.addtransvar(k, cty+ ' Freq (Hz)')
+          self.addtransvar(k, tcty+ ' freq (Hz)')
 
     self.ldict = [self.dL2, self.dL5, self.dtiming]
-    self.ltitle = ['Layer2', 'Layer5', 'Timing']
+    self.ltitle = ['Layer 2/3', 'Layer 5', 'Timing']
     self.stitle = 'Set Poisson Inputs'
 
 # evoked input param dialog (allows adding/removing arbitrary number of evoked inputs)
@@ -803,9 +808,11 @@ class EvokedInputParamDialog (QDialog):
     return pixlbl
 
   def addtransvarfromdict (self,d):
+    dtmp = {'L2':'L2/3 ','L5':'L5 '}
     for k in d.keys():
       if k.startswith('gbar'):
-        self.addtransvar(k,k.split('_')[-1] + ' weight (nS)')
+        stmp = k.split('_')[-1]
+        self.addtransvar(k,dtmp[stmp[0:2]] + stmp[2:] + ' weight (nS)')
       elif k.startswith('t'):
         self.addtransvar(k,'Start time mean (ms)')
       elif k.startswith('sigma'):
@@ -1077,8 +1084,8 @@ class CellParamDialog (DictDialog):
 
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
                   self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
-    self.ltitle = [ 'L2Pyr Geometry', 'L2Pyr Synapses', 'L2Pyr Biophysics',\
-                    'L5Pyr Geometry', 'L5Pyr Synapses', 'L5Pyr Biophysics']
+    self.ltitle = [ 'L2/3 Pyr Geometry', 'L2/3 Pyr Synapses', 'L2/3 Pyr Biophysics',\
+                    'L5 Pyr Geometry', 'L5 Pyr Synapses', 'L5 Pyr Biophysics']
     self.stitle = 'Cell Parameters'
 
 
@@ -1117,7 +1124,7 @@ class NetworkParamDialog (DictDialog):
                                ('gbar_L5Basket_L5Basket', 0.)])
 
     self.ldict = [self.dcells, self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]
-    self.ltitle = ['Cells', 'Layer2 Pyr', 'Layer5 Pyr', 'Layer2 Bas', 'Layer5 Bas']
+    self.ltitle = ['Cells', 'Layer 2/3 Pyr', 'Layer 5 Pyr', 'Layer 2/3 Bas', 'Layer 5 Bas']
     self.stitle = 'Local Network Parameters'
 
     self.addtransvar('N_pyr_x', 'Num Pyr Cells (X direction)')
