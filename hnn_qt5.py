@@ -671,7 +671,7 @@ class EvokedInputParamDialog (QDialog):
           self.chksync.setChecked(True)
       elif k == 'inc_evinput':
         self.incedit.setText(str(v).strip())
-  
+
   def initUI (self):
     self.layout = QVBoxLayout(self)
 
@@ -744,7 +744,9 @@ class EvokedInputParamDialog (QDialog):
     tab = self.ltabs[idx]
     self.ltabs.remove(tab)
     d = self.ld[idx]
-    for k in d.keys(): del self.dqline[k]
+    for k in d.keys(): 
+      if k in self.dqline:
+        del self.dqline[k]
     self.ld.remove(d)
     tab.setParent(None)
     # print(self) # for testing
@@ -808,12 +810,15 @@ class EvokedInputParamDialog (QDialog):
         self.addtransvar(k,'Start time mean (ms)')
       elif k.startswith('sigma'):
         self.addtransvar(k,'Start time stdev (ms)')
+      elif k.startswith('numspikes'):
+        self.addtransvar(k,'Number spikes')
 
   def addProx (self):
     self.nprox += 1 # starts at 1
     # evprox feed strength
     dprox = OrderedDict([('t_evprox_' + str(self.nprox), 0.), # times and stdevs for evoked responses
                          ('sigma_t_evprox_' + str(self.nprox), 2.5),
+                         ('numspikes_evprox_' + str(self.nprox), 1),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Pyr', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Basket', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L5Pyr', 0.),                                   
@@ -832,6 +837,7 @@ class EvokedInputParamDialog (QDialog):
     # evdist feed strengths
     ddist = OrderedDict([('t_evdist_' + str(self.ndist), 0.),
                          ('sigma_t_evdist_' + str(self.ndist), 6.),
+                         ('numspikes_evdist_' + str(self.ndist), 1),
                          ('gbar_evdist_' + str(self.ndist) + '_L2Pyr', 0.),
                          ('gbar_evdist_' + str(self.ndist) + '_L2Basket', 0.),
                          ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
@@ -1226,7 +1232,7 @@ class BaseParamDialog (QDialog):
       for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
       self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
     except:
-      pass
+      print('WARNING: could not read dialog settings.')
 
   def setrunparam (self): self.runparamwin.show()
   def setcellparam (self): self.cellparamwin.show()

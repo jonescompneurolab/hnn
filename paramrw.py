@@ -566,7 +566,7 @@ def create_pext (p, tstop):
     # p_unique is a dict of input param types that end up going to each cell uniquely
     p_unique = {}
 
-    # default params
+    # default params for proximal rhythmic inputs
     feed_prox = {
         'f_input': p['f_input_prox'],
         't0': p['t0_input_prox'],
@@ -593,6 +593,7 @@ def create_pext (p, tstop):
     # ensures time interval makes sense
     p_ext = feed_validate(p_ext, feed_prox, tstop)
 
+    # default params for distal rhythmic inputs
     feed_dist = {
         'f_input': p['f_input_dist'],
         't0': p['t0_input_dist'],
@@ -633,7 +634,8 @@ def create_pext (p, tstop):
           'lamtha_space': 3.,
           'loc': 'proximal',
           'sync_evinput': p['sync_evinput'],
-          'threshold': p['threshold']
+          'threshold': p['threshold'],
+          'numspikes': p['numspikes_' + skey]
       }
 
     # Create distal evoked response parameters
@@ -649,7 +651,8 @@ def create_pext (p, tstop):
           'lamtha_space': 3.,
           'loc': 'distal',
           'sync_evinput': p['sync_evinput'],
-          'threshold': p['threshold']
+          'threshold': p['threshold'],
+          'numspikes': p['numspikes_' + skey]
       }
 
     # this needs to create many feeds

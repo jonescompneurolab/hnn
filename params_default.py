@@ -208,6 +208,7 @@ def get_ev_params_default (n,isprox):
     dout['t_' + tystr] = 0. # times and stdevs for evoked responses
     dout['sigma_t_' + tystr] = 0.
     dout['prng_seedcore_' + tystr] = 0 # random number generator seed for this input
+    dout['numspikes_' + tystr] = 1 # number of presynaptic spikes (postsynaptic inputs)
   return dout
 
 # returns default params for L2 pyramidal cell
