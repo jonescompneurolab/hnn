@@ -71,7 +71,7 @@ class DipoleCanvas (FigureCanvas):
 
     gdx = 311
 
-    ltitle = ['Layer2', 'Layer5', 'Aggregate']
+    ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
 
     white_patch = mpatches.Patch(color='white', label='Average')
     gray_patch = mpatches.Patch(color='gray', label='Individual')
