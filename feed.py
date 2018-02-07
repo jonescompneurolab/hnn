@@ -180,7 +180,7 @@ class ParFeedAll ():
         t_array = self.prng.normal(np.repeat(isi_array, self.p_ext['repeats']), stdev)
       else:
         t_array = isi_array
-      if events_per_cycle == 2:
+      if events_per_cycle == 2: # spikes/burst in GUI
         # Two arrays store doublet times
         t_array_low = t_array - 5
         t_array_high = t_array + 5
