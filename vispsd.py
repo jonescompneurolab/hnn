@@ -70,7 +70,7 @@ def drawpsd (dspec, fig, G, ltextra=''):
 
   gdx = 311
 
-  ltitle = ['Layer2', 'Layer5', 'Aggregate']
+  ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
 
   yl = [1e9,-1e9]
 
