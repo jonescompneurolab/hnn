@@ -414,7 +414,7 @@ class OngoingInputParamDialog (DictDialog):
     self.addtransvar('t0_input_stdev'+self.postfix,'Start time stdev (ms)')
     self.addtransvar('tstop_input'+self.postfix,'Stop time (ms)')
     self.addtransvar('f_input'+self.postfix,'Burst frequency (Hz)')
-    self.addtransvar('f_stdev'+self.postfix,'Burst stdev (Hz)')
+    self.addtransvar('f_stdev'+self.postfix,'Burst stdev (ms)')
     self.addtransvar('events_per_cycle'+self.postfix,'Spikes/burst')
     self.addtransvar('repeats'+self.postfix,'Number bursts')
 
