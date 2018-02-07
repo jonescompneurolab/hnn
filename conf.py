@@ -31,6 +31,7 @@ paramf = param/default.param
 drawindivdpl = 1
 drawindivrast = 1
 fontsize = 0
+drawavgdpl = 0
 [tips]
 tstop = Simulation duration; Evoked response simulations typically take 170 ms while ongoing rhythms are run for longer.
 dt = Simulation timestep - shorter timesteps mean more accuracy but longer runtimes.
@@ -166,6 +167,7 @@ def readconf (fn="hnn.cfg"):
   d['optrun'] = confint("run","optrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
+  d['drawavgdpl'] = confint("draw","drawavgdpl",0)
   d['drawindivrast'] = confint("draw","drawindivrast",1)
   d['fontsize'] = confint("draw","fontsize",0)
 
