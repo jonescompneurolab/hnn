@@ -371,6 +371,7 @@ class SIMCanvas (FigureCanvas):
 
       if EvokedInputs or dconf['drawavgdpl'] or N_trials <= 1:
         ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3) # this is the average dipole (across trials)
+        # it's also the ONLY dipole when running a single trial
 
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
