@@ -369,7 +369,7 @@ class SIMCanvas (FigureCanvas):
       if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
       #if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)
 
-      if EvokedInputs or dconf['drawavgdpl']:
+      if EvokedInputs or dconf['drawavgdpl'] or N_trials <= 1:
         ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3) # this is the average dipole (across trials)
 
       scalefctr = getscalefctr(self.paramf)
