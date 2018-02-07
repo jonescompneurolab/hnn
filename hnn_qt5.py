@@ -1130,13 +1130,17 @@ class NetworkParamDialog (DictDialog):
     self.addtransvar('N_pyr_x', 'Num Pyr Cells (X direction)')
     self.addtransvar('N_pyr_y', 'Num Pyr Cells (Y direction)')
 
+    dtmp = {'L2':'L2/3 ','L5':'L5 '}
+
     for d in [self.dL2Pyr, self.dL5Pyr, self.dL2Bas, self.dL5Bas]:
       for k in d.keys():
         lk = k.split('_')
+        sty1 = dtmp[lk[1][0:2]] + lk[1][2:]
+        sty2 = dtmp[lk[2][0:2]] + lk[2][2:]
         if len(lk) == 3:
-          self.addtransvar(k,lk[1]+'->'+lk[2]+' weight (nS)')
+          self.addtransvar(k,sty1+' -> '+sty2+' weight (nS)')
         else:
-          self.addtransvar(k,lk[1]+'->'+lk[2]+' '+lk[3].upper()+' weight (nS)')
+          self.addtransvar(k,sty1+' -> '+sty2+' '+lk[3].upper()+' weight (nS)')
 
 class HelpDialog (QDialog):
   def __init__ (self, parent):
