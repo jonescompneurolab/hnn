@@ -58,6 +58,7 @@ class Spikes():
 
 # Class to handle extinput event times
 class ExtInputs (Spikes):
+  # class for external inputs - extracts gids and times
   def __init__ (self, fspk, fparam, evoked=False):
     # load gid and param dicts
     self.gid_dict, self.p_dict = paramrw.read(fparam)
@@ -68,6 +69,9 @@ class ExtInputs (Spikes):
     # print('got evokedinput gids')
     # parse ongoing prox and dist input gids from gid_dict
     self.gid_prox, self.gid_dist = self.__get_extinput_gids()
+    # poisson input gids
+    #print('getting pois input gids')
+    self.gid_pois = self.__get_poisinput_gids()
     # self.inputs is dict of input times with keys 'prox' and 'dist'
     self.inputs = self.__get_extinput_times(fspk)
 
@@ -87,7 +91,17 @@ class ExtInputs (Spikes):
     else:
       return None, None
 
+  def __get_poisinput_gids (self):
+    # get Poisson input gids
+    gids = []
+    if len(self.gid_dict['extpois']) > 0:
+      if self.p_dict['t0_pois'] < self.p_dict['tstop']:
+        gids = np.array(self.gid_dict['extpois'])
+        self.pois_gid_range = (min(gids),max(gids))
+    return gids
+
   def countevinputs (self, ty):
+    # count number of evoked inputs
     n = 0
     for k in self.gid_dict.keys():
       if k.startswith(ty) and len(self.gid_dict[k]) > 0: n += 1
@@ -151,6 +165,9 @@ class ExtInputs (Spikes):
 
     if self.gid_evdist is not None: inputs['evdist'] = self.unique_times(s_all, self.gid_evdist)
     else: inputs['evdist'] = np.array([])
+
+    if self.gid_pois is not None: inputs['pois'] = self.unique_times(s_all, self.gid_pois)
+    else: inputs['pois'] = np.array([])
 
     return inputs
 

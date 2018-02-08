@@ -120,8 +120,13 @@ class SIMCanvas (FigureCanvas):
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
     self.invertedhistax = False
+    self.initaxes()
     self.G = gridspec.GridSpec(10,1)
     self.plot()
+
+  def initaxes (self):
+    self.axdist = self.axprox = self.axdipole = self.axspec = self.axpois = None
+    self.lax = [self.axdist, self.axprox, self.axdipole, self.axspec, self.axpois]
 
   def plotinputhist (self,xl): # plot input histograms
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
@@ -136,16 +141,27 @@ class SIMCanvas (FigureCanvas):
       extinputs.add_delay_times()
       dinput = extinputs.inputs
       if len(dinput['dist']) <= 0 and len(dinput['prox']) <= 0 and \
-         len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0:
+         len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0 and \
+         len(dinput['pois']) <= 0:
         if debug: print('all hists 0!')
         return False
     except:
       print('plotinputhist ERR: problem with extinputs')
-    self.hist = hist = {'feed_dist':None, 'feed_prox':None, 'feed_evdist':None, 'feed_evprox':None}
-    self.axdist = axdist = self.figure.add_subplot(self.G[0,0]); # distal inputs
-    self.axprox = axprox = self.figure.add_subplot(self.G[1,0]); # proximal inputs
+    self.hist=hist={x:None for x in ['feed_dist','feed_prox','feed_evdist','feed_evprox','feed_pois']}
+    hasPois = len(dinput['pois']) > 0
+    gRow = 0
+    axdist = axprox = axpois = None
+    if hasPois:
+      self.axpois = axpois = self.figure.add_subplot(self.G[gRow,0])
+      gRow += 1
+    if len(dinput['dist']) > 0 or len(dinput['evdist']) > 0:
+      self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # distal inputs
+    if len(dinput['prox']) > 0 or len(dinput['evprox']) > 0:
+      self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # proximal inputs
     if extinputs is not None: # only valid param.txt file after sim was run
-      print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']))
+      print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
+      if hasPois:
+        hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step')
       if len(dinput['dist']) > 0:
         hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
       if len(dinput['prox']) > 0:
@@ -154,27 +170,29 @@ class SIMCanvas (FigureCanvas):
         hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step')
       if len(dinput['evprox']) > 0:
         hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step')
+      
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
-         hist['feed_evdist'] is None and hist['feed_evprox'] is None:
+         hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
+         hist['feed_pois'] is None:
         self.invertedhistax = False
         if debug: print('all hists None!')
         return False
       else:
-        if not self.invertedhistax:# only need to invert axis 1X
+        if not self.invertedhistax and axdist:# only need to invert axis 1X
           axdist.invert_yaxis()
           self.invertedhistax = True
-        for ax in [axdist,axprox]:
-          # ax.set_xlim(xl)
-          ax.set_xlim(xlim_new)
-          ax.legend()          
-        return True
+        for ax in [axpois,axdist,axprox]:
+          if ax:
+            # ax.set_xlim(xl)
+            ax.set_xlim(xlim_new)
+            ax.legend()          
+        return True,gRow
 
   def clearaxes (self):
     try:
-      self.axdist.cla()
-      self.axprox.cla()
-      self.axdipole.cla()
-      self.axspec.cla()
+      for ax in self.lax:
+        if ax:
+          ax.cla()
     except:
       pass
 
@@ -347,8 +365,9 @@ class SIMCanvas (FigureCanvas):
       # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
       DrawSpec = find_param(dfile['outparam'],'save_spec_data') or OngoingInputs or PoissonInputs or TonicInputs
 
-      if OngoingInputs or EvokedInputs:
-        if self.plotinputhist(xl): gRow = 2
+      if OngoingInputs or EvokedInputs or PoissonInputs:
+        xo = self.plotinputhist(xl)
+        if xo: gRow = xo[1]
 
       if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
@@ -393,8 +412,8 @@ class SIMCanvas (FigureCanvas):
         cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
         if DrawSpec:
-          self.axdist.set_xlim(xl)
-          self.axprox.set_xlim(xl)
+          for ax in self.lax:
+            if ax: ax.set_xlim(xl)
     except:
       print('ERR: in plotsimdat')
     self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
