@@ -140,35 +140,24 @@ class ExtInputs (Spikes):
         ltime.append(time)
     return np.array(list(set(ltime)))
 
+  def get_times (self, gid, s_all):
+    self.r = [gid]
+    return self.filter(s_all)[0]
+
   def __get_extinput_times (self, fspk):
     # load all spike times from file
     s_all = np.loadtxt(open(fspk, 'rb'))
-    inputs = {}
+    inputs = {k:np.array([]) for k in ['prox','dist','evprox','evdist','pois']}
     # If prox input exists, get spike times
     # self.filter() inherited from Spikes()
     # self.r weirdness is necessary to use self.filter()
     # i.e. self.r must exist and be a list to execute self.filter()
-    if self.gid_prox:
-      self.r = [self.gid_prox]
-      inputs['prox'] = self.filter(s_all)[0]
-    else:
-      inputs['prox'] = np.array([])
+    if self.gid_prox: inputs['prox'] = self.get_times(self.gid_prox, s_all)
     # If dist input exists, get spike times
-    if self.gid_dist is not None:
-      self.r = [self.gid_dist]
-      inputs['dist'] = self.filter(s_all)[0]
-    else:
-      inputs['dist'] = np.array([])
-
+    if self.gid_dist is not None: inputs['dist'] = self.get_times(self.gid_dist, s_all)
     if self.gid_evprox is not None: inputs['evprox'] = self.unique_times(s_all, self.gid_evprox)
-    else: inputs['evprox'] = np.array([])
-
     if self.gid_evdist is not None: inputs['evdist'] = self.unique_times(s_all, self.gid_evdist)
-    else: inputs['evdist'] = np.array([])
-
     if self.gid_pois is not None: inputs['pois'] = self.unique_times(s_all, self.gid_pois)
-    else: inputs['pois'] = np.array([])
-
     return inputs
 
   # gid associated with evoked input
