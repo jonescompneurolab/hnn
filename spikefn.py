@@ -151,14 +151,11 @@ class ExtInputs (Spikes):
     # load all spike times from file
     s_all = np.loadtxt(open(fspk, 'rb'))
     inputs = {k:np.array([]) for k in ['prox','dist','evprox','evdist','pois']}
-
-    for lgid,k in zip([self.gid_prox, self.gid_dist],['prox','dist']):
-      if lgid: # if the input exists, get the spike times
-        inputs[k] = self.get_times(lgid, s_all)
-
+    if self.gid_prox is not None: inputs['prox'] = self.get_times(self.gid_prox,s_all)
+    if self.gid_dist is not None: inputs['dist'] = self.get_times(self.gid_dist,s_all)
     if self.gid_evprox is not None: inputs['evprox'] = self.unique_times(s_all, self.gid_evprox)
     if self.gid_evdist is not None: inputs['evdist'] = self.unique_times(s_all, self.gid_evdist)
-    if self.gid_pois is not None: inputs['pois'] = self.unique_times(s_all, self.gid_pois)
+    if self.gid_pois is not None:  inputs['pois'] = self.unique_times(s_all, self.gid_pois)
     return inputs
 
   # gid associated with evoked input
