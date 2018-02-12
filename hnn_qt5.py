@@ -373,7 +373,7 @@ class OngoingInputParamDialog (DictDialog):
   def TurnOff (self): self.lines2val('weight',0.0)
 
   def initd (self):
-    self.dtiming = OrderedDict([('distribution' + self.postfix, 'normal'),
+    self.dtiming = OrderedDict([#('distribution' + self.postfix, 'normal'),
                                 ('t0_input' + self.postfix, 1000.),
                                 ('t0_input_stdev' + self.postfix, 0.),
                                 ('tstop_input' + self.postfix, 250.),
@@ -409,7 +409,7 @@ class OngoingInputParamDialog (DictDialog):
         else:
           self.addtransvar(k, 'Delay (ms)')
 
-    self.addtransvar('distribution'+self.postfix,'Distribution')
+    #self.addtransvar('distribution'+self.postfix,'Distribution')
     self.addtransvar('t0_input'+self.postfix,'Start time mean (ms)')
     self.addtransvar('t0_input_stdev'+self.postfix,'Start time stdev (ms)')
     self.addtransvar('tstop_input'+self.postfix,'Stop time (ms)')
