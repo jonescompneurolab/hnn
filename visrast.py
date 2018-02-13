@@ -33,7 +33,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 1; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = False; 
+ntrial = 1; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = PoissonInputs = False; 
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.txt'):
@@ -44,18 +44,20 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     EvokedInputs = paramrw.usingEvokedInputs(paramf)
     OngoingInputs = paramrw.usingOngoingInputs(paramf)
+    PoissonInputs = paramrw.usingPoissonInputs(paramf)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
 extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
 
 alldat = {}
-alldat[0] = (extinputs)
 
 ncell = len(net.cells)
 
 binsz = 5.0
 smoothsz = 0 # no smoothing
+
+bDrawHist = True # whether to draw histograms (spike counts per time)
 
 # adjust input gids for display purposes
 def adjustinputgid (extinputs, gid):
@@ -195,23 +197,43 @@ class SpikeCanvas (FigureCanvas):
     except:
       pass
 
-  def plot (self):
+  def loadspk (self,idx):
     global haveinputs,extinputs
-    #self.clearaxes()
-    #plt.close(self.figure)
-    if self.index == 0:      
+    if idx in alldat: return
+    alldat[idx] = {}
+    if idx == 0:
       extinputs = spikefn.ExtInputs(spkpath, outparamf)
       extinputs.add_delay_times()
       dspk,haveinputs,dhist = getdspk(spkpath)
-      self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
-      self.lax.append(drawhist(dhist,self.lax[-1]))
+      alldat[idx]['dspk'] = dspk
+      alldat[idx]['haveinputs'] = haveinputs
+      alldat[idx]['dhist'] = dhist
+      alldat[idx]['extinputs'] = extinputs
     else:
       spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index-1)+'.txt') 
       dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
       extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
       extinputs.add_delay_times()
-      self.lax=drawrast(dspktrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
-      self.lax.append(drawhist(dhisttrial,self.lax[-1]))
+      alldat[idx]['dspk'] = dspktrial
+      alldat[idx]['haveinputs'] = haveinputs
+      alldat[idx]['dhist'] = dhisttrial
+      alldat[idx]['extinputs'] = extinputs
+
+  def plot (self):
+    global haveinputs,extinputs
+
+    self.loadspk(self.index)
+
+    idx = self.index
+    dspk = alldat[idx]['dspk']
+    haveinputs = alldat[idx]['haveinputs']
+    dhist = alldat[idx]['dhist']
+    extinputs = alldat[idx]['extinputs']
+
+    if idx == 0: self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
+    else: self.lax=drawrast(dspk,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+
+    if bDrawHist: self.lax.append(drawhist(dhist,self.lax[-1]))
 
     self.figure.subplots_adjust(bottom=0.0, left=0.06, right=1.0, top=0.97, wspace=0.1, hspace=0.09)
 
@@ -233,6 +255,19 @@ class SpikeGUI (QMainWindow):
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(exitAction)
+
+    drawHistAction = QAction('Toggle Histograms',self)
+    drawHistAction.setStatusTip('Toggle Histogram Drawing.')
+    drawHistAction.triggered.connect(self.toggleHist)
+    viewMenu = menubar.addMenu('&View')
+    viewMenu.addAction(drawHistAction)
+
+  def toggleHist (self):
+    global bDrawHist
+    bDrawHist = not bDrawHist
+    self.initCanvas()
+    self.m.plot()
+
 
   def initCanvas (self):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
