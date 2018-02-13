@@ -182,6 +182,15 @@ class ExtInputs (Spikes):
       return self.evdist_gid_range[0] <= gid <= self.evdist_gid_range[1]
     return False    
 
+  # check if gid is associated with a Poisson input
+  def is_pois_gid (self, gid):
+    try:
+      if len(self.inputs['pois']) > 0:
+        return self.pois_gid_range[0] <= gid <= self.pois_gid_range[1]
+    except:
+      pass
+    return False
+
   def truncate_ext (self, dtype, t_int):
     if dtype == 'prox' or dtype == 'dist':
       tmask = (self.inputs[dtype] >= t_int[0]) & (self.inputs[dtype] <= t_int[1])

@@ -97,7 +97,7 @@ def getdspk (fn):
       elif extinputs.is_dist_gid(gid):
         dspk['Input'][2].append('g')
       else:
-        dspk['Input'][2].append('w')
+        dspk['Input'][2].append('orange')
       haveinputs = True
   for ty in dhist.keys():
     dhist[ty] = np.histogram(dhist[ty],range=(0,tstop),bins=int(tstop/binsz))
@@ -126,36 +126,33 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
   lax = []
   lk = ['Cell']
   row = 0
+
   if haveinputs:
     lk.append('Input')
     lk.reverse()
-  for i,k in enumerate(lk):
-    if k == 'Input':
 
-      ax = fig.add_subplot(G[row:row+2,:])
-      lax.append(ax)
+  for i,k in enumerate(lk):
+    if k == 'Input': # input spiking
 
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
-      extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
-      extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g')
-      #if not invertedax: 
+      ax = fig.add_subplot(G[row:row+2,:]); row += 2
+      lax.append(ax)
+      for k2 in ['dist','evdist']: extinputs.plot_hist(ax,k2,0,bins,(0,tstop),color='g')
       ax.invert_yaxis()
-      #invertedax = True
       ax.set_ylabel('Distal Input')
 
-      row += 2
-
-      ax2 = fig.add_subplot(G[row:row+2,:])
+      ax2 = fig.add_subplot(G[row:row+2,:]); row += 2
       lax.append(ax2)
-      row += 2
-      extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
-      extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r')
-      ax2.set_facecolor('k')
-      ax2.grid(True)
-      if tstop != -1: ax2.set_xlim((0,tstop))
+      for k2 in ['prox','evprox']: extinputs.plot_hist(ax2,k2,0,bins,(0,tstop),color='r')
       ax2.set_ylabel('Proximal Input')
-    else:
+
+      axp = fig.add_subplot(G[row:row+2,:]); row += 2
+      lax.append(axp)
+      extinputs.plot_hist(axp,'pois',0,bins,(0,tstop),color='orange')
+      axp.set_ylabel('Poisson Input')
+
+    else: # local circuit neuron spiking
 
       ax = fig.add_subplot(G[row:-1,:])
       lax.append(ax)
@@ -169,11 +166,14 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
       ax.set_ylim((-1,ncell+1))
       ax.invert_yaxis()
+
+  for ax in lax: 
     ax.set_facecolor('k')
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
-    if i ==0: ax.set_title(ltextra)
-  ax.set_xlabel('Time (ms)');
+
+  lax[0].set_title(ltextra)
+  lax[-1].set_xlabel('Time (ms)');
   return lax
 
 class SpikeCanvas (FigureCanvas):
@@ -186,7 +186,7 @@ class SpikeCanvas (FigureCanvas):
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
     self.invertedhistax = False
-    self.G = gridspec.GridSpec(10,1)
+    self.G = gridspec.GridSpec(12,1)
     self.plot()
 
   def clearaxes (self):
