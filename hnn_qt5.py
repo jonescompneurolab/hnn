@@ -1621,7 +1621,7 @@ class HNNGUI (QMainWindow):
       viewLFPAction.triggered.connect(self.showLFPPlot)
       viewMenu.addAction(viewLFPAction)
 
-    viewSpecAction = QAction('View Experiment Spectrograms',self)
+    viewSpecAction = QAction('View Spectrograms',self)
     viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data.')
     viewSpecAction.triggered.connect(self.showSpecPlot)
     viewMenu.addAction(viewSpecAction)
