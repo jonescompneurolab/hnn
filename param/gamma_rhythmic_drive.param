@@ -153,7 +153,7 @@ t0_input_dist: 55.0
 t0_input_stdev_dist: 0.0
 tstop_input_dist: 1000.0
 f_input_dist: 50.0
-f_stdev_dist: 0.0
+f_stdev_dist: 2.5
 events_per_cycle_dist: 1
 repeats_dist: 10
 input_dist_A_weight_L2Pyr_ampa: 0.0
