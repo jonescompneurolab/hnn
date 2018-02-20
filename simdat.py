@@ -126,7 +126,7 @@ class SIMCanvas (FigureCanvas):
 
   def initaxes (self):
     self.axdist = self.axprox = self.axdipole = self.axspec = self.axpois = None
-    self.lax = [self.axdist, self.axprox, self.axdipole, self.axspec, self.axpois]
+    self.lax = []
 
   def plotinputhist (self,xl): # plot input histograms
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
@@ -153,11 +153,14 @@ class SIMCanvas (FigureCanvas):
     axdist = axprox = axpois = None
     if hasPois:
       self.axpois = axpois = self.figure.add_subplot(self.G[gRow,0])
+      self.lax.append(axpois)
       gRow += 1
     if len(dinput['dist']) > 0 or len(dinput['evdist']) > 0:
       self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # distal inputs
+      self.lax.append(axdist)
     if len(dinput['prox']) > 0 or len(dinput['evprox']) > 0:
       self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # proximal inputs
+      self.lax.append(axprox)
     if extinputs is not None: # only valid param.txt file after sim was run
       print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
       if hasPois:
@@ -183,7 +186,6 @@ class SIMCanvas (FigureCanvas):
           self.invertedhistax = True
         for ax in [axpois,axdist,axprox]:
           if ax:
-            # ax.set_xlim(xl)
             ax.set_xlim(xlim_new)
             ax.legend()          
         return True,gRow
@@ -193,6 +195,7 @@ class SIMCanvas (FigureCanvas):
       for ax in self.lax:
         if ax:
           ax.cla()
+      self.lax = []
     except:
       pass
 
@@ -371,8 +374,10 @@ class SIMCanvas (FigureCanvas):
 
       if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
+        self.lax.append(ax)
       else:
         self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
+        self.lax.append(ax)
 
       N_trials = self.getNTrials()
       if debug: print('simdat: N_trials:',N_trials)
@@ -404,6 +409,7 @@ class SIMCanvas (FigureCanvas):
         if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
+        self.lax.append(ax)
         cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
         ax.set_ylabel('Frequency (Hz)')
         ax.set_xlabel('Time (ms)')
@@ -411,9 +417,8 @@ class SIMCanvas (FigureCanvas):
         ax.set_ylim(ds['freq'][-1],ds['freq'][0])
         cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
-        if DrawSpec:
-          for ax in self.lax:
-            if ax: ax.set_xlim(xl)
+        for ax in self.lax:
+          if ax: ax.set_xlim(xl)
     except:
       print('ERR: in plotsimdat')
     self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
