@@ -2,8 +2,11 @@
 # This worked with python 3, with requests module installed
 # use port 8443 for production, 8444 for test
 # register at https://www.nsgportal.org/reg/reg.php for username and password
-CRA_USER = 'changeme'
-PASSWORD = 'changeme'
+f = open('nsgr.txt')
+l = f.readlines()
+CRA_USER = l[0].strip()
+PASSWORD = l[1].strip() # #'changeme'
+f.close()
 # for development version:
 # log in at https://nsgr.sdsc.edu:8444/restusers/login.action
 # for production version:
@@ -11,9 +14,9 @@ PASSWORD = 'changeme'
 # Tool names can be found at Developer->Documentation (Tools: How to Configure Specific Tools)
 # create a new application at Developer->Application Management (Create New Application)
 # save the Application Key for use in REST requests
-KEY = 'test1-D96E308858BB418CB50B5307391616BD'
+KEY = 'test1-D96E308858BB418CB50B5307391616BD' # HNN-418776D750A84FC28A19D5EF1C7B4933
 # for development version:
-# URL = 'https://nsgr.sdsc.edu:8444/cipresrest/v1'
+#URL = 'https://nsgr.sdsc.edu:8444/cipresrest/v1'
 # for production version:
 URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1'
 TOOL = 'NEURON73_TG'
@@ -28,7 +31,7 @@ os.popen('pwd').read()
 os.popen('ls -ltr').read()
 headers = {'cipres-appkey' : KEY}
 payload = {'tool' : TOOL, 'metadata.statusEmail' : 'true', 'vparam.number_cores_' : 24, 'vparam.number_nodes_' : 2, 'vparam.runtime_' : 0.5, 'vparam.filename_': 'Batch.hoc', 'vparam.cmdlineopts_': '-c TSTOP=1'}
-files = {'input.infile_' : open('/media/john/scigap/nsgtest/JonesEtAl2009_r31.zip','rb')}
+files = {'input.infile_' : open('/u/samn/hnn/JonesEtAl2009_r31.zip','rb')}
 
 r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
 #print(r.text)
@@ -47,6 +50,7 @@ for child in root:
         for urlchild in child:
             if urlchild.tag == 'url':
                 selfuri = urlchild.text
+
 #print(outputuri,file=sys.stderr)
 sys.stderr.write("%s\n" % outputuri)
 #print(selfuri,file=sys.stderr)
