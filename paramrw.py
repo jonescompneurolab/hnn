@@ -62,7 +62,6 @@ def countEvokedInputs (d):
 
 # check if using any evoked inputs 
 def usingEvokedInputs (d):
-  print('usingEvokedInputs?')
   if type(d) == str: d = quickreadprm(d)
   nprox,ndist = countEvokedInputs(d)
   tstop = float(d['tstop']) 
