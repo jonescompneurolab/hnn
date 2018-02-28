@@ -16,12 +16,13 @@ from collections import OrderedDict
 from time import time, clock, sleep
 import pickle, tempfile
 from conf import dconf
+import conf
 import numpy as np
 import random
 from math import ceil
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs
+from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI
 from ctune import expval, expvals, logval, logvals
@@ -1235,6 +1236,10 @@ class BaseParamDialog (QDialog):
     # now update the GUI components to reflect the param file selected
     try:
       din = quickreadprm(paramf)
+      if usingEvokedInputs(din): # default for evoked is to show average dipole
+        conf.dconf['drawavgdpl'] = True        
+      elif usingOngoingInputs(din): # default for ongoing is NOT to show average dipole
+        conf.dconf['drawavgdpl'] = False        
     except:
       print('could not read',paramf)
     ddef = params_default.get_params_default()
@@ -1552,6 +1557,11 @@ class HNNGUI (QMainWindow):
   def showwaitsimwin (self):
     self.waitsimwin.show()
 
+  def togAvgDpl (self):
+    conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
+    self.m.plotsimdat()
+    self.m.draw()
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -1625,6 +1635,12 @@ class HNNGUI (QMainWindow):
     viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data.')
     viewSpecAction.triggered.connect(self.showSpecPlot)
     viewMenu.addAction(viewSpecAction)
+
+    viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
+    viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing.')
+    viewAvgDplAction.triggered.connect(self.togAvgDpl)
+    viewMenu.addAction(viewAvgDplAction)
+
     viewNetAction = QAction('View Local Network (3D)',self)
     viewNetAction.setStatusTip('View Local Network Model (3D).')
     viewNetAction.triggered.connect(self.showvisnet)

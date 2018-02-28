@@ -8,6 +8,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 from math import ceil
 from conf import dconf
+import conf
 import spikefn
 from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm, countEvokedInputs
 from scipy import signal
@@ -391,9 +392,9 @@ class SIMCanvas (FigureCanvas):
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
       if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
-      #if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)
+      #if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)      
 
-      if EvokedInputs or dconf['drawavgdpl'] or N_trials <= 1:
+      if conf.dconf['drawavgdpl'] or N_trials <= 1:
         ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3) # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
 

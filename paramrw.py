@@ -30,8 +30,8 @@ def quickgetprm (fn,k,ty):
   return ty(d[k])
 
 # check if using ongoing inputs
-def usingOngoingInputs (fparam):
-  d = quickreadprm(fparam)
+def usingOngoingInputs (d):
+  if type(d)==str: d = quickreadprm(d)
   tstop = float(d['tstop'])
   dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
   try:
@@ -47,20 +47,6 @@ def usingOngoingInputs (fparam):
     return False
   return False
 
-# check if using any evoked inputs 
-def usingEvokedInputs (fparam):
-  d = quickreadprm(fparam)
-  tstop = float(d['tstop']) 
-  for k1 in ['t_evprox_1', 't_evprox_2', 't_evdist_1']:
-    if k1 not in d: continue
-    if float(d[k1]) <= tstop:
-      for k2 in d.keys():
-        if (k1=='t_evprox_1' and k2.startswith('gbar_evprox_1') and float(d[k2])>0.) or \
-           (k1=='t_evprox_2' and k2.startswith('gbar_evprox_2') and float(d[k2])>0.) or \
-           (k1=='t_evdist_1' and k2.startswith('gbar_evdist_1') and float(d[k2])>0.):
-          return True
-  return False
-
 # return number of evoked inputs (proximal, distal)
 # using dictionary d (or if d is a string, first load the dictionary from filename d)
 def countEvokedInputs (d):
@@ -74,9 +60,28 @@ def countEvokedInputs (d):
         ndist += 1
   return nprox, ndist
 
+# check if using any evoked inputs 
+def usingEvokedInputs (d):
+  print('usingEvokedInputs?')
+  if type(d) == str: d = quickreadprm(d)
+  nprox,ndist = countEvokedInputs(d)
+  tstop = float(d['tstop']) 
+  lsuff = []
+  for i in range(1,nprox+1,1): lsuff.append('_evprox_'+str(i))
+  for i in range(1,ndist+1,1): lsuff.append('_evdist_'+str(i))
+  for suff in lsuff:
+    k = 't' + suff
+    if k not in d: continue
+    if float(d[k]) > tstop: continue
+    k = 'gbar' + suff
+    for k1 in d.keys():
+      if k1.startswith(k):
+        if float(d[k1]) > 0.0: return True
+  return False
+
 # check if using any poisson inputs 
-def usingPoissonInputs (fparam):
-  d = quickreadprm(fparam)
+def usingPoissonInputs (d):
+  if type(d)==str: d = quickreadprm(d)
   tstop = float(d['tstop'])
   if 't0_pois' in d and 'T_pois' in d:
     t0_pois = float(d['t0_pois'])
@@ -91,8 +96,8 @@ def usingPoissonInputs (fparam):
   return False
 
 # check if using any tonic (IClamp) inputs 
-def usingTonicInputs (fparam):
-  d = quickreadprm(fparam)
+def usingTonicInputs (d):
+  if type(d)==str: d = quickreadprm(d)
   tstop = float(d['tstop'])
   for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
     k = 'Itonic_A_' + cty + '_soma'
