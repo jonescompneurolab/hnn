@@ -17,13 +17,45 @@ import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 from specfn import MorletSpec
 from conf import dconf
+import simdat
+from simdat import readdpltrials
+import paramrw
+from paramrw import quickgetprm
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
 ntrial = 1; paramf = ''
 for i in range(len(sys.argv)):
-  if sys.argv[i].endswith('.param'):
+  if sys.argv[i].endswith('.txt'):
+    specpath = sys.argv[i]
+  elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
+    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+
+basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+print('basedir:',basedir)
+
+ddat = {}
+try:
+  specpath = os.path.join(basedir,'rawspec.npz')
+  print('specpath',specpath)
+  ddat['spec'] = np.load(specpath)
+except:
+  print('Could not load',specpath)
+  #quit()
+
+# assumes column 0 is time, rest of columns are time-series
+def extractpsd (dat, fmax=120.0):
+  print('extractpsd',dat.shape)
+  lpsd = []
+  tvec = dat[:,0]
+  dt = tvec[1] - tvec[0]
+  tstop = tvec[-1]
+  prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
+  for col in range(1,dat.shape[1],1):
+    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+    lpsd.append(np.mean(ms.TFR,axis=1))
+  return ms.f, np.array(lpsd)
         
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=120.0):
@@ -39,8 +71,19 @@ def extractspec (dat, fmax=120.0):
     ms = MorletSpec(tvec,dat[:,col],None,None,prm)
     lspec.append(ms)
   ntrial = len(lspec)
+
   avgdipole = np.mean(dat[:,1:-1],axis=1)
-  avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
+
+  print('lspec len is ' , len(lspec))
+
+  #avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
+
+  ltfr = [ms.TFR for ms in lspec]
+  npspec = np.array(ltfr)
+  print('got npspec',npspec.shape)
+  avgspec = np.mean(npspec,axis=0)#,axis=0)
+  print('got avgspec',avgspec.shape)
+
   return ms.f, lspec, avgdipole, avgspec
 
 def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
@@ -61,10 +104,11 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   if sdx == 0:
     for i in range(1,dat.shape[1],1):
+      print('sdx is 0',dat.shape,i)
       ax.plot(tvec, dat[:,i],linewidth=1,color='gray')
     ax.plot(tvec,avgdipole,linewidth=2,color='black')
   else:
-    ax.plot(dat[:,0], dat[:,sdx-1],linewidth=2,color='gray')
+    ax.plot(dat[:,0], dat[:,sdx],linewidth=2,color='gray')
 
   ax.set_xlim(tvec[0],tvec[-1])
   ax.set_ylabel('Dipole (nAm)')
@@ -73,14 +117,17 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   ax = fig.add_subplot(gdx)
 
+
   if sdx==0: ms = avgspec
   else: ms = lspec[sdx-1]
-
+  print('ms.TFR.shape:',ms.TFR.shape)
+  """
   ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
 
   ax.set_xlim(tvec[0],tvec[-1])
   ax.set_xlabel('Time (ms)')
   ax.set_ylabel('Frequency (Hz)');
+  """
 
   lax.append(ax)
 
@@ -149,14 +196,14 @@ class SpecViewGUI (DataViewGUI):
     self.m.avgspec = self.avgspec
 
   def addLoadDataActions (self):
-    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
+    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data.', self)
     loadDataFile.setShortcut('Ctrl+D')
-    loadDataFile.setStatusTip('Load data file.')
+    loadDataFile.setStatusTip('Load experimental (.txt) / simulation (.param) data.')
     loadDataFile.triggered.connect(self.loadDisplayData)
 
-    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file.', self)
+    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data.', self)
     clearDataFileAct.setShortcut('Ctrl+C')
-    clearDataFileAct.setStatusTip('Clear data file.')
+    clearDataFileAct.setStatusTip('Clear data.')
     clearDataFileAct.triggered.connect(self.clearDataFile)
 
     self.fileMenu.addAction(loadDataFile)
@@ -193,13 +240,29 @@ class SpecViewGUI (DataViewGUI):
       self.printStat('Could not plot data from ' + extdataf)    
 
   def loadDataFileDialog (self):
-    fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
+    fn = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
     if fn[0]:
       try:
-        extdataf = fn[0] # data file
-        dat = np.loadtxt(extdataf)
-        self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
-        return extdataf,dat
+        if fn[0].endswith('.txt'):
+          extdataf = fn[0] # data file
+          dat = np.loadtxt(extdataf)
+          self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
+          return extdataf,dat
+        elif fn[0].endswith('.param'):
+          paramf = fn[0]
+          ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+          basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+          print('basedir:',basedir)
+          #simdat.updatedat(paramf)
+          #return paramf,simdat.ddat
+          ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+          print('read dpl trials',ddat[0].shape)
+          dout = np.zeros((ddat[0].shape[0],1+ntrial))
+          print('set dout shape',dout.shape)
+          dout[:,0] = ddat[0][:,0]
+          for i in range(ntrial):
+            dout[:,i+1] = ddat[i][:,1]
+          return paramf,dout
       except:
         self.printStat('Could not load data in ' + fn[0])
         return None,None
