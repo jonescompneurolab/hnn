@@ -76,13 +76,13 @@ def extractspec (dat, fmax=120.0):
 
   print('lspec len is ' , len(lspec))
 
-  #avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
+  avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
 
   ltfr = [ms.TFR for ms in lspec]
   npspec = np.array(ltfr)
   print('got npspec',npspec.shape)
-  avgspec = np.mean(npspec,axis=0)#,axis=0)
-  print('got avgspec',avgspec.shape)
+  avgspec.TFR = np.mean(npspec,axis=0)#,axis=0)
+  print('got avgspec',avgspec.TFR.shape)
 
   return ms.f, lspec, avgdipole, avgspec
 
@@ -117,17 +117,17 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   ax = fig.add_subplot(gdx)
 
+  print('sdx:',sdx,avgspec.TFR.shape)
 
   if sdx==0: ms = avgspec
   else: ms = lspec[sdx-1]
-  print('ms.TFR.shape:',ms.TFR.shape)
-  """
+  #print('ms.TFR.shape:',ms.TFR.shape)
+
   ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
 
   ax.set_xlim(tvec[0],tvec[-1])
   ax.set_xlabel('Time (ms)')
   ax.set_ylabel('Frequency (Hz)');
-  """
 
   lax.append(ax)
 
@@ -170,11 +170,9 @@ class SpecCanvas (FigureCanvas):
       del self.lextdatobj
     
   def plot (self):
-    if self.index == 0:      
-      self.lax = drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra='All Trials')
-    else:
-      self.lax=drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra='Trial '+str(self.index));
-
+    ltextra = 'Trial '+str(self.index)
+    if self.index == 0: ltextra = 'All Trials'
+    self.lax = drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra=ltextra)
     self.draw()
 
 class SpecViewGUI (DataViewGUI):
@@ -210,25 +208,25 @@ class SpecViewGUI (DataViewGUI):
     self.fileMenu.addAction(clearDataFileAct)
 
   def loadDisplayData (self):
-    extdataf,dat = self.loadDataFileDialog()    
-    if not extdataf: return
+    fname,dat = self.loadDataFileDialog()    
+    if not fname: return
     self.dat = dat
     try:
       f, lspec, avgdipole, avgspec = extractspec(dat)
       self.ntrial = len(lspec)
       self.updateCB()
-      self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms from ' + extdataf)
+      self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms from ' + fname)
       self.lextspec = lspec
-      self.lextfiles.append(extdataf)
+      self.lextfiles.append(fname)
       self.avgdipole = avgdipole
       self.avgspec = avgspec
       self.lF.append(f)
     except:
-      self.printStat('Could not extract Spectrograms from ' + extdataf)
+      self.printStat('Could not extract Spectrograms from ' + fname)
 
     try:
       if len(self.lextspec) > 0:
-        self.printStat('Plotting ext data Spectrograms.')
+        self.printStat('Plotting Spectrograms.')
         self.m.lextspec = self.lextspec
         self.m.dat = self.dat
         self.m.avgspec = self.avgspec
@@ -237,7 +235,7 @@ class SpecViewGUI (DataViewGUI):
         self.m.draw() # make sure new lines show up in plot
         self.printStat('')
     except:
-      self.printStat('Could not plot data from ' + extdataf)    
+      self.printStat('Could not plot data from ' + fname)    
 
   def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
