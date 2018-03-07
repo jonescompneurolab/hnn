@@ -33,29 +33,7 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
 
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-print('basedir:',basedir)
-
-ddat = {}
-try:
-  specpath = os.path.join(basedir,'rawspec.npz')
-  print('specpath',specpath)
-  ddat['spec'] = np.load(specpath)
-except:
-  print('Could not load',specpath)
-  #quit()
-
-# assumes column 0 is time, rest of columns are time-series
-def extractpsd (dat, fmax=120.0):
-  print('extractpsd',dat.shape)
-  lpsd = []
-  tvec = dat[:,0]
-  dt = tvec[1] - tvec[0]
-  tstop = tvec[-1]
-  prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
-  for col in range(1,dat.shape[1],1):
-    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
-    lpsd.append(np.mean(ms.TFR,axis=1))
-  return ms.f, np.array(lpsd)
+print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
         
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=120.0):
@@ -85,6 +63,32 @@ def extractspec (dat, fmax=120.0):
   print('got avgspec',avgspec.TFR.shape)
 
   return ms.f, lspec, avgdipole, avgspec
+
+def loaddat (fname):
+  try:
+    if fname.endswith('.txt'):
+      extdataf = fname # data file
+      dat = np.loadtxt(extdataf)
+      self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
+      return dat
+    elif fname.endswith('.param'):
+      ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+      print('basedir:',basedir)
+      #simdat.updatedat(paramf)
+      #return paramf,simdat.ddat
+      ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+      print('read dpl trials',ddat[0].shape)
+      dout = np.zeros((ddat[0].shape[0],1+ntrial))
+      print('set dout shape',dout.shape)
+      dout[:,0] = ddat[0][:,0]
+      for i in range(ntrial):
+        dout[:,i+1] = ddat[i][:,1]
+      return dout
+  except:
+    print('Could not load data in ' + fname)
+    return None
+  return None
 
 def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
   if len(lspec) == 0: return
@@ -185,6 +189,9 @@ class SpecViewGUI (DataViewGUI):
     self.avgspec = []
     super(SpecViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
     self.addLoadDataActions()
+    print('paramf:',paramf)
+    if len(paramf):
+      self.loadDisplayData(paramf)
 
   def initCanvas (self):
     super(SpecViewGUI,self).initCanvas()
@@ -207,9 +214,11 @@ class SpecViewGUI (DataViewGUI):
     self.fileMenu.addAction(loadDataFile)
     self.fileMenu.addAction(clearDataFileAct)
 
-  def loadDisplayData (self):
-    fname,dat = self.loadDataFileDialog()    
+  def loadDisplayData (self, fname=None):
+    if fname is None:
+      fname = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
     if not fname: return
+    dat = loaddat(fname)
     self.dat = dat
     try:
       f, lspec, avgdipole, avgspec = extractspec(dat)
@@ -237,35 +246,6 @@ class SpecViewGUI (DataViewGUI):
     except:
       self.printStat('Could not plot data from ' + fname)    
 
-  def loadDataFileDialog (self):
-    fn = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
-    if fn[0]:
-      try:
-        if fn[0].endswith('.txt'):
-          extdataf = fn[0] # data file
-          dat = np.loadtxt(extdataf)
-          self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
-          return extdataf,dat
-        elif fn[0].endswith('.param'):
-          paramf = fn[0]
-          ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-          basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-          print('basedir:',basedir)
-          #simdat.updatedat(paramf)
-          #return paramf,simdat.ddat
-          ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
-          print('read dpl trials',ddat[0].shape)
-          dout = np.zeros((ddat[0].shape[0],1+ntrial))
-          print('set dout shape',dout.shape)
-          dout[:,0] = ddat[0][:,0]
-          for i in range(ntrial):
-            dout[:,i+1] = ddat[i][:,1]
-          return paramf,dout
-      except:
-        self.printStat('Could not load data in ' + fn[0])
-        return None,None
-    return None,None
-
   def clearDataFile (self):
     self.m.clearlextdatobj()
     self.lextspec = []
@@ -276,6 +256,6 @@ class SpecViewGUI (DataViewGUI):
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = SpecViewGUI(SpecCanvas,'',ntrial,'HNN Spectrogram Viewer')
+  ex = SpecViewGUI(SpecCanvas,paramf,ntrial,'HNN Spectrogram Viewer')
   sys.exit(app.exec_())  
   

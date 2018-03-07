@@ -1535,7 +1535,9 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
-    lcmd = ['python3', 'visspec.py']
+    global basedir
+    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+    lcmd = ['python3', 'visspec.py',paramf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
