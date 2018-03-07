@@ -45,12 +45,22 @@ def extractspec (dat, fmax=120.0):
   tstop = tvec[-1]
   print('tstop is ', tstop)
   prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
-  for col in range(1,dat.shape[1],1):
-    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+
+  if dat.shape[1] > 2:
+    print('gt2')
+    for col in range(1,dat.shape[1],1):
+      ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+      lspec.append(ms)
+  else:
+    ms = MorletSpec(tvec,dat[:,1],None,None,prm)
     lspec.append(ms)
+
   ntrial = len(lspec)
 
-  avgdipole = np.mean(dat[:,1:-1],axis=1)
+  if ntrial > 1:
+    avgdipole = np.mean(dat[:,1:-1],axis=1)
+  else:
+    avgdipole = dat[:,1]
 
   print('lspec len is ' , len(lspec))
 
@@ -77,14 +87,23 @@ def loaddat (fname):
       print('basedir:',basedir)
       #simdat.updatedat(paramf)
       #return paramf,simdat.ddat
-      ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
-      print('read dpl trials',ddat[0].shape)
-      dout = np.zeros((ddat[0].shape[0],1+ntrial))
-      print('set dout shape',dout.shape)
-      dout[:,0] = ddat[0][:,0]
-      for i in range(ntrial):
-        dout[:,i+1] = ddat[i][:,1]
-      return dout
+      if ntrial > 1:
+        ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+        print('read dpl trials',ddat[0].shape)
+        dout = np.zeros((ddat[0].shape[0],1+ntrial))
+        print('set dout shape',dout.shape)
+        dout[:,0] = ddat[0][:,0]
+        for i in range(ntrial):
+          dout[:,i+1] = ddat[i][:,1]
+        return dout
+      else:
+        ddat = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+        #print('ddat.shape:',ddat.shape)
+        dout = np.zeros((ddat.shape[0],2))
+        #print('dout.shape:',dout.shape)
+        dout[:,0] = ddat[:,0]
+        dout[:,1] = ddat[:,1]
+        return dout
   except:
     print('Could not load data in ' + fname)
     return None
