@@ -33,21 +33,20 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
 
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
+#print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
         
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=120.0):
   global ntrial
-  print('extractspec',dat.shape)
+  #print('extractspec',dat.shape)
   lspec = []
   tvec = dat[:,0]
   dt = tvec[1] - tvec[0]
   tstop = tvec[-1]
-  print('tstop is ', tstop)
+
   prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
 
   if dat.shape[1] > 2:
-    print('gt2')
     for col in range(1,dat.shape[1],1):
       ms = MorletSpec(tvec,dat[:,col],None,None,prm)
       lspec.append(ms)
@@ -62,23 +61,25 @@ def extractspec (dat, fmax=120.0):
   else:
     avgdipole = dat[:,1]
 
-  print('lspec len is ' , len(lspec))
+  #print('lspec len is ' , len(lspec))
 
   avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
 
   ltfr = [ms.TFR for ms in lspec]
   npspec = np.array(ltfr)
-  print('got npspec',npspec.shape)
+  #print('got npspec',npspec.shape)
   avgspec.TFR = np.mean(npspec,axis=0)#,axis=0)
-  print('got avgspec',avgspec.TFR.shape)
+  #print('got avgspec',avgspec.TFR.shape)
 
   return ms.f, lspec, avgdipole, avgspec
 
 def loaddat (fname):
   try:
     if fname.endswith('.txt'):
+      print('txt fname is',fname)
       extdataf = fname # data file
       dat = np.loadtxt(extdataf)
+      print('extdataf is',extdataf,'got dat, shape is',dat.shape)
       self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
       return dat
     elif fname.endswith('.param'):
@@ -89,9 +90,9 @@ def loaddat (fname):
       #return paramf,simdat.ddat
       if ntrial > 1:
         ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
-        print('read dpl trials',ddat[0].shape)
+        #print('read dpl trials',ddat[0].shape)
         dout = np.zeros((ddat[0].shape[0],1+ntrial))
-        print('set dout shape',dout.shape)
+        #print('set dout shape',dout.shape)
         dout[:,0] = ddat[0][:,0]
         for i in range(ntrial):
           dout[:,i+1] = ddat[i][:,1]
@@ -127,7 +128,7 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   if sdx == 0:
     for i in range(1,dat.shape[1],1):
-      print('sdx is 0',dat.shape,i)
+      #print('sdx is 0',dat.shape,i)
       ax.plot(tvec, dat[:,i],linewidth=1,color='gray')
     ax.plot(tvec,avgdipole,linewidth=2,color='black')
   else:
@@ -140,7 +141,7 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   ax = fig.add_subplot(gdx)
 
-  print('sdx:',sdx,avgspec.TFR.shape)
+  # print('sdx:',sdx,avgspec.TFR.shape)
 
   if sdx==0: ms = avgspec
   else: ms = lspec[sdx-1]
@@ -196,6 +197,7 @@ class SpecCanvas (FigureCanvas):
     ltextra = 'Trial '+str(self.index)
     if self.index == 0: ltextra = 'All Trials'
     self.lax = drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra=ltextra)
+    self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98, top=0.97, wspace=0.1, hspace=0.09)
     self.draw()
 
 class SpecViewGUI (DataViewGUI):
@@ -208,7 +210,7 @@ class SpecViewGUI (DataViewGUI):
     self.avgspec = []
     super(SpecViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
     self.addLoadDataActions()
-    print('paramf:',paramf)
+    #print('paramf:',paramf)
     if len(paramf):
       self.loadDisplayData(paramf)
 
@@ -234,13 +236,20 @@ class SpecViewGUI (DataViewGUI):
     self.fileMenu.addAction(clearDataFileAct)
 
   def loadDisplayData (self, fname=None):
-    if fname is None:
+    #print('loadDisplayDAta fname=',fname)
+    if fname is None or fname is False:
       fname = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
+      fname = fname[0]
+      print('got fname = ',fname)
     if not fname: return
     dat = loaddat(fname)
     self.dat = dat
     try:
-      f, lspec, avgdipole, avgspec = extractspec(dat)
+      try:
+        fmax = quickgetprm(paramf,'f_max_spec',float)
+      except:
+        fmax = 120.
+      f, lspec, avgdipole, avgspec = extractspec(dat,fmax=fmax)
       self.ntrial = len(lspec)
       self.updateCB()
       self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms from ' + fname)
