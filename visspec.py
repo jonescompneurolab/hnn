@@ -36,7 +36,7 @@ basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.par
 #print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
         
 # assumes column 0 is time, rest of columns are time-series
-def extractspec (dat, fmax=120.0):
+def extractspec (dat, fmax=40.0):
   global ntrial
   #print('extractspec',dat.shape)
   lspec = []
@@ -61,31 +61,23 @@ def extractspec (dat, fmax=120.0):
   else:
     avgdipole = dat[:,1]
 
-  #print('lspec len is ' , len(lspec))
-
   avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
 
   ltfr = [ms.TFR for ms in lspec]
   npspec = np.array(ltfr)
-  #print('got npspec',npspec.shape)
   avgspec.TFR = np.mean(npspec,axis=0)#,axis=0)
-  #print('got avgspec',avgspec.TFR.shape)
 
   return ms.f, lspec, avgdipole, avgspec
 
 def loaddat (fname):
   try:
     if fname.endswith('.txt'):
-      print('txt fname is',fname)
-      extdataf = fname # data file
-      dat = np.loadtxt(extdataf)
-      print('extdataf is',extdataf,'got dat, shape is',dat.shape)
-      self.printStat('Loaded data in ' + extdataf + '. Extracting Spectrograms.')
+      dat = np.loadtxt(fname)
+      print('Loaded data in ' + fname + '. Extracting Spectrograms.')
       return dat
     elif fname.endswith('.param'):
       ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
       basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      print('basedir:',basedir)
       #simdat.updatedat(paramf)
       #return paramf,simdat.ddat
       if ntrial > 1:
@@ -113,15 +105,12 @@ def loaddat (fname):
 def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
   if len(lspec) == 0: return
 
-  lax = []
-
   plt.ion()
 
   gdx = 211
 
   ax = fig.add_subplot(gdx)
-  lax.append(ax)
-
+  lax = [ax]
   tvec = dat[:,0]
   dt = tvec[1] - tvec[0]
   tstop = tvec[-1]
@@ -141,7 +130,7 @@ def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
 
   ax = fig.add_subplot(gdx)
 
-  # print('sdx:',sdx,avgspec.TFR.shape)
+  #print('sdx:',sdx,avgspec.TFR.shape)
 
   if sdx==0: ms = avgspec
   else: ms = lspec[sdx-1]
@@ -236,11 +225,9 @@ class SpecViewGUI (DataViewGUI):
     self.fileMenu.addAction(clearDataFileAct)
 
   def loadDisplayData (self, fname=None):
-    #print('loadDisplayDAta fname=',fname)
     if fname is None or fname is False:
       fname = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
       fname = fname[0]
-      print('got fname = ',fname)
     if not fname: return
     dat = loaddat(fname)
     self.dat = dat
@@ -248,7 +235,7 @@ class SpecViewGUI (DataViewGUI):
       try:
         fmax = quickgetprm(paramf,'f_max_spec',float)
       except:
-        fmax = 120.
+        fmax = 40.
       f, lspec, avgdipole, avgspec = extractspec(dat,fmax=fmax)
       self.ntrial = len(lspec)
       self.updateCB()
