@@ -2,11 +2,23 @@
 # This worked with python 3, with requests module installed
 # use port 8443 for production, 8444 for test
 # register at https://www.nsgportal.org/reg/reg.php for username and password
-f = open('nsgr.txt')
-l = f.readlines()
-CRA_USER = l[0].strip()
-PASSWORD = l[1].strip() # #'changeme'
-f.close()
+
+import os
+import requests
+import xml.etree.ElementTree
+import time
+import sys
+
+def getuserpass ():
+  f = open('nsgr.txt')
+  l = f.readlines()
+  CRA_USER = l[0].strip()
+  PASSWORD = l[1].strip() # #'changeme'
+  f.close()
+  return CRA_USER,PASSWORD
+
+CRA_USER,PASSWORD = getuserpass()
+
 # for development version:
 # log in at https://nsgr.sdsc.edu:8444/restusers/login.action
 # for production version:
@@ -20,12 +32,6 @@ KEY = 'test1-D96E308858BB418CB50B5307391616BD' # HNN-418776D750A84FC28A19D5EF1C7
 # for production version:
 URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1'
 TOOL = 'NEURON73_TG'
-
-import os
-import requests
-import xml.etree.ElementTree
-import time
-import sys
 
 os.popen('pwd').read()
 os.popen('ls -ltr').read()
