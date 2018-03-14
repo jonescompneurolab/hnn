@@ -84,7 +84,7 @@ def writeconf (fn,sec,opt,val):
 def str2bool (v): return v.lower() in ("true", "t", "1")
 
 # read config file
-def readconf (fn="hnn.cfg"):
+def readconf (fn="hnn.cfg",nohomeout=False):
   config = ConfigParser()
   config.optionxform = str
   
@@ -141,6 +141,7 @@ def readconf (fn="hnn.cfg"):
   d = {}
 
   d['homeout'] = confint("paths","homeout",1) # whether user home directory for output
+  if nohomeout: d['homeout'] = 0 # override config file with commandline
 
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
@@ -187,6 +188,8 @@ def setfcfg ():
   return fcfg
 
 fcfg = setfcfg() # config file name
-dconf = readconf(fcfg)
-
+nohomeout = False
+for i in range(len(sys.argv)):  # override homeout option through commandline flag
+  if sys.argv[i] == '-nohomeout' or sys.argv[i] == 'nohomeout': nohomeout = True
+dconf = readconf(fcfg,nohomeout)
 

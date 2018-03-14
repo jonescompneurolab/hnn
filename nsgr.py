@@ -37,7 +37,7 @@ if testingHNN:
   TOOL = 'SINGULARITY_HNN_TG'
   payload['vparam.runtime_'] = 0.5
   payload['vparam.filename_'] = 'run.py'
-  payload['vparam.cmdlineopts_'] = '-homeout 0 -paramf param/default.param 1'
+  payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
   payload['vparam.number_nodes_'] = 1
 else:
   KEY = 'test1-D96E308858BB418CB50B5307391616BD' 

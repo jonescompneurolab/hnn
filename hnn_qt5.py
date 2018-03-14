@@ -39,10 +39,6 @@ def parseargs ():
       print('-paramf is ', sys.argv[i+1])
       conf.dconf['paramf'] = dconf['paramf'] = sys.argv[i+1]
       i += 1
-    elif sys.argv[i] == '-homeout' and i + 1 < len(sys.argv):
-      print('-homeout is ', sys.argv[i+1])
-      conf.dconf['homeout'] = dconf['homeout'] = int(sys.argv[i+1])
-      i += 1
 
 parseargs()
 
