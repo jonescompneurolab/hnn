@@ -34,7 +34,7 @@ payload = {'metadata.statusEmail' : 'true'}
 if testingHNN:
   KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
   zippath = '/u/samn/inputfile.zip'
-  TOOL = 'SINGULARITY_HNN_TG'
+  TOOL = 'HNN_TG' # 'HNN' # 'NGBW-JOB-SINGULARITY_HNN_TG' # 'HNN_TG'
   payload['vparam.runtime_'] = 0.5
   payload['vparam.filename_'] = 'run.py'
   payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
