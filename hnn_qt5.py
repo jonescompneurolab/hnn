@@ -33,11 +33,15 @@ def parseargs ():
   for i in range(len(sys.argv)):
     if sys.argv[i] == '-dataf' and i + 1 < len(sys.argv):
       print('-dataf is ', sys.argv[i+1])
-      dconf['dataf'] = sys.argv[i+1]
+      conf.dconf['dataf'] = dconf['dataf'] = sys.argv[i+1]
       i += 1
     elif sys.argv[i] == '-paramf' and i + 1 < len(sys.argv):
       print('-paramf is ', sys.argv[i+1])
-      dconf['paramf'] = sys.argv[i+1]
+      conf.dconf['paramf'] = dconf['paramf'] = sys.argv[i+1]
+      i += 1
+    elif sys.argv[i] == '-homeout' and i + 1 < len(sys.argv):
+      print('-homeout is ', sys.argv[i+1])
+      conf.dconf['homeout'] = dconf['homeout'] = int(sys.argv[i+1])
       i += 1
 
 parseargs()

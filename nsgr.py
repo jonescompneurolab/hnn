@@ -20,21 +20,40 @@ def getuserpass ():
 
 CRA_USER,PASSWORD = getuserpass()
 
+testingHNN = True
+
 # for production version:
 # log in at https://nsgr.sdsc.edu:8443/restusers/login.action
 # Tool names can be found at Developer->Documentation (Tools: How to Configure Specific Tools)
 # create a new application at Developer->Application Management (Create New Application)
 # save the Application Key for use in REST requests
-KEY = 'test1-D96E308858BB418CB50B5307391616BD' # HNN-418776D750A84FC28A19D5EF1C7B4933
-# for development version:
-#URL = 'https://nsgr.sdsc.edu:8444/cipresrest/v1'
-# for production version:
-URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1'
-TOOL = 'NEURON73_TG'
 
-headers = {'cipres-appkey' : KEY}
-payload = {'tool' : TOOL, 'metadata.statusEmail' : 'true', 'vparam.number_cores_' : 24, 'vparam.number_nodes_' : 2, 'vparam.runtime_' : 0.5, 'vparam.filename_': 'Batch.hoc', 'vparam.cmdlineopts_': '-c TSTOP=1'}
-files = {'input.infile_' : open('/u/samn/hnn/JonesEtAl2009_r31.zip','rb')}
+# dictionary of parameters for the NSG job
+payload = {'metadata.statusEmail' : 'true'} 
+
+if testingHNN:
+  KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
+  zippath = '/u/samn/inputfile.zip'
+  TOOL = 'SINGULARITY_HNN_TG'
+  payload['vparam.runtime_'] = 0.5
+  payload['vparam.filename_'] = 'run.py'
+  payload['vparam.cmdlineopts_'] = '-homeout 0 -paramf param/default.param 1'
+  payload['vparam.number_nodes_'] = 1
+else:
+  KEY = 'test1-D96E308858BB418CB50B5307391616BD' 
+  zippath = '/u/samn/hnn/JonesEtAl2009_r31.zip'
+  TOOL = 'NEURON73_TG'
+  payload['vparam.runtime_'] = 0.5
+  payload['vparam.filename_'] = 'Batch.hoc'
+  payload['vparam.cmdlineopts_'] = '-c TSTOP=1'
+  payload['vparam.number_nodes_'] = 2
+
+URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1' # for production version
+headers = {'cipres-appkey' : KEY} # application KEY
+
+payload['tool'] = TOOL
+
+files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
 def runjob ():
   r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
