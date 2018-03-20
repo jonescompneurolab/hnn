@@ -47,4 +47,4 @@ make
 
 
 # at this point you can run hnn by typing the command 
-./hnn
+python hnn.py hnn.cfg
