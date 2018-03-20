@@ -2,6 +2,7 @@
 #type to following 
 
 echo 'export TMPDIR=/private/tmp' >> ~/.bash_profile  
+echo 'set TMPDIR=/private/tmp' >> ~/.tcshrc
 
 xcode-select --install
 # click install
@@ -31,19 +32,30 @@ sudo make install -j4
 ls 
 # if you don't see the above folders you are not in the right directory, change directories to hard drive Applications
 
-#to make sure all of the correct paths are followed type the following 
-export PYTHONPATH=/Applications/NEURON-7.5/nrn/lib/python
-export PATH=/Applications/NEURON-7.5/nrn/x86_64/bin:$PATH
-export PYTHONHOME="/Applications/anaconda"
-export NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
+# to make sure all of the correct paths are followed type the following set of commands to 
+# set the environment variables; note that depending on your shell (bash or c shell) you will
+# use the 4 export commands below or the 4 set commands below, respectively
 
-#now type the following
+ # if you are using the bash shell:
+ export PYTHONPATH=/Applications/NEURON-7.5/nrn/lib/python
+ export PATH=/Applications/NEURON-7.5/nrn/x86_64/bin:$PATH
+ export PYTHONHOME="/Applications/anaconda"
+ export NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
+
+ # if you are using the c shell (tcsh):
+ set PYTHONPATH=/Applications/NEURON-7.5/nrn/lib/python
+ set PATH=/Applications/NEURON-7.5/nrn/x86_64/bin:$PATH
+ set PYTHONHOME="/Applications/anaconda"
+ set NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
+
+
+# next type the following
 git clone https://bitbucket.org/samnemo/hnn
-# the above will prompt for your password
+# the above will prompt for your bitbucket username/password
 
+# the following command will "compile" HNN's biophysical model
 cd hnn
 make
-
 
 
 # at this point you can run hnn by typing the command 
