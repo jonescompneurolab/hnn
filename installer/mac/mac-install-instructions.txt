@@ -11,7 +11,7 @@ xcode-select --install
 
 # reboot (yes, really)
 
-# go to https://www.continuum.io/downloads and download and install the Python 3.x version into your Applications folder (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
+# go to https://www.continuum.io/downloads and download and install the Python 3.x version (Anaconda distribution) into your Applications folder (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
 
 # go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1620.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
 
