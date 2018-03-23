@@ -129,15 +129,16 @@ def runjob ():
     r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
     #print(r.text)
     globaloutputdict[downloaduri] = r.text
+
+  """
   for name in globaloutputdict.keys():
-    #continue_var = raw_input("display %s [Y/y]? " % name)
     if sys.version_info[0] < 3:
       continue_var = raw_input("display %s [Y/y]?" % name)
     else:
       continue_var = input("display %s [Y/y]?" % name)
     if continue_var in ['Y','y']:
-      #print(globaloutputdict[name])
-      sys.stdout.write("%s\n" % globaloutputdict[name])
+      sys.stdout.write("%s\n" % globaloutputdict[name]) # this prints file contents - do not need it
+  """
 
   #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
   #downloaduri = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-650AAA3A8044475580739C88BDF7771D/output/14'
