@@ -150,9 +150,9 @@ class RunSimThread (QThread):
       self.proc.stdout.close()
       sleep(1)
       # cend = time(); rtime = cend - cstart
-    print('sim finished')
+    if debug: print('sim finished')
     if not self.killed:  
-      print('not self.killed')
+      if debug: print('not self.killed')
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
         print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
