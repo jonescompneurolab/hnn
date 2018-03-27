@@ -30,19 +30,21 @@ def quickgetprm (fn,k,ty):
   return ty(d[k])
 
 # check if using ongoing inputs
-def usingOngoingInputs (d):
+def usingOngoingInputs (d, lty = ['_prox', '_dist']):
   if type(d)==str: d = quickreadprm(d)
   tstop = float(d['tstop'])
   dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
   try:
-    for postfix in ['_prox','_dist']:    
+    for postfix in lty:
       if float(d['t0_input'+postfix])<= tstop and \
          float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
          float(d['f_input'+postfix])>0.:
         for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
                   'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
                   'weight_inh_ampa','weight_inh_nmda']:
-          if float(d[dpref[postfix]+k])>0.: return True
+          if float(d[dpref[postfix]+k])>0.:
+            print('usingOngoingInputs:',d[dpref[postfix]+k])
+            return True
   except: 
     return False
   return False
@@ -61,13 +63,15 @@ def countEvokedInputs (d):
   return nprox, ndist
 
 # check if using any evoked inputs 
-def usingEvokedInputs (d):
+def usingEvokedInputs (d, lsuffty = ['_evprox_', '_evdist_']):
   if type(d) == str: d = quickreadprm(d)
   nprox,ndist = countEvokedInputs(d)
   tstop = float(d['tstop']) 
   lsuff = []
-  for i in range(1,nprox+1,1): lsuff.append('_evprox_'+str(i))
-  for i in range(1,ndist+1,1): lsuff.append('_evdist_'+str(i))
+  if '_evprox_' in lsuffty:
+    for i in range(1,nprox+1,1): lsuff.append('_evprox_'+str(i))
+  if '_evdist_' in lsuffty:
+    for i in range(1,ndist+1,1): lsuff.append('_evdist_'+str(i))
   for suff in lsuff:
     k = 't' + suff
     if k not in d: continue

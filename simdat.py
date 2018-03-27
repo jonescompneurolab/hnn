@@ -129,13 +129,18 @@ class SIMCanvas (FigureCanvas):
     self.axdist = self.axprox = self.axdipole = self.axspec = self.axpois = None
     self.lax = []
 
-  def plotinputhist (self,xl): # plot input histograms
+  def plotinputhist (self, xl, dinty):
+    """ plot input histograms
+        xl = x axis limits
+        dinty = dict of input types used, determines how many/which axes created/displayed
+    """
     xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
     # print('xlim_new:',xlim_new)
     # set number of bins (150 bins per 1000ms)
     bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
     if debug: print('bins:',bins)
     extinputs = None
+
     try:
       if debug: print('dfilespk:',dfile['spk'],'dfileoutparam',dfile['outparam'])
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
@@ -149,30 +154,49 @@ class SIMCanvas (FigureCanvas):
     except:
       print('plotinputhist ERR: problem with extinputs')
     self.hist=hist={x:None for x in ['feed_dist','feed_prox','feed_evdist','feed_evprox','feed_pois']}
-    hasPois = len(dinput['pois']) > 0
+
+    hasPois = len(dinput['pois']) > 0 and dinty['Poisson'] # this ensures synaptic weight > 0
+
     gRow = 0
-    axdist = axprox = axpois = None
+    axdist = axprox = axpois = None # axis objects
+
+    # check poisson inputs, create subplot
     if hasPois:
       self.axpois = axpois = self.figure.add_subplot(self.G[gRow,0])
       self.lax.append(axpois)
       gRow += 1
-    if len(dinput['dist']) > 0 or len(dinput['evdist']) > 0:
-      self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # distal inputs
+
+    # check distal inputs, create subplot
+    if (len(dinput['dist']) > 0 and dinty['OngoingDist']) or \
+       (len(dinput['evdist']) > 0 and dinty['EvokedDist']):
+      self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]); 
+      gRow+=1 
       self.lax.append(axdist)
-    if len(dinput['prox']) > 0 or len(dinput['evprox']) > 0:
-      self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]); gRow+=1; # proximal inputs
+
+    # check proximal inputs, create subplot
+    if (len(dinput['prox']) > 0 and dinty['OngoingProx']) or \
+       (len(dinput['evprox']) > 0 and dinty['EvokedProx']):
+      self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]); 
+      gRow+=1
       self.lax.append(axprox)
+
     if extinputs is not None: # only valid param.txt file after sim was run
-      print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
+      if debug:
+        print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
+
       if hasPois:
         hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step')
-      if len(dinput['dist']) > 0:
+
+      if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
         hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
-      if len(dinput['prox']) > 0:
+
+      if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
         hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
-      if len(dinput['evdist']) > 0:
+
+      if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
         hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step')
-      if len(dinput['evprox']) > 0:
+
+      if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
         hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step')
       
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
@@ -236,18 +260,26 @@ class SIMCanvas (FigureCanvas):
     for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,fc='g',ec='g',head_width=w,head_length=w)#head_length=w,head_width=1.)#w/4)
 
   def getInputs (self):
-    EvokedInputs = OngoingInputs = PoissonInputs = TonicInputs = False
+    """ get a dictionary of input types used in simulation
+        with distal/proximal specificity for evoked,ongoing inputs
+    """
+    dinty = {'Evoked':False,'Ongoing':False,'Poisson':False,'Tonic':False,'EvokedDist':False,\
+             'EvokedProx':False,'OngoingDist':False,'OngoingProx':False}
     try:
-      EvokedInputs = usingEvokedInputs(dfile['outparam'])
-      OngoingInputs = usingOngoingInputs(dfile['outparam'])
-      PoissonInputs = usingPoissonInputs(dfile['outparam'])
-      TonicInputs = usingTonicInputs(dfile['outparam'])
+      dinty['Evoked'] = usingEvokedInputs(dfile['outparam'])
+      dinty['EvokedDist'] = usingEvokedInputs(dfile['outparam'], lsuffty = ['_evdist_'])
+      dinty['EvokedProx'] = usingEvokedInputs(dfile['outparam'], lsuffty = ['_evprox_'])
+      dinty['Ongoing'] = usingOngoingInputs(dfile['outparam'])
+      dinty['OngoingDist'] = usingOngoingInputs(dfile['outparam'], lty = ['_dist'])
+      dinty['OngoingProx'] = usingOngoingInputs(dfile['outparam'], lty = ['_prox'])
+      dinty['Poisson'] = usingPoissonInputs(dfile['outparam'])
+      dinty['Tonic'] = usingTonicInputs(dfile['outparam'])
     except:
       pass
-    return EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs
+    return dinty
 
   def setupaxdipole (self):
-    EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
+    dinty = self.getInputs()
 
     # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
     DrawSpec = False
@@ -258,7 +290,7 @@ class SIMCanvas (FigureCanvas):
 
     gRow = 0
 
-    if OngoingInputs or EvokedInputs: gRow = 2
+    if dinty['Ongoing'] or dinty['Evoked']: gRow = 2
 
     if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:5,0]); # dipole
@@ -364,13 +396,13 @@ class SIMCanvas (FigureCanvas):
       sampr = 1e3/dt # dipole sampling rate
       sidx, eidx = int(sampr*xl[0]/1e3), int(sampr*xl[1]/1e3) # use these indices to find dipole min,max
 
-      EvokedInputs, OngoingInputs, PoissonInputs, TonicInputs = self.getInputs()
+      dinty = self.getInputs()
 
       # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
-      DrawSpec = find_param(dfile['outparam'],'save_spec_data') or OngoingInputs or PoissonInputs or TonicInputs
+      DrawSpec = find_param(dfile['outparam'],'save_spec_data') or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic']
 
-      if OngoingInputs or EvokedInputs or PoissonInputs:
-        xo = self.plotinputhist(xl)
+      if dinty['Ongoing'] or dinty['Evoked'] or dinty['Poisson']:
+        xo = self.plotinputhist(xl, dinty)
         if xo: gRow = xo[1]
 
       if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
@@ -391,8 +423,8 @@ class SIMCanvas (FigureCanvas):
           yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
-      if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
-      #if EvokedInputs: self.drawEVInputTimes(ax,yl,0.1,15.0)      
+      if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
+      #if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,15.0)      
 
       if conf.dconf['drawavgdpl'] or N_trials <= 1:
         ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3) # this is the average dipole (across trials)
