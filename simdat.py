@@ -383,23 +383,25 @@ class SIMCanvas (FigureCanvas):
     plt.close(self.figure); 
     if len(ddat.keys()) == 0: return
 
+    dinty = self.getInputs() # get dict of input types used (influences which/how plots drawn)
+
+    # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
+    DrawSpec = find_param(dfile['outparam'],'save_spec_data') or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic']
     try:
       ds = None
       xl = (0,find_param(dfile['outparam'],'tstop'))
       dt = find_param(dfile['outparam'],'dt')
-      if 'spec' in ddat:
+
+      # get spectrogram if it exists, then adjust axis limits but only if drawing spectrogram
+      if DrawSpec and 'spec' in ddat: 
         if ddat['spec'] is not None:
           ds = ddat['spec'] # spectrogram
           xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
+
       gRow = 0
 
       sampr = 1e3/dt # dipole sampling rate
       sidx, eidx = int(sampr*xl[0]/1e3), int(sampr*xl[1]/1e3) # use these indices to find dipole min,max
-
-      dinty = self.getInputs()
-
-      # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
-      DrawSpec = find_param(dfile['outparam'],'save_spec_data') or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic']
 
       if dinty['Ongoing'] or dinty['Evoked'] or dinty['Poisson']:
         xo = self.plotinputhist(xl, dinty)
