@@ -10,8 +10,8 @@ import time
 import sys
 import re
 import zipfile
+import tarfile
 import glob
-from zipfile import ZipFile
 from conf import dconf
 
 debug = dconf['debug']
@@ -67,6 +67,24 @@ def prepinputzip (fout='test.zip'):
   fp.close()
 
 prepinputzip(zippath)
+
+#
+def untar (fname):
+  tar = tarfile.open(fname)
+  tar.extractall()
+  tar.close()
+  print("Extracted",fname," in Current Directory.")
+
+#
+def procoutputtar (fname):
+  tar = tarfile.open(fname)
+  lf = tar.getnames()
+  for f in lf:
+    if f.count('data') > 0:
+      lp = f.split(os.path.sep)
+      tar.extract(f,os.path.join('data',lp[-2]))
+  tar.close()
+  print("Extracted",fname," in Current Directory.")
 
 def runjob ():
 
