@@ -70,8 +70,13 @@ def prepinputzip ():
   lglob = ['*.py','mod/*.mod','*.cfg','param/*.param']
   for glb in lglob:
     for name in glob.glob(glb):
-      print(os.path.realpath(name))
-      fp.write(name, os.path.basename(name), zipfile.ZIP_DEFLATED)
+      print(os.path.realpath(name))      
+      if name.endswith('.mod'):
+        fp.write(name, 'hnn/mod/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
+      elif name.endswith('.param'):
+        fp.write(name,'hnn/param/'+os.path.basename(name),zipfile.ZIP_DEFLATED)
+      else:
+        fp.write(name, 'hnn/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
   fp.close()
   #print('files:',lpath)
 
