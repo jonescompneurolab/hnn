@@ -30,7 +30,7 @@ CRA_USER,PASSWORD = getuserpass()
 payload = {'metadata.statusEmail' : 'true'} 
 KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
 zippath = '/u/samn/inputfile.zip'
-TOOL = 'SINGULARITY_HNN_TG' # 'HNN_TG' # 'HNN' # 'NGBW-JOB-SINGULARITY_HNN_TG' # 'HNN_TG'
+TOOL = 'SINGULARITY_HNN_TG' 
 payload['vparam.runtime_'] = 0.1 # 0.5
 payload['vparam.filename_'] = 'run.py'
 payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
@@ -42,12 +42,16 @@ payload['tool'] = TOOL
 
 files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
+def prepinputzip ():
+  pass
+
 def runjob ():
+
   r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
   #print(r.text)
   root = xml.etree.ElementTree.fromstring(r.text)
 
-  sys.stderr.write("%s\n" % r.text)
+  # sys.stderr.write("%s\n" % r.text)
   sys.stderr.write("%s\n" % r.url)
 
   for child in root:
@@ -147,6 +151,7 @@ def runjob ():
   r = requests.get("%s/job/%s" % (URL,CRA_USER), auth=(CRA_USER, PASSWORD), headers=headers)
   #print(r.text)
 
+  ldeluri = [] # list of jobs to delete
   root = xml.etree.ElementTree.fromstring(r.text)
   for child in root:
     if child.tag == 'jobs':
@@ -164,14 +169,16 @@ def runjob ():
                     if jobrchild.tag == 'terminalStage':
                       jobstatus = jobrchild.text
                       sys.stdout.write("job url: %s status terminalStage: %s\n" % (joburi,jobstatus))
+                      ldeluri.append(joburi)
 
   # get information for a single job, print out raw XML, need to set joburi according to above list
+  for joburi in ldeluri:
+    print('joburi:',joburi)
+    #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
+    r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
+    print(r.text)
 
-  joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
-  r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
-  # print(r.text)
-
-  # delete an old job, need to set joburi
-  joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-7AF604008F314B43A331231E5A94C361'
-  r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
-  sys.stderr.write("%s\n" % r.text)
+    # delete an old job, need to set joburi
+    #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-7AF604008F314B43A331231E5A94C361'
+    r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
+    sys.stderr.write("%s\n" % r.text)
