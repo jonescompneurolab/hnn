@@ -20,8 +20,6 @@ def getuserpass ():
 
 CRA_USER,PASSWORD = getuserpass()
 
-testingHNN = True
-
 # for production version:
 # log in at https://nsgr.sdsc.edu:8443/restusers/login.action
 # Tool names can be found at Developer->Documentation (Tools: How to Configure Specific Tools)
@@ -30,24 +28,13 @@ testingHNN = True
 
 # dictionary of parameters for the NSG job
 payload = {'metadata.statusEmail' : 'true'} 
-
-if testingHNN:
-  KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
-  zippath = '/u/samn/inputfile.zip'
-  TOOL = 'SINGULARITY_HNN_TG' # 'HNN_TG' # 'HNN' # 'NGBW-JOB-SINGULARITY_HNN_TG' # 'HNN_TG'
-  payload['vparam.runtime_'] = 0.1 # 0.5
-  payload['vparam.filename_'] = 'run.py'
-  payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
-  payload['vparam.number_nodes_'] = 1
-else:
-  KEY = 'test1-D96E308858BB418CB50B5307391616BD' 
-  zippath = '/u/samn/hnn/JonesEtAl2009_r31.zip'
-  TOOL = 'NEURON73_TG'
-  payload['vparam.runtime_'] = 0.5
-  payload['vparam.filename_'] = 'Batch.hoc'
-  payload['vparam.cmdlineopts_'] = '-c TSTOP=1'
-  payload['vparam.number_nodes_'] = 2
-
+KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
+zippath = '/u/samn/inputfile.zip'
+TOOL = 'SINGULARITY_HNN_TG' # 'HNN_TG' # 'HNN' # 'NGBW-JOB-SINGULARITY_HNN_TG' # 'HNN_TG'
+payload['vparam.runtime_'] = 0.1 # 0.5
+payload['vparam.filename_'] = 'run.py'
+payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
+payload['vparam.number_nodes_'] = 1
 URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1' # for production version
 headers = {'cipres-appkey' : KEY} # application KEY
 
@@ -130,16 +117,6 @@ def runjob ():
     #print(r.text)
     globaloutputdict[downloaduri] = r.text
 
-  """
-  for name in globaloutputdict.keys():
-    if sys.version_info[0] < 3:
-      continue_var = raw_input("display %s [Y/y]?" % name)
-    else:
-      continue_var = input("display %s [Y/y]?" % name)
-    if continue_var in ['Y','y']:
-      sys.stdout.write("%s\n" % globaloutputdict[name]) # this prints file contents - do not need it
-  """
-
   #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
   #downloaduri = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-650AAA3A8044475580739C88BDF7771D/output/14'
   for downloaduri in globaldownloadurilist:
@@ -191,9 +168,8 @@ def runjob ():
   # get information for a single job, print out raw XML, need to set joburi according to above list
 
   joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
-  r = requests.get(joburi,
-                   headers= headers, auth=(CRA_USER, PASSWORD))
-  print(r.text)
+  r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
+  # print(r.text)
 
   # delete an old job, need to set joburi
   joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-7AF604008F314B43A331231E5A94C361'
