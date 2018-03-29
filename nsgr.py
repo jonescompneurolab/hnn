@@ -12,6 +12,9 @@ import re
 import zipfile
 import glob
 from zipfile import ZipFile
+from conf import dconf
+
+debug = dconf['debug']
 
 def getuserpass ():
   f = open('nsgr.txt')
@@ -32,7 +35,7 @@ CRA_USER,PASSWORD = getuserpass()
 # dictionary of parameters for the NSG job
 payload = {'metadata.statusEmail' : 'true'} 
 KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
-zippath = '/u/samn/inputfile.zip'
+zippath = os.path.realpath('inputfile.zip')
 TOOL = 'SINGULARITY_HNN_TG' 
 payload['vparam.runtime_'] = 0.1 # 0.5
 payload['vparam.filename_'] = 'run.py'
@@ -45,40 +48,25 @@ payload['tool'] = TOOL
 
 files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
-def isfilety (filename, lty):
-  for ty in lty:
-    if filename.endswith(ty): return True
-  return False
-
-def getpaths (directory, lty = ['.py','.mod','.cfg','.param']):
-  # initializing empty file paths list
-  lfile = []
-  # crawling through directory and subdirectories
-  for root, directories, files in os.walk(directory):
-    for filename in files:
-      if not isfilety(filename,lty): continue
-      # join the two strings in order to form the full filepath.
-      filepath = os.path.join(root, filename)
-      lfile.append(filepath)
-  # returning all file paths
-  return lfile   
-
 #
-def prepinputzip ():
-  #lpath = getpaths('.')
-  fp = zipfile.ZipFile("test.zip", "w")
-  lglob = ['*.py','mod/*.mod','*.cfg','param/*.param']
+def prepinputzip (fout='test.zip'):
+  if debug: print('Preparing NSGR input zip file...',zippath)
+  fp = zipfile.ZipFile(fout, "w")
+  lglob = ['*.py','mod/*.mod','*.cfg','param/*.param','res/*.png','Makefile']
   for glb in lglob:
     for name in glob.glob(glb):
-      print(os.path.realpath(name))      
+      if debug: print('adding:',os.path.realpath(name))      
       if name.endswith('.mod'):
         fp.write(name, 'hnn/mod/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
       elif name.endswith('.param'):
         fp.write(name,'hnn/param/'+os.path.basename(name),zipfile.ZIP_DEFLATED)
+      elif name.endswith('.png'):
+        fp.write(name,'hnn/res/'+os.path.basename(name),zipfile.ZIP_DEFLATED)        
       else:
         fp.write(name, 'hnn/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
   fp.close()
-  #print('files:',lpath)
+
+prepinputzip(zippath)
 
 def runjob ():
 
