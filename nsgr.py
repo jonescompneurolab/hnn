@@ -9,6 +9,9 @@ import xml.etree.ElementTree
 import time
 import sys
 import re
+import zipfile
+import glob
+from zipfile import ZipFile
 
 def getuserpass ():
   f = open('nsgr.txt')
@@ -42,8 +45,31 @@ payload['tool'] = TOOL
 
 files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
+def isfilety (filename, lty):
+  for ty in lty:
+    if filename.endswith(ty): return True
+  return False
+
+def getpaths (directory, lty = ['.py','.mod','.cfg','.param']):
+  # initializing empty file paths list
+  lfile = []
+  # crawling through directory and subdirectories
+  for root, directories, files in os.walk(directory):
+    for filename in files:
+      if not isfilety(filename,lty): continue
+      # join the two strings in order to form the full filepath.
+      filepath = os.path.join(root, filename)
+      lfile.append(filepath)
+  # returning all file paths
+  return lfile   
+
 def prepinputzip ():
-  pass
+  #lpath = getpaths('.')
+  lty = ['.py','./mod/.mod','.cfg','.param']
+  for ty in lty:
+    for name in glob.glob('./*'+ty):
+      print(name)
+  #print('files:',lpath)
 
 def runjob ():
 
@@ -122,7 +148,6 @@ def runjob ():
     globaloutputdict[downloaduri] = r.text
 
   #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
-  #downloaduri = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-650AAA3A8044475580739C88BDF7771D/output/14'
   for downloaduri in globaldownloadurilist:
     r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
     sys.stderr.write("%s\n" % r.headers)
@@ -132,8 +157,6 @@ def runjob ():
       sys.stderr.write("%s\n" % fname)
 
   # download all output files
-
-  #downloaduri = 'https://cipresrest.sdsc.edu/cipresrest/v1/job/kenneth/NGBW-JOB-RAXMLHPC8_REST_XSEDE-EF0E26B61D2E4C0C8D02499D8068D873/output/11496'
   for downloaduri in globaldownloadurilist:
     r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
     #sys.stderr.write("%s\n" % r.json())
@@ -147,7 +170,6 @@ def runjob ():
           fd.write(chunk)
 
   # get a list of jobs for user and app key, and terminalStage status
-
   r = requests.get("%s/job/%s" % (URL,CRA_USER), auth=(CRA_USER, PASSWORD), headers=headers)
   #print(r.text)
 
@@ -172,13 +194,11 @@ def runjob ():
                       ldeluri.append(joburi)
 
   # get information for a single job, print out raw XML, need to set joburi according to above list
+  # delete an old job, need to set joburi
   for joburi in ldeluri:
-    print('joburi:',joburi)
+    print('deleting old job with joburi = ',joburi)
     #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
     r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
-    print(r.text)
-
-    # delete an old job, need to set joburi
-    #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-7AF604008F314B43A331231E5A94C361'
+    #print(r.text)
     r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
     sys.stderr.write("%s\n" % r.text)
