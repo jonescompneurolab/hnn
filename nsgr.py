@@ -63,12 +63,16 @@ def getpaths (directory, lty = ['.py','.mod','.cfg','.param']):
   # returning all file paths
   return lfile   
 
+#
 def prepinputzip ():
   #lpath = getpaths('.')
-  lty = ['.py','./mod/.mod','.cfg','.param']
-  for ty in lty:
-    for name in glob.glob('./*'+ty):
-      print(name)
+  fp = zipfile.ZipFile("test.zip", "w")
+  lglob = ['*.py','mod/*.mod','*.cfg','param/*.param']
+  for glb in lglob:
+    for name in glob.glob(glb):
+      print(os.path.realpath(name))
+      fp.write(name, os.path.basename(name), zipfile.ZIP_DEFLATED)
+  fp.close()
   #print('files:',lpath)
 
 def runjob ():
