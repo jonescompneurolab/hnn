@@ -21,6 +21,7 @@ debug = 0
 testlfp = 0
 testlaminarlfp = 0
 optrun = 0
+nsgrun = 0
 [paths]
 paramindir = param
 homeout = 1
@@ -166,6 +167,7 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['testlfp'] = confint("run","testlfp",0)
   d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
   d['optrun'] = confint("run","optrun",0)
+  d['nsgrun'] = confint("run","nsgrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawavgdpl'] = confint("draw","drawavgdpl",0)
