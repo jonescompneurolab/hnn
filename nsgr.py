@@ -50,26 +50,35 @@ files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
 #
 def prepinputzip (fout='test.zip'):
-  if debug: print('Preparing NSGR input zip file...',zippath)
-  fp = zipfile.ZipFile(fout, "w")
-  lglob = ['*.py','mod/*.mod','*.cfg','param/*.param','res/*.png','Makefile']
-  for glb in lglob:
-    for name in glob.glob(glb):
-      if debug: print('adding:',os.path.realpath(name))      
-      if name.endswith('.mod'):
-        fp.write(name, 'hnn/mod/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
-      elif name.endswith('.param'):
-        fp.write(name,'hnn/param/'+os.path.basename(name),zipfile.ZIP_DEFLATED)
-      elif name.endswith('.png'):
-        fp.write(name,'hnn/res/'+os.path.basename(name),zipfile.ZIP_DEFLATED)        
-      else:
-        fp.write(name, 'hnn/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
-  fp.close()
+  """ prepares input zip file for NSGR; file contains all py,mod,param,cfg
+  files needed to run the simulation """
+  try:
+    if debug: print('Preparing NSGR input zip file...',zippath)
+    fp = zipfile.ZipFile(fout, "w")
+    lglob = ['*.py','mod/*.mod','*.cfg','param/*.param','res/*.png','Makefile']
+    for glb in lglob:
+      for name in glob.glob(glb):
+        if debug: print('adding:',os.path.realpath(name))      
+        if name.endswith('.mod'):
+          fp.write(name, 'hnn/mod/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
+        elif name.endswith('.param'):
+          fp.write(name,'hnn/param/'+os.path.basename(name),zipfile.ZIP_DEFLATED)
+        elif name.endswith('.png'):
+          fp.write(name,'hnn/res/'+os.path.basename(name),zipfile.ZIP_DEFLATED)        
+        else:
+          fp.write(name, 'hnn/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
+    fp.close()
+    return True
+  except:
+    print('prepinputzip ERR: could not prepare input zip file',fout,'for NSGR.')
+    return False
+    
 
 prepinputzip(zippath)
 
 #
 def untar (fname):
+  # extract contents of tar gz file to current directory
   tar = tarfile.open(fname)
   tar.extractall()
   tar.close()
@@ -77,20 +86,25 @@ def untar (fname):
 
 #
 def procoutputtar (fname):
-  """ process output tar file, saving simulation data
-  to appropriate directories """
-  tar = tarfile.open(fname)
-  for member in tar.getmembers():
-    if member.isreg():  # skip if not a file (e.g. directory)
-      f = member.name
-      if f.count('data')>0:
-        lp = f.split(os.path.sep)
-        member.name = os.path.basename(member.name) # remove the path by resetting it
-        tar.extract(member,os.path.join('data',lp[-2])) # extract to data subdir
-        if f.endswith('.param'):
-          tar.extract(member,'param') # extract to param subdir
-  tar.close()
-  if debug: print("Extracted",fname)
+  """ process HNN NSGR output tar file, saving simulation data
+  and param file to appropriate directories """
+  try:
+    tar = tarfile.open(fname)
+    for member in tar.getmembers():
+      if member.isreg():  # skip if not a file (e.g. directory)
+        f = member.name
+        if f.count('data')>0:
+          lp = f.split(os.path.sep)
+          member.name = os.path.basename(member.name) # remove the path by resetting it
+          tar.extract(member,os.path.join('data',lp[-2])) # extract to data subdir
+          if f.endswith('.param'):
+            tar.extract(member,'param') # extract to param subdir
+    tar.close()
+    if debug: print("Extracted",fname)
+    return True
+  except:
+    print('procoutputtar ERR: Could not extract contents of ',fname)
+    return False
 
 def runjob ():
 
@@ -157,7 +171,7 @@ def runjob ():
                   globaldownloadurilist.append(attchild.text)
 
   #print('Download complete.  Run the next cell.',file=sys.stderr)
-  sys.stderr.write('Download complete.  Run the next cell.\n')
+  sys.stderr.write('NSG download complete.\n')
 
   #submitoutput.show()
   #print(submitoutput.stdout)
@@ -175,7 +189,7 @@ def runjob ():
     d = r.headers['content-disposition']
     fname_list = re.findall("filename=(.+)", d)
     for fname in fname_list:
-      sys.stderr.write("%s\n" % fname)
+      if debug: sys.stderr.write("%s\n" % fname)
 
   # download all output files
   for downloaduri in globaldownloadurilist:
@@ -217,9 +231,9 @@ def runjob ():
   # get information for a single job, print out raw XML, need to set joburi according to above list
   # delete an old job, need to set joburi
   for joburi in ldeluri:
-    print('deleting old job with joburi = ',joburi)
+    if debug: print('deleting old job with joburi = ',joburi)
     #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
     r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
     #print(r.text)
     r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
-    sys.stderr.write("%s\n" % r.text)
+    if debug: sys.stderr.write("%s\n" % r.text)
