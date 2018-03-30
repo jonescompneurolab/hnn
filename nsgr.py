@@ -56,7 +56,7 @@ def prepinputzip (fout='inputfile.zip'):
     lglob = ['*.py','mod/*.mod','*.cfg','param/*.param','res/*.png','Makefile']
     for glb in lglob:
       for name in glob.glob(glb):
-        if debug: print('adding:',os.path.realpath(name))      
+        #if debug: print('adding:',os.path.realpath(name))      
         if name.endswith('.mod'):
           fp.write(name, 'hnn/mod/'+os.path.basename(name), zipfile.ZIP_DEFLATED)
         elif name.endswith('.param'):
@@ -128,10 +128,10 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
     r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
-    #print(r.text)
+    #if debug: print(r.text)
     root = xml.etree.ElementTree.fromstring(r.text)
 
-    # print(r.text)
+    #if debug: print(r.text)
     print(r.url)
 
     for child in root:
@@ -182,13 +182,10 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
 
     print('NSG download complete.')
 
-    #submitoutput.show()
-    #print(submitoutput.stdout)
-    #print(globaldownloadurilist)
     globaloutputdict = {}
     for downloaduri in globaldownloadurilist:
       r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
-      #print(r.text)
+      #if debug: print(r.text)
       globaloutputdict[downloaduri] = r.text
 
     #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
@@ -241,7 +238,6 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     # delete an old job, need to set joburi
     for joburi in ldeluri:
       if debug: print('deleting old job with joburi = ',joburi)
-      #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
       r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
       #print(r.text)
       r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
