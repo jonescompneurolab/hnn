@@ -41,6 +41,7 @@ def createpayload (paramf, ntrial, tstop):
   payload = {'metadata.statusEmail' : 'true'} 
   payload['vparam.runtime_'] = 0.1 # 0.5
   payload['vparam.filename_'] = 'run.py'
+  if ntrial == 0: ntrial = 1
   payload['vparam.cmdlineopts_'] = '-nohomeout -paramf ' + os.path.join('param',paramf) + ' ' + str(ntrial)
   payload['vparam.number_nodes_'] = 1
   payload['tool'] = TOOL
@@ -80,7 +81,7 @@ def untar (fname):
   print("Extracted",fname," in Current Directory.")
 
 #
-def procoutputtar (fname='output.tar.gz'):
+def procoutputtar (fname='output.tar.gz'):#,simstr='default'):
   """ process HNN NSGR output tar file, saving simulation data
   and param file to appropriate directories """
   try:
@@ -92,6 +93,7 @@ def procoutputtar (fname='output.tar.gz'):
           lp = f.split(os.path.sep)
           member.name = os.path.basename(member.name) # remove the path by resetting it
           tar.extract(member,os.path.join('data',lp[-2])) # extract to data subdir
+          #tar.extract(member,os.path.join('data',simstr)) # extract to data subdir
           if f.endswith('.param'):
             tar.extract(member,'param') # extract to param subdir
     tar.close()
@@ -118,6 +120,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
   try:
 
     payload = createpayload(paramf,ntrial,tstop)
+    print('payload:',payload)
     headers = {'cipres-appkey' : KEY} # application KEY
     zippath = os.path.realpath('inputfile.zip')
 
@@ -243,6 +246,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
       r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
       if debug: print(r.text)
 
+    #if not procoutputtar('output.tar.gz',paramf.split('.param')[0]):
     if not procoutputtar('output.tar.gz'):
       print('runjobNSGR ERR: could not extract simulation output data.')
       return False
@@ -252,7 +256,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     return True
 
   except:
-    print('runjobNSGR unhandled exception!')
+    print('runjobNSGR: unhandled exception!')
     return False
 
 if __name__ == '__main__':
@@ -262,4 +266,5 @@ if __name__ == '__main__':
   else:
     print(sys.argv)
     paramf = sys.argv[1].split(os.path.sep)[-1]
-    runjobNSGR(paramf, int(sys.argv[2]), float(sys.argv[3]))
+    print('paramf:',paramf)
+    runjobNSGR(paramf=paramf, ntrial=int(sys.argv[2]), tstop=float(sys.argv[3]))
