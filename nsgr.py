@@ -131,8 +131,8 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     #print(r.text)
     root = xml.etree.ElementTree.fromstring(r.text)
 
-    # sys.stdout.write("%s\n" % r.text)
-    sys.stdout.write("%s\n" % r.url)
+    # print(r.text)
+    print(r.url)
 
     for child in root:
       if child.tag == 'resultsUri':
@@ -144,37 +144,29 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
           if urlchild.tag == 'url':
             selfuri = urlchild.text
 
-    #print(outputuri,file=sys.stderr)
-    sys.stdout.write("%s\n" % outputuri)
-    #print(selfuri,file=sys.stderr)
-    sys.stdout.write("%s\n" % selfuri)
+    if debug: print(outputuri)
+    if debug: print(selfuri)
 
-    #print('Waiting for job to complete',file=sys.stderr)
-    print('Waiting for job to complete\n')
+    print('Waiting for NSG job to complete. . .')
     jobdone = False
     while not jobdone:
       r = requests.get(selfuri, auth=(CRA_USER, PASSWORD), headers=headers)
-      #print(r.text)
+      #if debug: print(r.text)
       root = xml.etree.ElementTree.fromstring(r.text)
       for child in root:
         if child.tag == 'terminalStage':
           jobstatus = child.text
           if jobstatus == 'false':
             time.sleep(5)
-            #print('.',file=sys.stderr,end='')
-            sys.stdout.write('.')
           else:
             jobdone = True
-            #print('',file=sys.stderr,end='\n')
-            sys.stdout.write('\n')
             break
 
-    #print('Job completion detected, getting download URIs...',file=sys.stderr)
-    sys.stdout.write('Job completion detected, getting download URIs...')
+    print('Job completion detected, getting download URIs...')
 
     r = requests.get(outputuri,
                      headers= headers, auth=(CRA_USER, PASSWORD))
-    #print(r.text)
+    #if debug: print(r.text)
     globaldownloadurilist = []
     root = xml.etree.ElementTree.fromstring(r.text)
     for child in root:
@@ -188,8 +180,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
                     print(attchild.text)
                     globaldownloadurilist.append(attchild.text)
 
-    #print('Download complete.  Run the next cell.',file=sys.stderr)
-    sys.stdout.write('NSG download complete.\n')
+    print('NSG download complete.')
 
     #submitoutput.show()
     #print(submitoutput.stdout)
@@ -203,16 +194,16 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
     for downloaduri in globaldownloadurilist:
       r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
-      sys.stdout.write("%s\n" % r.headers)
+      print(r.headers)
       d = r.headers['content-disposition']
       fname_list = re.findall("filename=(.+)", d)
       for fname in fname_list:
-        if debug: sys.stdout.write("%s\n" % fname)
+        if debug: print(fname)
 
     # download all output files
     for downloaduri in globaldownloadurilist:
       r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
-      #sys.stdout.write("%s\n" % r.json())
+      #if debug: print(r.json())
       #r.content
       d = r.headers['content-disposition']
       filename_list = re.findall('filename=(.+)', d)
@@ -243,7 +234,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
                     for jobrchild in jobroot:
                       if jobrchild.tag == 'terminalStage':
                         jobstatus = jobrchild.text
-                        sys.stdout.write("job url: %s status terminalStage: %s\n" % (joburi,jobstatus))
+                        if debug: print('job url:',joburi,' status terminalStage:',jobstatus)
                         ldeluri.append(joburi)
 
     # get information for a single job, print out raw XML, need to set joburi according to above list
@@ -254,7 +245,7 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
       r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
       #print(r.text)
       r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
-      if debug: sys.stdout.write("%s\n" % r.text)
+      if debug: print(r.text)
 
     if not procoutputtar('output.tar.gz'):
       print('runjobNSGR ERR: could not extract simulation output data.')
