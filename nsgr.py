@@ -77,14 +77,20 @@ def untar (fname):
 
 #
 def procoutputtar (fname):
+  """ process output tar file, saving simulation data
+  to appropriate directories """
   tar = tarfile.open(fname)
-  lf = tar.getnames()
-  for f in lf:
-    if f.count('data') > 0:
-      lp = f.split(os.path.sep)
-      tar.extract(f,os.path.join('data',lp[-2]))
+  for member in tar.getmembers():
+    if member.isreg():  # skip if not a file (e.g. directory)
+      f = member.name
+      if f.count('data')>0:
+        lp = f.split(os.path.sep)
+        member.name = os.path.basename(member.name) # remove the path by resetting it
+        tar.extract(member,os.path.join('data',lp[-2])) # extract to data subdir
+        if f.endswith('.param'):
+          tar.extract(member,'param') # extract to param subdir
   tar.close()
-  print("Extracted",fname," in Current Directory.")
+  if debug: print("Extracted",fname)
 
 def runjob ():
 
