@@ -78,7 +78,6 @@ class RunSimThread (QThread):
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
     self.onNSG = onNSG
-    print('self.onNSG:',self.onNSG)
 
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
