@@ -1611,7 +1611,7 @@ class HNNGUI (QMainWindow):
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(runSimAct)
-    #fileMenu.addAction(runSimNSGAct)
+    if dconf['nsgrun']: fileMenu.addAction(runSimNSGAct)
     if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
