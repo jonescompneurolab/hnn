@@ -1597,7 +1597,7 @@ class HNNGUI (QMainWindow):
     runSimAct.triggered.connect(self.controlsim)
 
     runSimNSGAct = QAction('Run simulation on NSG', self)
-    runSimNSGAct.setShortcut('Ctrl+G')
+    runSimNSGAct.setShortcut('Ctrl+N')
     runSimNSGAct.setStatusTip('Run simulation on Neuroscience Gateway Portal (requires NSG account and internet connection).')
     runSimNSGAct.triggered.connect(self.controlNSGsim)
 
