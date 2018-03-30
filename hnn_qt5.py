@@ -66,7 +66,7 @@ class CanvSignal (QObject):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None):
+  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
     QThread.__init__(self)
     self.c = c
     self.killed = False
@@ -77,6 +77,8 @@ class RunSimThread (QThread):
     self.opt = opt
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
+    self.onNSG = onNSG
+    print('self.onNSG:',self.onNSG)
 
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
@@ -126,7 +128,11 @@ class RunSimThread (QThread):
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
-    cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
+    print('self.onNSG:',self.onNSG)
+    if self.onNSG:
+      cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
+    else:
+      cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
     simdat.dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd)
@@ -1590,6 +1596,11 @@ class HNNGUI (QMainWindow):
     runSimAct.setStatusTip('Run simulation')
     runSimAct.triggered.connect(self.controlsim)
 
+    runSimNSGAct = QAction('Run simulation on NSG', self)
+    runSimNSGAct.setShortcut('Ctrl+G')
+    runSimNSGAct.setStatusTip('Run simulation on Neuroscience Gateway Portal (requires NSG account and internet connection).')
+    runSimNSGAct.triggered.connect(self.controlNSGsim)
+
     if dconf['optrun']:
       optSimAct = QAction('Optimize model', self)
       optSimAct.setShortcut('Ctrl+O')
@@ -1600,6 +1611,7 @@ class HNNGUI (QMainWindow):
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(runSimAct)
+    #fileMenu.addAction(runSimNSGAct)
     if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
     fileMenu.addAction(loadDataFile)
@@ -1848,6 +1860,12 @@ class HNNGUI (QMainWindow):
     else:
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
+  def controlNSGsim (self):
+    if self.runningsim:
+      self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
+    else:
+      self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore(),True)
+
   def stopsim (self):
     if self.runningsim:
       self.waitsimwin.hide()
@@ -1871,7 +1889,7 @@ class HNNGUI (QMainWindow):
     self.btnsim.setText("Stop Optimization") 
     self.qbtn.setEnabled(False)
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self)
+    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -1881,7 +1899,7 @@ class HNNGUI (QMainWindow):
     self.qbtn.setEnabled(False)
     self.waitsimwin.show()    
 
-  def startsim (self, ntrial, ncore):
+  def startsim (self, ntrial, ncore, onNSG=False):
 
     if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
 
@@ -1890,9 +1908,12 @@ class HNNGUI (QMainWindow):
     print('Starting simulation. . .')
     self.runningsim = True
 
-    self.statusBar().showMessage("Running simulation. . .")
+    if onNSG:
+      self.statusBar().showMessage("Running simulation on Neuroscience Gateway Portal. . .")
+    else:
+      self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin)
+    self.runthread=RunSimThread(self.c,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
