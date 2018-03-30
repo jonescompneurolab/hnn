@@ -1,5 +1,5 @@
-# from https://github.com/kenneth59715/nsg-rest-client/blob/master/nsg.nopassword.ipynb
-# This worked with python 3, with requests module installed
+# based on https://github.com/kenneth59715/nsg-rest-client/blob/master/nsg.nopassword.ipynb
+# This works with python 3, with requests module installed
 # use port 8443 for production, 8444 for test
 # register at https://www.nsgportal.org/reg/reg.php for username and password
 
@@ -24,7 +24,7 @@ def getuserpass ():
   f.close()
   return CRA_USER,PASSWORD
 
-CRA_USER,PASSWORD = getuserpass()
+CRA_USER,PASSWORD = getuserpass() # this will be collected from the HNN GUI later on
 
 # for production version:
 # log in at https://nsgr.sdsc.edu:8443/restusers/login.action
@@ -32,21 +32,19 @@ CRA_USER,PASSWORD = getuserpass()
 # create a new application at Developer->Application Management (Create New Application)
 # save the Application Key for use in REST requests
 
-# dictionary of parameters for the NSG job
-payload = {'metadata.statusEmail' : 'true'} 
 KEY = 'HNN-418776D750A84FC28A19D5EF1C7B4933'
-zippath = os.path.realpath('inputfile.zip')
 TOOL = 'SINGULARITY_HNN_TG' 
-payload['vparam.runtime_'] = 0.1 # 0.5
-payload['vparam.filename_'] = 'run.py'
-payload['vparam.cmdlineopts_'] = '-nohomeout -paramf param/default.param 1'
-payload['vparam.number_nodes_'] = 1
 URL = 'https://nsgr.sdsc.edu:8443/cipresrest/v1' # for production version
-headers = {'cipres-appkey' : KEY} # application KEY
 
-payload['tool'] = TOOL
-
-files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
+def createpayload (paramf, ntrial, tstop):
+  # returns dictionary of parameters for the NSG job
+  payload = {'metadata.statusEmail' : 'true'} 
+  payload['vparam.runtime_'] = 0.1 # 0.5
+  payload['vparam.filename_'] = 'run.py'
+  payload['vparam.cmdlineopts_'] = '-nohomeout -paramf ' + os.path.join('param',paramf) + ' ' + str(ntrial)
+  payload['vparam.number_nodes_'] = 1
+  payload['tool'] = TOOL
+  return payload
 
 #
 def prepinputzip (fout='test.zip'):
@@ -73,9 +71,6 @@ def prepinputzip (fout='test.zip'):
     print('prepinputzip ERR: could not prepare input zip file',fout,'for NSGR.')
     return False
     
-
-prepinputzip(zippath)
-
 #
 def untar (fname):
   # extract contents of tar gz file to current directory
@@ -85,7 +80,7 @@ def untar (fname):
   print("Extracted",fname," in Current Directory.")
 
 #
-def procoutputtar (fname):
+def procoutputtar (fname='output.tar.gz'):
   """ process HNN NSGR output tar file, saving simulation data
   and param file to appropriate directories """
   try:
@@ -106,134 +101,160 @@ def procoutputtar (fname):
     print('procoutputtar ERR: Could not extract contents of ',fname)
     return False
 
-def runjob ():
+def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
+  """ run a simulation job on NSG using Restful interface; first prepares input zip
+  file, then submits job and waits for it to finish, finally downloads simulation output
+  data and extracts it to appropriate location """
 
-  r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
-  #print(r.text)
-  root = xml.etree.ElementTree.fromstring(r.text)
+  try:
 
-  # sys.stderr.write("%s\n" % r.text)
-  sys.stderr.write("%s\n" % r.url)
+    payload = createpayload(paramf,ntrial,tstop)
+    headers = {'cipres-appkey' : KEY} # application KEY
+    zippath = os.path.realpath('inputfile.zip')
 
-  for child in root:
-    if child.tag == 'resultsUri':
-      for urlchild in child:
-        if urlchild.tag == 'url':
-          outputuri = urlchild.text
-    if child.tag == 'selfUri':
-      for urlchild in child:
-        if urlchild.tag == 'url':
-          selfuri = urlchild.text
+    if not prepinputzip(zippath):
+      print('runjobNSGR ERR: could not prepare NSGR input zip file',zippath)
+      return False
 
-  #print(outputuri,file=sys.stderr)
-  sys.stderr.write("%s\n" % outputuri)
-  #print(selfuri,file=sys.stderr)
-  sys.stderr.write("%s\n" % selfuri)
+    files = {'input.infile_' : open(zippath,'rb')} # input zip file with code to run
 
-  #print('Waiting for job to complete',file=sys.stderr)
-  sys.stderr.write('Waiting for job to complete\n')
-  jobdone = False
-  while not jobdone:
-    r = requests.get(selfuri, auth=(CRA_USER, PASSWORD), headers=headers)
+    r = requests.post('{}/job/{}'.format(URL, CRA_USER), auth=(CRA_USER, PASSWORD), data=payload, headers=headers, files=files)
     #print(r.text)
     root = xml.etree.ElementTree.fromstring(r.text)
+
+    # sys.stderr.write("%s\n" % r.text)
+    sys.stderr.write("%s\n" % r.url)
+
     for child in root:
-      if child.tag == 'terminalStage':
-        jobstatus = child.text
-        if jobstatus == 'false':
-          time.sleep(5)
-          #print('.',file=sys.stderr,end='')
-          sys.stderr.write('.')
-        else:
-          jobdone = True
-          #print('',file=sys.stderr,end='\n')
-          sys.stderr.write('\n')
-          break
+      if child.tag == 'resultsUri':
+        for urlchild in child:
+          if urlchild.tag == 'url':
+            outputuri = urlchild.text
+      if child.tag == 'selfUri':
+        for urlchild in child:
+          if urlchild.tag == 'url':
+            selfuri = urlchild.text
 
-  #print('Job completion detected, getting download URIs...',file=sys.stderr)
-  sys.stderr.write('Job completion detected, getting download URIs...')
+    #print(outputuri,file=sys.stderr)
+    sys.stderr.write("%s\n" % outputuri)
+    #print(selfuri,file=sys.stderr)
+    sys.stderr.write("%s\n" % selfuri)
 
-  r = requests.get(outputuri,
-                   headers= headers, auth=(CRA_USER, PASSWORD))
-  #print(r.text)
-  globaldownloadurilist = []
-  root = xml.etree.ElementTree.fromstring(r.text)
-  for child in root:
-    if child.tag == 'jobfiles':
-      for jobchild in child:
-        if jobchild.tag == 'jobfile':
-          for downloadchild in jobchild:
-            if downloadchild.tag == 'downloadUri':
-              for attchild in downloadchild:
-                if attchild.tag == 'url':
-                  #print(attchild.text)
-                  sys.stdout.write(attchild.text)
-                  globaldownloadurilist.append(attchild.text)
+    #print('Waiting for job to complete',file=sys.stderr)
+    sys.stderr.write('Waiting for job to complete\n')
+    jobdone = False
+    while not jobdone:
+      r = requests.get(selfuri, auth=(CRA_USER, PASSWORD), headers=headers)
+      #print(r.text)
+      root = xml.etree.ElementTree.fromstring(r.text)
+      for child in root:
+        if child.tag == 'terminalStage':
+          jobstatus = child.text
+          if jobstatus == 'false':
+            time.sleep(5)
+            #print('.',file=sys.stderr,end='')
+            sys.stderr.write('.')
+          else:
+            jobdone = True
+            #print('',file=sys.stderr,end='\n')
+            sys.stderr.write('\n')
+            break
 
-  #print('Download complete.  Run the next cell.',file=sys.stderr)
-  sys.stderr.write('NSG download complete.\n')
+    #print('Job completion detected, getting download URIs...',file=sys.stderr)
+    sys.stderr.write('Job completion detected, getting download URIs...')
 
-  #submitoutput.show()
-  #print(submitoutput.stdout)
-  #print(globaldownloadurilist)
-  globaloutputdict = {}
-  for downloaduri in globaldownloadurilist:
-    r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
+    r = requests.get(outputuri,
+                     headers= headers, auth=(CRA_USER, PASSWORD))
     #print(r.text)
-    globaloutputdict[downloaduri] = r.text
+    globaldownloadurilist = []
+    root = xml.etree.ElementTree.fromstring(r.text)
+    for child in root:
+      if child.tag == 'jobfiles':
+        for jobchild in child:
+          if jobchild.tag == 'jobfile':
+            for downloadchild in jobchild:
+              if downloadchild.tag == 'downloadUri':
+                for attchild in downloadchild:
+                  if attchild.tag == 'url':
+                    #print(attchild.text)
+                    sys.stdout.write(attchild.text)
+                    globaldownloadurilist.append(attchild.text)
 
-  #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
-  for downloaduri in globaldownloadurilist:
-    r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
-    sys.stderr.write("%s\n" % r.headers)
-    d = r.headers['content-disposition']
-    fname_list = re.findall("filename=(.+)", d)
-    for fname in fname_list:
-      if debug: sys.stderr.write("%s\n" % fname)
+    #print('Download complete.  Run the next cell.',file=sys.stderr)
+    sys.stderr.write('NSG download complete.\n')
 
-  # download all output files
-  for downloaduri in globaldownloadurilist:
-    r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
-    #sys.stderr.write("%s\n" % r.json())
-    #r.content
-    d = r.headers['content-disposition']
-    filename_list = re.findall('filename=(.+)', d)
-    for filename in filename_list:
-      #http://docs.python-requests.org/en/master/user/quickstart/#raw-response-content
-      with open(filename, 'wb') as fd:
-        for chunk in r.iter_content():
-          fd.write(chunk)
+    #submitoutput.show()
+    #print(submitoutput.stdout)
+    #print(globaldownloadurilist)
+    globaloutputdict = {}
+    for downloaduri in globaldownloadurilist:
+      r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
+      #print(r.text)
+      globaloutputdict[downloaduri] = r.text
 
-  # get a list of jobs for user and app key, and terminalStage status
-  r = requests.get("%s/job/%s" % (URL,CRA_USER), auth=(CRA_USER, PASSWORD), headers=headers)
-  #print(r.text)
+    #http://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
+    for downloaduri in globaldownloadurilist:
+      r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
+      sys.stderr.write("%s\n" % r.headers)
+      d = r.headers['content-disposition']
+      fname_list = re.findall("filename=(.+)", d)
+      for fname in fname_list:
+        if debug: sys.stderr.write("%s\n" % fname)
 
-  ldeluri = [] # list of jobs to delete
-  root = xml.etree.ElementTree.fromstring(r.text)
-  for child in root:
-    if child.tag == 'jobs':
-      for jobchild in child:
-        if jobchild.tag == 'jobstatus':
-          for statuschild in jobchild:
-            if statuschild.tag == 'selfUri':
-              for selfchild in statuschild:
-                if selfchild.tag == 'url':
-                  #print(child)
-                  joburi = selfchild.text
-                  jobr = requests.get(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
-                  jobroot = xml.etree.ElementTree.fromstring(jobr.text)
-                  for jobrchild in jobroot:
-                    if jobrchild.tag == 'terminalStage':
-                      jobstatus = jobrchild.text
-                      sys.stdout.write("job url: %s status terminalStage: %s\n" % (joburi,jobstatus))
-                      ldeluri.append(joburi)
+    # download all output files
+    for downloaduri in globaldownloadurilist:
+      r = requests.get(downloaduri, auth=(CRA_USER, PASSWORD), headers=headers)
+      #sys.stderr.write("%s\n" % r.json())
+      #r.content
+      d = r.headers['content-disposition']
+      filename_list = re.findall('filename=(.+)', d)
+      for filename in filename_list:
+        #http://docs.python-requests.org/en/master/user/quickstart/#raw-response-content
+        with open(filename, 'wb') as fd:
+          for chunk in r.iter_content():
+            fd.write(chunk)
 
-  # get information for a single job, print out raw XML, need to set joburi according to above list
-  # delete an old job, need to set joburi
-  for joburi in ldeluri:
-    if debug: print('deleting old job with joburi = ',joburi)
-    #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
-    r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
+    # get a list of jobs for user and app key, and terminalStage status
+    r = requests.get("%s/job/%s" % (URL,CRA_USER), auth=(CRA_USER, PASSWORD), headers=headers)
     #print(r.text)
-    r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
-    if debug: sys.stderr.write("%s\n" % r.text)
+
+    ldeluri = [] # list of jobs to delete
+    root = xml.etree.ElementTree.fromstring(r.text)
+    for child in root:
+      if child.tag == 'jobs':
+        for jobchild in child:
+          if jobchild.tag == 'jobstatus':
+            for statuschild in jobchild:
+              if statuschild.tag == 'selfUri':
+                for selfchild in statuschild:
+                  if selfchild.tag == 'url':
+                    #print(child)
+                    joburi = selfchild.text
+                    jobr = requests.get(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
+                    jobroot = xml.etree.ElementTree.fromstring(jobr.text)
+                    for jobrchild in jobroot:
+                      if jobrchild.tag == 'terminalStage':
+                        jobstatus = jobrchild.text
+                        sys.stdout.write("job url: %s status terminalStage: %s\n" % (joburi,jobstatus))
+                        ldeluri.append(joburi)
+
+    # get information for a single job, print out raw XML, need to set joburi according to above list
+    # delete an old job, need to set joburi
+    for joburi in ldeluri:
+      if debug: print('deleting old job with joburi = ',joburi)
+      #joburi = 'https://nsgr.sdsc.edu:8443/cipresrest/v1/job/kenneth/NGBW-JOB-NEURON73_TG-220F7B3C7EE84BC3ADD87346E933ED5E'
+      r = requests.get(joburi, headers= headers, auth=(CRA_USER, PASSWORD))
+      #print(r.text)
+      r = requests.delete(joburi, auth=(CRA_USER, PASSWORD), headers=headers)
+      if debug: sys.stderr.write("%s\n" % r.text)
+
+    if not procoutputtar('output.tar.gz'):
+      print('runjobNSGR ERR: could not extract simulation output data.')
+      return False
+
+    return True
+
+  except:
+    print('runjobNSGR unhandled exception!')
+    return False
+
