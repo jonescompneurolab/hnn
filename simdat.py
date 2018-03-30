@@ -235,9 +235,9 @@ class SIMCanvas (FigureCanvas):
 
   def getNPyr (self):
     try:
-      x = quickgetprm(self.paramf,'N_pyr_x',float)
-      y = quickgetprm(self.paramf,'N_pyr_y',float)
-      if type(x)==float and type(y)==float:
+      x = quickgetprm(self.paramf,'N_pyr_x',int)
+      y = quickgetprm(self.paramf,'N_pyr_y',int)
+      if type(x)==int and type(y)==int:
         return int(x * y * 2)
     except:
       return 0
@@ -434,6 +434,7 @@ class SIMCanvas (FigureCanvas):
 
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
+
       if NEstPyr > 0:
         ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells')
       else:
