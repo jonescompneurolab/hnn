@@ -47,11 +47,11 @@ def createpayload (paramf, ntrial, tstop):
   return payload
 
 #
-def prepinputzip (fout='test.zip'):
+def prepinputzip (fout='inputfile.zip'):
   """ prepares input zip file for NSGR; file contains all py,mod,param,cfg
   files needed to run the simulation """
   try:
-    if debug: print('Preparing NSGR input zip file...',zippath)
+    if debug: print('Preparing NSGR input zip file...',fout)
     fp = zipfile.ZipFile(fout, "w")
     lglob = ['*.py','mod/*.mod','*.cfg','param/*.param','res/*.png','Makefile']
     for glb in lglob:
