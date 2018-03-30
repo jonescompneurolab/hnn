@@ -269,3 +269,11 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     print('runjobNSGR unhandled exception!')
     return False
 
+if __name__ == '__main__':
+  if debug: print(sys.argv)
+  if len(sys.argv) < 4:
+    print('usage: python nsgr.py paramf ntrial tstop')
+  else:
+    print(sys.argv)
+    paramf = sys.argv[1].split(os.path.sep)[-1]
+    runjobNSGR(paramf, int(sys.argv[2]), float(sys.argv[3]))
