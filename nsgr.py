@@ -101,6 +101,15 @@ def procoutputtar (fname='output.tar.gz'):
     print('procoutputtar ERR: Could not extract contents of ',fname)
     return False
 
+#
+def cleanup (zippath='inputfile.zip'):
+  # cleanup the temporary NSGR files
+  try:
+    l = ['output.tar.gz', zippath, 'STDERR', 'STDOUT', 'scheduler_stdout.txt', 'scheduler_stderr.txt']
+    for f in l: os.unlink(f)
+  except:
+    print('Could not cleanup temp files.')
+
 def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
   """ run a simulation job on NSG using Restful interface; first prepares input zip
   file, then submits job and waits for it to finish, finally downloads simulation output
@@ -251,6 +260,8 @@ def runjobNSGR (paramf='default.param', ntrial=1, tstop=710.0):
     if not procoutputtar('output.tar.gz'):
       print('runjobNSGR ERR: could not extract simulation output data.')
       return False
+
+    if not debug: cleanup()
 
     return True
 
