@@ -1218,9 +1218,80 @@ class VisnetDialog (QDialog):
 
     self.setWindowTitle('Visualize Model')
 
-# base widget for specifying params (contains buttons to create other widgets
-class BaseParamDialog (QDialog):
+class SchematicDialog (QDialog):
+  # class for holding model schematics (and parameter shortcuts)
+  def __init__ (self, parent):
+    super(SchematicDialog, self).__init__(parent)
+    self.initUI()
 
+  def initUI (self):
+
+    self.setWindowTitle('HNN Model Schematics')
+    QToolTip.setFont(QFont('SansSerif', 10))        
+
+    self.grid = grid = QGridLayout()
+    grid.setSpacing(10)
+
+    gRow = 0
+
+    self.locbtn = QPushButton('Local Network'+os.linesep+'Connections',self)
+    self.locbtn.setIcon(QIcon(lookupresource('connfig')))
+    self.locbtn.clicked.connect(self.parent().shownetparamwin)
+    self.grid.addWidget(self.locbtn,gRow,0,1,1)
+
+    self.proxbtn = QPushButton('Proximal Drive'+os.linesep+'Thalamus',self)
+    self.proxbtn.setIcon(QIcon(lookupresource('proxfig')))
+    self.proxbtn.clicked.connect(self.parent().showproxparamwin)
+    self.grid.addWidget(self.proxbtn,gRow,1,1,1)
+
+    self.distbtn = QPushButton('Distal Drive NonLemniscal'+os.linesep+'Thal./Cortical Feedback',self)
+    self.distbtn.setIcon(QIcon(lookupresource('distfig')))
+    self.distbtn.clicked.connect(self.parent().showdistparamwin)
+    self.grid.addWidget(self.distbtn,gRow,2,1,1)
+
+    self.netbtn = QPushButton('Model Visualization',self)
+    self.netbtn.setIcon(QIcon(lookupresource('netfig')))
+    self.netbtn.clicked.connect(self.parent().showvisnet)
+    self.grid.addWidget(self.netbtn,gRow,3,1,1)
+
+    gRow = 1
+
+    # for schematic dialog box
+    self.pixConn = QPixmap(lookupresource('connfig'))
+    self.pixConnlbl = ClickLabel(self)
+    self.pixConnlbl.setScaledContents(True)
+    #self.pixConnlbl.resize(self.pixConnlbl.size())
+    self.pixConnlbl.setPixmap(self.pixConn)    
+    # self.pixConnlbl.clicked.connect(self.shownetparamwin)
+    self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
+
+    self.pixProx = QPixmap(lookupresource('proxfig'))
+    self.pixProxlbl = ClickLabel(self)
+    self.pixProxlbl.setScaledContents(True)
+    self.pixProxlbl.setPixmap(self.pixProx)
+    # self.pixProxlbl.clicked.connect(self.showproxparamwin)
+    self.grid.addWidget(self.pixProxlbl,gRow,1,1,1)
+
+    self.pixDist = QPixmap(lookupresource('distfig'))
+    self.pixDistlbl = ClickLabel(self)
+    self.pixDistlbl.setScaledContents(True)
+    self.pixDistlbl.setPixmap(self.pixDist)
+    # self.pixDistlbl.clicked.connect(self.showdistparamwin)
+    self.grid.addWidget(self.pixDistlbl,gRow,2,1,1)
+
+    self.pixNet = QPixmap(lookupresource('netfig'))
+    self.pixNetlbl = ClickLabel(self)
+    self.pixNetlbl.setScaledContents(True)
+    self.pixNetlbl.setPixmap(self.pixNet)
+    # self.pixNetlbl.clicked.connect(self.showvisnet)
+    self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
+
+    self.setLayout(grid)
+
+    #self.show()
+
+class BaseParamDialog (QDialog):
+  # base widget for specifying params (contains buttons to create other widgets
   def __init__ (self, parent):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
@@ -1458,6 +1529,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.runthread = None
     self.dextdata = OrderedDict() # external data
+    self.schemwin = SchematicDialog(self)
     self.initUI()
     self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
@@ -1655,6 +1727,10 @@ class HNNGUI (QMainWindow):
     viewMenu.addAction(viewAvgDplAction)
     viewMenu.addSeparator()
 
+    viewSchemAction = QAction('View Model Schematics',self)
+    viewSchemAction.setStatusTip('View Model Schematics')
+    viewSchemAction.triggered.connect(self.showschematics)
+    viewMenu.addAction(viewSchemAction)
     viewNetAction = QAction('View Local Network (3D)',self)
     viewNetAction.setStatusTip('View Local Network Model (3D)')
     viewNetAction.triggered.connect(self.showvisnet)
@@ -1709,6 +1785,7 @@ class HNNGUI (QMainWindow):
     #self.baseparamwin.evparamwin.show()
     #self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
   def showvisnet (self): self.visnetwin.show() 
+  def showschematics (self): self.schemwin.show()
 
   def addParamImageButtons (self,gRow):
 
@@ -1734,6 +1811,9 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
+    return
+
+    # for schematic dialog box
     self.pixConn = QPixmap(lookupresource('connfig'))
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setScaledContents(True)
@@ -1802,6 +1882,8 @@ class HNNGUI (QMainWindow):
     widget = QWidget(self)
     widget.setLayout(grid)
     self.setCentralWidget(widget);
+
+    self.showschematics() # so it's underneat main window
 
     self.show()
 
