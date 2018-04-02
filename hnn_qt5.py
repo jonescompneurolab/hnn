@@ -64,6 +64,25 @@ class ParamSignal (QObject):
 class CanvSignal (QObject):
   csig = pyqtSignal(bool)
 
+def bringwintobot (win):
+  #win.show()
+  #win.lower()
+  win.hide()
+
+def bringwintotop (win):
+  # bring a pyqt5 window to the top (parents still stay behind children)
+  # based on examples from https://www.programcreek.com/python/example/101663/PyQt5.QtCore.Qt.WindowActive
+  win.show()
+  #win.setWindowState(win.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
+  #win.raise_()
+  #win.showNormal()
+  win.activateWindow()
+  #win.setWindowState((win.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
+  #win.activateWindow()
+  #win.raise_()
+  #win.show() 
+
+
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
   def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
@@ -454,11 +473,11 @@ class EvokedOrRhythmicDialog (QDialog):
     self.setWindowTitle("Pick Input Type")     
 
   def showevokedwin (self):
-    self.evwin.show()
+    bringwintotop(self.evwin)
     self.hide()
 
   def showrhythmicwin (self):
-    self.rhythwin.show()
+    bringwintotop(self.rhythwin)
     self.hide()
 
   def addHideButton (self):
@@ -1288,8 +1307,6 @@ class SchematicDialog (QDialog):
 
     self.setLayout(grid)
 
-    #self.show()
-
 class BaseParamDialog (QDialog):
   # base widget for specifying params (contains buttons to create other widgets
   def __init__ (self, parent):
@@ -1326,15 +1343,15 @@ class BaseParamDialog (QDialog):
     except:
       print('WARNING: could not read dialog settings.')
 
-  def setrunparam (self): self.runparamwin.show()
-  def setcellparam (self): self.cellparamwin.show()
-  def setnetparam (self): self.netparamwin.show()
-  def setsyngainparam (self): self.syngainparamwin.show()
-  def setproxparam (self): self.proxparamwin.show()
-  def setdistparam (self): self.distparamwin.show()
-  def setevparam (self): self.evparamwin.show()
-  def setpoisparam (self): self.poisparamwin.show()
-  def settonicparam (self): self.tonicparamwin.show()
+  def setrunparam (self): bringwintotop(self.runparamwin)
+  def setcellparam (self): bringwintotop(self.cellparamwin)
+  def setnetparam (self): bringwintotop(self.netparamwin)
+  def setsyngainparam (self): bringwintotop(self.syngainparamwin)
+  def setproxparam (self): bringwintotop(self.proxparamwin)
+  def setdistparam (self): bringwintotop(self.distparamwin)
+  def setevparam (self): bringwintotop(self.evparamwin)
+  def setpoisparam (self): bringwintotop(self.poisparamwin)
+  def settonicparam (self): bringwintotop(self.tonicparamwin)
 
   def initUI (self):
 
@@ -1508,7 +1525,7 @@ class WaitSimDialog (QDialog):
     self.layout.addWidget(self.qtxt)
 
     self.stopbtn = stopbtn = QPushButton('Stop All Simulations', self)
-    stopbtn.setToolTip('Set parameters')
+    stopbtn.setToolTip('Stop All Simulations')
     stopbtn.resize(stopbtn.sizeHint())
     stopbtn.clicked.connect(self.stopsim)
     self.layout.addWidget(stopbtn)
@@ -1582,13 +1599,14 @@ class HNNGUI (QMainWindow):
 
   def setparams (self):
     if self.baseparamwin:
-      self.baseparamwin.show()
+      for win in self.baseparamwin.lsubwin: bringwintobot(win)
+      bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
     QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://bitbucket.org/samnemo/hnn"+os.linesep+"2017.")
 
   def showHelpDialog (self):
-    self.helpwin.show()
+    bringwintotop(self.helpwin)
 
   def showSomaVPlot (self): 
     global basedir
@@ -1634,7 +1652,7 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking    
 
   def showwaitsimwin (self):
-    self.waitsimwin.show()
+    bringwintotop(self.waitsimwin)
 
   def togAvgDpl (self):
     conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
@@ -1752,7 +1770,7 @@ class HNNGUI (QMainWindow):
 
   def addButtons (self, gRow):
     self.pbtn = pbtn = QPushButton('Set Parameters', self)
-    pbtn.setToolTip('Set parameters')
+    pbtn.setToolTip('Set Parameters')
     pbtn.resize(pbtn.sizeHint())
     pbtn.clicked.connect(self.setparams)
     self.grid.addWidget(self.pbtn, gRow, 0, 1, 1)
@@ -1764,7 +1782,7 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.pfbtn, gRow, 1, 1, 1)
 
     self.btnsim = btn = QPushButton('Run Simulation', self)
-    btn.setToolTip('Run simulation')
+    btn.setToolTip('Run Simulation')
     btn.resize(btn.sizeHint())
     btn.clicked.connect(self.controlsim)
     self.grid.addWidget(self.btnsim, gRow, 2, 1, 1)
@@ -1773,19 +1791,12 @@ class HNNGUI (QMainWindow):
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
     self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
-
     
-  def shownetparamwin (self): self.baseparamwin.netparamwin.show()
-  def showdistparamwin (self):
-    self.erselectdistal.show()
-    #self.baseparamwin.evparamwin.show()
-    #self.baseparamwin.evparamwin.tabs.setCurrentIndex(1)
-  def showproxparamwin (self):
-    self.erselectprox.show()
-    #self.baseparamwin.evparamwin.show()
-    #self.baseparamwin.evparamwin.tabs.setCurrentIndex(0)
-  def showvisnet (self): self.visnetwin.show() 
-  def showschematics (self): self.schemwin.show()
+  def shownetparamwin (self): bringwintotop(self.baseparamwin.netparamwin)
+  def showdistparamwin (self): bringwintotop(self.erselectdistal)
+  def showproxparamwin (self): bringwintotop(self.erselectprox)
+  def showvisnet (self): bringwintotop(self.visnetwin)
+  def showschematics (self): bringwintotop(self.schemwin)
 
   def addParamImageButtons (self,gRow):
 
@@ -1883,7 +1894,7 @@ class HNNGUI (QMainWindow):
     widget.setLayout(grid)
     self.setCentralWidget(widget);
 
-    self.showschematics() # so it's underneat main window
+    self.schemwin.show() # so it's underneath main window
 
     self.show()
 
@@ -1978,7 +1989,7 @@ class HNNGUI (QMainWindow):
     # so we enable that button
     self.btnsim.setText("Stop Optimization") 
     self.qbtn.setEnabled(False)
-    self.waitsimwin.show()    
+    bringwintotop(self.waitsimwin)
 
   def startsim (self, ntrial, ncore, onNSG=False):
 
@@ -2006,7 +2017,7 @@ class HNNGUI (QMainWindow):
     # self.btn_start.setEnabled(False)
     self.qbtn.setEnabled(False)
 
-    self.waitsimwin.show()
+    bringwintotop(self.waitsimwin)
 
   def done (self):
     if debug: print('done')
