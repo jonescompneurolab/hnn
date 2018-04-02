@@ -50,19 +50,21 @@ def getinputfiles (paramf):
   return dfile
 
 def updatedat (paramf):
+  # update data dictionary (ddat) from the param file
   if debug: print('paramf:',paramf)
   try:
     getinputfiles(paramf)
-    #print('dfile:',dfile)
+    for k in ['dpl','spk']:
+      if not os.path.isfile(dfile[k]): return False
     ddat['dpl'] = np.loadtxt(dfile['dpl']);
-    if os.path.isfile(dfile['spec']):
-      ddat['spec'] = np.load(dfile['spec'])
-    else:
-      ddat['spec'] = None
+    if os.path.isfile(dfile['spec']): ddat['spec'] = np.load(dfile['spec'])
+    else: ddat['spec'] = None
     ddat['spk'] = np.loadtxt(dfile['spk']); 
     ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+    return True
   except:
     print('updatedat ERR: exception in getting input files. paramf:',paramf)
+    return False
 
 def getscalefctr (paramf):
   try:
@@ -377,7 +379,7 @@ class SIMCanvas (FigureCanvas):
 
   def plotsimdat (self):
 
-    updatedat(self.paramf)
+    if not updatedat(self.paramf): return # if no data from sim, or data load problem return
 
     self.clearaxes()
     plt.close(self.figure); 

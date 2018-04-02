@@ -43,7 +43,7 @@ def usingOngoingInputs (d, lty = ['_prox', '_dist']):
                   'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
                   'weight_inh_ampa','weight_inh_nmda']:
           if float(d[dpref[postfix]+k])>0.:
-            print('usingOngoingInputs:',d[dpref[postfix]+k])
+            #print('usingOngoingInputs:',d[dpref[postfix]+k])
             return True
   except: 
     return False
