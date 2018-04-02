@@ -108,20 +108,19 @@ def getdspk (fn):
       dhist[ty] = dhist[ty][0]
   return dspk,haveinputs,dhist
 
-def drawhist (dhist,ax):
-  ax2 = ax.twinx()
+def drawhist (dhist,fig,G):
+  ax = fig.add_subplot(G[-4:-1,:])
   fctr = 1.0
-  if ntrial > 0:
-    fctr = 1.0 / ntrial
+  if ntrial > 0: fctr = 1.0 / ntrial
   for ty in dhist.keys():
-    ax2.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
-  ax2.set_xlim((0,tstop))
-  ax2.set_ylabel('Cell Spikes')
-  return ax2
+    ax.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
+  ax.set_xlim((0,tstop))
+  ax.set_ylabel('Cell Spikes')
+  return ax
 
 invertedax = False
 
-def drawrast (dspk, fig, G, sz=8, ltextra=''):
+def drawrast (dspk, fig, G, sz=8):
   global invertedax
   lax = []
   lk = ['Cell']
@@ -159,7 +158,10 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
 
     else: # local circuit neuron spiking
 
-      ax = fig.add_subplot(G[row:-1,:])
+      endrow = -1
+      if bDrawHist: endrow = -4
+
+      ax = fig.add_subplot(G[row:endrow,:])
       lax.append(ax)
 
       ax.scatter(dspk[k][0],dspk[k][1],c=dspk[k][2],s=sz**2) 
@@ -168,17 +170,10 @@ def drawrast (dspk, fig, G, sz=8, ltextra=''):
       green_patch = mpatches.Patch(color='green', label='L2/3 Pyr')
       red_patch = mpatches.Patch(color='red', label='L5 Pyr')
       blue_patch = mpatches.Patch(color='blue', label='L5 Basket')
-      ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
+      ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch],loc='best')
       ax.set_ylim((-1,ncell+1))
       ax.invert_yaxis()
 
-  for ax in lax: 
-    ax.set_facecolor('k')
-    ax.grid(True)
-    if tstop != -1: ax.set_xlim((0,tstop))
-
-  lax[0].set_title(ltextra)
-  lax[-1].set_xlabel('Time (ms)');
   return lax
 
 class SpikeCanvas (FigureCanvas):
@@ -191,7 +186,7 @@ class SpikeCanvas (FigureCanvas):
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
     self.invertedhistax = False
-    self.G = gridspec.GridSpec(12,1)
+    self.G = gridspec.GridSpec(16,1)
     self.plot()
 
   def clearaxes (self):
@@ -235,10 +230,19 @@ class SpikeCanvas (FigureCanvas):
     dhist = alldat[idx]['dhist']
     extinputs = alldat[idx]['extinputs']
 
-    if idx == 0: self.lax = drawrast(dspk,self.figure, self.G, 5, ltextra='All Trials')
-    else: self.lax=drawrast(dspk,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+    self.lax = drawrast(dspk,self.figure, self.G, 5)
 
-    if bDrawHist: self.lax.append(drawhist(dhist,self.lax[-1]))
+    if bDrawHist: self.lax.append(drawhist(dhist,self.figure,self.G))
+
+    for ax in self.lax: 
+      ax.set_facecolor('k')
+      ax.grid(True)
+      if tstop != -1: ax.set_xlim((0,tstop))
+
+    if idx == 0: self.lax[0].set_title('All Trials')
+    else: self.lax[0].set_title('Trial '+str(self.index))
+
+    self.lax[-1].set_xlabel('Time (ms)');
 
     self.figure.subplots_adjust(bottom=0.0, left=0.06, right=1.0, top=0.97, wspace=0.1, hspace=0.09)
 
