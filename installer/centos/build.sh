@@ -1,7 +1,10 @@
 # start with this since it gets input needed
 
 # HNN repo from bitbucket
-git clone https://bitbucket.org/samnemo/hnn.git
+#git clone https://bitbucket.org/samnemo/hnn.git# old repo
+
+# HNN repo from github - moved to github on April 8, 2018
+git clone https://github.com/jonescompneurolab/hnn.git
 
 wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 sudo rpm -i epel-release-latest-7.noarch.rpm

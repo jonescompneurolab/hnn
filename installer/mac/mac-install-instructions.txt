@@ -48,10 +48,9 @@ ls
  set PYTHONHOME="/Applications/anaconda"
  set NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
 
+# next type the following to clone HNN's github repository (contains model/gui source-code)
+git clone https://github.com/jonescompneurolab/hnn.git
 
-# next type the following
-git clone https://bitbucket.org/samnemo/hnn
-# the above will prompt for your bitbucket username/password
 
 # the following command will "compile" HNN's biophysical model
 cd hnn

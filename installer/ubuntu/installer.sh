@@ -1,7 +1,10 @@
 sudo apt install -y git
 
 # HNN repo from bitbucket
-git clone https://bitbucket.org/samnemo/hnn.git
+#git clone https://bitbucket.org/samnemo/hnn.git# old repo location
+
+# HNN repo from github - moved to github on April 8, 2018
+git clone https://github.com/jonescompneurolab/hnn.git
 
 # packages neded for NEURON and graphics
 sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 

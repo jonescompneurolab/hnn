@@ -10,8 +10,8 @@
 
 # get a terminal: press the windows key and the "r" simultaneously, type "cmd" (without the quotes) then enter
 
-# enter the following on the terminal; it'll prompt you for your bitbucket login
-git clone https://bitbucket.org/samnemo/hnn
+# enter the following on the terminal to clone HNN's github repository (contains model/gui source-code)
+git clone https://github.com/jonescompneurolab/hnn.git
 
 # on your desktop, you should have a NEURON 7.x x86_64 folder, open that, then double clcik on mknrndll
 # select "Choose directory"
