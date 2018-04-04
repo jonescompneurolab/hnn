@@ -12,11 +12,9 @@ localization software, so researchers can compute MEG/EEG source estimates and t
 the circuit origin of their data in one software package. Our goal is to design HNN to be useful
 to researchers with no formal computational neural modeling or coding experience.
 
-We also here describe the use of HNN in studying the circuit-level origin of some of the most
-commonly measured MEG/EEG and ECoG signal: event related potentials (ERPs) and low frequency
-rhythms (alpha/beta/gamma).
-
-For more information visit http://hnn.brown.edu
+For more information visit http://hnn.brown.edu There, we describe the use of HNN in studying the
+circuit-level origin of some of the most commonly measured MEG/EEG and ECoG signal: event related
+potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 
 For questions/comments/feedback contact:
  samuel_neymotin@brown.edu 
