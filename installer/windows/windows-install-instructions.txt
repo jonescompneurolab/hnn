@@ -29,7 +29,8 @@ git clone https://github.com/jonescompneurolab/hnn.git
  then navigate to the hnn directory; e.g. if the instructions above were followed exactly, it's probably in C:/Users/YOURUSERNAME/hnn/mod where YOURUSERNAME represents your Windows username
  then select mod, then "Make nrnmech.dll"
 
-9. return to the terminal window, and enter:
+9. return to the terminal window, and enter the following two commands:
+cd hnn
 copy mod\nrnmech.dll .
 
 10. run HNN:
