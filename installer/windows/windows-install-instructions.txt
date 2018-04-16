@@ -2,7 +2,7 @@
 
 # go to https://neuron.yale.edu/neuron/download/precompiled-installers#mswin and download and install NEURON. NOTE: be sure to select the "Set DOS environment" checkbox during the install)
 
-# go to https://msdn.microsoft.com/en-us/library/bb524831.aspx download and install Microsoft MPI (current version: MS-MPI v8.1... when asked MSMpiSetup.exe)
+# go to https://msdn.microsoft.com/en-us/library/bb524831.aspx download and install Microsoft MPI (current version: MS-MPI v9.0.1... when asked MSMpiSetup.exe)
 
 # open the control panel, search for "environment" then select "Edit the system environment variables", then on the next dialog, select "Environment Variables..." then "New..." in the System variables... for "Variable name" enter "NRN_PYLIB" and for Variable value "c:\ProgramData\Anaconda3\python36.dll" (if Anaconda was installed on for the user instead of system wide, do a search to find the true path for python36.dll instead). Select apply, and close that sequence of dialog boxes.
 
