@@ -1,25 +1,36 @@
-# go to https://www.continuum.io/downloads and download and install the Python 3.x version (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website; just say "no thanks") (NOTE: Select the "Add Anaconda to the system PATH environment variable" option) (NOTE: a later step assumes that this is installed system-wide; if not, you'll need to adapt the instructions below to the true location of python36.dll)
+1. go to https://www.continuum.io/downloads and download and install the Python 3.x version (currently Python 3.6) 
+(NOTE: you do NOT need to enter your email on the website; just say "no thanks") 
+(NOTE: Select the "Add Anaconda to the system PATH environment variable" option)
+(NOTE: a later step assumes that this is installed system-wide; if not, you'll need to adapt the
+instructions below to the true location of python36.dll)
 
-# go to https://neuron.yale.edu/neuron/download/precompiled-installers#mswin and download and install NEURON. NOTE: be sure to select the "Set DOS environment" checkbox during the install)
+2. go to https://neuron.yale.edu/neuron/download/precompiled-installers#mswin and download and install NEURON. 
+NOTE: be sure to select the "Set DOS environment" checkbox during the install)
 
-# go to https://msdn.microsoft.com/en-us/library/bb524831.aspx download and install Microsoft MPI (current version: MS-MPI v9.0.1... when asked MSMpiSetup.exe)
+3. go to https://msdn.microsoft.com/en-us/library/bb524831.aspx download and install Microsoft MPI 
+(current version: MS-MPI v9.0.1... when asked on the next screen, select MSMpiSetup.exe)
 
-# open the control panel, search for "environment" then select "Edit the system environment variables", then on the next dialog, select "Environment Variables..." then "New..." in the System variables... for "Variable name" enter "NRN_PYLIB" and for Variable value "c:\ProgramData\Anaconda3\python36.dll" (if Anaconda was installed on for the user instead of system wide, do a search to find the true path for python36.dll instead). Select apply, and close that sequence of dialog boxes.
+4. open the control panel, search for "environment" then select "Edit the system environment variables", 
+then on the next dialog, select "Environment Variables..." then "New..." in the System variables... for
+"Variable name" enter "NRN_PYLIB" and for Variable value "c:\ProgramData\Anaconda3\python36.dll" 
+(if Anaconda was installed only for the user instead of system wide, do a search to find the true path for 
+python36.dll instead). Select apply, and close that sequence of dialog boxes.
 
-# go to http://git-scm.com/download/win and download and install git (there are lots of options during install; just select the defaults)
+5. go to http://git-scm.com/download/win and download and install git
+(there are lots of options during install; just select the defaults)
 
-# get a terminal: press the windows key and the "r" simultaneously, type "cmd" (without the quotes) then enter
+6. get a terminal: press the windows key and the "r" simultaneously, type "cmd" (without the quotes) then enter
 
-# enter the following on the terminal to clone HNN's github repository (contains model/gui source-code)
+7. enter the following on the terminal to clone HNN's github repository (contains model/gui source-code)
 git clone https://github.com/jonescompneurolab/hnn.git
 
-# on your desktop, you should have a NEURON 7.x x86_64 folder, open that, then double clcik on mknrndll
-# select "Choose directory"
-# navigate to the hnn directory; e.g. if the instructions above were followed exactly, it's probably in C:/Users/YOURUSERNAME/hnn/mod where YOURUSERNAME represents your Windows username
-# select mod, then "Make nrnmech.dll"
+8. on your desktop, you should have a NEURON 7.x x86_64 folder, open that, then double clcik on mknrndll
+ select "Choose directory"
+ then navigate to the hnn directory; e.g. if the instructions above were followed exactly, it's probably in C:/Users/YOURUSERNAME/hnn/mod where YOURUSERNAME represents your Windows username
+ then select mod, then "Make nrnmech.dll"
 
-# return to the terminal window, and enter:
+9. return to the terminal window, and enter:
 copy mod\nrnmech.dll .
 
-# run HNN:
+10. run HNN:
 python hnn.py hnn.cfg
