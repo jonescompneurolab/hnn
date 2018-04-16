@@ -1603,7 +1603,7 @@ class HNNGUI (QMainWindow):
       bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
-    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://bitbucket.org/samnemo/hnn"+os.linesep+"2017.")
+    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://github.com/jonescompneurolab/hnn"+os.linesep+"2017-2018")
 
   def showHelpDialog (self):
     bringwintotop(self.helpwin)
