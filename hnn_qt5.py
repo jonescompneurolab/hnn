@@ -153,7 +153,7 @@ class RunSimThread (QThread):
       cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
     simdat.dfile = getinputfiles(paramf)
-    cmdargs = shlex.split(cmd)
+    cmdargs = shlex.split(cmd,posix="win" not in sys.platform)
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
