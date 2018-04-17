@@ -146,14 +146,14 @@ class RunSimThread (QThread):
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
-    print('self.onNSG:',self.onNSG)
+    if debug: print('self.onNSG:',self.onNSG)
     if self.onNSG:
       cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
     else:
       cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     maxruntime = 1200 # 20 minutes - will allow terminating sim later
     simdat.dfile = getinputfiles(paramf)
-    cmdargs = shlex.split(cmd,posix="win" not in sys.platform)
+    cmdargs = shlex.split(cmd,posix="win" not in sys.platform) # https://github.com/maebert/jrnl/issues/348
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
@@ -190,7 +190,7 @@ class RunSimThread (QThread):
       except: # no output to read yet
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
     else:
-      print('self.killproc')
+      if debug: print('self.killproc')
       self.killproc()
     print(''); self.updatewaitsimwin('')
   
@@ -1557,9 +1557,9 @@ class HNNGUI (QMainWindow):
     
   def selParamFileDialog (self):
     global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file', 'param')
+    fn = QFileDialog.getOpenFileName(self, 'Open file', 'param') # uses forward slash, even on Windows OS
     if fn[0]:
-      paramf = fn[0]
+      paramf = os.path.abspath(fn[0]) # to make sure have right path separates on Windows OS
       try:
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
@@ -1589,7 +1589,7 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
-    if fn[0]: self.loadDataFile(fn[0])
+    if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
     import simdat
