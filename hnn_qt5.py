@@ -285,9 +285,9 @@ class DictDialog (QDialog):
 
   def initd (self): pass # implemented in subclass
 
-  def getval (self,ksearch):
-    if ksearch in self.dqline.keys():
-      return self.dqline[ksearch].text().strip()
+  def getval (self,k):
+    if k in self.dqline.keys():
+      return self.dqline[k].text().strip()
 
   def lines2val (self,ksearch,val):
     for k in self.dqline.keys():
