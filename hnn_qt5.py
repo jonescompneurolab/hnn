@@ -1186,12 +1186,12 @@ class VisnetDialog (QDialog):
     super(VisnetDialog, self).__init__(parent)
     self.initUI()
 
-  def showcells3D (self): Popen(['python3', 'visnet.py', 'cells', paramf]) # nonblocking
-  def showEconn (self): Popen(['python3', 'visnet.py', 'Econn', paramf]) # nonblocking
-  def showIconn (self): Popen(['python3', 'visnet.py', 'Iconn', paramf]) # nonblocking
+  def showcells3D (self): Popen(['python', 'visnet.py', 'cells', paramf]) # nonblocking
+  def showEconn (self): Popen(['python', 'visnet.py', 'Econn', paramf]) # nonblocking
+  def showIconn (self): Popen(['python', 'visnet.py', 'Iconn', paramf]) # nonblocking
 
   def runvisnet (self):
-    lcmd = ['python3', 'visnet.py']
+    lcmd = ['python', 'visnet.py']
     if self.chkcells.isChecked(): lcmd.append('cells')
     if self.chkE.isChecked(): lcmd.append('Econn')
     if self.chkI.isChecked(): lcmd.append('Iconn')
@@ -1611,35 +1611,35 @@ class HNNGUI (QMainWindow):
   def showSomaVPlot (self): 
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'visvolt.py',paramf]
+    lcmd = ['python', 'visvolt.py',paramf]
     if debug: print('visvolt cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'vispsd.py',paramf]
+    lcmd = ['python', 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showLFPPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'vislfp.py',paramf]
+    lcmd = ['python', 'vislfp.py',paramf]
     if debug: print('vislfp cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'visspec.py',paramf]
+    lcmd = ['python', 'visspec.py',paramf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showRasterPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+    lcmd = ['python', 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -1647,7 +1647,7 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python3', 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+    lcmd = ['python', 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
