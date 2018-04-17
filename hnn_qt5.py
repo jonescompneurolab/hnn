@@ -285,6 +285,11 @@ class DictDialog (QDialog):
 
   def initd (self): pass # implemented in subclass
 
+  def getval (self,ksearch):
+    for k in self.dqline.keys():
+      if k == ksearch:
+        return self.dqline[k].text().strip()
+
   def lines2val (self,ksearch,val):
     for k in self.dqline.keys():
       if k.count(ksearch) > 0:
@@ -892,7 +897,7 @@ class RunParamDialog (DictDialog):
 
     self.drun = OrderedDict([('tstop', 250.), # simulation end time (ms)
                              ('dt', 0.025), # timestep
-                             ('celsius',6.3), # temperature
+                             ('celsius',37.0), # temperature
                              ('N_trials',1), # number of trials
                              ('threshold',0.0)]) # firing threshold
                              # cvode - not currently used by simulation
@@ -1609,11 +1614,20 @@ class HNNGUI (QMainWindow):
     bringwintotop(self.helpwin)
 
   def showSomaVPlot (self): 
-    global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'visvolt.py',paramf]
-    if debug: print('visvolt cmd:',lcmd)
-    Popen(lcmd) # nonblocking
+    global basedir, dfile
+    if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
+      smsg='In order to view somatic voltages you must first rerun the simulation with saving somatic voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Somatic Voltages, enter a 1 and then rerun the simulation.'
+      msg = QMessageBox()
+      msg.setIcon(QMessageBox.Information)
+      msg.setText(smsg)
+      msg.setWindowTitle('HNN - rerun simulation')
+      msg.setStandardButtons(QMessageBox.Ok)      
+      msg.exec_()
+    else:
+      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+      lcmd = ['python', 'visvolt.py',paramf]
+      if debug: print('visvolt cmd:',lcmd)
+      Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     global basedir
