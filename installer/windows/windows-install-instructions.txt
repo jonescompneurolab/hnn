@@ -33,5 +33,14 @@ git clone https://github.com/jonescompneurolab/hnn.git
 cd hnn
 copy mod\nrnmech.dll .
 
-10. run HNN:
+10. OPTIONAL/EXPERIMENTAL: If you want to run the 3D visualizations you need to install PyOpenGL and pyqtgraph with
+the following. First run the following two commands from the terminal window:
+ pip install PyOpenGL
+ pip install --upgrade PyOpenGL
+ then download and run installer for pyqtgraph using
+  http://www.pyqtgraph.org/downloads/0.10.0/pyqtgraph-0.10.0.win-amd64.exe (for 64 bit windows)
+  or
+  http://www.pyqtgraph.org/downloads/0.10.0/pyqtgraph-0.10.0.win32.exe (for 32 bit windows)
+
+11. Finally, to run HNN execute the following command from the terminal:
 python hnn.py hnn.cfg
