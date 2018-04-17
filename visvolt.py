@@ -69,10 +69,10 @@ def drawvolt (dvolt, fig, G, sz=8, ltextra=''):
     yoff += max(vsoma) - min(vsoma)
     dcnt[ty] += 1
             
-  white_patch = mpatches.Patch(color='white', label='L2Basket')
-  green_patch = mpatches.Patch(color='green', label='L2Pyr')
-  red_patch = mpatches.Patch(color='red', label='L5Pyr')
-  blue_patch = mpatches.Patch(color='blue', label='L5Basket')
+  white_patch = mpatches.Patch(color='white', label='L2/3 Basket')
+  green_patch = mpatches.Patch(color='green', label='L2/3 Pyr')
+  red_patch = mpatches.Patch(color='red', label='L5 Pyr')
+  blue_patch = mpatches.Patch(color='blue', label='L5 Basket')
   ax.legend(handles=[white_patch,green_patch,blue_patch,red_patch])
 
   #if not invertedax: 
