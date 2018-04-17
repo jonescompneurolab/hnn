@@ -230,7 +230,7 @@ class PSDViewGUI (DataViewGUI):
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]:
       try:
-        extdataf = fn[0] # data file
+        extdataf = os.path.abspath(fn[0]) # data file
         dat = np.loadtxt(extdataf)
         self.printStat('Loaded data in ' + extdataf + '. Extracting PSDs.')
         return extdataf,dat

@@ -227,7 +227,7 @@ class SpecViewGUI (DataViewGUI):
   def loadDisplayData (self, fname=None):
     if fname is None or fname is False:
       fname = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
-      fname = fname[0]
+      fname = os.path.abspath(fname[0])
     if not fname: return
     dat = loaddat(fname)
     self.dat = dat
