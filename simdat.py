@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtWidgets import QMenu, QSizePolicy, QInputDialog
+from PyQt5.QtWidgets import QMenu, QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
