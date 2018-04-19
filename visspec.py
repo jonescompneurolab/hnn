@@ -102,56 +102,12 @@ def loaddat (fname):
     return None
   return None
 
-def drawspec (dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
-  if len(lspec) == 0: return
-
-  plt.ion()
-
-  gdx = 211
-
-  ax = fig.add_subplot(gdx)
-  lax = [ax]
-  tvec = dat[:,0]
-  dt = tvec[1] - tvec[0]
-  tstop = tvec[-1]
-
-  if sdx == 0:
-    for i in range(1,dat.shape[1],1):
-      #print('sdx is 0',dat.shape,i)
-      ax.plot(tvec, dat[:,i],linewidth=1,color='gray')
-    ax.plot(tvec,avgdipole,linewidth=2,color='black')
-  else:
-    ax.plot(dat[:,0], dat[:,sdx],linewidth=2,color='gray')
-
-  ax.set_xlim(tvec[0],tvec[-1])
-  ax.set_ylabel('Dipole (nAm)')
-
-  gdx = 212
-
-  ax = fig.add_subplot(gdx)
-
-  #print('sdx:',sdx,avgspec.TFR.shape)
-
-  if sdx==0: ms = avgspec
-  else: ms = lspec[sdx-1]
-  #print('ms.TFR.shape:',ms.TFR.shape)
-
-  ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
-
-  ax.set_xlim(tvec[0],tvec[-1])
-  ax.set_xlabel('Time (ms)')
-  ax.set_ylabel('Frequency (Hz)');
-
-  lax.append(ax)
-
-  return lax
-
-
 class SpecCanvas (FigureCanvas):
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Spectrogram Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
+    self.gui = parent
     self.index = index
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
@@ -181,11 +137,55 @@ class SpecCanvas (FigureCanvas):
         except:
           o[0].set_visible(False)
       del self.lextdatobj
+
+  def drawspec (self, dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
+    if len(lspec) == 0: return
+
+    plt.ion()
+
+    gdx = 211
+
+    ax = fig.add_subplot(gdx)
+    lax = [ax]
+    tvec = dat[:,0]
+    dt = tvec[1] - tvec[0]
+    tstop = tvec[-1]
+
+    if sdx == 0:
+      for i in range(1,dat.shape[1],1):
+        #print('sdx is 0',dat.shape,i)
+        ax.plot(tvec, dat[:,i],linewidth=self.gui.linewidth,color='gray')
+      ax.plot(tvec,avgdipole,linewidth=self.gui.linewidth+1,color='black')
+    else:
+      ax.plot(dat[:,0], dat[:,sdx],linewidth=self.gui.linewidth+1,color='gray')
+
+    ax.set_xlim(tvec[0],tvec[-1])
+    ax.set_ylabel('Dipole (nAm)')
+
+    gdx = 212
+
+    ax = fig.add_subplot(gdx)
+
+    #print('sdx:',sdx,avgspec.TFR.shape)
+
+    if sdx==0: ms = avgspec
+    else: ms = lspec[sdx-1]
+    #print('ms.TFR.shape:',ms.TFR.shape)
+
+    ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+
+    ax.set_xlim(tvec[0],tvec[-1])
+    ax.set_xlabel('Time (ms)')
+    ax.set_ylabel('Frequency (Hz)');
+
+    lax.append(ax)
+
+    return lax
     
   def plot (self):
     ltextra = 'Trial '+str(self.index)
     if self.index == 0: ltextra = 'All Trials'
-    self.lax = drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra=ltextra)
+    self.lax = self.drawspec(self.dat, self.lextspec,self.index, self.avgdipole, self.avgspec, self.figure, self.G, ltextra=ltextra)
     self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98, top=0.97, wspace=0.1, hspace=0.09)
     self.draw()
 
