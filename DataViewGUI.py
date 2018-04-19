@@ -2,17 +2,25 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QCheckBox, QInputDialog
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from gutils import getmplDPI
+import matplotlib.pyplot as plt
+from conf import dconf
+
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 # GUI for viewing data from individual/all trials
 class DataViewGUI (QMainWindow):
   def __init__ (self, CanvasType, paramf, ntrial,title):
     super().__init__()        
+    self.fontsize = dconf['fontsize']
+    self.linewidth = plt.rcParams['lines.linewidth'] = 3
+    self.markersize = plt.rcParams['lines.markersize'] = 5
     self.CanvasType = CanvasType
     self.paramf = paramf
     self.ntrial = ntrial
@@ -29,6 +37,41 @@ class DataViewGUI (QMainWindow):
     self.fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
     self.fileMenu.addAction(exitAction)
+
+    viewMenu = menubar.addMenu('&View')
+    changeFontSizeAction = QAction('Change Font Size',self)
+    changeFontSizeAction.setStatusTip('Change Font Size.')
+    changeFontSizeAction.triggered.connect(self.changeFontSize)
+    viewMenu.addAction(changeFontSizeAction)
+    changeLineWidthAction = QAction('Change Line Width',self)
+    changeLineWidthAction.setStatusTip('Change Line Width.')
+    changeLineWidthAction.triggered.connect(self.changeLineWidth)
+    viewMenu.addAction(changeLineWidthAction)
+    changeMarkerSizeAction = QAction('Change Marker Size',self)
+    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
+    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
+    viewMenu.addAction(changeMarkerSizeAction)
+
+  def changeFontSize (self):
+    i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
+    if okPressed:
+      self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.initCanvas()
+      self.m.plot()
+
+  def changeLineWidth (self):
+    i, okPressed = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
+    if okPressed:
+      self.linewidth = plt.rcParams['lines.linewidth'] = i
+      self.initCanvas()
+      self.m.plot()
+
+  def changeMarkerSize (self):
+    i, okPressed = QInputDialog.getInt(self, "Set Marker Size","Font Size:", self.markersize, 1, 100, 1)
+    if okPressed:
+      self.markersize = plt.rcParams['lines.markersize'] = i
+      self.initCanvas()
+      self.m.plot()
 
   def printStat (self,s):
     print(s)

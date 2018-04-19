@@ -25,6 +25,7 @@ from specfn import MorletSpec
 from conf import dconf
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: dconf['fontsize'] = 10
 
 ntrial = 1; specpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -59,59 +60,12 @@ def extractpsd (dat, fmax=120.0):
     lpsd.append(np.mean(ms.TFR,axis=1))
   return ms.f, np.array(lpsd)
 
-def drawpsd (dspec, fig, G, ltextra=''):
-
-  lax = []
-
-  lkF = ['f_L2', 'f_L5', 'f_L2']
-  lkS = ['TFR_L2', 'TFR_L5', 'TFR']      
-
-  plt.ion()
-
-  gdx = 311
-
-  ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
-
-  yl = [1e9,-1e9]
-
-  for i in [0,1,2]:
-    ddat['avg'+str(i)] = avg = np.mean(dspec[lkS[i]],axis=1)
-    ddat['std'+str(i)] = std = np.std(dspec[lkS[i]],axis=1) / sqrt(dspec[lkS[i]].shape[1])
-    yl[0] = min(yl[0],np.amin(avg-std))
-    yl[1] = max(yl[1],np.amax(avg+std))
-
-  yl = tuple(yl)
-  xl = (dspec['f_L2'][0],dspec['f_L2'][-1])
-
-  for i,title in zip([0, 1, 2],ltitle):
-    ax = fig.add_subplot(gdx)
-    lax.append(ax)
-
-    if i == 2: ax.set_xlabel('Frequency (Hz)');
-
-    ax.plot(dspec[lkF[i]],np.mean(dspec[lkS[i]],axis=1),color='w',linewidth=4)
-    avg = ddat['avg'+str(i)]
-    std = ddat['std'+str(i)]
-    ax.plot(dspec[lkF[i]],avg-std,color='gray',linewidth=2)
-    ax.plot(dspec[lkF[i]],avg+std,color='gray',linewidth=2)
-
-    ax.set_ylim(yl)
-    ax.set_xlim(xl)
-
-    ax.set_facecolor('k')
-    ax.grid(True)
-    ax.set_title(title)
-    ax.set_ylabel(r'$nAm^2$')
-
-    gdx += 1
-  return lax
-
-
 class PSDCanvas (FigureCanvas):
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='PSD Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
+    self.gui = parent
     self.index = index
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
@@ -119,6 +73,54 @@ class PSDCanvas (FigureCanvas):
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
     self.plot()
+
+  def drawpsd (self, dspec, fig, G, ltextra=''):
+
+    lax = []
+
+    lkF = ['f_L2', 'f_L5', 'f_L2']
+    lkS = ['TFR_L2', 'TFR_L5', 'TFR']      
+
+    plt.ion()
+
+    gdx = 311
+
+    ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
+
+    yl = [1e9,-1e9]
+
+    for i in [0,1,2]:
+      ddat['avg'+str(i)] = avg = np.mean(dspec[lkS[i]],axis=1)
+      ddat['std'+str(i)] = std = np.std(dspec[lkS[i]],axis=1) / sqrt(dspec[lkS[i]].shape[1])
+      yl[0] = min(yl[0],np.amin(avg-std))
+      yl[1] = max(yl[1],np.amax(avg+std))
+
+    yl = tuple(yl)
+    xl = (dspec['f_L2'][0],dspec['f_L2'][-1])
+
+    for i,title in zip([0, 1, 2],ltitle):
+      ax = fig.add_subplot(gdx)
+      lax.append(ax)
+
+      if i == 2: ax.set_xlabel('Frequency (Hz)');
+
+      ax.plot(dspec[lkF[i]],np.mean(dspec[lkS[i]],axis=1),color='w',linewidth=self.gui.linewidth+2)
+      avg = ddat['avg'+str(i)]
+      std = ddat['std'+str(i)]
+      ax.plot(dspec[lkF[i]],avg-std,color='gray',linewidth=self.gui.linewidth)
+      ax.plot(dspec[lkF[i]],avg+std,color='gray',linewidth=self.gui.linewidth)
+
+      ax.set_ylim(yl)
+      ax.set_xlim(xl)
+
+      ax.set_facecolor('k')
+      ax.grid(True)
+      ax.set_title(title)
+      ax.set_ylabel(r'$nAm^2$')
+
+      gdx += 1
+    return lax
+
 
   def clearaxes (self):
     try:
@@ -158,9 +160,9 @@ class PSDCanvas (FigureCanvas):
       clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
       avg = np.mean(lpsd,axis=0)
       std = np.std(lpsd,axis=0) / sqrt(lpsd.shape[1])
-      self.lextdatobj.append(ax.plot(f,avg,color=clr,linewidth=2))
-      self.lextdatobj.append(ax.plot(f,avg-std,'--',color=clr,linewidth=1))
-      self.lextdatobj.append(ax.plot(f,avg+std,'--',color=clr,linewidth=1))
+      self.lextdatobj.append(ax.plot(f,avg,color=clr,linewidth=self.gui.linewidth+2))
+      self.lextdatobj.append(ax.plot(f,avg-std,'--',color=clr,linewidth=self.gui.linewidth))
+      self.lextdatobj.append(ax.plot(f,avg+std,'--',color=clr,linewidth=self.gui.linewidth))
       yl = ((min(yl[0],min(avg))),(max(yl[1],max(avg))))
       new_patch = mpatches.Patch(color=clr, label=fname.split(os.path.sep)[-1].split('.txt')[0])
       self.lpatch.append(new_patch)
@@ -172,12 +174,12 @@ class PSDCanvas (FigureCanvas):
     #self.clearaxes()
     #plt.close(self.figure)
     if self.index == 0:      
-      self.lax = drawpsd(ddat['spec'],self.figure, self.G, ltextra='All Trials')
+      self.lax = self.drawpsd(ddat['spec'],self.figure, self.G, ltextra='All Trials')
     else:
       specpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
       if 'spec'+str(self.index) not in ddat:
         ddat['spec'+str(self.index)] = np.load(specpath)
-      self.lax=drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));
+      self.lax=self.drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));
 
     self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98, top=0.97, wspace=0.1, hspace=0.09)
 

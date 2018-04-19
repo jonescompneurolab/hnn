@@ -25,6 +25,7 @@ from simdat import readdpltrials
 from conf import dconf
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: dconf['fontsize'] = 10
 
 tstop = -1; ntrial = 1; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -53,6 +54,7 @@ class DipoleCanvas (FigureCanvas):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
+    self.gui = parent
     self.index = index
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
@@ -99,15 +101,16 @@ class DipoleCanvas (FigureCanvas):
 
       if i == 1: ax.set_xlabel('Time (ms)');
 
-      lw = 2
-      if self.index != 0: lw = 5
+      lw = self.gui.linewidth
+      if self.index != 0: lw = self.gui.linewidth + 2
 
       if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for ddx,dpltrial in enumerate(ddat['dpltrials']):
           if self.index == 0 or (self.index > 0 and ddx == self.index-1):
             ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
 
-      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=5) # average dipole (across trials)
+      # average dipole (across trials)
+      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=self.gui.linewidth+2) 
 
       ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
       if tstop != -1: ax.set_xlim((0,tstop))

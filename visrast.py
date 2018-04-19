@@ -27,7 +27,7 @@ from gutils import getmplDPI
 plt.rcParams['lines.linewidth'] = 3
 rastmarksz = 5 # raster dot size
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: plt.rcParams['font.size'] = dconf['fontsize'] = 12
+else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -295,7 +295,6 @@ class SpikeGUI (QMainWindow):
   def changeFontSize (self):
     i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if okPressed:
-      print('Setting font size to', i)
       plt.rcParams['font.size'] = dconf['fontsize'] = i
       self.initCanvas()
       self.m.plot()
@@ -303,7 +302,6 @@ class SpikeGUI (QMainWindow):
   def changeLineWidth (self):
     i, okPressed = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
     if okPressed:
-      print('Setting line width to', i)
       plt.rcParams['lines.linewidth'] = i
       self.initCanvas()
       self.m.plot()
@@ -312,7 +310,6 @@ class SpikeGUI (QMainWindow):
     global rastmarksz
     i, okPressed = QInputDialog.getInt(self, "Set Marker Size","Font Size:", rastmarksz, 1, 100, 1)
     if okPressed:
-      print('Setting marker size to', i)
       rastmarksz = i
       self.initCanvas()
       self.m.plot()
