@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtWidgets import QMenu, QSizePolicy
+from PyQt5.QtWidgets import QMenu, QSizePolicy, QInputDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -16,6 +16,7 @@ from scipy import signal
 #plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 debug = dconf['debug']
 
@@ -119,6 +120,7 @@ class SIMCanvas (FigureCanvas):
     self.lextdatobj = []
     self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
     self.setParent(parent)
+    self.gui = parent
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
@@ -327,7 +329,7 @@ class SIMCanvas (FigureCanvas):
 
         for c in range(1,shp[1],1): 
           clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
-          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=4))
+          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=self.gui.linewidth+3))
           yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
           fx = int(shp[0] * float(c) / shp[1])
@@ -335,7 +337,7 @@ class SIMCanvas (FigureCanvas):
           if lerr:
             tx,ty=dat[fx,0],dat[fx,c]
             txt='RMSE:' + str(round(lerr[c-1],2))
-            self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontsize=15,fontweight='bold'))
+            self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
           self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
 
       ax.set_ylim(yl)
@@ -346,7 +348,7 @@ class SIMCanvas (FigureCanvas):
       if errtot:
         tx,ty=0,0
         txt='Avg. RMSE:' + str(round(errtot,2))
-        self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontsize=15,fontweight='bold')
+        self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontweight='bold')
 
       if not hassimdata: # need axis labels
         ax.set_xlabel('Time (ms)')
@@ -423,7 +425,7 @@ class SIMCanvas (FigureCanvas):
 
       if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
-          ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=1)
+          ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=self.gui.linewidth)
           yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
@@ -431,9 +433,10 @@ class SIMCanvas (FigureCanvas):
       #if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,15.0)      
 
       if conf.dconf['drawavgdpl'] or N_trials <= 1:
-        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=3) # this is the average dipole (across trials)
+        # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
-
+        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+2) 
+        
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
 

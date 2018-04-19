@@ -4,11 +4,12 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QTextEdit
+from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
 from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
 import multiprocessing
 from subprocess import Popen, PIPE, call
 import shlex
@@ -48,6 +49,9 @@ debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
 defncore = multiprocessing.cpu_count() # default number of cores
+
+if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 # for signaling
 class Communicate (QObject):    
@@ -1549,6 +1553,9 @@ class HNNGUI (QMainWindow):
     super().__init__()   
     self.runningsim = False
     self.runthread = None
+    self.fontsize = dconf['fontsize']
+    self.linewidth = plt.rcParams['lines.linewidth'] = 3
+    self.markersize = plt.rcParams['lines.markersize'] = 5
     self.dextdata = OrderedDict() # external data
     self.schemwin = SchematicDialog(self)
     self.initUI()
@@ -1558,6 +1565,29 @@ class HNNGUI (QMainWindow):
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     self.waitsimwin = WaitSimDialog(self)
+
+  def redraw (self):
+    self.m.plotsimdat()
+    self.m.draw()
+    self.m.plot()
+
+  def changeFontSize (self):
+    i, ok = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
+    if ok:
+      self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.redraw()
+
+  def changeLineWidth (self):
+    i, ok = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
+    if ok:
+      self.linewidth = plt.rcParams['lines.linewidth'] = i
+      self.redraw()
+
+  def changeMarkerSize (self):
+    i, ok = QInputDialog.getInt(self, "Set Marker Size","Font Size:", self.markersize, 1, 100, 1)
+    if ok:
+      self.markersize = plt.rcParams['lines.markersize'] = i
+      self.redraw()
     
   def selParamFileDialog (self):
     global paramf,dfile
@@ -1719,8 +1749,8 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
     fileMenu.addAction(exitAction)
-
-    # view menu - drawing/visualization
+    
+    # view menu - to view drawing/visualizations
     viewMenu = menubar.addMenu('&View')
     viewDipoleAction = QAction('View Simulation Dipoles',self)
     viewDipoleAction.setStatusTip('View Simulation Dipoles')
@@ -1752,12 +1782,6 @@ class HNNGUI (QMainWindow):
     viewMenu.addAction(viewSpecAction)
 
     viewMenu.addSeparator()
-    viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
-    viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
-    viewAvgDplAction.triggered.connect(self.togAvgDpl)
-    viewMenu.addAction(viewAvgDplAction)
-    viewMenu.addSeparator()
-
     viewSchemAction = QAction('View Model Schematics',self)
     viewSchemAction.setStatusTip('View Model Schematics')
     viewSchemAction.triggered.connect(self.showschematics)
@@ -1770,6 +1794,25 @@ class HNNGUI (QMainWindow):
     viewSimLogAction.setStatusTip('View Detailed Simulation Log')
     viewSimLogAction.triggered.connect(self.showwaitsimwin)
     viewMenu.addAction(viewSimLogAction)
+    viewMenu.addSeparator()
+
+    # part of view menu for changing drawing properties (line thickness, font size, toggle avg dipole drawing)
+    viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
+    viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
+    viewAvgDplAction.triggered.connect(self.togAvgDpl)
+    viewMenu.addAction(viewAvgDplAction)
+    changeFontSizeAction = QAction('Change Font Size',self)
+    changeFontSizeAction.setStatusTip('Change Font Size.')
+    changeFontSizeAction.triggered.connect(self.changeFontSize)
+    viewMenu.addAction(changeFontSizeAction)
+    changeLineWidthAction = QAction('Change Line Width',self)
+    changeLineWidthAction.setStatusTip('Change Line Width.')
+    changeLineWidthAction.triggered.connect(self.changeLineWidth)
+    viewMenu.addAction(changeLineWidthAction)
+    changeMarkerSizeAction = QAction('Change Marker Size',self)
+    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
+    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
+    viewMenu.addAction(changeMarkerSizeAction)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN',self)
