@@ -2,7 +2,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox
+from PyQt5.QtWidgets import QCheckBox, QInputDialog
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
@@ -24,8 +24,10 @@ from conf import dconf
 from gutils import getmplDPI
 
 #plt.rcParams['lines.markersize'] = 15
-#plt.rcParams['lines.linewidth'] = 4
+plt.rcParams['lines.linewidth'] = 3
+rastmarksz = 5 # raster dot size
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+else: plt.rcParams['font.size'] = dconf['fontsize'] = 12
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -113,7 +115,7 @@ def drawhist (dhist,fig,G):
   fctr = 1.0
   if ntrial > 0: fctr = 1.0 / ntrial
   for ty in dhist.keys():
-    ax.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linewidth=3,linestyle='--')
+    ax.plot(np.arange(binsz/2,tstop+binsz/2,binsz),dhist[ty]*fctr,dclr[ty],linestyle='--')
   ax.set_xlim((0,tstop))
   ax.set_ylabel('Cell Spikes')
   return ax
@@ -230,7 +232,7 @@ class SpikeCanvas (FigureCanvas):
     dhist = alldat[idx]['dhist']
     extinputs = alldat[idx]['extinputs']
 
-    self.lax = drawrast(dspk,self.figure, self.G, 5)
+    self.lax = drawrast(dspk,self.figure, self.G, rastmarksz)
 
     if bDrawHist: self.lax.append(drawhist(dhist,self.figure,self.G))
 
@@ -265,11 +267,24 @@ class SpikeGUI (QMainWindow):
     menubar.setNativeMenuBar(False)
     fileMenu.addAction(exitAction)
 
+    viewMenu = menubar.addMenu('&View')
     drawHistAction = QAction('Toggle Histograms',self)
     drawHistAction.setStatusTip('Toggle Histogram Drawing.')
     drawHistAction.triggered.connect(self.toggleHist)
-    viewMenu = menubar.addMenu('&View')
     viewMenu.addAction(drawHistAction)
+    changeFontSizeAction = QAction('Change Font Size',self)
+    changeFontSizeAction.setStatusTip('Change Font Size.')
+    changeFontSizeAction.triggered.connect(self.changeFontSize)
+    viewMenu.addAction(changeFontSizeAction)
+    changeLineWidthAction = QAction('Change Line Width',self)
+    changeLineWidthAction.setStatusTip('Change Line Width.')
+    changeLineWidthAction.triggered.connect(self.changeLineWidth)
+    viewMenu.addAction(changeLineWidthAction)
+    changeMarkerSizeAction = QAction('Change Marker Size',self)
+    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
+    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
+    viewMenu.addAction(changeMarkerSizeAction)
+
 
   def toggleHist (self):
     global bDrawHist
@@ -277,6 +292,30 @@ class SpikeGUI (QMainWindow):
     self.initCanvas()
     self.m.plot()
 
+  def changeFontSize (self):
+    i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
+    if okPressed:
+      print('Setting font size to', i)
+      plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.initCanvas()
+      self.m.plot()
+
+  def changeLineWidth (self):
+    i, okPressed = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
+    if okPressed:
+      print('Setting line width to', i)
+      plt.rcParams['lines.linewidth'] = i
+      self.initCanvas()
+      self.m.plot()
+
+  def changeMarkerSize (self):
+    global rastmarksz
+    i, okPressed = QInputDialog.getInt(self, "Set Marker Size","Font Size:", rastmarksz, 1, 100, 1)
+    if okPressed:
+      print('Setting marker size to', i)
+      rastmarksz = i
+      self.initCanvas()
+      self.m.plot()
 
   def initCanvas (self):
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
