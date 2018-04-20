@@ -85,7 +85,7 @@ def drawraster ():
     plt.figure()
     for pair in ddat['spk']:
       plt.plot([pair[0]],[pair[1]],'ko',markersize=10)
-    plt.xlabel('Time (ms)'); plt.ylabel('ID')
+    plt.xlabel('Time (ms)',fontsize=dconf['fontsize']); plt.ylabel('ID',fontsize=dconf['fontsize'])
 
 # calculates RMSE error from ddat dictionary
 def calcerr (ddat):
@@ -351,8 +351,8 @@ class SIMCanvas (FigureCanvas):
         self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontweight='bold')
 
       if not hassimdata: # need axis labels
-        ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Dipole (nAm)')
+        ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
+        ax.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
         myxl = ax.get_xlim()
         if myxl[0] < 0.0: ax.set_xlim((0.0,myxl[1]+myxl[0]))
         self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
@@ -441,9 +441,9 @@ class SIMCanvas (FigureCanvas):
       NEstPyr = int(self.getNPyr() * scalefctr)
 
       if NEstPyr > 0:
-        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells')
+        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells',fontsize=dconf['fontsize'])
       else:
-        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n')
+        ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n',fontsize=dconf['fontsize'])
       ax.set_xlim(xl); ax.set_ylim(yl)
 
       if DrawSpec: # 
@@ -452,8 +452,8 @@ class SIMCanvas (FigureCanvas):
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
         self.lax.append(ax)
         cax = ax.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap('jet'))
-        ax.set_ylabel('Frequency (Hz)')
-        ax.set_xlabel('Time (ms)')
+        ax.set_ylabel('Frequency (Hz)',fontsize=dconf['fontsize'])
+        ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
         ax.set_xlim(xl)
         ax.set_ylim(ds['freq'][-1],ds['freq'][0])
         cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
