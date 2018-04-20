@@ -189,19 +189,19 @@ class SIMCanvas (FigureCanvas):
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
       if hasPois:
-        hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step')
+        hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g')
+        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g',lw=self.gui.linewidth+1)
 
       if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r')
+        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r',lw=self.gui.linewidth+1)
 
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step')
+        hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step')
+        hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step',lw=self.gui.linewidth+1)
       
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
          hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
