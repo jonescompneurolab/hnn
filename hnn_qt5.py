@@ -25,7 +25,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI
+from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 from ctune import expval, expvals, logval, logvals
 
 prtime = False
@@ -85,7 +85,6 @@ def bringwintotop (win):
   #win.activateWindow()
   #win.raise_()
   #win.show() 
-
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
@@ -1702,6 +1701,32 @@ class HNNGUI (QMainWindow):
     self.m.plotsimdat()
     self.m.draw()
 
+  def hidesubwin (self):
+    # hide sub windows
+    self.baseparamwin.hide()
+    self.schemwin.hide()
+    self.baseparamwin.syngainparamwin.hide()
+    for win in self.baseparamwin.lsubwin: win.hide()
+
+  def distribsubwin (self):
+    # distribute sub windows on screen
+    sw,sh = getscreengeom()
+    lwin = [win for win in self.baseparamwin.lsubwin if win.isVisible()]
+    if self.baseparamwin.isVisible(): lwin.insert(0,self.baseparamwin)
+    if self.schemwin.isVisible(): lwin.insert(0,self.schemwin)
+    if self.baseparamwin.syngainparamwin.isVisible(): lwin.append(self.baseparamwin.syngainparamwin)
+    curx,cury,maxh=0,0,0
+    for win in lwin: 
+      widget = win.geometry()
+      win.move(curx, cury)
+      curx += win.width()
+      maxh = max(maxh,win.height())
+      if curx >= sw: 
+        curx = 0
+        cury += maxh
+        maxh = win.height()
+      if cury >= sh: cury = cury = 0
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -1813,6 +1838,16 @@ class HNNGUI (QMainWindow):
     changeMarkerSizeAction.setStatusTip('Change Marker Size.')
     changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
     viewMenu.addAction(changeMarkerSizeAction)
+    viewMenu.addSeparator()
+    distributeWindowsAction = QAction('Distribute Windows',self)
+    distributeWindowsAction.setStatusTip('Distribute Parameter Windows Across Screen.')
+    distributeWindowsAction.triggered.connect(self.distribsubwin)
+    viewMenu.addAction(distributeWindowsAction)
+    hideWindowsAction = QAction('Hide Windows',self)
+    hideWindowsAction.setStatusTip('Hide Parameter Windows.')
+    hideWindowsAction.triggered.connect(self.hidesubwin)
+    hideWindowsAction.setShortcut('Ctrl+H')
+    viewMenu.addAction(hideWindowsAction)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN',self)
