@@ -14,19 +14,11 @@ xcode-select --install
 
 # go to https://www.continuum.io/downloads and download and install the Python 3.x version (Anaconda distribution) into your Applications folder (currently Python 3.6) (NOTE: you do NOT need to enter your email on the website)
 
+# open a new terminal window and type the following; enter your password when prompted
+sudo conda install mpi4py
+
 # go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1688.x86_64-osx.pkg) -- NOTE: be sure to say "YES" to both prompts about modifying paths
 
-# go to https://www.open-mpi.org/software/ and download the tar.gz file of the 2.1.1 version of openmpi (openmpi-2.1.1.tar.gz)
-# (note: the latest version of openmpi 3 may cause problems for certain versions of mac)
-# next, change to the directory you downloaded the tar.gz file to (e.g. "cd ~/Downloads") (Note: be sure to use the newly installed XQuartz version of X11 as your terminal window, found in Applications/Utilities),
-# type the following:
-tar -zxvf openmpi*
-cd openmpi*
-./configure
-make all -j4
-sudo make install -j4
-
-#move the new openmpi-2.1.1 folder into your hard drives Applications folder 
 #change directories to your hard drives Applications folders  - you may need to type cd ../../Applications
 #verify that anaconda, NEURON-7.5 and openmpi-2.1.X are in the Applications folder you are in by typing 
 ls 
