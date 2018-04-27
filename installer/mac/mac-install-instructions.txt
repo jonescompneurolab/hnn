@@ -24,11 +24,6 @@ sudo conda install -y PyOpenGL
 
 # go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1688.x86_64-osx.pkg) -- NOTE: say no when asked about setting paths; we'll do that later
 
-#change directories to your hard drives Applications folders  - you may need to type cd ../../Applications
-#verify that anaconda, NEURON-7.5 and openmpi-2.1.X are in the Applications folder you are in by typing 
-ls 
-# if you don't see the above folders you are not in the right directory, change directories to hard drive Applications
-
 # to make sure all of the correct paths are followed type the following set of commands to 
 # set the environment variables; note that depending on your shell (bash or c shell) you will
 # use the 4 export commands below or the 4 set commands below, respectively
