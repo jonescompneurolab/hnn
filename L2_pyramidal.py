@@ -335,7 +335,8 @@ class L2Pyr(Pyr):
                     'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
                     'A_delay': 1.,
                     'lamtha': 3.,
-                    'threshold': p['threshold']
+                    'threshold': p['threshold'],
+                    'type_src' : 'L2_pyramidal'
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -349,7 +350,8 @@ class L2Pyr(Pyr):
                     'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
                     'A_delay': 1.,
                     'lamtha': 3.,
-                    'threshold': p['threshold']
+                    'threshold': p['threshold'],
+                    'type_src' : 'L2_pyramidal'
                 }
 
                 # parconnect_from_src(gid_presyn, nc_dict, postsyn)
@@ -365,7 +367,8 @@ class L2Pyr(Pyr):
                 'A_weight': p['gbar_L2Basket_L2Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 50.,
-                'threshold': p['threshold']
+                'threshold': p['threshold'],
+                'type_src' : 'L2_basket'
             }
 
             nc_dict['gabab'] = {
@@ -373,7 +376,8 @@ class L2Pyr(Pyr):
                 'A_weight': p['gbar_L2Basket_L2Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 50.,
-                'threshold': p['threshold']
+                'threshold': p['threshold'],
+                'type_src' : 'L2_basket'
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict['gabaa'], self.synapses['soma_gabaa']))
@@ -401,7 +405,8 @@ class L2Pyr(Pyr):
                     'A_weight': p_src['L2Pyr_ampa'][0],
                     'A_delay': p_src['L2Pyr_ampa'][1],
                     'lamtha': p_src['lamtha'],
-                    'threshold': p_src['threshold']
+                    'threshold': p_src['threshold'],
+                    'type_src': 'ext'
                 }
 
                 # Proximal feed AMPA synapses
@@ -409,7 +414,6 @@ class L2Pyr(Pyr):
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.basal2_ampa))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.basal3_ampa))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.apicaloblique_ampa))
-
                 # Distal feed AMPA synapses
                 elif p_src['loc'] is 'distal':
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_ampa, self.apicaltuft_ampa))
@@ -421,7 +425,8 @@ class L2Pyr(Pyr):
                     'A_weight': p_src['L2Pyr_nmda'][0],
                     'A_delay': p_src['L2Pyr_nmda'][1],
                     'lamtha': p_src['lamtha'],
-                    'threshold': p_src['threshold']
+                    'threshold': p_src['threshold'],
+                    'type_src': 'ext'
                 }
 
                 # Proximal feed NMDA synapses
@@ -429,34 +434,44 @@ class L2Pyr(Pyr):
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.basal2_nmda))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.basal3_nmda))
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.apicaloblique_nmda))
-
                 # Distal feed NMDA synapses
                 elif p_src['loc'] is 'distal':
                     self.ncfrom_extinput.append(self.parconnect_from_src(gid_src, nc_dict_nmda, self.apicaltuft_nmda))
 
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
+    # this function handles evoked, gaussian, and poisson inputs
     def parreceive_ext (self, type, gid, gid_dict, pos_dict, p_ext):
         if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 
-                nc_dict = {
+                # separate dictionaries for ampa and nmda evoked inputs
+                nc_dict_ampa = {
                     'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][0],
-                    'A_delay': p_ext[self.celltype][1],
+                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
                     'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
+                }
+
+                nc_dict_nmda = {
+                    'pos_src': pos_dict[type][gid],
+                    'A_weight': p_ext[self.celltype][1], # index 1 for nmda weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
                 }
 
                 if p_ext['loc'] is 'proximal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal2_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.basal3_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaloblique_ampa))
-
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal2_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal3_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaloblique_ampa))
                 elif p_ext['loc'] is 'distal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaltuft_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.apicaltuft_nmda))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaltuft_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaltuft_nmda))
 
         elif type == 'extgauss':
             # gid is this cell's gid
@@ -472,15 +487,16 @@ class L2Pyr(Pyr):
 
                 nc_dict = {
                     'pos_src': pos_dict['extgauss'][gid],
-                    'A_weight': p_ext['L2_pyramidal'][0],
-                    'A_delay': p_ext['L2_pyramidal'][1],
+                    'A_weight': p_ext['L2_pyramidal'][0], # index 0 for ampa weight (nmda not yet used in Gauss)
+                    'A_delay': p_ext['L2_pyramidal'][2], # index 2 for delay
                     'lamtha': p_ext['lamtha'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
                 }
 
-                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal2_ampa))
-                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.basal3_ampa))
-                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.apicaloblique_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss,nc_dict,self.basal2_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss,nc_dict,self.basal3_ampa))
+                self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss,nc_dict,self.apicaloblique_ampa))
 
         elif type == 'extpois':
             if self.celltype in p_ext.keys():
@@ -488,16 +504,22 @@ class L2Pyr(Pyr):
 
                 nc_dict = {
                     'pos_src': pos_dict['extpois'][gid],
-                    'A_weight': p_ext[self.celltype][0],
-                    'A_delay': p_ext[self.celltype][1],
+                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
                     'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
                 }
 
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal2_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal3_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.apicaloblique_ampa))
 
-                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal2_ampa))
-                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.basal3_ampa))
-                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.apicaloblique_ampa))
+                if p_ext[self.celltype][1] > 0.0:
+                  nc_dict['A_weight'] = p_ext[self.celltype][1] # index 1 for nmda weight
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal2_nmda))
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal3_nmda))
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.apicaloblique_nmda))
 
         else:
             print("Warning, ext type def does not exist in L2Pyr")

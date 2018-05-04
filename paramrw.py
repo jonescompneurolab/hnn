@@ -564,6 +564,23 @@ def feed_validate(p_ext, d, tstop):
 
     return p_ext
 
+#
+def checkevokedsynkeys (p, nprox, ndist):
+  # make sure ampa,nmda gbar values are in the param dict (for backwards compatibility)
+  lctprox = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # evoked distal target cell types
+  lctdist = ['L2Pyr','L5Pyr','L2Basket'] # evoked proximal target cell types
+  lsy = ['ampa','nmda'] # synapse types used in evoked inputs
+  for nev,pref,lct in zip([nprox,ndist],['evprox_','evdist_'],[lctprox,lctdist]):
+    print(lct)
+    for i in range(nev):
+      skey = pref + str(i+1)
+      for sy in lsy:
+        for ct in lct:
+          k = 'gbar_'+skey+'_'+ct+'_'+sy
+          # if the synapse-specific gbar not present, use the existing weight for both ampa,nmda
+          if k not in p: 
+            p[k] = p['gbar_'+skey+'_'+ct]
+
 # creates the external feed params based on individual simulation params p
 def create_pext (p, tstop):
     # indexable py list of param dicts for parallel
@@ -628,16 +645,19 @@ def create_pext (p, tstop):
     nprox, ndist = countEvokedInputs(p)
     # print('nprox,ndist evoked inputs:', nprox, ndist)
 
+    # make sure all evoked synaptic weights present (for backwards compatibility)
+    checkevokedsynkeys(p,nprox,ndist) 
+
     # Create proximal evoked response parameters
     # f_input needs to be defined as 0
     for i in range(nprox):
       skey = 'evprox_' + str(i+1)
       p_unique['evprox' + str(i+1)] = {
           't0': p['t_' + skey],
-          'L2_pyramidal': (p['gbar_' + skey + '_L2Pyr'], 0.1, p['sigma_t_' + skey]),
-          'L2_basket': (p['gbar_' + skey + '_L2Basket'], 0.1, p['sigma_t_' + skey]),
-          'L5_pyramidal': (p['gbar_' + skey + '_L5Pyr'], 1., p['sigma_t_' + skey]),
-          'L5_basket': (p['gbar_' + skey + '_L5Basket'], 1., p['sigma_t_' + skey]),
+          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_'+skey]),
+          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],1.,p['sigma_t_'+skey]),
+          'L5_basket':(p['gbar_'+skey+'_L5Basket_ampa'],p['gbar_'+skey+'_L5Basket_nmda'],1.,p['sigma_t_'+skey]),
           'prng_seedcore': int(p['prng_seedcore_' + skey]),
           'lamtha_space': 3.,
           'loc': 'proximal',
@@ -652,9 +672,9 @@ def create_pext (p, tstop):
       skey = 'evdist_' + str(i+1)
       p_unique['evdist' + str(i+1)] = {
           't0': p['t_' + skey],
-          'L2_pyramidal': (p['gbar_' + skey + '_L2Pyr'], 0.1, p['sigma_t_' + skey]),
-          'L5_pyramidal': (p['gbar_' + skey + '_L5Pyr'], 0.1, p['sigma_t_' + skey]),
-          'L2_basket': (p['gbar_' + skey +'_L2Basket'], 0.1, p['sigma_t_' + skey]),
+          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_' + skey]),
           'prng_seedcore': int(p['prng_seedcore_' + skey]),
           'lamtha_space': 3.,
           'loc': 'distal',
@@ -665,12 +685,12 @@ def create_pext (p, tstop):
 
     # this needs to create many feeds
     # (amplitude, delay, mu, sigma). ordered this way to preserve compatibility
-    p_unique['extgauss'] = {
+    p_unique['extgauss'] = { # note double weight specification since only use ampa for gauss inputs
         'stim': 'gaussian',
-        'L2_basket': (p['L2Basket_Gauss_A_weight'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
-        'L2_pyramidal': (p['L2Pyr_Gauss_A_weight'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
-        'L5_basket': (p['L5Basket_Gauss_A_weight'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
-        'L5_pyramidal': (p['L5Pyr_Gauss_A_weight'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
+        'L2_basket': (p['L2Basket_Gauss_A_weight'],p['L2Basket_Gauss_A_weight'], 1., p['L2Basket_Gauss_mu'], p['L2Basket_Gauss_sigma']),
+        'L2_pyramidal': (p['L2Pyr_Gauss_A_weight'],p['L2Pyr_Gauss_A_weight'], 0.1, p['L2Pyr_Gauss_mu'], p['L2Pyr_Gauss_sigma']),
+        'L5_basket': (p['L5Basket_Gauss_A_weight'],p['L5Basket_Gauss_A_weight'], 1., p['L5Basket_Gauss_mu'], p['L5Basket_Gauss_sigma']),
+        'L5_pyramidal': (p['L5Pyr_Gauss_A_weight'],p['L5Pyr_Gauss_A_weight'], 1., p['L5Pyr_Gauss_mu'], p['L5Pyr_Gauss_sigma']),
         'lamtha': 100.,
         'prng_seedcore': int(p['prng_seedcore_extgauss']),
         'loc': 'proximal',
@@ -681,12 +701,12 @@ def create_pext (p, tstop):
     if p['T_pois'] in (0, -1): p['T_pois'] = tstop
 
     # Poisson distributed inputs to proximal
-    p_unique['extpois'] = {
+    p_unique['extpois'] = {# note double weight specification since only use ampa for poisson inputs
         'stim': 'poisson',
-        'L2_basket': (p['L2Basket_Pois_A_weight'], 1., p['L2Basket_Pois_lamtha']),
-        'L2_pyramidal': (p['L2Pyr_Pois_A_weight'], 0.1, p['L2Pyr_Pois_lamtha']),
-        'L5_basket': (p['L5Basket_Pois_A_weight'], 1., p['L5Basket_Pois_lamtha']),
-        'L5_pyramidal': (p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
+        'L2_basket': (p['L2Basket_Pois_A_weight'],p['L2Basket_Pois_A_weight'], 1., p['L2Basket_Pois_lamtha']),
+        'L2_pyramidal': (p['L2Pyr_Pois_A_weight'],p['L2Pyr_Pois_A_weight'], 0.1, p['L2Pyr_Pois_lamtha']),
+        'L5_basket': (p['L5Basket_Pois_A_weight'],p['L5Basket_Pois_A_weight'], 1., p['L5Basket_Pois_lamtha']),
+        'L5_pyramidal': (p['L5Pyr_Pois_A_weight'],p['L5Pyr_Pois_A_weight'], 1., p['L5Pyr_Pois_lamtha']),
         'lamtha_space': 100.,
         'prng_seedcore': int(p['prng_seedcore_extpois']),
         't_interval': (p['t0_pois'], p['T_pois']),
