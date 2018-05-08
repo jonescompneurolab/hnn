@@ -30,28 +30,32 @@ def get_params_default (nprox = 2, ndist = 1):
         'L2Basket_Gauss_A_weight': 0.,
         'L2Basket_Gauss_mu': 2000.,
         'L2Basket_Gauss_sigma': 3.6,
-        'L2Basket_Pois_A_weight': 0.,
+        'L2Basket_Pois_A_weight_ampa': 0.,
+        'L2Basket_Pois_A_weight_nmda': 0.,
         'L2Basket_Pois_lamtha': 0.,
 
         # L2 Pyr params
         'L2Pyr_Gauss_A_weight': 0.,
         'L2Pyr_Gauss_mu': 2000.,
         'L2Pyr_Gauss_sigma': 3.6,
-        'L2Pyr_Pois_A_weight': 0.,
+        'L2Pyr_Pois_A_weight_ampa': 0.,
+        'L2Pyr_Pois_A_weight_nmda': 0.,
         'L2Pyr_Pois_lamtha': 0.,
 
         # L5 Pyr params
         'L5Pyr_Gauss_A_weight': 0.,
         'L5Pyr_Gauss_mu': 2000.,
         'L5Pyr_Gauss_sigma': 4.8,
-        'L5Pyr_Pois_A_weight': 0.,
+        'L5Pyr_Pois_A_weight_ampa': 0.,
+        'L5Pyr_Pois_A_weight_nmda': 0.,
         'L5Pyr_Pois_lamtha': 0.,
 
         # L5 Basket params
         'L5Basket_Gauss_A_weight': 0.,
         'L5Basket_Gauss_mu': 2000.,
         'L5Basket_Gauss_sigma': 2.,
-        'L5Basket_Pois_A_weight': 0.,
+        'L5Basket_Pois_A_weight_ampa': 0.,
+        'L5Basket_Pois_A_weight_nmda': 0.,
         'L5Basket_Pois_lamtha': 0.,
 
         # maximal conductances for all synapses

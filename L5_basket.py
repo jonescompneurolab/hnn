@@ -144,7 +144,7 @@ class L5Basket(BasketSingle):
     # one parreceive function to handle all types of external parreceives
     # types must be defined explicitly here
     def parreceive_ext(self, type, gid, gid_dict, pos_dict, p_ext):
-        if type.startswith(('evprox', 'evdist')):
+        if type.startswith(('evprox', 'evdist')): # shouldn't this just check for evprox?
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 
@@ -167,7 +167,9 @@ class L5Basket(BasketSingle):
                 }
 
                 self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.soma_ampa))
-                #self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.soma_nmda))
+
+                # NEW: note that default/original is 0 nmda weight for the soma (both prox and distal evoked)
+                self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.soma_nmda))
 
         elif type == 'extgauss':
             # gid is this cell's gid
