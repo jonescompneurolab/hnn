@@ -30,28 +30,32 @@ def get_params_default (nprox = 2, ndist = 1):
         'L2Basket_Gauss_A_weight': 0.,
         'L2Basket_Gauss_mu': 2000.,
         'L2Basket_Gauss_sigma': 3.6,
-        'L2Basket_Pois_A_weight': 0.,
+        'L2Basket_Pois_A_weight_ampa': 0.,
+        'L2Basket_Pois_A_weight_nmda': 0.,
         'L2Basket_Pois_lamtha': 0.,
 
         # L2 Pyr params
         'L2Pyr_Gauss_A_weight': 0.,
         'L2Pyr_Gauss_mu': 2000.,
         'L2Pyr_Gauss_sigma': 3.6,
-        'L2Pyr_Pois_A_weight': 0.,
+        'L2Pyr_Pois_A_weight_ampa': 0.,
+        'L2Pyr_Pois_A_weight_nmda': 0.,
         'L2Pyr_Pois_lamtha': 0.,
 
         # L5 Pyr params
         'L5Pyr_Gauss_A_weight': 0.,
         'L5Pyr_Gauss_mu': 2000.,
         'L5Pyr_Gauss_sigma': 4.8,
-        'L5Pyr_Pois_A_weight': 0.,
+        'L5Pyr_Pois_A_weight_ampa': 0.,
+        'L5Pyr_Pois_A_weight_nmda': 0.,
         'L5Pyr_Pois_lamtha': 0.,
 
         # L5 Basket params
         'L5Basket_Gauss_A_weight': 0.,
         'L5Basket_Gauss_mu': 2000.,
         'L5Basket_Gauss_sigma': 2.,
-        'L5Basket_Pois_A_weight': 0.,
+        'L5Basket_Pois_A_weight_ampa': 0.,
+        'L5Basket_Pois_A_weight_nmda': 0.,
         'L5Basket_Pois_lamtha': 0.,
 
         # maximal conductances for all synapses
@@ -98,7 +102,7 @@ def get_params_default (nprox = 2, ndist = 1):
         'repeats_dist': 10,
         't0_input_stdev_dist': 0.0,
 
-        # thalamic input amplitudes abd delays
+        # thalamic input amplitudes and delays
         'input_prox_A_weight_L2Pyr_ampa': 0.,
         'input_prox_A_weight_L2Pyr_nmda': 0.,
         'input_prox_A_weight_L5Pyr_ampa': 0.,
@@ -199,12 +203,14 @@ def get_ev_params_default (n,isprox):
   if isprox: pref = 'evprox'
   else: pref = 'evdist'
   # print('isprox:',isprox,'n:',n)
+  lty = ['L2Pyr', 'L5Pyr', 'L2Basket']
+  if isprox: lty.append('L5Basket')
+  lsy = ['ampa', 'nmda'] # allow changing both ampa and nmda weights
   for i in range(n):
-    tystr = pref + '_' + str(i+1)
-    dout['gbar_' + tystr + '_L2Pyr'] =  0. # feed strength
-    dout['gbar_' + tystr + '_L5Pyr'] =  0.
-    dout['gbar_' + tystr + '_L2Basket'] =  0.
-    if isprox: dout['gbar_' + tystr + '_L5Basket'] =  0.
+    tystr = pref + '_' + str(i+1) # this string includes input number 
+    for ty in lty:
+      for sy in lsy:
+        dout['gbar_' + tystr + '_' + ty + '_' + sy] = 0. # feed strength
     dout['t_' + tystr] = 0. # times and stdevs for evoked responses
     dout['sigma_t_' + tystr] = 0.
     dout['prng_seedcore_' + tystr] = 0 # random number generator seed for this input

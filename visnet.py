@@ -1,6 +1,7 @@
 import sys, os
 import pyqtgraph as pg        
 from pyqtgraph.Qt import QtCore, QtGui
+#from pyqtgraph.graphicsItems.AxisItem import *
 import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
@@ -23,6 +24,14 @@ dclr = {'L2_pyramidal' : 'g', L2Pyr: (0.,1.,0.,0.6),
         'L5_pyramidal' : 'r', L5Pyr: (1.,0.,0.,0.6),
         'L2_basket' : 'k', L2Basket: (1.,1.,1.,0.6),
         'L5_basket' : 'b', L5Basket: (0.,0.,1.,0.6)}
+
+def getcellpos (net,ty):
+  lx,ly = [],[]
+  for cell in net.cells:
+    if type(cell) == ty:
+      lx.append(cell.pos[0])
+      ly.append(cell.pos[1])
+  return lx,ly
 
 def cellsecbytype (ty):
   lss = []
@@ -162,13 +171,13 @@ def drawconn2d ():
     break
 
 #
-def drawinputs3d (cell,clr,widget,width=2.0):
+def drawinputs3d (cell,clr,widg,width=2.0):
   for lsrc in [cell.ncfrom_L2Pyr, cell.ncfrom_L2Basket, cell.ncfrom_L5Pyr, cell.ncfrom_L5Basket]:
     for src in lsrc:
       precell = src.precell()
       pts = np.vstack([[precell.pos[0]*100,cell.pos[0]*100],[precell.pos[2],cell.pos[2]],[precell.pos[1]*100,cell.pos[1]*100]]).transpose()
       plt = gl.GLLinePlotItem(pos=pts, color=clr, width=width, antialias=True, mode='lines')
-      widget.addItem(plt)
+      widg.addItem(plt)
 
 #
 def drawconn3d (widg,width=2.0,clr=(1.0,0.0,0.0,0.5)):
@@ -184,7 +193,14 @@ def drawcells3dgl (ty,widget,width=2.2):
     lx,ly,lz = getshapecoords(h,cell.get_sections())  
     pts = np.vstack([lx,ly,lz]).transpose()
     plt = gl.GLLinePlotItem(pos=pts, color=dclr[type(cell)], width=width, antialias=True, mode='lines')
+    #plt.showGrid(x=True,y=True)
     widget.addItem(plt)
+  #axis = pg.AxisItem(orientation='bottom')
+  #print(dir(axis))
+  #print(dir(widget))
+  #print(widget.getViewport())
+  #axis.linkToView(axis.getViewBox())#widget.getViewport())
+  #widget.addItem(pg.AxisItem(orientation='bottom'))
 
 def drawallcells3dgl (wcells):
   drawcells3dgl(L5Pyr,wcells,width=15.0)
@@ -207,6 +223,8 @@ if __name__ == '__main__':
       drawconn3d(widg,clr=(1.0,0.0,0.0,0.25))
     if s == 'Iconn':
       drawconn3d(widg,clr=(0.0,0.0,1.0,0.25))
+  #app.axis = axis = pg.AxisItem(orientation='bottom')
+  #app.pqg_plot_item.showAxis('bottom',True)
   widg.show()
   if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
     QtGui.QApplication.instance().exec_()

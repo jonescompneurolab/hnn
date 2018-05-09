@@ -629,15 +629,14 @@ class PoissonInputParamDialog (DictDialog):
 
   def initd (self):
 
-    self.dL2 = OrderedDict([('L2Pyr_Pois_A_weight', 0.),
-                            ('L2Pyr_Pois_lamtha', 0.),
-                            ('L2Basket_Pois_A_weight', 0.),
-                            ('L2Basket_Pois_lamtha', 0.)])
+    self.dL2,self.dL5 = OrderedDict(),OrderedDict()
+    ld = [self.dL2,self.dL5]
 
-    self.dL5 = OrderedDict([('L5Pyr_Pois_A_weight', 0.),
-                            ('L5Pyr_Pois_lamtha', 0.),
-                            ('L5Basket_Pois_A_weight', 0.),
-                            ('L5Basket_Pois_lamtha', 0.)])
+    for i,lyr in enumerate(['L2','L5']):
+      d = ld[i]
+      for ty in ['Pyr', 'Basket']:
+        for sy in ['ampa','nmda']: d[lyr+ty+'_Pois_A_weight'+'_'+sy]=0.
+        d[lyr+ty+'_Pois_lamtha']=0.
 
     self.dtiming = OrderedDict([('t0_pois', 0.),
                                 ('T_pois', -1)])
@@ -648,10 +647,11 @@ class PoissonInputParamDialog (DictDialog):
     dtmp = {'L2':'L2/3 ','L5':'L5 '} # temporary dictionary for string translation
     for d in [self.dL2, self.dL5]:
       for k in d.keys():
-        cty = k.split('_')[0] # cell type
+        ks = k.split('_')
+        cty = ks[0] # cell type
         tcty = dtmp[cty[0:2]] + cty[2:] # translated cell type
-        if k.endswith('weight'):
-          self.addtransvar(k, tcty+ ' weight (nS)')
+        if k.count('weight'):
+          self.addtransvar(k, tcty+ ' ' + ks[-1].upper() + ' weight (nS)')
         elif k.endswith('lamtha'):
           self.addtransvar(k, tcty+ ' freq (Hz)')
 
@@ -699,15 +699,27 @@ class EvokedInputParamDialog (QDialog):
         elif self.nprox < nprox:
           self.addProx()
     for k,v in din.items():
-      if k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
-      elif k == 'sync_evinput':
+      if k == 'sync_evinput':
         if float(v)==0.0:
           self.chksync.setChecked(False)
         elif float(v)==1.0:
           self.chksync.setChecked(True)
       elif k == 'inc_evinput':
         self.incedit.setText(str(v).strip())
+      elif k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
+      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0): 
+        # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+        lks = k.split('_')
+        eloc = lks[1]
+        enum = lks[2]
+        if eloc == 'evprox':
+          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+        elif eloc == 'evdist':
+          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -843,8 +855,9 @@ class EvokedInputParamDialog (QDialog):
     dtmp = {'L2':'L2/3 ','L5':'L5 '}
     for k in d.keys():
       if k.startswith('gbar'):
-        stmp = k.split('_')[-1]
-        self.addtransvar(k,dtmp[stmp[0:2]] + stmp[2:] + ' weight (nS)')
+        ks = k.split('_')
+        stmp = ks[-2]
+        self.addtransvar(k,dtmp[stmp[0:2]] + stmp[2:] + ' ' + ks[-1].upper() + ' weight (nS)')
       elif k.startswith('t'):
         self.addtransvar(k,'Start time mean (ms)')
       elif k.startswith('sigma'):
@@ -858,10 +871,14 @@ class EvokedInputParamDialog (QDialog):
     dprox = OrderedDict([('t_evprox_' + str(self.nprox), 0.), # times and stdevs for evoked responses
                          ('sigma_t_evprox_' + str(self.nprox), 2.5),
                          ('numspikes_evprox_' + str(self.nprox), 1),
-                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr', 0.),
-                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket', 0.),
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr', 0.),                                   
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket', 0.)])
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_nmda', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket_nmda', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),                                   
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),                                   
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket_nmda', 0.)])
     self.ld.append(dprox)
     self.addtransvarfromdict(dprox)
     self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
@@ -877,9 +894,12 @@ class EvokedInputParamDialog (QDialog):
     ddist = OrderedDict([('t_evdist_' + str(self.ndist), 0.),
                          ('sigma_t_evdist_' + str(self.ndist), 6.),
                          ('numspikes_evdist_' + str(self.ndist), 1),
-                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr', 0.),
-                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket', 0.),
-                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr', 0.)])
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr_nmda', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket_nmda', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr_nmda', 0.)])
     self.ld.append(ddist)
     self.addtransvarfromdict(ddist)
     self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
@@ -1636,7 +1656,7 @@ class HNNGUI (QMainWindow):
       bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
-    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://github.com/jonescompneurolab/hnn"+os.linesep+"2017-2018")
+    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://github.com/jonescompneurolab/hnn"+os.linesep+"© 2017-2018")
 
   def showHelpDialog (self):
     bringwintotop(self.helpwin)
@@ -1707,6 +1727,7 @@ class HNNGUI (QMainWindow):
     self.schemwin.hide()
     self.baseparamwin.syngainparamwin.hide()
     for win in self.baseparamwin.lsubwin: win.hide()
+    self.activateWindow()
 
   def distribsubwin (self):
     # distribute sub windows on screen

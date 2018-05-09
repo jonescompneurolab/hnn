@@ -76,7 +76,8 @@ class L2Basket(BasketSingle):
                 'A_weight': p['gbar_L2Pyr_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.,
-                'threshold': p['threshold']
+                'threshold': p['threshold'],
+                'type_src' : 'L2_pyramidal'
             }
 
             self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_ampa))
@@ -90,7 +91,8 @@ class L2Basket(BasketSingle):
                 'A_weight': p['gbar_L2Basket_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 20.,
-                'threshold': p['threshold']
+                'threshold': p['threshold'],
+                'type_src' : 'L2_basket'
             }
 
             self.ncfrom_L2Basket.append(self.parconnect_from_src(gid_src, nc_dict, self.soma_gabaa))
@@ -108,7 +110,8 @@ class L2Basket(BasketSingle):
                     'A_weight': p_src['L2Basket_ampa'][0],
                     'A_delay': p_src['L2Basket_ampa'][1],
                     'lamtha': p_src['lamtha'],
-                    'threshold': p_src['threshold']
+                    'threshold': p_src['threshold'],
+                    'type_src' : 'ext'
                 }
 
                 # AMPA synapse
@@ -121,7 +124,8 @@ class L2Basket(BasketSingle):
                     'A_weight': p_src['L2Basket_nmda'][0],
                     'A_delay': p_src['L2Basket_nmda'][1],
                     'lamtha': p_src['lamtha'],
-                    'threshold': p_src['threshold']
+                    'threshold': p_src['threshold'],
+                    'type_src' : 'ext'
                 }
 
                 # NMDA synapse
@@ -134,21 +138,33 @@ class L2Basket(BasketSingle):
             if self.celltype in p_ext.keys():
                 gid_ev = gid + gid_dict[type][0]
 
-                nc_dict = {
+                nc_dict_ampa = {
                     'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][0],
-                    'A_delay': p_ext[self.celltype][1],
+                    'A_weight': p_ext[self.celltype][0], # index 0 is ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 is delay
                     'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src' : type
                 }
 
-                # connections depend on location of input
+                nc_dict_nmda = {
+                    'pos_src': pos_dict[type][gid],
+                    'A_weight': p_ext[self.celltype][1], # index 1 is nmda weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 is delay
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold'],
+                    'type_src' : type
+                }
+
+                # connections depend on location of input - why only for L2 basket and not L5 basket?
                 if p_ext['loc'] is 'proximal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.soma_ampa))
+                    # NEW: note that default/original is 0 nmda weight for the soma (for prox evoked)
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.soma_nmda))
 
                 elif p_ext['loc'] is 'distal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict, self.soma_nmda))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.soma_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.soma_nmda))
 
         elif type == 'extgauss':
             # gid is this cell's gid
@@ -167,10 +183,11 @@ class L2Basket(BasketSingle):
                 # gid works here because there are as many pos items in pos_dict['extgauss'] as there are cells
                 nc_dict = {
                     'pos_src': pos_dict['extgauss'][gid],
-                    'A_weight': p_ext[self.celltype][0],
-                    'A_delay': p_ext[self.celltype][1],
+                    'A_weight': p_ext[self.celltype][0], # index 0 is ampa weight
+                    'A_delay': p_ext[self.celltype][1], # index 2 is delay
                     'lamtha': p_ext['lamtha'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src' : type
                 }
 
                 self.ncfrom_extgauss.append(self.parconnect_from_src(gid_extgauss, nc_dict, self.soma_ampa))
@@ -181,13 +198,18 @@ class L2Basket(BasketSingle):
 
                 nc_dict = {
                     'pos_src': pos_dict['extpois'][gid],
-                    'A_weight': p_ext[self.celltype][0],
-                    'A_delay': p_ext[self.celltype][1],
+                    'A_weight': p_ext[self.celltype][0], # index 0 is ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 is delay
                     'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold']
+                    'threshold': p_ext['threshold'],
+                    'type_src' : type
                 }
 
                 self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_ampa))
+
+                if p_ext[self.celltype][1] > 0.0:
+                  nc_dict['A_weight'] = p_ext[self.celltype][1] # index 1 for nmda weight
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois, nc_dict, self.soma_nmda))
 
         else:
             print("Warning, type def not specified in L2Basket")
