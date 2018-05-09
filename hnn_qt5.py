@@ -715,11 +715,13 @@ class EvokedInputParamDialog (QDialog):
         enum = lks[2]
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
+            # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip()) 
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
