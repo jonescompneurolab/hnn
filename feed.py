@@ -76,11 +76,12 @@ class ParFeedAll ():
   # new external pois designation
   def __create_extpois (self):
     #print("__create_extpois")
-    if self.p_ext[self.celltype][0] <= 0.0: return False # 0 weight
+    if self.p_ext[self.celltype][0] <= 0.0 and \
+       self.p_ext[self.celltype][1] <= 0.0: return False # 0 ampa and 0 nmda weight
     # check the t interval
     t0 = self.p_ext['t_interval'][0]
     T = self.p_ext['t_interval'][1]
-    lamtha = self.p_ext[self.celltype][2]
+    lamtha = self.p_ext[self.celltype][3] # index 3 is frequency (lamtha)
     # values MUST be sorted for VecStim()!
     # start the initial value
     if lamtha > 0.:
@@ -109,7 +110,7 @@ class ParFeedAll ():
     if self.celltype in self.p_ext.keys():
       # assign the params
       mu = self.p_ext['t0'] + inc
-      sigma = self.p_ext[self.celltype][2]
+      sigma = self.p_ext[self.celltype][3] # index 3 is sigma_t_ (stdev)
       numspikes = int(self.p_ext['numspikes'])
       # print('mu:',mu,'sigma:',sigma,'inc:',inc)
       # if a non-zero sigma is specified
@@ -131,10 +132,11 @@ class ParFeedAll ():
   def __create_extgauss (self):
     # print("__create_extgauss")
     # assign the params
-    if self.p_ext[self.celltype][0] <= 0.0: return False # 0 weight
+    if self.p_ext[self.celltype][0] <= 0.0 and \
+       self.p_ext[self.celltype][1] <= 0.0: return False # 0 ampa and 0 nmda weight
     # print('gauss params:',self.p_ext[self.celltype])
-    mu = self.p_ext[self.celltype][2]
-    sigma = self.p_ext[self.celltype][3]
+    mu = self.p_ext[self.celltype][3]
+    sigma = self.p_ext[self.celltype][4]
     # mu and sigma values come from p
     # one single value from Gaussian dist.
     # values MUST be sorted for VecStim()!

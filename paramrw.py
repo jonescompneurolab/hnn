@@ -93,9 +93,10 @@ def usingPoissonInputs (d):
     if t0_pois > T_pois and T_pois != -1.0:
       return False
   for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
-    k = cty+'_Pois_A_weight'             
-    if k in d:
-      if float(d[k]) != 0.0: return True
+    for sy in ['ampa','nmda']:
+      k = cty+'_Pois_A_weight_'+sy
+      if k in d:
+        if float(d[k]) != 0.0: return True
   return False
 
 # check if using any tonic (IClamp) inputs 
@@ -114,7 +115,7 @@ def usingTonicInputs (d):
         k = 'Itonic_T_' + cty
         if k in d: t1 = float(d[k])
         if t0 > tstop: continue
-        print('t0:',t0,'t1:',t1)
+        #print('t0:',t0,'t1:',t1)
         if t0 < t1 or t1 == -1.0: return True
   return False
 
@@ -571,7 +572,6 @@ def checkevokedsynkeys (p, nprox, ndist):
   lctdist = ['L2Pyr','L5Pyr','L2Basket'] # evoked proximal target cell types
   lsy = ['ampa','nmda'] # synapse types used in evoked inputs
   for nev,pref,lct in zip([nprox,ndist],['evprox_','evdist_'],[lctprox,lctdist]):
-    print(lct)
     for i in range(nev):
       skey = pref + str(i+1)
       for sy in lsy:
@@ -582,17 +582,16 @@ def checkevokedsynkeys (p, nprox, ndist):
             p[k] = p['gbar_'+skey+'_'+ct]
 
 #
-def checkpoissynkeys (p, nprox, ndist):
+def checkpoissynkeys (p):
   # make sure ampa,nmda gbar values are in the param dict for Poisson inputs (for backwards compatibility)
   lct = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # target cell types
   lsy = ['ampa','nmda'] # synapse types used in Poisson inputs
   for ct in lct:
     for sy in lsy:
-      skey = pref + str(i+1)
-      k = 'gbar_'+skey+'_'+ct+'_'+sy
+      k = ct + '_Pois_A_weight_' + sy
       # if the synapse-specific weight not present, set it to 0 in p
       if k not in p: 
-        p[k] = p['gbar_'+skey+'_'+ct]
+        p[k] = 0.0 
 
 # creates the external feed params based on individual simulation params p
 def create_pext (p, tstop):
@@ -711,6 +710,8 @@ def create_pext (p, tstop):
         'loc': 'proximal',
         'threshold': p['threshold']
     }
+
+    checkpoissynkeys(p)
 
     # define T_pois as 0 or -1 to reset automatically to tstop
     if p['T_pois'] in (0, -1): p['T_pois'] = tstop

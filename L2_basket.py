@@ -199,7 +199,7 @@ class L2Basket(BasketSingle):
                 nc_dict = {
                     'pos_src': pos_dict['extpois'][gid],
                     'A_weight': p_ext[self.celltype][0], # index 0 is ampa weight
-                    'A_delay': p_ext[self.celltype][1], # index 2 is delay
+                    'A_delay': p_ext[self.celltype][2], # index 2 is delay
                     'lamtha': p_ext['lamtha_space'],
                     'threshold': p_ext['threshold'],
                     'type_src' : type
