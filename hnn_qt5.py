@@ -699,15 +699,27 @@ class EvokedInputParamDialog (QDialog):
         elif self.nprox < nprox:
           self.addProx()
     for k,v in din.items():
-      if k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
-      elif k == 'sync_evinput':
+      if k == 'sync_evinput':
         if float(v)==0.0:
           self.chksync.setChecked(False)
         elif float(v)==1.0:
           self.chksync.setChecked(True)
       elif k == 'inc_evinput':
         self.incedit.setText(str(v).strip())
+      elif k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
+      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0): 
+        # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+        lks = k.split('_')
+        eloc = lks[1]
+        enum = lks[2]
+        if eloc == 'evprox':
+          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+        elif eloc == 'evdist':
+          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
