@@ -459,6 +459,8 @@ class SIMCanvas (FigureCanvas):
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
         for ax in self.lax:
           if ax: ax.set_xlim(xl)
+      else:
+        ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
     except:
       print('ERR: in plotsimdat')
     self.figure.subplots_adjust(left=0.07,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
