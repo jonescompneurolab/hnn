@@ -310,6 +310,7 @@ class SIMCanvas (FigureCanvas):
       hassimdata = self.hassimdata() # has the simulation been run yet?
 
       if not hasattr(self,'axdipole'): self.setupaxdipole() # do we need an axis for drawing?
+      elif self.axdipole is None: self.setupaxdipole()
 
       ax = self.axdipole
       yl = ax.get_ylim()
@@ -361,18 +362,21 @@ class SIMCanvas (FigureCanvas):
     return 'dpl' in ddat
 
   def clearlextdatobj (self):
-    for o in self.lextdatobj:
-      try:
-        o.set_visible(False)
-      except:
-        o[0].set_visible(False)
-    del self.lextdatobj
-    self.lextdatobj = []
-    self.lpatch = []
-    if self.hassimdata(): self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
-    if hasattr(self,'annot_avg'):
-      self.annot_avg.set_visible(False)
-      del self.annot_avg
+    try:
+      for o in self.lextdatobj:
+        try:
+          o.set_visible(False)
+        except:
+          o[0].set_visible(False)
+      del self.lextdatobj
+      self.lextdatobj = []
+      self.lpatch = []
+      if self.hassimdata(): self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
+      if hasattr(self,'annot_avg'):
+        self.annot_avg.set_visible(False)
+        del self.annot_avg
+    except:
+      if debug: print('ERR: exception in clearlextdatobj')
 
   def plotsimdat (self):
 
