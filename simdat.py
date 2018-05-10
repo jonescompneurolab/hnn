@@ -303,18 +303,14 @@ class SIMCanvas (FigureCanvas):
 
   def plotextdat (self, recalcErr=True): # plot 'external' data (e.g. from experiment/other simulation)
     try:
-      #print('in plotextdat')
       #self.plotsimdat()
       if recalcErr: calcerr(ddat) # recalculate/save the error?
-      #print('ddat.keys():',ddat.keys())
       lerr, errtot = ddat['lerr'], ddat['errtot']
-      #print('lerr:',lerr,'errtot:',errtot)
 
       hassimdata = self.hassimdata() # has the simulation been run yet?
 
       if not hasattr(self,'axdipole'): self.setupaxdipole() # do we need an axis for drawing?
 
-      #print('self.axdipole:',self.axdipole)
       ax = self.axdipole
       yl = ax.get_ylim()
 
@@ -326,7 +322,6 @@ class SIMCanvas (FigureCanvas):
 
       for fn,dat in ddat['dextdata'].items():
         shp = dat.shape
-
         for c in range(1,shp[1],1): 
           clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
           self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=self.gui.linewidth+3))
@@ -374,7 +369,7 @@ class SIMCanvas (FigureCanvas):
     del self.lextdatobj
     self.lextdatobj = []
     self.lpatch = []
-    if self.hassimdata(): lpatch.append(mpatches.Patch(color='black', label='Simulation'))
+    if self.hassimdata(): self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
     if hasattr(self,'annot_avg'):
       self.annot_avg.set_visible(False)
       del self.annot_avg
