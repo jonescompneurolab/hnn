@@ -1750,6 +1750,18 @@ class HNNGUI (QMainWindow):
         maxh = win.height()
       if cury >= sh: cury = cury = 0
 
+  def clearCanvas (self):
+    # clear all data and erase everything from canvas
+    global paramf
+    import simdat
+    self.m.clearlextdatobj() # clear the external data
+    self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
+    paramf = '' # set paramf to empty so no data gets loaded
+    simdat.ddat = {} # clear data in simdat.ddat
+    self.initSimCanvas() # recreate canvas 
+    self.m.draw()
+    self.setWindowTitle('HNN')
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
@@ -1760,6 +1772,11 @@ class HNNGUI (QMainWindow):
     selParamFile.setShortcut('Ctrl+P')
     selParamFile.setStatusTip('Set parameter file')
     selParamFile.triggered.connect(self.selParamFileDialog)
+
+    clearCanv = QAction('Clear canvas/data', self)
+    clearCanv.setShortcut('Ctrl+X')
+    clearCanv.setStatusTip('Clear canvas/data')
+    clearCanv.triggered.connect(self.clearCanvas)
 
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file', self)
     loadDataFile.setShortcut('Ctrl+D')
@@ -1794,6 +1811,7 @@ class HNNGUI (QMainWindow):
     if dconf['nsgrun']: fileMenu.addAction(runSimNSGAct)
     if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
+    fileMenu.addAction(clearCanv)
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
     fileMenu.addAction(exitAction)
