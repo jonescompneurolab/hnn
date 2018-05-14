@@ -24,7 +24,7 @@ from conf import dconf
 from gutils import getmplDPI
 
 #plt.rcParams['lines.markersize'] = 15
-plt.rcParams['lines.linewidth'] = 3
+plt.rcParams['lines.linewidth'] = 1
 rastmarksz = 5 # raster dot size
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10

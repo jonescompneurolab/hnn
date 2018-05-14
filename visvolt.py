@@ -124,7 +124,7 @@ class VoltGUI (QMainWindow):
     global dfile, ddat, paramf
     super().__init__()        
     self.fontsize = dconf['fontsize']
-    self.linewidth = plt.rcParams['lines.linewidth'] = 3
+    self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.initUI()
 
