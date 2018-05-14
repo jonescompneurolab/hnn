@@ -351,7 +351,7 @@ class SIMCanvas (FigureCanvas):
         ax.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
         myxl = ax.get_xlim()
         if myxl[0] < 0.0: ax.set_xlim((0.0,myxl[1]+myxl[0]))
-        self.figure.subplots_adjust(left=0.08,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
+        self.figure.subplots_adjust(left=0.08,right=0.99,bottom=0.0,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
     except:
       print('simdat ERR: could not plotextdat')
@@ -445,6 +445,8 @@ class SIMCanvas (FigureCanvas):
         ax.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n',fontsize=dconf['fontsize'])
       ax.set_xlim(xl); ax.set_ylim(yl)
 
+      bottom = 0.0
+
       if DrawSpec: # 
         if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
         gRow = 6
@@ -459,11 +461,12 @@ class SIMCanvas (FigureCanvas):
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
         for ax in self.lax:
           if ax: ax.set_xlim(xl)
+        bottom = 0.08
       else:
         ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
     except:
       print('ERR: in plotsimdat')
-    self.figure.subplots_adjust(left=0.08,right=0.99,bottom=0.08,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
+    self.figure.subplots_adjust(left=0.08,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
   def plot (self):
     self.plotsimdat()
