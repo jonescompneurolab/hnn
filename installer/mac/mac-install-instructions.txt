@@ -22,7 +22,8 @@ sudo conda install -y mpi4py
 sudo conda install -y pyqtgraph
 sudo conda install -y PyOpenGL
 
-# go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.5.master-1688.x86_64-osx.pkg) -- NOTE: say no when asked about setting paths; we'll do that later
+# go to http://neuron.yale.edu/ftp/neuron/versions/alpha, download and install the most recent version of NEURON into your Applications folder (currently nrn-7.6.master-1712.x86_64-osx.pkg) -- NOTE: say no when asked about setting paths; we'll do that later
+
 
 # to make sure all of the correct paths are followed type the following set of commands to 
 # set the environment variables; note that depending on your shell (bash or c shell) you will
@@ -30,14 +31,14 @@ sudo conda install -y PyOpenGL
 
  # if you are using the bash shell, put the following in your ~/.bash_profile
  # (e.g. type "open ~/.bash_profile" in the terminal without the quotes to edit it):
- export PYTHONPATH=/Applications/NEURON-7.5/nrn/lib/python:$PYTHONPATH
- export PATH=/Applications/NEURON-7.5/nrn/x86_64/bin:$PATH
+ export PYTHONPATH=/Applications/NEURON-7.6/nrn/lib/python:$PYTHONPATH
+ export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
  export NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
 
  # if you are using the c shell (tcsh), put the following in your ~/.cshrc (and/or ~/.tcshrc)
  # (e.g. type "open ~/.cshrc" or as appropriate in the terminal without the quotes to edit the file):
- set PYTHONPATH=(/Applications/NEURON-7.5/nrn/lib/python $PYTHONPATH)
- set path = ($path /Applications/NEURON-7.5/nrn/x86_64/bin)
+ set PYTHONPATH=(/Applications/NEURON-7.6/nrn/lib/python $PYTHONPATH)
+ set path = ($path /Applications/NEURON-7.6/nrn/x86_64/bin)
  set NRN_PYLIB="/Applications/anaconda/bin/../lib//libpython3.6m.dylib"
 
 # next type the following to clone HNN's github repository (contains model/gui source-code)
