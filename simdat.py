@@ -325,7 +325,7 @@ class SIMCanvas (FigureCanvas):
         shp = dat.shape
         for c in range(1,shp[1],1): 
           clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
-          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=self.gui.linewidth+3))
+          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=self.gui.linewidth+1))
           yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
           fx = int(shp[0] * float(c) / shp[1])
@@ -434,7 +434,7 @@ class SIMCanvas (FigureCanvas):
       if conf.dconf['drawavgdpl'] or N_trials <= 1:
         # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
-        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+2) 
+        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+1) 
         
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
