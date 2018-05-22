@@ -12,8 +12,7 @@ import conf
 import spikefn
 from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm, countEvokedInputs
 from scipy import signal
-
-#plt.rc_context({'axes.edgecolor':'white', 'xtick.color':'white', 'ytick.color':'white','figure.facecolor':'white','axes.facecolor':'black'})
+from gutils import getscreengeom
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
@@ -347,11 +346,14 @@ class SIMCanvas (FigureCanvas):
         self.annot_avg = ax.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',fontweight='bold')
 
       if not hassimdata: # need axis labels
+        left = 0.08
+        w,h=getscreengeom()
+        if w < 2800: left = 0.1
         ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
         ax.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
         myxl = ax.get_xlim()
         if myxl[0] < 0.0: ax.set_xlim((0.0,myxl[1]+myxl[0]))
-        self.figure.subplots_adjust(left=0.08,right=0.99,bottom=0.0,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
+        self.figure.subplots_adjust(left=left,right=0.99,bottom=0.0,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
     except:
       print('simdat ERR: could not plotextdat')
@@ -446,6 +448,9 @@ class SIMCanvas (FigureCanvas):
       ax.set_xlim(xl); ax.set_ylim(yl)
 
       bottom = 0.0
+      left = 0.08
+      w,h=getscreengeom()
+      if w < 2800: left = 0.1
 
       if DrawSpec: # 
         if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
@@ -466,7 +471,7 @@ class SIMCanvas (FigureCanvas):
         ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
     except:
       print('ERR: in plotsimdat')
-    self.figure.subplots_adjust(left=0.08,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
+    self.figure.subplots_adjust(left=left,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
   def plot (self):
     self.plotsimdat()
