@@ -76,10 +76,10 @@ def bringwintobot (win):
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
   # based on examples from https://www.programcreek.com/python/example/101663/PyQt5.QtCore.Qt.WindowActive
-  win.show()
+  #win.show()
   #win.setWindowState(win.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
   #win.raise_()
-  #win.showNormal()
+  win.showNormal()
   win.activateWindow()
   #win.setWindowState((win.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
   #win.activateWindow()
@@ -1992,7 +1992,7 @@ class HNNGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
 
-    setscalegeomcenter(self, 1300, 1100) # start GUI in center of screen
+    setscalegeomcenter(self, 1500, 1300) # start GUI in center of screenm, scale based on screen w x h 
 
     self.setWindowTitle('HNN - ' + paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
@@ -2000,19 +2000,12 @@ class HNNGUI (QMainWindow):
     self.grid = grid = QGridLayout()
     #grid.setSpacing(10)
 
-    # addWidget(QWidget *widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment())
-
     gRow = 0
 
     self.addButtons(gRow)
 
     gRow += 1
 
-    """
-    self.mne = mne = QLabel() 
-    self.mne.setText('MNE (To Be Added)')
-    grid.addWidget(self.mne, gRow, 0, 1, 2)
-    """
     self.initSimCanvas(gRow)
     gRow += 2
 
