@@ -6,9 +6,6 @@
 Anaconda system-wide, you'll need to adapt the instructions below in step 4 to the true location of python36.dll,
 which will be c:\ProgramData\Anaconda3)
 
-I’d make their suggestion the default with a comment that if one selected to install Anaconda for all users, to use c:\ProgramData\Anaconda3 instead.
-)
-
 2a. go to - https://neuron.yale.edu/neuron/download/precompiled-installers#mswin 
 2b. Download and install NEURON. 
 (NOTE: be sure to select the "Set DOS environment" checkbox during the install)
