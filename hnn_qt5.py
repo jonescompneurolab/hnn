@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 import multiprocessing
 from subprocess import Popen, PIPE, call
-import shlex
+import shlex, shutil
 from collections import OrderedDict
 from time import time, clock, sleep
 import pickle, tempfile
@@ -200,6 +200,10 @@ class RunSimThread (QThread):
   def optmodel (self):
     self.updatewaitsimwin('Optimizing model. . .')
     from neuron import h # for praxis
+    self.optiter = 0 # optimization iteration
+    fpopt = open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'w')
+    fpopt.close()
+    self.minopterr = 1e9
 
     def optrun (vparam):
       # create parameter dictionary of current values to test
@@ -225,6 +229,20 @@ class RunSimThread (QThread):
       self.updatedrawerr() # send event to draw updated error (asynchronously)
       self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
       print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)#,'time=',time())
+
+      with open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'a') as fpopt:
+        fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
+
+      # backup the current param file
+      outdir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+      prmloc0 = os.path.join(outdir,paramf.split(os.path.sep)[-1])
+      prmloc1 = os.path.join(outdir,str(self.optiter)+'.param')
+      shutil.copyfile(prmloc0,prmloc1)
+      if simdat.ddat['errtot'] < self.minopterr:
+        self.minopterr = simdat.ddat['errtot']
+        shutil.copyfile(prmloc0,os.path.join(outdir,'best.param')) # convenience, save best here
+      self.optiter += 1
+
       return simdat.ddat['errtot'] # return error to praxis
 
     tol = 1e-5; nstep = 100; stepsz = 1.0 #stepsz = 0.5
@@ -244,8 +262,7 @@ class RunSimThread (QThread):
         prm = lparam[lvar.index(k)]
         vparam.append(logval(prm,float(v)))
         if debug: print('optmodel: k',k,'in lparam')
-    x = h.fit_praxis(optrun, vparam) #x = optrun(vparam)    
-
+    x = h.fit_praxis(optrun, vparam) #x = optrun(vparam)
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
