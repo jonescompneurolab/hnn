@@ -1,3 +1,6 @@
+# make sure the package lists are current
+sudo apt-get update
+
 sudo apt install -y git
 
 # HNN repo from bitbucket
