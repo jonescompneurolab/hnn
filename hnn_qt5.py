@@ -454,7 +454,7 @@ class OngoingInputParamDialog (DictDialog):
       for k in d.keys():
         lk = k.split('_')
         if k.count('weight') > 0:
-          self.addtransvar(k, dtmp[lk[-2][0:2]] + lk[-2][2:]+' '+lk[-1].upper()+' weight (nS)')
+          self.addtransvar(k, dtmp[lk[-2][0:2]] + lk[-2][2:]+' '+lk[-1].upper()+u' weight (µS)')
         else:
           self.addtransvar(k, 'Delay (ms)')
 
@@ -668,7 +668,7 @@ class PoissonInputParamDialog (DictDialog):
         cty = ks[0] # cell type
         tcty = dtmp[cty[0:2]] + cty[2:] # translated cell type
         if k.count('weight'):
-          self.addtransvar(k, tcty+ ' ' + ks[-1].upper() + ' weight (nS)')
+          self.addtransvar(k, tcty+ ' ' + ks[-1].upper() + u' weight (µS)')
         elif k.endswith('lamtha'):
           self.addtransvar(k, tcty+ ' freq (Hz)')
 
@@ -876,7 +876,7 @@ class EvokedInputParamDialog (QDialog):
       if k.startswith('gbar'):
         ks = k.split('_')
         stmp = ks[-2]
-        self.addtransvar(k,dtmp[stmp[0:2]] + stmp[2:] + ' ' + ks[-1].upper() + ' weight (nS)')
+        self.addtransvar(k,dtmp[stmp[0:2]] + stmp[2:] + ' ' + ks[-1].upper() + u' weight (µS)')
       elif k.startswith('t'):
         self.addtransvar(k,'Start time mean (ms)')
       elif k.startswith('sigma'):
@@ -1209,9 +1209,9 @@ class NetworkParamDialog (DictDialog):
         sty1 = dtmp[lk[1][0:2]] + lk[1][2:]
         sty2 = dtmp[lk[2][0:2]] + lk[2][2:]
         if len(lk) == 3:
-          self.addtransvar(k,sty1+' -> '+sty2+' weight (nS)')
+          self.addtransvar(k,sty1+' -> '+sty2+u' weight (µS)')
         else:
-          self.addtransvar(k,sty1+' -> '+sty2+' '+lk[3].upper()+' weight (nS)')
+          self.addtransvar(k,sty1+' -> '+sty2+' '+lk[3].upper()+u' weight (µS)')
 
 class HelpDialog (QDialog):
   def __init__ (self, parent):
