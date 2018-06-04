@@ -19,8 +19,8 @@ environment variables", then on the next dialog, select "Environment Variables..
 in the System variables... in the field "Variable name" enter "NRN_PYLIB" and for Variable value
 "C:\Users\USERNAME\Anaconda3\python36.dll"
 (Where USERNAME is your Windows username. Make sure you know what path/directory you installed
-Anaconda 3.6 in – the variable value is that folder/directory where python36.dll resides; if you
-installed Anaconda system-wide then the location will be c:\ProgramData\Anaconda3).
+Anaconda 3.6 in – the variable's value is the full path to where python36.dll resides; if you
+installed Anaconda system-wide then the variable's value will be c:\ProgramData\Anaconda3\python36.dll).
 Select apply, and close that sequence of dialog boxes. 
 
 
