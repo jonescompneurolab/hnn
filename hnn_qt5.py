@@ -30,6 +30,16 @@ from ctune import expval, expvals, logval, logvals
 
 prtime = False
 
+def isWindows ():
+  # are we on windows? or linux/mac ?
+  return sys.platform.startswith('win')
+
+def getPyComm ():
+  # get the python command - Windows only has python linux/mac have python3
+  if isWindows():
+    return 'python'
+  return 'python3'
+
 def parseargs ():
   for i in range(len(sys.argv)):
     if sys.argv[i] == '-dataf' and i + 1 < len(sys.argv):
@@ -1232,15 +1242,15 @@ class VisnetDialog (QDialog):
     super(VisnetDialog, self).__init__(parent)
     self.initUI()
 
-  def showcells3D (self): Popen(['python', 'visnet.py', 'cells', paramf]) # nonblocking
-  def showEconn (self): Popen(['python', 'visnet.py', 'Econn', paramf]) # nonblocking
-  def showIconn (self): Popen(['python', 'visnet.py', 'Iconn', paramf]) # nonblocking
+  def showcells3D (self): Popen([getPyComm(), 'visnet.py', 'cells', paramf]) # nonblocking
+  def showEconn (self): Popen([getPyComm(), 'visnet.py', 'Econn', paramf]) # nonblocking
+  def showIconn (self): Popen([getPyComm(), 'visnet.py', 'Iconn', paramf]) # nonblocking
 
   def runvisnet (self):
-    lcmd = ['python', 'visnet.py']
-    if self.chkcells.isChecked(): lcmd.append('cells')
-    if self.chkE.isChecked(): lcmd.append('Econn')
-    if self.chkI.isChecked(): lcmd.append('Iconn')
+    lcmd = [getPyComm(), 'visnet.py', 'cells']
+    #if self.chkcells.isChecked(): lcmd.append('cells')
+    #if self.chkE.isChecked(): lcmd.append('Econn')
+    #if self.chkI.isChecked(): lcmd.append('Iconn')
     lcmd.append(paramf)
     Popen(lcmd) # nonblocking
 
@@ -1249,13 +1259,13 @@ class VisnetDialog (QDialog):
     self.layout = QVBoxLayout(self)
 
     # Add stretch to separate the form layout from the button
-    self.layout.addStretch(1)
+    # self.layout.addStretch(1)
 
+    """
     self.chkcells = QCheckBox('Cells in 3D',self)
     self.chkcells.resize(self.chkcells.sizeHint())
     self.chkcells.setChecked(True)
     self.layout.addWidget(self.chkcells)
-
     self.chkE = QCheckBox('Excitatory Connections',self)
     self.chkE.resize(self.chkE.sizeHint())
     self.layout.addWidget(self.chkE)
@@ -1263,6 +1273,7 @@ class VisnetDialog (QDialog):
     self.chkI = QCheckBox('Inhibitory Connections',self)
     self.chkI.resize(self.chkI.sizeHint())
     self.layout.addWidget(self.chkI)
+    """
 
     # Create a horizontal box layout to hold the buttons
     self.button_box = QHBoxLayout()
@@ -1692,35 +1703,35 @@ class HNNGUI (QMainWindow):
       msg.exec_()
     else:
       basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      lcmd = ['python', 'visvolt.py',paramf]
+      lcmd = [getPyComm(), 'visvolt.py',paramf]
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'vispsd.py',paramf]
+    lcmd = [getPyComm(), 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showLFPPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'vislfp.py',paramf]
+    lcmd = [getPyComm(), 'vislfp.py',paramf]
     if debug: print('vislfp cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'visspec.py',paramf]
+    lcmd = [getPyComm(), 'visspec.py',paramf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showRasterPlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+    lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -1728,7 +1739,7 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-    lcmd = ['python', 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+    lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
