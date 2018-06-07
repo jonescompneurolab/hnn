@@ -36,6 +36,10 @@ def isWindows ():
 
 def getPyComm ():
   # get the python command - Windows only has python linux/mac have python3
+  if sys.executable is not None: # check python command interpreter path - if available
+    pyc = sys.executable
+    if pyc.count('python') > 0 and len(pyc) > 0:
+      return pyc # full path to python
   if isWindows():
     return 'python'
   return 'python3'
@@ -62,6 +66,8 @@ defncore = multiprocessing.cpu_count() # default number of cores
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
+
+if debug: print('getPyComm:',getPyComm())
 
 # for signaling
 class Communicate (QObject):    
