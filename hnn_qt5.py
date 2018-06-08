@@ -1692,12 +1692,13 @@ class HNNGUI (QMainWindow):
       bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
+    from __init__ import __version__
     msgBox = QMessageBox(self)
     msgBox.setTextFormat(Qt.RichText)
     msgBox.setWindowTitle('About')
-    msgBox.setText("Human Neocortical Neurosolver (HNN)<br>"+\
+    msgBox.setText("Human Neocortical Neurosolver (HNN) v" + __version__ + "<br>"+\
                    "<a href=https://hnn.brown.edu>https://hnn.brown.edu</a><br>"+\
-                   "<a href=https://github.com/jonescompneurolab/hnn>On Github</a><br>"+\
+                   "<a href=https://github.com/jonescompneurolab/hnn>HNN On Github</a><br>"+\
                    "© 2017-2018 <a href=http://brown.edu>Brown University, Providence, RI</a><br>"+\
                    "<a href=https://github.com/jonescompneurolab/hnn/blob/master/LICENSE>Software License</a>")
     msgBox.setStandardButtons(QMessageBox.Ok)
