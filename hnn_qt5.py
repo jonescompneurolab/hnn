@@ -1240,7 +1240,7 @@ class HelpDialog (QDialog):
     self.layout.addStretch(1)
 
     setscalegeom(self, 100, 100, 300, 100)
-    self.setWindowTitle('HNN Help')    
+    self.setWindowTitle('Help')    
 
 # dialog for visualizing model
 class VisnetDialog (QDialog):
@@ -1308,7 +1308,7 @@ class SchematicDialog (QDialog):
 
   def initUI (self):
 
-    self.setWindowTitle('HNN Model Schematics')
+    self.setWindowTitle('Model Schematics')
     QToolTip.setFont(QFont('SansSerif', 10))        
 
     self.grid = grid = QGridLayout()
@@ -1657,7 +1657,7 @@ class HNNGUI (QMainWindow):
       self.baseparamwin.updateDispParam()
       self.initSimCanvas() # recreate canvas 
       # self.m.plot() # replot data
-      self.setWindowTitle('HNN - ' + paramf)
+      self.setWindowTitle(paramf)
 
   def loadDataFile (self, fn):
     import simdat
@@ -1692,7 +1692,7 @@ class HNNGUI (QMainWindow):
       bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
-    QMessageBox.information(self, "HNN", "Human Neocortical Neurosolver"+os.linesep+"https://github.com/jonescompneurolab/hnn"+os.linesep+"© 2017-2018")
+    QMessageBox.information(self, "About", "Human Neocortical Neurosolver"+os.linesep+"https://github.com/jonescompneurolab/hnn"+os.linesep+"© 2017-2018")
 
   def showHelpDialog (self):
     bringwintotop(self.helpwin)
@@ -1704,7 +1704,7 @@ class HNNGUI (QMainWindow):
       msg = QMessageBox()
       msg.setIcon(QMessageBox.Information)
       msg.setText(smsg)
-      msg.setWindowTitle('HNN - rerun simulation')
+      msg.setWindowTitle('Rerun simulation')
       msg.setStandardButtons(QMessageBox.Ok)      
       msg.exec_()
     else:
@@ -1794,7 +1794,7 @@ class HNNGUI (QMainWindow):
     simdat.ddat = {} # clear data in simdat.ddat
     self.initSimCanvas() # recreate canvas 
     self.m.draw()
-    self.setWindowTitle('HNN')
+    self.setWindowTitle('')
 
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
@@ -2028,7 +2028,7 @@ class HNNGUI (QMainWindow):
 
     setscalegeomcenter(self, 1500, 1300) # start GUI in center of screenm, scale based on screen w x h 
 
-    self.setWindowTitle('HNN - ' + paramf)
+    self.setWindowTitle(paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
 
     self.grid = grid = QGridLayout()
@@ -2194,7 +2194,7 @@ class HNNGUI (QMainWindow):
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     self.setcursors(Qt.ArrowCursor)
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
-    self.setWindowTitle('HNN - ' + paramf)
+    self.setWindowTitle(paramf)
 
 if __name__ == '__main__':    
   app = QApplication(sys.argv)
