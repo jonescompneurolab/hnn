@@ -121,6 +121,9 @@ class DataViewGUI (QMainWindow):
     widget.setLayout(grid)
     self.setCentralWidget(widget);
 
+    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
+    except: pass
+
     self.show()
 
   def onActivated(self, idx):

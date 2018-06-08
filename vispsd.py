@@ -251,6 +251,6 @@ class PSDViewGUI (DataViewGUI):
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = PSDViewGUI(PSDCanvas,paramf,ntrial,'HNN PSD Viewer')
+  ex = PSDViewGUI(PSDCanvas,paramf,ntrial,'PSD Viewer')
   sys.exit(app.exec_())  
   

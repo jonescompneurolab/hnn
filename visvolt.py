@@ -196,7 +196,7 @@ class VoltGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle('HNN Volt Viewer - ' + paramf)
+    self.setWindowTitle('Volt Viewer - ' + paramf)
     self.grid = grid = QGridLayout()
     self.index = 0
     self.initCanvas()
@@ -210,6 +210,9 @@ class VoltGUI (QMainWindow):
     widget = QWidget(self)
     widget.setLayout(grid)
     self.setCentralWidget(widget);
+
+    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
+    except: pass
 
     self.show()
 

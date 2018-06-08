@@ -132,5 +132,5 @@ class DipoleCanvas (FigureCanvas):
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = DataViewGUI(DipoleCanvas,paramf,ntrial,'HNN Dipole Viewer')
+  ex = DataViewGUI(DipoleCanvas,paramf,ntrial,'Dipole Viewer')
   sys.exit(app.exec_())  

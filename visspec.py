@@ -271,6 +271,6 @@ class SpecViewGUI (DataViewGUI):
 
 if __name__ == '__main__':
   app = QApplication(sys.argv)
-  ex = SpecViewGUI(SpecCanvas,paramf,ntrial,'HNN Spectrogram Viewer')
+  ex = SpecViewGUI(SpecCanvas,paramf,ntrial,'Spectrogram Viewer')
   sys.exit(app.exec_())  
   
