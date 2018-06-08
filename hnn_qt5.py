@@ -261,7 +261,7 @@ class RunSimThread (QThread):
 
       return simdat.ddat['errtot'] # return error to praxis
 
-    tol = 1e-5; nstep = 100; stepsz = 1.0 #stepsz = 0.5
+    tol = 1e-5; nstep = 100; stepsz = 0.5 # 1.0 #stepsz = 0.5
     h.attr_praxis(tol, stepsz, 3)
     h.stop_praxis(nstep) # 
     lparam = list(dconf['params'].values())
@@ -2052,6 +2052,9 @@ class HNNGUI (QMainWindow):
     widget = QWidget(self)
     widget.setLayout(grid)
     self.setCentralWidget(widget);
+
+    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
+    except: pass
 
     self.schemwin.show() # so it's underneath main window
 
