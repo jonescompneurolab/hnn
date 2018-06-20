@@ -265,7 +265,6 @@ class ExpParams():
                 if isinstance(val, float):
                     if val == 0:
                         p[param] = p['tstop']
-
                 elif isinstance(val, np.ndarray):
                     p[param][p[param] == 0] = p['tstop']
 
@@ -303,7 +302,6 @@ class ExpParams():
     # creates dict of params whose values are to be coupled
     def __find_coupled_params(self):
         coupled_params = {}
-
         # iterates over all key/value pairs to find vals that are strings
         for key, val in self.p_all.items():
             if isinstance(val, str):
@@ -360,7 +358,7 @@ class ExpParams():
         return p_all
 
     # creates all combination of non-exp params
-    def __create_paramlist(self):
+    def __create_paramlist (self):
         # p_all is the dict specifying all of the changing params
         plist = []
 
@@ -379,7 +377,6 @@ class ExpParams():
         for item in list_sorted:
             if isinstance(item[1], np.ndarray):
                 plist.append(item[1])
-
             else:
                 plist.append(np.array([item[1]]))
 
@@ -387,15 +384,6 @@ class ExpParams():
         # vals_all = cartesian(plist)
         vals_new = np.array([np.array(val) for val in it.product(*plist)])
         vals_new = vals_new.transpose()
-
-        # debug code
-        # with open('oldway.txt', 'w') as fout:
-        #     for item in vals_trans:
-        #         fout.write("%s\n" % str(item))
-
-        # with open('newway.txt', 'w') as fout:
-        #     for item in vals_new:
-        #         fout.write("%s\n" % str(item))
 
         return [item for item in zip(self.keys_sorted, vals_new)]
 
@@ -510,7 +498,6 @@ def read_sim_prefix(fparam):
     # Assume we found something ...
     if param_list:
         return param_list[0].split(" ")[1]
-
     else:
         print("No sim_prefix found")
         return 0
@@ -522,7 +509,6 @@ def read_expmt_groups(fparam):
 
     try:
         return lines[0].split(': ')[1][1:-1].split(', ')
-
     except:
         print("Couldn't get a handle on expmts")
         return 0
@@ -548,7 +534,6 @@ def feed_validate(p_ext, d, tstop):
             for key in d.keys():
                 if key.endswith('Pyr'):
                     d[key] = (d[key][0] * 5., d[key][1])
-
                 elif key.endswith('Basket'):
                     d[key] = (d[key][0] * 5., d[key][1])
 
