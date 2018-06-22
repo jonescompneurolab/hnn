@@ -1,5 +1,5 @@
-sim_prefix: default
-expmt_groups: {default}
+sim_prefix: AlphaAndBeta2
+expmt_groups: {AlphaAndBeta2}
 tstop: 710.
 dt: 0.025
 celsius: 37.0
@@ -122,8 +122,8 @@ gbar_L2Pyr_L2Pyr_nmda: 5e-4
 gbar_L2Basket_L2Pyr_gabaa: 5e-2
 gbar_L2Basket_L2Pyr_gabab: 5e-2
 gbar_L2Pyr_L5Pyr: 2.5e-4
-gbar_L2Basket_L5Pyr: 5e-3
-gbar_L5Pyr_L5Pyr_ampa: 5e-3
+gbar_L2Basket_L5Pyr: 0.001
+gbar_L5Pyr_L5Pyr_ampa: 0.0005
 gbar_L5Pyr_L5Pyr_nmda: 5e-4
 gbar_L5Basket_L5Pyr_gabaa: 2.5e-2
 gbar_L5Basket_L5Pyr_gabab: 2.5e-2
