@@ -201,10 +201,10 @@ class RunSimThread (QThread):
         # save last simulation dipole for display
         if debug: print('savelastdpl:')
         try:
-          if 'ldpl' not in simdat.ddat:
-            simdat.ddat['ldpl'] = []
+          if 'lolddpl' not in simdat.ddat:
+            simdat.ddat['lolddpl'] = []
           if 'dpl' in simdat.ddat:
-            simdat.ddat['ldpl'].append(simdat.ddat['dpl'])
+            simdat.ddat['lolddpl'].append(simdat.ddat['dpl'])
             if debug: print('saving last dpl from simulation')
         except:
           print('exception in savelastdpl')

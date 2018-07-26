@@ -424,9 +424,9 @@ class SIMCanvas (FigureCanvas):
 
       yl = [np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1])]
 
-      if 'ldpl' in ddat: # plot average dipoles from prior simulations
-        if debug: print('found ldpl in ddat with len=',len(ddat['ldpl']))
-        for olddpl in ddat['ldpl']:
+      if 'lolddpl' in ddat: # plot average dipoles from prior simulations
+        if debug: print('found lolddpl in ddat with len=',len(ddat['lolddpl']))
+        for olddpl in ddat['lolddpl']:
           if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
           ax.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
           yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
