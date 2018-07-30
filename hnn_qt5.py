@@ -59,6 +59,9 @@ parseargs()
 
 simf = dconf['simf']
 paramf = dconf['paramf']
+# lastparamf = '' # param file from previous simulation run
+lparamf = [] # list of param files that were run (so can restore previous/next simulation)
+lparamidx = 0 # index into lparamf
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
@@ -219,6 +222,11 @@ class RunSimThread (QThread):
         simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
         simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
         if debug: print("Read simulation outputs:",simdat.dfile.values())
+
+        while len(lparamf)>0 and lparamidx != len(lparamf) - 1: lparamf.pop() # make sure redos popped
+        lparamf.append(paramf) # save last param file that was run
+        lparamidx = len(lparamf) - 1 # current param index
+
       except: # no output to read yet
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
     else:
@@ -1835,9 +1843,9 @@ class HNNGUI (QMainWindow):
     exitAction.setStatusTip('Exit HNN application')
     exitAction.triggered.connect(qApp.quit)
 
-    selParamFile = QAction(QIcon.fromTheme('open'), 'Set parameter file', self)
+    selParamFile = QAction(QIcon.fromTheme('open'), 'Load parameter file', self)
     selParamFile.setShortcut('Ctrl+P')
-    selParamFile.setStatusTip('Set parameter file')
+    selParamFile.setStatusTip('Load simulation parameter (.param) file')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
     clearCanv = QAction('Clear canvas', self)
@@ -1845,19 +1853,19 @@ class HNNGUI (QMainWindow):
     clearCanv.setStatusTip('Clear canvas (simulation+data)')
     clearCanv.triggered.connect(self.clearCanvas)
 
-    clearSims = QAction('Clear simulations', self)
+    clearSims = QAction('Clear simulation(s)', self)
     #clearSims.setShortcut('Ctrl+X')
-    clearSims.setStatusTip('Clear simulations')
+    clearSims.setStatusTip('Clear simulation(s)')
     clearSims.triggered.connect(self.clearSimulations)
 
-    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data', self)
+    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file', self)
     loadDataFile.setShortcut('Ctrl+D')
     loadDataFile.setStatusTip('Load (dipole) data file')
     loadDataFile.triggered.connect(self.loadDataFileDialog)
 
-    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data', self)
+    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file(s)', self)
     clearDataFileAct.setShortcut('Ctrl+C')
-    clearDataFileAct.setStatusTip('Clear (dipole) data file')
+    clearDataFileAct.setStatusTip('Clear (dipole) data file(s)')
     clearDataFileAct.triggered.connect(self.clearDataFile)
 
     runSimAct = QAction('Run simulation', self)
@@ -1879,17 +1887,35 @@ class HNNGUI (QMainWindow):
     menubar = self.menuBar()
     fileMenu = menubar.addMenu('&File')
     menubar.setNativeMenuBar(False)
-    fileMenu.addAction(runSimAct)
-    if dconf['nsgrun']: fileMenu.addAction(runSimNSGAct)
-    if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
-    fileMenu.addAction(clearSims)
     fileMenu.addSeparator()
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
     fileMenu.addSeparator()
-    fileMenu.addAction(clearCanv)
     fileMenu.addAction(exitAction)
+
+    # part of edit menu for changing drawing properties (line thickness, font size, toggle avg dipole drawing)
+    editMenu = menubar.addMenu('&Edit')
+    viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
+    viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
+    viewAvgDplAction.triggered.connect(self.togAvgDpl)
+    editMenu.addAction(viewAvgDplAction)
+    changeFontSizeAction = QAction('Change Font Size',self)
+    changeFontSizeAction.setStatusTip('Change Font Size.')
+    changeFontSizeAction.triggered.connect(self.changeFontSize)
+    editMenu.addAction(changeFontSizeAction)
+    changeLineWidthAction = QAction('Change Line Width',self)
+    changeLineWidthAction.setStatusTip('Change Line Width.')
+    changeLineWidthAction.triggered.connect(self.changeLineWidth)
+    editMenu.addAction(changeLineWidthAction)
+    changeMarkerSizeAction = QAction('Change Marker Size',self)
+    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
+    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
+    editMenu.addAction(changeMarkerSizeAction)    
+    editMenu.addSeparator()
+    editMenu.addAction(clearSims)
+    editMenu.addAction(clearDataFileAct)
+    editMenu.addAction(clearCanv)
     
     # view menu - to view drawing/visualizations
     viewMenu = menubar.addMenu('&View')
@@ -1935,26 +1961,7 @@ class HNNGUI (QMainWindow):
     viewSimLogAction.setStatusTip('View Detailed Simulation Log')
     viewSimLogAction.triggered.connect(self.showwaitsimwin)
     viewMenu.addAction(viewSimLogAction)
-    viewMenu.addSeparator()
-
-    # part of view menu for changing drawing properties (line thickness, font size, toggle avg dipole drawing)
-    viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
-    viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
-    viewAvgDplAction.triggered.connect(self.togAvgDpl)
-    viewMenu.addAction(viewAvgDplAction)
-    changeFontSizeAction = QAction('Change Font Size',self)
-    changeFontSizeAction.setStatusTip('Change Font Size.')
-    changeFontSizeAction.triggered.connect(self.changeFontSize)
-    viewMenu.addAction(changeFontSizeAction)
-    changeLineWidthAction = QAction('Change Line Width',self)
-    changeLineWidthAction.setStatusTip('Change Line Width.')
-    changeLineWidthAction.triggered.connect(self.changeLineWidth)
-    viewMenu.addAction(changeLineWidthAction)
-    changeMarkerSizeAction = QAction('Change Marker Size',self)
-    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
-    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-    viewMenu.addAction(changeMarkerSizeAction)
-    viewMenu.addSeparator()
+    viewMenu.addSeparator()    
     distributeWindowsAction = QAction('Distribute Windows',self)
     distributeWindowsAction.setStatusTip('Distribute Parameter Windows Across Screen.')
     distributeWindowsAction.triggered.connect(self.distribsubwin)
@@ -1964,6 +1971,18 @@ class HNNGUI (QMainWindow):
     hideWindowsAction.triggered.connect(self.hidesubwin)
     hideWindowsAction.setShortcut('Ctrl+H')
     viewMenu.addAction(hideWindowsAction)
+
+    simMenu = menubar.addMenu('&Simulation')
+    simMenu.addAction(runSimAct)    
+    if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
+    if dconf['optrun']: simMenu.addAction(optSimAct)
+    restorePrevSimAct = QAction('Restore Previous Simulation',self)
+    restorePrevSimAct.setShortcut('Ctrl+Z')
+    simMenu.addAction(restorePrevSimAct)
+    restoreNextSimAct = QAction('Restore Next Simulation',self)
+    restoreNextSimAct.setShortcut('Ctrl+Y')
+    simMenu.addAction(restoreNextSimAct)
+    simMenu.addAction(clearSims)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN',self)
