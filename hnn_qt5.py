@@ -1807,6 +1807,16 @@ class HNNGUI (QMainWindow):
         maxh = win.height()
       if cury >= sh: cury = cury = 0
 
+  def clearSimulations (self):
+    # clear all data and erase everything from canvas
+    global paramf
+    import simdat
+    paramf = '' # set paramf to empty so no data gets loaded
+    simdat.ddat = {} # clear data in simdat.ddat
+    self.initSimCanvas() # recreate canvas 
+    self.m.draw()
+    self.setWindowTitle('')
+
   def clearCanvas (self):
     # clear all data and erase everything from canvas
     global paramf
@@ -1830,17 +1840,22 @@ class HNNGUI (QMainWindow):
     selParamFile.setStatusTip('Set parameter file')
     selParamFile.triggered.connect(self.selParamFileDialog)
 
-    clearCanv = QAction('Clear canvas/data', self)
+    clearCanv = QAction('Clear canvas', self)
     clearCanv.setShortcut('Ctrl+X')
-    clearCanv.setStatusTip('Clear canvas/data')
+    clearCanv.setStatusTip('Clear canvas (simulation+data)')
     clearCanv.triggered.connect(self.clearCanvas)
 
-    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file', self)
+    clearSims = QAction('Clear simulations', self)
+    #clearSims.setShortcut('Ctrl+X')
+    clearSims.setStatusTip('Clear simulations')
+    clearSims.triggered.connect(self.clearSimulations)
+
+    loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data', self)
     loadDataFile.setShortcut('Ctrl+D')
     loadDataFile.setStatusTip('Load (dipole) data file')
     loadDataFile.triggered.connect(self.loadDataFileDialog)
 
-    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data file', self)
+    clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data', self)
     clearDataFileAct.setShortcut('Ctrl+C')
     clearDataFileAct.setStatusTip('Clear (dipole) data file')
     clearDataFileAct.triggered.connect(self.clearDataFile)
@@ -1868,9 +1883,12 @@ class HNNGUI (QMainWindow):
     if dconf['nsgrun']: fileMenu.addAction(runSimNSGAct)
     if dconf['optrun']: fileMenu.addAction(optSimAct)
     fileMenu.addAction(selParamFile)
-    fileMenu.addAction(clearCanv)
+    fileMenu.addAction(clearSims)
+    fileMenu.addSeparator()
     fileMenu.addAction(loadDataFile)
     fileMenu.addAction(clearDataFileAct)
+    fileMenu.addSeparator()
+    fileMenu.addAction(clearCanv)
     fileMenu.addAction(exitAction)
     
     # view menu - to view drawing/visualizations
