@@ -1815,6 +1815,14 @@ class HNNGUI (QMainWindow):
         maxh = win.height()
       if cury >= sh: cury = cury = 0
 
+  def restorePrevSim (self):
+    if debug: print('restorePrevSim')
+    pass
+
+  def restoreNextSim (self):
+    if debug: print('restoreNextSim')
+    pass
+
   def clearSimulations (self):
     # clear all data and erase everything from canvas
     global paramf
@@ -1978,9 +1986,11 @@ class HNNGUI (QMainWindow):
     if dconf['optrun']: simMenu.addAction(optSimAct)
     restorePrevSimAct = QAction('Restore Previous Simulation',self)
     restorePrevSimAct.setShortcut('Ctrl+Z')
+    restorePrevSimAct.triggered.connect(self.restorePrevSim)
     simMenu.addAction(restorePrevSimAct)
     restoreNextSimAct = QAction('Restore Next Simulation',self)
     restoreNextSimAct.setShortcut('Ctrl+Y')
+    restoreNextSimAct.triggered.connect(self.restoreNextSim)
     simMenu.addAction(restoreNextSimAct)
     simMenu.addAction(clearSims)
 
