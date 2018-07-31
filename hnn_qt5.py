@@ -198,19 +198,6 @@ class RunSimThread (QThread):
       if debug: print('not self.killed')
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
 
-        """
-        # save last simulation dipole for display
-        if debug: print('savelastdpl:')
-        try:
-          if 'lolddpl' not in simdat.ddat:
-            simdat.ddat['lolddpl'] = []
-          if 'dpl' in simdat.ddat:
-            simdat.ddat['lolddpl'].append(simdat.ddat['dpl'])
-            if debug: print('saving last dpl from simulation')
-        except:
-          print('exception in savelastdpl')
-        """
-
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
         if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
         if os.path.isfile(simdat.dfile['spec']):

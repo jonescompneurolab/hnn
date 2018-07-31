@@ -451,16 +451,6 @@ class SIMCanvas (FigureCanvas):
         yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
         yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())      
 
-      """
-      if 'lolddpl' in ddat: # plot average dipoles from prior simulations
-        if debug: print('found lolddpl in ddat with len=',len(ddat['lolddpl']))
-        for olddpl in ddat['lolddpl']:
-          if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
-          ax.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
-          yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
-          yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())
-      """
-
       if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           ax.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=self.gui.linewidth)
