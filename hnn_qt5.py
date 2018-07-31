@@ -1658,7 +1658,7 @@ class HNNGUI (QMainWindow):
     global paramf,dfile
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'param') # uses forward slash, even on Windows OS
     if fn[0]:
-      paramf = os.path.abspath(fn[0]) # to make sure have right path separates on Windows OS
+      paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
       try:
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
@@ -2176,6 +2176,10 @@ class HNNGUI (QMainWindow):
     if 'dataf' in dconf:
       if os.path.isfile(dconf['dataf']):
         self.loadDataFile(dconf['dataf'])
+
+    # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
+    import simdat
+    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
   def initSimCanvas (self,gRow=1,recalcErr=True):
     # initialize the simulation canvas, loading any required data
