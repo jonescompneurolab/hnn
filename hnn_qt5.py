@@ -165,6 +165,7 @@ class RunSimThread (QThread):
 
   # run sim command via mpi, then delete the temp file.
   def runsim (self):
+    global lparamf,lparamidx
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
@@ -1815,13 +1816,35 @@ class HNNGUI (QMainWindow):
         maxh = win.height()
       if cury >= sh: cury = cury = 0
 
+  def updateDatCanv (self,fn):
+    try:
+      dfile = getinputfiles(fn) # reset input data - if already exists
+    except:
+      pass
+    # now update the GUI components to reflect the param file selected
+    self.baseparamwin.updateDispParam()
+    self.initSimCanvas() # recreate canvas 
+    self.setWindowTitle(fn)
+
   def restorePrevSim (self):
-    if debug: print('restorePrevSim')
-    pass
+    global paramf,dfile,lparamf,lparamidx
+    # restore previously run simulation
+    if debug: print('restorePrevSim',paramf,lparamf,lparamidx)
+    if len(lparamf) > 0 and lparamidx > 0:
+      lparamidx -= 1
+      paramf = lparamf[lparamidx]
+      if debug: print('new paramf:',paramf,lparamf,lparamidx)
+      self.updateDatCanv(paramf)
 
   def restoreNextSim (self):
-    if debug: print('restoreNextSim')
-    pass
+    global paramf,dfile,lparamf,lparamidx
+    # restore next simulation (if went back before)
+    if debug: print('restoreNextSim',paramf,lparamf,lparamidx)
+    if len(lparamf) > 0 and lparamidx + 1 < len(lparamf):
+      lparamidx += 1
+      paramf = lparamf[lparamidx]
+      if debug: print('new paramf:',paramf,lparamf,lparamidx)
+      self.updateDatCanv(paramf)
 
   def clearSimulations (self):
     # clear all data and erase everything from canvas
