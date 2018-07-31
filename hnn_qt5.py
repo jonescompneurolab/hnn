@@ -1847,7 +1847,7 @@ class HNNGUI (QMainWindow):
       self.updateDatCanv(paramf)
 
   def clearSimulations (self):
-    # clear all data and erase everything from canvas
+    # clear all simulation data and erase simulations from canvas (does not clear external data)
     global paramf
     import simdat
     paramf = '' # set paramf to empty so no data gets loaded
@@ -2011,14 +2011,14 @@ class HNNGUI (QMainWindow):
     simMenu.addAction(runSimAct)    
     if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
     if dconf['optrun']: simMenu.addAction(optSimAct)
-    restorePrevSimAct = QAction('Restore Previous Simulation',self)
+    restorePrevSimAct = QAction('Undo (Go to Previous Simulation)',self)
     restorePrevSimAct.setShortcut('Ctrl+Z')
-    restorePrevSimAct.setStatusTip('Go Back to Previous Simulation')
+    restorePrevSimAct.setStatusTip('Undo (Go Back to Previous Simulation)')
     restorePrevSimAct.triggered.connect(self.restorePrevSim)
     simMenu.addAction(restorePrevSimAct)
-    restoreNextSimAct = QAction('Restore Next Simulation',self)
+    restoreNextSimAct = QAction('Redo (Go to Next Simulation)',self)
     restoreNextSimAct.setShortcut('Ctrl+Y')
-    restoreNextSimAct.setStatusTip('Go Forward to Next Simulation')
+    restoreNextSimAct.setStatusTip('Redo (Go Forward to Next Simulation)')
     restoreNextSimAct.triggered.connect(self.restoreNextSim)
     simMenu.addAction(restoreNextSimAct)
     simMenu.addAction(clearSims)
