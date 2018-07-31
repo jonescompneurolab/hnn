@@ -22,6 +22,9 @@ debug = dconf['debug']
 ddat = {} # current simulation data
 dfile = {} # data file information for current simulation
 
+lsimdat = [] # list of simulation data
+lsimidx = 0 # index into lsimdat
+
 def rmse (a1, a2):
   # return root mean squared error between a1, a2; assumes same lengths, sampling rates
   len1,len2 = len(a1),len(a2)
@@ -441,6 +444,14 @@ class SIMCanvas (FigureCanvas):
 
       yl = [np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1])]
 
+      for lsim in lsimdat: # plot average dipoles from prior simulations
+        olddpl = lsim[1]
+        if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
+        ax.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
+        yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
+        yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())      
+
+      """
       if 'lolddpl' in ddat: # plot average dipoles from prior simulations
         if debug: print('found lolddpl in ddat with len=',len(ddat['lolddpl']))
         for olddpl in ddat['lolddpl']:
@@ -448,6 +459,7 @@ class SIMCanvas (FigureCanvas):
           ax.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
           yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
           yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())
+      """
 
       if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:

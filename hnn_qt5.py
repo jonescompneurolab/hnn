@@ -59,9 +59,6 @@ parseargs()
 
 simf = dconf['simf']
 paramf = dconf['paramf']
-# lastparamf = '' # param file from previous simulation run
-lparamf = [] # list of param files that were run (so can restore previous/next simulation)
-lparamidx = 0 # index into lparamf
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
@@ -165,7 +162,6 @@ class RunSimThread (QThread):
 
   # run sim command via mpi, then delete the temp file.
   def runsim (self):
-    global lparamf,lparamidx
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
@@ -202,6 +198,7 @@ class RunSimThread (QThread):
       if debug: print('not self.killed')
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
 
+        """
         # save last simulation dipole for display
         if debug: print('savelastdpl:')
         try:
@@ -212,7 +209,7 @@ class RunSimThread (QThread):
             if debug: print('saving last dpl from simulation')
         except:
           print('exception in savelastdpl')
-
+        """
 
         simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
         if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
@@ -224,9 +221,9 @@ class RunSimThread (QThread):
         simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
         if debug: print("Read simulation outputs:",simdat.dfile.values())
 
-        while len(lparamf)>0 and lparamidx != len(lparamf) - 1: lparamf.pop() # make sure redos popped
-        lparamf.append(paramf) # save last param file that was run
-        lparamidx = len(lparamf) - 1 # current param index
+        while len(simdat.lsimdat)>0 and simdat.lsimidx!=len(simdat.lsimdat)-1: simdat.lsimdat.pop() # redos popped
+        simdat.lsimdat.append( [paramf, simdat.ddat['dpl']] ) # save param file & avg dipole from this run
+        simdat.lsimidx = len(simdat.lsimdat) - 1 # current simulation index
 
       except: # no output to read yet
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
@@ -1826,44 +1823,49 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas() # recreate canvas 
     self.setWindowTitle(fn)
 
-  def restorePrevSim (self):
-    global paramf,dfile,lparamf,lparamidx
-    # restore previously run simulation
-    if debug: print('restorePrevSim',paramf,lparamf,lparamidx)
-    if len(lparamf) > 0 and lparamidx > 0:
-      lparamidx -= 1
-      paramf = lparamf[lparamidx]
-      if debug: print('new paramf:',paramf,lparamf,lparamidx)
+  def undoSim (self):
+    # undo last simulation 
+    global paramf,dfile
+    import simdat
+    if debug: print('undoSim',paramf,simdat.lsimidx)
+    if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
+      simdat.lsimidx -= 1
+      paramf = simdat.lsimdat[simdat.lsimidx][0]
+      if debug: print('new paramf:',paramf,simdat.lsimdat,simdat.lsimidx)
       self.updateDatCanv(paramf)
 
-  def restoreNextSim (self):
-    global paramf,dfile,lparamf,lparamidx
-    # restore next simulation (if went back before)
-    if debug: print('restoreNextSim',paramf,lparamf,lparamidx)
-    if len(lparamf) > 0 and lparamidx + 1 < len(lparamf):
-      lparamidx += 1
-      paramf = lparamf[lparamidx]
-      if debug: print('new paramf:',paramf,lparamf,lparamidx)
+  def redoSim (self):
+    # redo simulation (if had undo before)
+    global paramf,dfile
+    import simdat
+    if debug: print('redoSim',paramf,simdat.lsimidx)
+    if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
+      simdat.lsimidx += 1
+      paramf = simdat.lsimdat[simdat.lsimidx][0]
+      if debug: print('new paramf:',paramf,simdat.lsimdat,simdat.lsimidx)
       self.updateDatCanv(paramf)
 
-  def clearSimulations (self):
-    # clear all simulation data and erase simulations from canvas (does not clear external data)
+  def clearSimulationData (self):
+    # clear the simulation data
     global paramf
     import simdat
     paramf = '' # set paramf to empty so no data gets loaded
     simdat.ddat = {} # clear data in simdat.ddat
+    simdat.lsimdat = []
+    simdat.lsimidx = 0
+
+  def clearSimulations (self):
+    # clear all simulation data and erase simulations from canvas (does not clear external data)
+    self.clearSimulationData()
     self.initSimCanvas() # recreate canvas 
     self.m.draw()
     self.setWindowTitle('')
 
   def clearCanvas (self):
-    # clear all data and erase everything from canvas
-    global paramf
-    import simdat
+    # clear all simulation & external data and erase everything from the canvas
+    self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
-    paramf = '' # set paramf to empty so no data gets loaded
-    simdat.ddat = {} # clear data in simdat.ddat
     self.initSimCanvas() # recreate canvas 
     self.m.draw()
     self.setWindowTitle('')
@@ -2011,16 +2013,16 @@ class HNNGUI (QMainWindow):
     simMenu.addAction(runSimAct)    
     if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
     if dconf['optrun']: simMenu.addAction(optSimAct)
-    restorePrevSimAct = QAction('Undo (Go to Previous Simulation)',self)
-    restorePrevSimAct.setShortcut('Ctrl+Z')
-    restorePrevSimAct.setStatusTip('Undo (Go Back to Previous Simulation)')
-    restorePrevSimAct.triggered.connect(self.restorePrevSim)
-    simMenu.addAction(restorePrevSimAct)
-    restoreNextSimAct = QAction('Redo (Go to Next Simulation)',self)
-    restoreNextSimAct.setShortcut('Ctrl+Y')
-    restoreNextSimAct.setStatusTip('Redo (Go Forward to Next Simulation)')
-    restoreNextSimAct.triggered.connect(self.restoreNextSim)
-    simMenu.addAction(restoreNextSimAct)
+    undoSimAct = QAction('Undo (Go to Previous Simulation)',self)
+    undoSimAct.setShortcut('Ctrl+Z')
+    undoSimAct.setStatusTip('Undo (Go Back to Previous Simulation)')
+    undoSimAct.triggered.connect(self.undoSim)
+    simMenu.addAction(undoSimAct)
+    redoSimAct = QAction('Redo (Go to Next Simulation)',self)
+    redoSimAct.setShortcut('Ctrl+Y')
+    redoSimAct.setStatusTip('Redo (Go Forward to Next Simulation)')
+    redoSimAct.triggered.connect(self.redoSim)
+    simMenu.addAction(redoSimAct)
     simMenu.addAction(clearSims)
 
     aboutMenu = menubar.addMenu('&About')
