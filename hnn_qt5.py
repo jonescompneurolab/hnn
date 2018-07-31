@@ -208,9 +208,7 @@ class RunSimThread (QThread):
         simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
         if debug: print("Read simulation outputs:",simdat.dfile.values())
 
-        while len(simdat.lsimdat)>0 and simdat.lsimidx!=len(simdat.lsimdat)-1: simdat.lsimdat.pop() # redos popped
-        simdat.lsimdat.append( [paramf, simdat.ddat['dpl']] ) # save param file & avg dipole from this run
-        simdat.lsimidx = len(simdat.lsimdat) - 1 # current simulation index
+        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
       except: # no output to read yet
         print('WARN: could not read simulation outputs:',simdat.dfile.values())
@@ -1818,7 +1816,7 @@ class HNNGUI (QMainWindow):
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
       simdat.lsimidx -= 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
-      if debug: print('new paramf:',paramf,simdat.lsimdat,simdat.lsimidx)
+      if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
 
   def redoSim (self):
@@ -1829,7 +1827,7 @@ class HNNGUI (QMainWindow):
     if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
       simdat.lsimidx += 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
-      if debug: print('new paramf:',paramf,simdat.lsimdat,simdat.lsimidx)
+      if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
 
   def clearSimulationData (self):

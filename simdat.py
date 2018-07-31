@@ -25,6 +25,20 @@ dfile = {} # data file information for current simulation
 lsimdat = [] # list of simulation data
 lsimidx = 0 # index into lsimdat
 
+def updatelsimdat(paramf,dpl):
+  # update lsimdat with paramf and dipole dpl
+  # but if the specific sim already run put dipole at that location in list
+  global lsimdat,lsimidx
+  while len(lsimdat)>0 and lsimidx!=len(lsimdat)-1: lsimdat.pop() # redos popped
+  found = False
+  for i,l in enumerate(lsimdat):
+    if l[0] == paramf:
+      lsimdat[i][1] = dpl
+      found = True
+      break
+  if not found: lsimdat.append([paramf,dpl]) # if not found, append to end of the list
+  lsimidx = len(lsimdat) - 1 # current simulation index
+
 def rmse (a1, a2):
   # return root mean squared error between a1, a2; assumes same lengths, sampling rates
   len1,len2 = len(a1),len(a2)
