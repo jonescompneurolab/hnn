@@ -1604,10 +1604,11 @@ class WaitSimDialog (QDialog):
     self.parent().stopsim()
     self.hide()
 
-# main GUI class
-class HNNGUI (QMainWindow):
 
+class HNNGUI (QMainWindow):
+  # main HNN GUI class
   def __init__ (self):
+    # initialize the main HNN GUI
     global dfile, ddat, paramf
     super().__init__()   
     self.runningsim = False
@@ -1626,29 +1627,34 @@ class HNNGUI (QMainWindow):
     self.waitsimwin = WaitSimDialog(self)
 
   def redraw (self):
+    # redraw simulation & external data
     self.m.plotsimdat()
     self.m.draw()
     self.m.plot()
 
   def changeFontSize (self):
+    # bring up window to change font sizes
     i, ok = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if ok:
       self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
       self.redraw()
 
   def changeLineWidth (self):
+    # bring up window to change line width(s)
     i, ok = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
     if ok:
       self.linewidth = plt.rcParams['lines.linewidth'] = i
       self.redraw()
 
   def changeMarkerSize (self):
+    # bring up window to change marker size
     i, ok = QInputDialog.getInt(self, "Set Marker Size","Font Size:", self.markersize, 1, 100, 1)
     if ok:
       self.markersize = plt.rcParams['lines.markersize'] = i
       self.redraw()
     
   def selParamFileDialog (self):
+    # bring up window to select simulation parameter file
     global paramf,dfile
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'param') # uses forward slash, even on Windows OS
     if fn[0]:
@@ -1662,8 +1668,12 @@ class HNNGUI (QMainWindow):
       self.initSimCanvas() # recreate canvas 
       # self.m.plot() # replot data
       self.setWindowTitle(paramf)
+      # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
+      import simdat
+      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
   def loadDataFile (self, fn):
+    # load a dipole data file
     import simdat
     try:
       self.dextdata[fn] = np.loadtxt(fn)
@@ -1681,21 +1691,25 @@ class HNNGUI (QMainWindow):
       return False
 
   def loadDataFileDialog (self):
+    # bring up window to select/load external dipole data file
     fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
+    # clear external dipole data
     import simdat
     self.m.clearlextdatobj()
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
     self.m.draw()
 
   def setparams (self):
+    # show set parameters dialog window
     if self.baseparamwin:
       for win in self.baseparamwin.lsubwin: bringwintobot(win)
       bringwintotop(self.baseparamwin)
 
   def showAboutDialog (self):
+    # show HNN's about dialog box
     from __init__ import __version__
     msgBox = QMessageBox(self)
     msgBox.setTextFormat(Qt.RichText)
@@ -1709,9 +1723,11 @@ class HNNGUI (QMainWindow):
     msgBox.exec_()
 
   def showHelpDialog (self):
+    # show the help dialog box
     bringwintotop(self.helpwin)
 
   def showSomaVPlot (self): 
+    # start the somatic voltage visualization process (separate window)
     global basedir, dfile
     if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
       smsg='In order to view somatic voltages you must first rerun the simulation with saving somatic voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Somatic Voltages, enter a 1 and then rerun the simulation.'
@@ -1728,6 +1744,7 @@ class HNNGUI (QMainWindow):
       Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
+    # start the PSD visualization process (separate window)
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vispsd.py',paramf]
@@ -1735,6 +1752,7 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking
 
   def showLFPPlot (self):
+    # start the LFP visualization process (separate window)
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vislfp.py',paramf]
@@ -1742,6 +1760,7 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
+    # start the spectrogram visualization process (separate window)
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visspec.py',paramf]
@@ -1749,6 +1768,7 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking
 
   def showRasterPlot (self):
+    # start the raster plot visualization process (separate window)
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
@@ -1757,6 +1777,7 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking
 
   def showDipolePlot (self):
+    # start the dipole visualization process (separate window)
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
@@ -1764,15 +1785,17 @@ class HNNGUI (QMainWindow):
     Popen(lcmd) # nonblocking    
 
   def showwaitsimwin (self):
+    # show the wait sim window (has simulation log)
     bringwintotop(self.waitsimwin)
 
   def togAvgDpl (self):
+    # toggle drawing of the average (across trials) dipole
     conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
     self.m.plotsimdat()
     self.m.draw()
 
   def hidesubwin (self):
-    # hide sub windows
+    # hide GUI's sub windows
     self.baseparamwin.hide()
     self.schemwin.hide()
     self.baseparamwin.syngainparamwin.hide()
@@ -1780,7 +1803,7 @@ class HNNGUI (QMainWindow):
     self.activateWindow()
 
   def distribsubwin (self):
-    # distribute sub windows on screen
+    # distribute GUI's sub-windows on screen
     sw,sh = getscreengeom()
     lwin = [win for win in self.baseparamwin.lsubwin if win.isVisible()]
     if self.baseparamwin.isVisible(): lwin.insert(0,self.baseparamwin)
@@ -1799,6 +1822,7 @@ class HNNGUI (QMainWindow):
       if cury >= sh: cury = cury = 0
 
   def updateDatCanv (self,fn):
+    # update the simulation data and canvas
     try:
       dfile = getinputfiles(fn) # reset input data - if already exists
     except:
@@ -1856,6 +1880,7 @@ class HNNGUI (QMainWindow):
     self.setWindowTitle('')
 
   def initMenu (self):
+    # initialize the GUI's menu
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')
     exitAction.setStatusTip('Exit HNN application')
@@ -2051,6 +2076,7 @@ class HNNGUI (QMainWindow):
   def showschematics (self): bringwintotop(self.schemwin)
 
   def addParamImageButtons (self,gRow):
+    # add parameter image buttons to the GUI
 
     self.locbtn = QPushButton('Local Network'+os.linesep+'Connections',self)
     self.locbtn.setIcon(QIcon(lookupresource('connfig')))
@@ -2107,7 +2133,8 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.pixNetlbl,gRow,3,1,1)
 
 
-  def initUI (self):       
+  def initUI (self):
+    # initialize the user interface (UI)
 
     self.initMenu()
     self.statusBar()
@@ -2151,6 +2178,7 @@ class HNNGUI (QMainWindow):
         self.loadDataFile(dconf['dataf'])
 
   def initSimCanvas (self,gRow=1,recalcErr=True):
+    # initialize the simulation canvas, loading any required data
     try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
       self.grid.removeWidget(self.m)
       self.grid.removeWidget(self.toolbar)
@@ -2160,12 +2188,12 @@ class HNNGUI (QMainWindow):
     except:
       pass
     if debug: print('paramf in initSimCanvas:',paramf)
-    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI())
+    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI()) # also loads data
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
-    gCol = 0 # 2
-    gWidth = 4 # 2
     self.toolbar = NavigationToolbar(self.m, self)
+    gCol = 0
+    gWidth = 4
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
     if len(self.dextdata.keys()) > 0:
@@ -2175,8 +2203,8 @@ class HNNGUI (QMainWindow):
       # self.m.plotsimdat()
       self.m.draw()
 
-  # set cursors of self and children
   def setcursors (self,cursor):
+    # set cursors of self and children
     self.setCursor(cursor)
     self.update()
     kids = self.children()
@@ -2189,24 +2217,28 @@ class HNNGUI (QMainWindow):
         pass
 
   def startoptmodel (self):
+    # start model optimization
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
       self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def controlsim (self):
+    # control the simulation
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def controlNSGsim (self):
+    # control simulation on NSG
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore(),True)
 
   def stopsim (self):
+    # stop the simulation
     if self.runningsim:
       self.waitsimwin.hide()
       print('Terminating simulation. . .')
@@ -2219,6 +2251,7 @@ class HNNGUI (QMainWindow):
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
+    # optimize the model
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
 
@@ -2240,7 +2273,7 @@ class HNNGUI (QMainWindow):
     bringwintotop(self.waitsimwin)
 
   def startsim (self, ntrial, ncore, onNSG=False):
-
+    # start the simulation
     if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
 
     self.setcursors(Qt.WaitCursor)
@@ -2268,6 +2301,7 @@ class HNNGUI (QMainWindow):
     bringwintotop(self.waitsimwin)
 
   def done (self):
+    # called when the simulation completes running
     if debug: print('done')
     self.runningsim = False
     self.waitsimwin.hide()
