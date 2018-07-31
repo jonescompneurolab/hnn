@@ -19,16 +19,18 @@ else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 debug = dconf['debug']
 
-ddat = {}
-dfile = {}
+ddat = {} # current simulation data
+dfile = {} # data file information for current simulation
 
 def rmse (a1, a2):
+  # return root mean squared error between a1, a2; assumes same lengths, sampling rates
   len1,len2 = len(a1),len(a2)
   sz = min(len1,len2)
   if debug: print('len1:',len1,'len2:',len2,'ty1:',type(a1),'ty2:',type(a2))
   return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
 
 def readdpltrials (basedir,ntrial):
+  # read dipole data files for individual trials
   if debug: print('in readdpltrials',basedir,ntrial)
   ldpl = []
   for i in range(ntrial):
@@ -39,6 +41,7 @@ def readdpltrials (basedir,ntrial):
   return ldpl
 
 def getinputfiles (paramf):
+  # get a dictionary of input files based on simulation parameter file paramf
   global dfile,basedir
   dfile = {}
   basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
@@ -67,6 +70,7 @@ def updatedat (paramf):
     return False
 
 def getscalefctr (paramf):
+  # get dipole scaling factor parameter value from paramf file
   try:
     xx = quickgetprm(paramf,'dipole_scalefctr',float)
     if type(xx) == float: return xx
@@ -76,8 +80,8 @@ def getscalefctr (paramf):
     return dconf['dipole_scalefctr']
   return 30e3
 
-# draw raster to standalone matplotlib figure - for debugging
 def drawraster ():  
+  # draw raster to standalone matplotlib figure - for debugging (not used in main HNN GUI)
   if 'spk' in ddat:
     # print('spk shape:',ddat['spk'].shape)
     plt.ion()
@@ -86,8 +90,8 @@ def drawraster ():
       plt.plot([pair[0]],[pair[1]],'ko',markersize=10)
     plt.xlabel('Time (ms)',fontsize=dconf['fontsize']); plt.ylabel('ID',fontsize=dconf['fontsize'])
 
-# calculates RMSE error from ddat dictionary
 def calcerr (ddat):
+  # calculates RMSE error from ddat dictionary
   try:
     NSig = errtot = 0.0; lerr = []
     ddat['errtot']=None; ddat['lerr']=None
@@ -110,8 +114,9 @@ def calcerr (ddat):
     #print('exception in calcerr')
     return [],-1.0
 
-# based on https://pythonspot.com/en/pyqt5-matplotlib/
 class SIMCanvas (FigureCanvas): 
+  # matplotlib/pyqt-compatible canvas for drawing simulation & external data
+  # based on https://pythonspot.com/en/pyqt5-matplotlib/
 
   def __init__ (self, paramf, parent=None, width=5, height=4, dpi=40, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
@@ -129,6 +134,7 @@ class SIMCanvas (FigureCanvas):
     self.plot()
 
   def initaxes (self):
+    # initialize the axes; lax is list of axes
     self.axdist = self.axprox = self.axdipole = self.axspec = self.axpois = None
     self.lax = []
 
@@ -183,11 +189,12 @@ class SIMCanvas (FigureCanvas):
       gRow+=1
       self.lax.append(axprox)
 
+    # check input types provided in simulation
     if extinputs is not None: # only valid param.txt file after sim was run
       if debug:
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
-      if hasPois:
+      if hasPois: # any Poisson inputs?
         hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
@@ -219,6 +226,7 @@ class SIMCanvas (FigureCanvas):
         return True,gRow
 
   def clearaxes (self):
+    # clear the figures axes
     try:
       for ax in self.lax:
         if ax:
@@ -228,6 +236,7 @@ class SIMCanvas (FigureCanvas):
       pass
 
   def getNTrials (self):
+    # get the number of trials
     N_trials = 1
     try:
       xx = quickgetprm(self.paramf,'N_trials',int)
@@ -237,6 +246,7 @@ class SIMCanvas (FigureCanvas):
     return N_trials
 
   def getNPyr (self):
+    # get the number of pyramidal neurons used in the simulation
     try:
       x = quickgetprm(self.paramf,'N_pyr_x',int)
       y = quickgetprm(self.paramf,'N_pyr_y',int)
@@ -246,6 +256,7 @@ class SIMCanvas (FigureCanvas):
       return 0
 
   def getEVInputTimes (self):
+    # get the evoked input times
     nprox, ndist = countEvokedInputs(self.paramf)
     ltprox, ltdist = [], []
     try:
@@ -256,6 +267,7 @@ class SIMCanvas (FigureCanvas):
     return ltprox, ltdist
 
   def drawEVInputTimes (self, ax, yl, h=0.1, w=15):
+    # draw the evoked input times using arrows
     ltprox, ltdist = self.getEVInputTimes()
     yrange = abs(yl[1] - yl[0])
     #print('drawEVInputTimes:',yl,yrange,h,w,h*yrange,-h*yrange,yl[0]+h*yrange,yl[1]-h*yrange)
@@ -282,6 +294,7 @@ class SIMCanvas (FigureCanvas):
     return dinty
 
   def setupaxdipole (self):
+    # setup the figure axis for drawing the dipole signal
     dinty = self.getInputs()
 
     # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
@@ -300,7 +313,8 @@ class SIMCanvas (FigureCanvas):
     else:
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
 
-  def plotextdat (self, recalcErr=True): # plot 'external' data (e.g. from experiment/other simulation)
+  def plotextdat (self, recalcErr=True): 
+    # plot 'external' data (e.g. from experiment/other simulation)
     try:
       #self.plotsimdat()
       if recalcErr: calcerr(ddat) # recalculate/save the error?
@@ -361,9 +375,11 @@ class SIMCanvas (FigureCanvas):
     return True
 
   def hassimdata (self):
+    # check if any simulation data available in ddat dictionary
     return 'dpl' in ddat
 
   def clearlextdatobj (self):
+    # clear list of external data objects
     try:
       for o in self.lextdatobj:
         try:
@@ -381,6 +397,7 @@ class SIMCanvas (FigureCanvas):
       if debug: print('ERR: exception in clearlextdatobj')
 
   def plotsimdat (self):
+    # plot the simulation data
 
     if not updatedat(self.paramf): return # if no data from sim, or data load problem return
 
