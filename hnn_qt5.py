@@ -1671,6 +1671,7 @@ class HNNGUI (QMainWindow):
       # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
       import simdat
       simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      self.populateSimCB() # populate the combobox
 
   def loadDataFile (self, fn):
     # load a dipole data file
@@ -1842,6 +1843,7 @@ class HNNGUI (QMainWindow):
       paramf = simdat.lsimdat[simdat.lsimidx][0]
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
+      self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def redoSim (self):
     # redo simulation (if had undo before)
@@ -1853,6 +1855,7 @@ class HNNGUI (QMainWindow):
       paramf = simdat.lsimdat[simdat.lsimidx][0]
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
+      self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def clearSimulationData (self):
     # clear the simulation data
@@ -2156,30 +2159,57 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas(gRow)
     gRow += 2
 
-    self.addParamImageButtons(gRow)
+    # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
+    import simdat
+    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
-    self.c = Communicate()
-    self.c.finishSim.connect(self.done)
+    self.cbsim = QComboBox(self)
+    self.populateSimCB() # populate the combobox
+    self.cbsim.activated[str].connect(self.onActivateSimCB)
+    self.grid.addWidget(self.cbsim, gRow, 0, 1, 4)
+
+    gRow += 1
+    self.addParamImageButtons(gRow)
 
     # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
     self.setCentralWidget(widget);
 
+    self.c = Communicate()
+    self.c.finishSim.connect(self.done)
+
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass
 
     self.schemwin.show() # so it's underneath main window
 
-    self.show()
-
     if 'dataf' in dconf:
       if os.path.isfile(dconf['dataf']):
         self.loadDataFile(dconf['dataf'])
 
-    # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
+    self.show()
+
+  def onActivateSimCB (self, s):
+    # load simulation when activating simulation combobox
+    global paramf,dfile
     import simdat
-    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    if debug: print('onActivateSimCB',s,paramf,self.cbsim.currentIndex(),simdat.lsimidx)
+    if self.cbsim.currentIndex() != simdat.lsimidx:
+      if debug: print('Loading',s)
+      paramf = s
+      simdat.lsimidx = self.cbsim.currentIndex()
+      self.updateDatCanv(paramf)
+
+  def populateSimCB (self):
+    # populate the simulation combobox
+    if debug: print('populateSimCB')
+    global paramf
+    self.cbsim.clear()
+    import simdat
+    for l in simdat.lsimdat:
+      self.cbsim.addItem(l[0])
+    self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def initSimCanvas (self,gRow=1,recalcErr=True):
     # initialize the simulation canvas, loading any required data
@@ -2319,6 +2349,7 @@ class HNNGUI (QMainWindow):
     self.setcursors(Qt.ArrowCursor)
     QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle(paramf)
+    self.populateSimCB() # populate the combobox
 
 if __name__ == '__main__':    
   app = QApplication(sys.argv)
