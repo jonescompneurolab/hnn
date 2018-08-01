@@ -1865,6 +1865,7 @@ class HNNGUI (QMainWindow):
     simdat.ddat = {} # clear data in simdat.ddat
     simdat.lsimdat = []
     simdat.lsimidx = 0
+    self.populateSimCB() # un-populate the combobox
 
   def clearSimulations (self):
     # clear all simulation data and erase simulations from canvas (does not clear external data)
