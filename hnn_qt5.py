@@ -1335,7 +1335,7 @@ class SchematicDialog (QDialog):
     self.distbtn.clicked.connect(self.parent().showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
-    self.netbtn = QPushButton('Model Visualization',self)
+    self.netbtn = QPushButton('Model'+os.linesep+'Visualization',self)
     self.netbtn.setIcon(QIcon(lookupresource('netfig')))
     self.netbtn.clicked.connect(self.parent().showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
@@ -2093,7 +2093,7 @@ class HNNGUI (QMainWindow):
     self.distbtn.clicked.connect(self.showdistparamwin)
     self.grid.addWidget(self.distbtn,gRow,2,1,1)
 
-    self.netbtn = QPushButton('Model Visualization',self)
+    self.netbtn = QPushButton('Model'+os.linesep+'Visualization',self)
     self.netbtn.setIcon(QIcon(lookupresource('netfig')))
     self.netbtn.clicked.connect(self.showvisnet)
     self.grid.addWidget(self.netbtn,gRow,3,1,1)
