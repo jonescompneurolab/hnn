@@ -2072,7 +2072,7 @@ class HNNGUI (QMainWindow):
   def shownetparamwin (self): bringwintotop(self.baseparamwin.netparamwin)
   def showdistparamwin (self): bringwintotop(self.erselectdistal)
   def showproxparamwin (self): bringwintotop(self.erselectprox)
-  def showvisnet (self): bringwintotop(self.visnetwin)
+  def showvisnet (self): Popen([getPyComm(), 'visnet.py', 'cells', paramf]) # nonblocking
   def showschematics (self): bringwintotop(self.schemwin)
 
   def addParamImageButtons (self,gRow):
