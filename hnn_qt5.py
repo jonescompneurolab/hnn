@@ -1962,7 +1962,11 @@ class HNNGUI (QMainWindow):
     editMenu.addAction(changeMarkerSizeAction)    
     editMenu.addSeparator()
     editMenu.addAction(clearSims)
-    editMenu.addAction(clearDataFileAct)
+    clearDataFileAct2 = QAction(QIcon.fromTheme('close'), 'Clear data file(s)', self) # need new act to avoid DBus warning
+    clearDataFileAct2.setShortcut('Ctrl+C')
+    clearDataFileAct2.setStatusTip('Clear (dipole) data file(s)')
+    clearDataFileAct2.triggered.connect(self.clearDataFile)
+    editMenu.addAction(clearDataFileAct2)
     editMenu.addAction(clearCanv)
     
     # view menu - to view drawing/visualizations
@@ -2038,7 +2042,10 @@ class HNNGUI (QMainWindow):
     redoSimAct.setStatusTip('Redo (Go Forward to Next Simulation)')
     redoSimAct.triggered.connect(self.redoSim)
     simMenu.addAction(redoSimAct)
-    simMenu.addAction(clearSims)
+    clearSims2 = QAction('Clear simulation(s)', self) # need another QAction to avoid DBus warning
+    clearSims2.setStatusTip('Clear simulation(s)')
+    clearSims2.triggered.connect(self.clearSimulations)
+    simMenu.addAction(clearSims2)
 
     aboutMenu = menubar.addMenu('&About')
     aboutAction = QAction('About HNN',self)
