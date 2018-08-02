@@ -1670,7 +1670,8 @@ class HNNGUI (QMainWindow):
       self.setWindowTitle(paramf)
       # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
       import simdat
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      if 'dpl' in simdat.ddat:
+        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
       self.populateSimCB() # populate the combobox
 
   def loadDataFile (self, fn):
@@ -2162,7 +2163,8 @@ class HNNGUI (QMainWindow):
 
     # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
     import simdat
-    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    if 'dpl' in simdat.ddat:
+      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
     self.cbsim = QComboBox(self)
     self.populateSimCB() # populate the combobox
