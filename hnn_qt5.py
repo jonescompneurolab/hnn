@@ -1834,11 +1834,11 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas() # recreate canvas 
     self.setWindowTitle(fn)
 
-  def undoSim (self):
-    # undo last simulation 
+  def prevSim (self):
+    # go to previous simulation 
     global paramf,dfile
     import simdat
-    if debug: print('undoSim',paramf,simdat.lsimidx)
+    if debug: print('prevSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
       simdat.lsimidx -= 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
@@ -1846,11 +1846,11 @@ class HNNGUI (QMainWindow):
       self.updateDatCanv(paramf)
       self.cbsim.setCurrentIndex(simdat.lsimidx)
 
-  def redoSim (self):
-    # redo simulation (if had undo before)
+  def nextSim (self):
+    # go to next simulation
     global paramf,dfile
     import simdat
-    if debug: print('redoSim',paramf,simdat.lsimidx)
+    if debug: print('nextSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
       simdat.lsimidx += 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
@@ -2032,16 +2032,16 @@ class HNNGUI (QMainWindow):
     simMenu.addAction(runSimAct)    
     if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
     if dconf['optrun']: simMenu.addAction(optSimAct)
-    undoSimAct = QAction('Undo (Go to Previous Simulation)',self)
-    undoSimAct.setShortcut('Ctrl+Z')
-    undoSimAct.setStatusTip('Undo (Go Back to Previous Simulation)')
-    undoSimAct.triggered.connect(self.undoSim)
-    simMenu.addAction(undoSimAct)
-    redoSimAct = QAction('Redo (Go to Next Simulation)',self)
-    redoSimAct.setShortcut('Ctrl+Y')
-    redoSimAct.setStatusTip('Redo (Go Forward to Next Simulation)')
-    redoSimAct.triggered.connect(self.redoSim)
-    simMenu.addAction(redoSimAct)
+    prevSimAct = QAction('Go to Previous Simulation',self)
+    prevSimAct.setShortcut('Ctrl+Z')
+    prevSimAct.setStatusTip('Go Back to Previous Simulation')
+    prevSimAct.triggered.connect(self.prevSim)
+    simMenu.addAction(prevSimAct)
+    nextSimAct = QAction('Go to Next Simulation',self)
+    nextSimAct.setShortcut('Ctrl+Y')
+    nextSimAct.setStatusTip('Go Forward to Next Simulation')
+    nextSimAct.triggered.connect(self.nextSim)
+    simMenu.addAction(nextSimAct)
     clearSims2 = QAction('Clear simulation(s)', self) # need another QAction to avoid DBus warning
     clearSims2.setStatusTip('Clear simulation(s)')
     clearSims2.triggered.connect(self.clearSimulations)

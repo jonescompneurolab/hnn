@@ -29,7 +29,7 @@ def updatelsimdat(paramf,dpl):
   # update lsimdat with paramf and dipole dpl
   # but if the specific sim already run put dipole at that location in list
   global lsimdat,lsimidx
-  while len(lsimdat)>0 and lsimidx!=len(lsimdat)-1: lsimdat.pop() # redos popped
+  # while len(lsimdat)>0 and lsimidx!=len(lsimdat)-1: lsimdat.pop() # redos popped
   found = False
   for i,l in enumerate(lsimdat):
     if l[0] == paramf:
