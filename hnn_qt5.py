@@ -1834,6 +1834,28 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas() # recreate canvas 
     self.setWindowTitle(fn)
 
+  def removeSim (self):
+    # remove the currently selected simulation
+    global paramf,dfile
+    import simdat
+    if debug: print('removeSim',paramf,simdat.lsimidx)
+    if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
+      cidx = self.cbsim.currentIndex() # 
+      a = simdat.lsimdat[:cidx]
+      b = simdat.lsimdat[cidx+1:]
+      c = [x for x in a]
+      for x in b: c.append(x)
+      simdat.lsimdat = c
+      self.cbsim.removeItem(cidx)
+      simdat.lsimidx = max(0,len(simdat.lsimdat) - 1)
+      if len(simdat.lsimdat) > 0:
+        paramf = simdat.lsimdat[simdat.lsimidx][0]
+        if debug: print('new paramf:',paramf,simdat.lsimidx)
+        self.updateDatCanv(paramf)
+        self.cbsim.setCurrentIndex(simdat.lsimidx)
+      else:
+        self.clearSimulations()
+
   def prevSim (self):
     # go to previous simulation 
     global paramf,dfile
@@ -2176,7 +2198,11 @@ class HNNGUI (QMainWindow):
     self.cbsim = QComboBox(self)
     self.populateSimCB() # populate the combobox
     self.cbsim.activated[str].connect(self.onActivateSimCB)
-    self.grid.addWidget(self.cbsim, gRow, 0, 1, 4)
+    self.grid.addWidget(self.cbsim, gRow, 0, 1, 3)#, 1, 3)
+    self.btnrmsim = QPushButton('Remove Simulation',self)
+    self.btnrmsim.resize(self.btnrmsim.sizeHint())
+    self.btnrmsim.clicked.connect(self.removeSim)
+    self.grid.addWidget(self.btnrmsim, gRow, 3)#, 4, 1)
 
     gRow += 1
     self.addParamImageButtons(gRow)
