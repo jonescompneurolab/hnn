@@ -1313,7 +1313,7 @@ class SchematicDialog (QDialog):
   def initUI (self):
 
     self.setWindowTitle('Model Schematics')
-    QToolTip.setFont(QFont('SansSerif', 10))        
+    QToolTip.setFont(QFont('SansSerif', 10))
 
     self.grid = grid = QGridLayout()
     grid.setSpacing(10)
@@ -2202,6 +2202,7 @@ class HNNGUI (QMainWindow):
     self.btnrmsim = QPushButton('Remove Simulation',self)
     self.btnrmsim.resize(self.btnrmsim.sizeHint())
     self.btnrmsim.clicked.connect(self.removeSim)
+    self.btnrmsim.setToolTip('Remove Currently Selected Simulation')
     self.grid.addWidget(self.btnrmsim, gRow, 3)#, 4, 1)
 
     gRow += 1
