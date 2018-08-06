@@ -355,7 +355,7 @@ class SIMCanvas (FigureCanvas):
         shp = dat.shape
         for c in range(1,shp[1],1): 
           clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
-          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],'--',color=clr,linewidth=self.gui.linewidth+1))
+          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],color=clr,linewidth=self.gui.linewidth+1))
           yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
 
           fx = int(shp[0] * float(c) / shp[1])
