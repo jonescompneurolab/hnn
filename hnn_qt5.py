@@ -153,7 +153,7 @@ class RunSimThread (QThread):
 
   def killproc (self):
     if self.proc is None: return
-    print('Thread killing sim. . .')
+    if debug: print('Thread killing sim. . .')
     try:
       self.proc.kill() # has to be called before proc ends
       self.proc = None
