@@ -139,20 +139,22 @@ def drawrast (dspk, fig, G, sz=8):
 
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
-      if len(dinput['evdist'])>0 or len(dinput['dist'])>0:
+      if (EvokedInputs and len(dinput['evdist'])>0) or \
+         (OngoingInputs and len(dinput['dist'])>0):
         ax = fig.add_subplot(G[row:row+2,:]); row += 2
         lax.append(ax)
         for k2 in ['dist','evdist']: extinputs.plot_hist(ax,k2,0,bins,(0,tstop),color='g')
         ax.invert_yaxis()
         ax.set_ylabel('Distal Input')
 
-      if len(dinput['evprox'])>0 or len(dinput['prox'])>0:
+      if (EvokedInputs and len(dinput['evprox'])>0) or \
+         (OngoingInputs and len(dinput['prox'])>0):
         ax2 = fig.add_subplot(G[row:row+2,:]); row += 2
         lax.append(ax2)
         for k2 in ['prox','evprox']: extinputs.plot_hist(ax2,k2,0,bins,(0,tstop),color='r')
         ax2.set_ylabel('Proximal Input')
 
-      if len(dinput['pois']):
+      if PoissonInputs and len(dinput['pois']):
         axp = fig.add_subplot(G[row:row+2,:]); row += 2
         lax.append(axp)
         extinputs.plot_hist(axp,'pois',0,bins,(0,tstop),color='orange')
