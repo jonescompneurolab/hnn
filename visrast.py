@@ -139,19 +139,24 @@ def drawrast (dspk, fig, G, sz=8):
 
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
-      if (EvokedInputs and len(dinput['evdist'])>0) or \
-         (OngoingInputs and len(dinput['dist'])>0):
+      haveEvokedDist = (EvokedInputs and len(dinput['evdist'])>0)
+      haveOngoingDist = (OngoingInputs and len(dinput['dist'])>0)
+      haveEvokedProx = (EvokedInputs and len(dinput['evprox'])>0)
+      haveOngoingProx = (OngoingInputs and len(dinput['prox'])>0)
+
+      if haveEvokedDist or haveOngoingDist:
         ax = fig.add_subplot(G[row:row+2,:]); row += 2
         lax.append(ax)
-        for k2 in ['dist','evdist']: extinputs.plot_hist(ax,k2,0,bins,(0,tstop),color='g')
+        if haveEvokedDist: extinputs.plot_hist(ax,'evdist',0,bins,(0,tstop),color='g',hty='step')
+        if haveOngoingDist: extinputs.plot_hist(ax,'dist',0,bins,(0,tstop),color='g')
         ax.invert_yaxis()
         ax.set_ylabel('Distal Input')
 
-      if (EvokedInputs and len(dinput['evprox'])>0) or \
-         (OngoingInputs and len(dinput['prox'])>0):
+      if haveEvokedProx or haveOngoingProx:
         ax2 = fig.add_subplot(G[row:row+2,:]); row += 2
         lax.append(ax2)
-        for k2 in ['prox','evprox']: extinputs.plot_hist(ax2,k2,0,bins,(0,tstop),color='r')
+        if haveEvokedProx: extinputs.plot_hist(ax2,'evprox',0,bins,(0,tstop),color='r',hty='step')
+        if haveOngoingProx: extinputs.plot_hist(ax2,'prox',0,bins,(0,tstop),color='r')
         ax2.set_ylabel('Proximal Input')
 
       if PoissonInputs and len(dinput['pois']):
