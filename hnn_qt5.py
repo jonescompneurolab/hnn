@@ -1985,7 +1985,7 @@ class HNNGUI (QMainWindow):
     editMenu.addSeparator()
     editMenu.addAction(clearSims)
     clearDataFileAct2 = QAction(QIcon.fromTheme('close'), 'Clear data file(s)', self) # need new act to avoid DBus warning
-    clearDataFileAct2.setShortcut('Ctrl+C')
+    #clearDataFileAct2.setShortcut('Ctrl+C')
     clearDataFileAct2.setStatusTip('Clear (dipole) data file(s)')
     clearDataFileAct2.triggered.connect(self.clearDataFile)
     editMenu.addAction(clearDataFileAct2)
