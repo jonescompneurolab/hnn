@@ -1899,6 +1899,7 @@ class HNNGUI (QMainWindow):
 
   def clearCanvas (self):
     # clear all simulation & external data and erase everything from the canvas
+    import simdat
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
