@@ -19,22 +19,25 @@ netParams = specs.NetParams()   # object of class NetParams to store the network
 # Cell parameters
 # ----------------------------------------------------------------------------
 
-cellLabels = ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']
 
 # L2Pyr params
-cellRule = netParams.importCellParams(label='L2Pyr_rule', conds={'cellType': 'L2Pyr'}, fileName='L2_pyramidal.py', cellName='L2Pyr')
-# remove cell name from section name
-for secName in cellRule['secs'].keys():
-	netParams.renameCellParamsSec('L2Pyr', secName, secName.split()) 
+netParams.importCellParams(label='L2Pyr_rule', conds={'cellType': 'L2Pyr'}, fileName='L2_pyramidal.py', cellName='L2Pyr')
 
 # L2Bas params
-cellRule = netParams.importCellParams(label='L2Bas_rule', conds={'cellType': 'L2Bas'}, fileName='L2_basket.py', cellName='L2Basket')
+netParams.importCellParams(label='L2Basket_rule', conds={'cellType': 'L2Basket'}, fileName='L2_basket.py', cellName='L2Basket')
 
 # L5Pyr params
-cellRule = netParams.importCellParams(label='L5Pyr_rule', conds={'cellType':'L5Pyr'}, fileName='L5_pyramidal.py', cellName='L5Pyr')
+netParams.importCellParams(label='L5Pyr_rule', conds={'cellType':'L5Pyr'}, fileName='L5_pyramidal.py', cellName='L5Pyr')
 
 # L5Bas params
-cellRule = netParams.importCellParams(label='L5Bas_rule',conds={'cellType':'L5Bas'}, fileName='L5_basket.py',cellName='L5Basket')
+netParams.importCellParams(label='L5Basket_rule',conds={'cellType':'L5Basket'}, fileName='L5_basket.py',cellName='L5Basket')
+
+
+# remove cell name from section name
+cellLabels = ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']
+for cellLabel in cellLabels:
+	for secName in list(netParams.cellParams[cellLabel+'_rule']['secs'].keys()):
+		netParams.renameCellParamsSec(cellLabel+'_rule', secName, secName.replace(cellLabel+'_', '')) 
 
 
 # ----------------------------------------------------------------------------
@@ -44,10 +47,10 @@ cellRule = netParams.importCellParams(label='L5Bas_rule',conds={'cellType':'L5Ba
 numCellsE = int(cfg.netScale * cfg.numCells['E'])
 numCellsI = int(cfg.netScale * cfg.numCells['I'])
 
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr', 'cellModel': 'HH_reduced', 'numCells': numCellsE}
-netParams.popParams['L2Bas'] = {'cellType': 'L2Bas', 'cellModel': 'HH_simple', 'numCells': numCellsI}
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr', 'cellModel': 'HH_reduced',  'numCells': numCellsE}
-netParams.popParams['L5Bas'] = {'cellType': 'L5Bas', 'cellModel': 'HH_simple',  'numCells': numCellsI}
+netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr', 	'cellModel': 'HH_reduced', 'numCells': numCellsE}
+netParams.popParams['L2Bas'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'numCells': numCellsI}
+netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr', 	'cellModel': 'HH_reduced',  'numCells': numCellsE}
+netParams.popParams['L5Bas'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple',  'numCells': numCellsI}
 
 
 #------------------------------------------------------------------------------
