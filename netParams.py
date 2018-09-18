@@ -19,7 +19,6 @@ netParams = specs.NetParams()   # object of class NetParams to store the network
 # Cell parameters
 # ----------------------------------------------------------------------------
 
-
 # L2Pyr params
 netParams.importCellParams(label='L2Pyr_rule', conds={'cellType': 'L2Pyr'}, fileName='L2_pyramidal.py', cellName='L2Pyr')
 
@@ -70,6 +69,11 @@ netParams.synMechParams['AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e
 netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
 netParams.synMechParams['GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
 netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
+
+
+#------------------------------------------------------------------------------
+# Connectivity parameters
+#------------------------------------------------------------------------------
 
 
 """
