@@ -3,14 +3,17 @@ sudo yum -y install git
 # HNN repo from github - moved to github on April 8, 2018
 git clone https://github.com/jonescompneurolab/hnn.git
 
-wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo rpm -i epel-release-latest-7.noarch.rpm
+sudo yum -y install epel-release
 sudo yum -y install python34-devel.x86_64
 sudo yum -y install libX11-devel
 sudo yum -y group install "Development Tools"
 sudo yum -y install xorg-x11-fonts-100dpi 
-sudo yum -y install Cython
-sudo yum -y install python34-pip python-tools
+sudo yum -y install python34-Cython
+sudo yum -y install python34-pip
+# have to upgrade pip because the version provided by python34-pip
+# does not check the installed Python version and will attempt to
+# install modules that require newer versions of Python
+sudo pip3 install --upgrade pip
 sudo pip3 install matplotlib
 # make sure matplotlib version 2 is used -- is this strictly needed?
 sudo pip3 install --upgrade matplotlib
@@ -25,8 +28,8 @@ sudo PATH=$PATH:/usr/lib64/openmpi/bin pip3 install mpi4py
 startdir=$(pwd)
 echo $startdir
 
-git clone https://github.com/nrnhines/nrn
-git clone https://github.com/nrnhines/iv
+git clone https://github.com/neuronsimulator/nrn
+git clone https://github.com/neuronsimulator/iv
 cd iv
 git checkout d4bb059
 ./build.sh
@@ -36,7 +39,7 @@ sudo make install -j4
 cd ../nrn
 #git checkout be2997e
 ./build.sh
-./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d
+./configure --with-nrnpython=python3 --with-paranrn
 make -j4
 sudo PATH=$PATH:/usr/lib64/openmpi/bin make install -j4
 cd src/nrnpython
@@ -69,7 +72,7 @@ sudo ln -fs /usr/local/hnn/hnn /usr/local/bin/hnn
 # create the global session variables, make available for all users
 echo '# these lines define global session variables for HNN' | sudo tee -a /etc/profile.d/hnn.sh
 echo 'export CPU=$(uname -m)' | sudo tee -a /etc/profile.d/hnn.sh
-echo 'export PATH=$PATH::/usr/lib64/openmpi/bin:/usr/local/nrn/$CPU/bin' | sudo tee -a /etc/profile.d/hnn.sh
+echo 'export PATH=$PATH:/usr/lib64/openmpi/bin:/usr/local/nrn/$CPU/bin' | sudo tee -a /etc/profile.d/hnn.sh
 
 # qt, pyqt, and supporting packages - needed for GUI
 # SIP unforutnately not available as a wheel for Python 3.4, so have to compile
@@ -81,6 +84,7 @@ make -j4
 sudo make install -j4
 cd ..
 sudo rm -rf sip-4.19.2
+sudo rm -f sip-4.19.2.tar.gz
 
 sudo yum -y install qt-devel
 sudo yum -y install qt5-qtbase
