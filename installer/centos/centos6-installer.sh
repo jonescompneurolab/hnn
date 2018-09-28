@@ -11,7 +11,7 @@ sudo yum -y install gcc-c++
 sudo yum -y install libX11-devel
 sudo yum -y groupinstall "Development tools"
 sudo yum -y install xorg-x11-fonts-100dpi 
-sudo yum -y install Cython
+sudo yum -y install python34-Cython
 sudo yum -y install python34-setuptools
 sudo easy_install-3.4 pip
 sudo pip3 install matplotlib
@@ -39,7 +39,7 @@ sudo make install -j4
 cd ../nrn
 #git checkout be2997e
 ./build.sh
-./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d
+./configure --with-nrnpython=python3 --with-paranrn
 make -j4
 sudo PATH=$PATH:/usr/lib64/openmpi/bin make install -j4
 cd src/nrnpython
