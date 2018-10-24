@@ -21,5 +21,5 @@ To cite our software please use the following document object identifier:
  [![DOI](https://zenodo.org/badge/128077928.svg)](https://zenodo.org/badge/latestdoi/128077928)
 
 For questions/comments/feedback contact:
- samuel_neymotin@brown.edu stephanie_jones@brown.edu dylan_daniels@brown.edu
+ samuel.neymotin@nki.rfmh.org stephanie_jones@brown.edu dylan_daniels@brown.edu
 
