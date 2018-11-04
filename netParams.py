@@ -36,17 +36,17 @@ cellLabels = ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']
 secListLabels = ['basal', 'apical']
 
 for cellLabel in cellLabels:
-	cellRule = cellLabel+'_rule'
+    cellRule = cellLabel+'_rule'
 
-	# remove cell name from section name
-	secs = list(netParams.cellParams[cellRule]['secs'].keys())
-	for secName in secs:
-		netParams.renameCellParamsSec(cellRule, secName, secName.replace(cellLabel+'_', '')) 
+    # remove cell name from section name
+    secs = list(netParams.cellParams[cellRule]['secs'].keys())
+    for secName in secs:
+        netParams.renameCellParamsSec(cellRule, secName, secName.replace(cellLabel+'_', '')) 
 
-	# create basal and apical sec lists (new list of secs with shorter names)
-	secs = list(netParams.cellParams[cellRule]['secs'].keys())
-	for secListLabel in secListLabels:
-		netParams.cellParams[cellRule]['secLists'][secListLabel] = [sec for sec in secs if secListLabel in sec]
+    # create basal and apical sec lists (new list of secs with shorter names)
+    secs = list(netParams.cellParams[cellRule]['secs'].keys())
+    for secListLabel in secListLabels:
+        netParams.cellParams[cellRule]['secLists'][secListLabel] = [sec for sec in secs if secListLabel in sec]
 
 
 # ----------------------------------------------------------------------------
@@ -56,9 +56,9 @@ for cellLabel in cellLabels:
 numCellsE = int(cfg.netScale * cfg.numCells['E'])
 numCellsI = int(cfg.netScale * cfg.numCells['I'])
 
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr', 	'cellModel': 'HH_reduced', 'numCells': numCellsE}
+netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'numCells': numCellsE}
 netParams.popParams['L2Bas'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'numCells': numCellsI}
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr', 	'cellModel': 'HH_reduced',  'numCells': numCellsE}
+netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced',  'numCells': numCellsE}
 netParams.popParams['L5Bas'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple',  'numCells': numCellsI}
 
 
@@ -79,21 +79,21 @@ connMetaParams = {}
 
 # L2 Pyr -> L2 Pyr
 connMetaParams['L2Pyr->L2Pyr'] = {} 
-connMetaParams['L2Pyr->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 3, 'secs': ['apicaloblique', 'basal2', 'basal3']}
-connMetaParams['L2Pyr->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 3, 'secs': ['apicaloblique', 'basal2', 'basal3']}
+connMetaParams['L2Pyr->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
+connMetaParams['L2Pyr->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
 
 
 for rule, ruleParams in connMetaParams.items():
-	for syn, synParams in ruleParams.items():
-		netParams.connParams[rule] = { 
-			'preConds': {'cellType': rule.split('->')[0]}, 
-			'postConds': {'cellType': rule.split('->')[1]},
-			'synMech': syn,
-			'weight': '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2)'.format(**synParams),
-			'delay': '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2)'.format(**synParams),
-			'synsPerConn': len(synParams['secs']),
-			'sec': synParams['secs']}
-				
+    for syn, synParams in ruleParams.items():
+        netParams.connParams[rule] = { 
+            'preConds': {'cellType': rule.split('->')[0]}, 
+            'postConds': {'cellType': rule.split('->')[1]},
+            'synMech': syn,
+            'weight': '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2))'.format(**synParams),
+            'delay': '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'.format(**synParams),
+            'synsPerConn': len(synParams['secs']),
+            'sec': synParams['secs']}
+                
 
 #     def parconnect_from_src (self, gid_presyn, nc_dict, postsyn):
 #       # nc_dict keys are: {pos_src, A_weight, A_delay, lamtha}
@@ -107,70 +107,69 @@ for rule, ruleParams in connMetaParams.items():
 
 
 
-# 	# Connections FROM all other L2 Pyramidal cells to this one
-# 	for gid_src, pos in zip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
-# 	    # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
-# 	    if gid_src != gid:
-# 	        nc_dict['ampa'] = {
-# 	            'pos_src': pos,
-# 	            'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
-# 	            'A_delay': 1.,
-# 	            'lamtha': 3.,
-# 	            'threshold': p['threshold'],
-# 	            'type_src' : 'L2_pyramidal'
-# 	        }
+#   # Connections FROM all other L2 Pyramidal cells to this one
+#   for gid_src, pos in zip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
+#       # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
+#       if gid_src != gid:
+#           nc_dict['ampa'] = {
+#               'pos_src': pos,
+#               'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
+#               'A_delay': 1.,
+#               'lamtha': 3.,
+#               'threshold': p['threshold'],
+#               'type_src' : 'L2_pyramidal'
+#           }
 
-# 	        # parconnect_from_src(gid_presyn, nc_dict, postsyn)
-# 	        # ampa connections
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
+#           # parconnect_from_src(gid_presyn, nc_dict, postsyn)
+#           # ampa connections
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
 
-# 	        nc_dict['nmda'] = {
-# 	            'pos_src': pos,
-# 	            'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
-# 	            'A_delay': 1.,
-# 	            'lamtha': 3.,
-# 	            'threshold': p['threshold'],
-# 	            'type_src' : 'L2_pyramidal'
-# 	        }
+#           nc_dict['nmda'] = {
+#               'pos_src': pos,
+#               'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
+#               'A_delay': 1.,
+#               'lamtha': 3.,
+#               'threshold': p['threshold'],
+#               'type_src' : 'L2_pyramidal'
+#           }
 
-# 	        # parconnect_from_src(gid_presyn, nc_dict, postsyn)
-# 	        # nmda connections
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
-# 	        self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
+#           # parconnect_from_src(gid_presyn, nc_dict, postsyn)
+#           # nmda connections
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
+#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
 
-# """
+"""
 # ----------------------------------------------------------------------------
 # Current inputs (IClamp)
 # ----------------------------------------------------------------------------
-if cfg.addIClamp:	
- 	for iclabel in [k for k in dir(cfg) if k.startswith('IClamp')]:
- 		ic = getattr(cfg, iclabel, None)  # get dict with params
+if cfg.addIClamp:   
+    for iclabel in [k for k in dir(cfg) if k.startswith('IClamp')]:
+        ic = getattr(cfg, iclabel, None)  # get dict with params
 
-		# add stim source
-		netParams.stimSourceParams[iclabel] = {'type': 'IClamp', 'delay': ic['start'], 'dur': ic['dur'], 'amp': ic['amp']}
-		
-		# connect stim source to target
-		netParams.stimTargetParams[iclabel+'_'+ic['pop']] = \
-			{'source': iclabel, 'conds': {'pop': ic['pop']}, 'sec': ic['sec'], 'loc': ic['loc']}
+        # add stim source
+        netParams.stimSourceParams[iclabel] = {'type': 'IClamp', 'delay': ic['start'], 'dur': ic['dur'], 'amp': ic['amp']}
+        
+        # connect stim source to target
+        netParams.stimTargetParams[iclabel+'_'+ic['pop']] = \
+            {'source': iclabel, 'conds': {'pop': ic['pop']}, 'sec': ic['sec'], 'loc': ic['loc']}
 
 
 # ----------------------------------------------------------------------------
 # NetStim inputs
 # ----------------------------------------------------------------------------
 if cfg.addNetStim:
-	for nslabel in [k for k in dir(cfg) if k.startswith('NetStim')]:
-		ns = getattr(cfg, nslabel, None)
+    for nslabel in [k for k in dir(cfg) if k.startswith('NetStim')]:
+        ns = getattr(cfg, nslabel, None)
 
-		# add stim source
-		netParams.stimSourceParams[nslabel] = {'type': 'NetStim', 'start': ns['start'], 'interval': ns['interval'], 
-											   'noise': ns['noise'], 'number': ns['number']}
+        # add stim source
+        netParams.stimSourceParams[nslabel] = {'type': 'NetStim', 'start': ns['start'], 'interval': ns['interval'], 
+                                               'noise': ns['noise'], 'number': ns['number']}
 
-		# connect stim source to target
-		netParams.stimTargetParams[nslabel+'_'+ns['pop']] = \
-			{'source': nslabel, 'conds': {'pop': ns['pop']}, 'sec': ns['sec'], 'loc': ns['loc'],
-			 'synMech': ns['synMech'], 'weight': ns['weight'], 'delay': ns['delay']}
+        # connect stim source to target
+        netParams.stimTargetParams[nslabel+'_'+ns['pop']] = \
+            {'source': nslabel, 'conds': {'pop': ns['pop']}, 'sec': ns['sec'], 'loc': ns['loc'],
+             'synMech': ns['synMech'], 'weight': ns['weight'], 'delay': ns['delay']}
 """
-

@@ -54,7 +54,7 @@ cfg.analysis['plotTraces'] = {'include': ['L2Pyr','L5Pyr'], 'oneFigPer': 'cell',
 # Cell parameters
 # ----------------------------------------------------------------------------
 cfg.gbar_L2Pyr_L2Pyr_ampa = 0.01
-cfg.gbar_L2Pyr_L2Pyr_ampa = 0.01
+cfg.gbar_L2Pyr_L2Pyr_nmda = 0.01
 
 
 # ----------------------------------------------------------------------------
