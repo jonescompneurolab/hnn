@@ -138,8 +138,9 @@ class SIMCanvas (FigureCanvas):
   def __init__ (self, paramf, parent=None, width=5, height=4, dpi=40, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
-    self.lextdatobj = []
-    self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
+    self.lextdatobj = [] # external data object
+    self.clridx = 5 # index for next color for drawing external data
+    self.lpatch = [mpatches.Patch(color='black', label='Sim.')] # legend for dipole signals
     self.setParent(parent)
     self.gui = parent
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
@@ -330,6 +331,12 @@ class SIMCanvas (FigureCanvas):
     else:
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
 
+  def getnextcolor (self):
+    # get next color for external data (colors selected in order)
+    self.clridx += 5
+    if self.clridx > 100: self.clridx = 5
+    return self.clridx
+
   def plotextdat (self, recalcErr=True): 
     # plot 'external' data (e.g. from experiment/other simulation)
     try:
@@ -351,20 +358,20 @@ class SIMCanvas (FigureCanvas):
 
       self.clearlextdatobj() # clear annotation objects
 
+      ddx = 0
       for fn,dat in ddat['dextdata'].items():
         shp = dat.shape
-        for c in range(1,shp[1],1): 
-          clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
-          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],color=clr,linewidth=self.gui.linewidth+1))
-          yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
-
-          fx = int(shp[0] * float(c) / shp[1])
-
-          if lerr:
-            tx,ty=dat[fx,0],dat[fx,c]
-            txt='RMSE:' + str(round(lerr[c-1],2))
-            self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
-          self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
+        clr = csm.to_rgba(self.getnextcolor())
+        c = min(shp[1],1)
+        self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],color=clr,linewidth=self.gui.linewidth+1))
+        yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
+        fx = int(shp[0] * float(c) / shp[1])
+        if lerr:
+          tx,ty=dat[fx,0],dat[fx,c]
+          txt='RMSE:' + str(round(lerr[ddx],2))
+          self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
+        self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
+        ddx+=1
 
       ax.set_ylim(yl)
 
@@ -404,8 +411,9 @@ class SIMCanvas (FigureCanvas):
         except:
           o[0].set_visible(False)
       del self.lextdatobj
-      self.lextdatobj = []
-      self.lpatch = []
+      self.lextdatobj = [] # reset list of external data objects
+      self.lpatch = [] # reset legend
+      self.clridx = 5 # reset index for next color for drawing external data
       if self.hassimdata(): self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
       if hasattr(self,'annot_avg'):
         self.annot_avg.set_visible(False)
