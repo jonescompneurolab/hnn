@@ -286,24 +286,28 @@ class NetworkOnNode ():
             # create_all_IClamp() is defined in L2Pyr (etc)
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
+            if self.p['save_isoma']: self.cells[-1].record_i_soma()
           elif type == 'L5_pyramidal':
             self.cells.append(L5Pyr(gid, pos, self.p))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
+            if self.p['save_isoma']: self.cells[-1].record_i_soma()
           elif type == 'L2_basket':
             self.cells.append(L2Basket(gid, pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # also run the IClamp for L2_basket
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
+            if self.p['save_isoma']: self.cells[-1].record_i_soma()
           elif type == 'L5_basket':
             self.cells.append(L5Basket(gid, pos))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
             # run the IClamp function here
             self.cells[-1].create_all_IClamp(self.p)
             if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
+            if self.p['save_isoma']: self.cells[-1].record_i_soma()
           elif type == 'extinput':
             #print('type',type)
             # to find param index, take difference between REAL gid
@@ -365,6 +369,15 @@ class NetworkOnNode ():
       dsoma = {}
       for cell in self.cells: dsoma[cell.gid] = (cell.celltype, np.array(cell.vsoma.to_python()))
       return dsoma
+
+    def get_isoma (self):
+      isoma = {}
+      for cell in self.cells:
+        ina = cell.ina_soma.to_python()
+        ik = cell.ik_soma.to_python()
+        val = np.array(list(zip(ina, ik)), dtype=[('ina', np.float32), ('ik', np.float32)])
+        isoma[cell.gid] = (cell.celltype, val)
+      return isoma
 
     # aggregate recording all the somatic voltages for pyr
     def aggregate_currents (self):

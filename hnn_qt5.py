@@ -381,7 +381,7 @@ class DictDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
     self.setWindowTitle(self.stitle)  
-    nw, nh = setscalegeom(self, 150, 150, 625, 300)
+    nw, nh = setscalegeom(self, 150, 150, 825, 300)
     #nx = parent.rect().x()+parent.rect().width()/2-nw/2
     #ny = parent.rect().y()+parent.rect().height()/2-nh/2
     #print(parent.rect(),nx,ny)
@@ -969,7 +969,8 @@ class RunParamDialog (DictDialog):
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
                                   ('dipole_smooth_win',15.0),
-                                  ('save_vsoma',0)])
+                                  ('save_vsoma',0),
+                                  ('save_isoma',0)])
 
     self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
@@ -995,6 +996,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
+    self.addtransvar('save_isoma','Save Somatic Transmembrane currents')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')

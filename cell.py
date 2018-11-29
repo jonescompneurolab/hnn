@@ -49,6 +49,12 @@ class Cell ():
       self.vsoma = h.Vector()
       self.vsoma.record(self.soma(0.5)._ref_v)
 
+    def record_i_soma(self):
+        self.ina_soma = h.Vector()
+        self.ina_soma.record(self.soma(0.5)._ref_ina)
+        self.ik_soma = h.Vector()
+        self.ik_soma.record(self.soma(0.5)._ref_ik)
+
     def get_sections (self): return [self.soma]
 
     def get3dinfo (self):

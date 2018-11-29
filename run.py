@@ -92,10 +92,10 @@ def prsimtime ():
   sys.stdout.flush()
 
 # save somatic voltage of all cells to pkl object
-def save_vsoma ():
+def save_soma (get_data_fn, filename):
   for host in range(int(pc.nhost())):
     if host == pcID:
-      dsoma = net.get_vsoma()
+      dsoma = get_data_fn()
       messageid = pc.pack(dsoma) # create a message ID and store this value
       pc.post(host,messageid) # post the message
   if pcID==0:
@@ -106,7 +106,7 @@ def save_vsoma ():
       for k,v in dsoma_node.items(): dsomaout[k] = v
     dsomaout['vtime'] = t_vec.to_python()
     # print('dsomaout.keys():',dsomaout.keys(),'file:',doutf['file_vsoma'])
-    pickle.dump(dsomaout,open(doutf['file_vsoma'],'wb'))
+    pickle.dump(dsomaout,open(doutf[filename],'wb'))
 
 #
 def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
@@ -143,7 +143,8 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   spikes_write(net, file_spikes_tmp)
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
-  if p['save_vsoma']: save_vsoma()
+  if p['save_vsoma']: save_soma(net.get_vsoma, 'file_vsoma')
+  if p['save_isoma']: save_soma(net.get_isoma, 'file_isoma')
   for i,elec in enumerate(lelec):
     elec.lfpout(fn=doutf['file_lfp'].split('.txt')[0]+'_'+str(i)+'.txt',tvec = t_vec)
 
@@ -195,6 +196,7 @@ def getfname (ddir,key,trial=0,ntrial=1):
                'figspk': ('spk','.png'),
                'param': ('param','.txt'),
                'vsoma': ('vsoma','.pkl'),
+               'isoma': ('isoma','.pkl'),
                'lfp': ('lfp', '.txt')
              }
   if ntrial == 1 or key == 'param': # param file currently identical for all trials
@@ -215,6 +217,7 @@ def setoutfiles (ddir,trial=0,ntrial=1):
   doutf['filename_debug'] = 'debug.dat'
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
   doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
+  doutf['file_isoma'] = getfname(ddir,'isoma',trial,ntrial)
   doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
   # if pcID==0: print(doutf)
   return doutf
