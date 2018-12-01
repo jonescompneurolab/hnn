@@ -373,10 +373,7 @@ class NetworkOnNode ():
     def get_isoma (self):
       isoma = {}
       for cell in self.cells:
-        ina = cell.ina_soma.to_python()
-        ik = cell.ik_soma.to_python()
-        val = np.array(list(zip(ina, ik)), dtype=[('ina', np.float32), ('ik', np.float32)])
-        isoma[cell.gid] = (cell.celltype, val)
+        isoma[cell.gid] = (cell.celltype, cell.dict_currents)
       return isoma
 
     # aggregate recording all the somatic voltages for pyr

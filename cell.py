@@ -30,6 +30,7 @@ class Cell ():
       self.soma.diam = soma_props['diam']
       self.soma.Ra = soma_props['Ra']
       self.soma.cm = soma_props['cm']
+      self.dict_currents = {}
       # variable for the list_IClamp
       self.list_IClamp = None
       # par: create arbitrary lists of connections FROM other cells
@@ -50,10 +51,10 @@ class Cell ():
       self.vsoma.record(self.soma(0.5)._ref_v)
 
     def record_i_soma(self):
-        self.ina_soma = h.Vector()
-        self.ina_soma.record(self.soma(0.5)._ref_ina)
-        self.ik_soma = h.Vector()
-        self.ik_soma.record(self.soma(0.5)._ref_ik)
+      self.dict_currents['soma_ina'] = h.Vector()
+      self.dict_currents['soma_ina'].record(self.soma(0.5)._ref_ina)
+      self.dict_currents['soma_ik'] = h.Vector()
+      self.dict_currents['soma_ik'].record(self.soma(0.5)._ref_ik)
 
     def get_sections (self): return [self.soma]
 
@@ -189,10 +190,8 @@ class Cell ():
       try:
         # assumes that self.synapses is a dict that exists
         list_syn_soma = [key for key in self.synapses.keys() if key.startswith('soma_')]
-        # matching dict from the list_syn_soma keys
-        self.dict_currents = dict.fromkeys(list_syn_soma)
         # iterate through keys and record currents appropriately
-        for key in self.dict_currents:
+        for key in list_syn_soma:
           self.dict_currents[key] = h.Vector()
           self.dict_currents[key].record(self.synapses[key]._ref_i)
       except:
