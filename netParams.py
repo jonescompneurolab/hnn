@@ -7,6 +7,9 @@ try:
 except:
   from cfg import cfg  # if no simConfig in parent module, import directly from cfg module
 
+import numpy as np
+
+
 # ----------------------------------------------------------------------------
 #
 # NETWORK PARAMETERS
@@ -14,6 +17,14 @@ except:
 # ----------------------------------------------------------------------------
 
 netParams = specs.NetParams()   # object of class NetParams to store the network parameters
+#------------------------------------------------------------------------------
+# General network parameters
+#------------------------------------------------------------------------------
+netParams.sizeX = cfg.N_pyr_x * cfg.gridSpacing # x-dimension (horizontal length) size in um
+netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) size in um
+netParams.sizeZ = cfg.N_pyr_y * cfg.gridSpacing # z-dimension (horizontal depth) size in um
+netParams.shape = 'cuboid' 
+
 
 # ----------------------------------------------------------------------------
 # Cell parameters
@@ -52,14 +63,12 @@ for cellLabel in cellLabels:
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
+layers = {'L2': [0.1*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.5*cfg.sizeY, 0.55*cfg.sizeY]}
 
-numCellsE = int(cfg.netScale * cfg.numCells['E'])
-numCellsI = int(cfg.netScale * cfg.numCells['I'])
-
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'numCells': numCellsE}
-netParams.popParams['L2Bas'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'numCells': numCellsI}
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced',  'numCells': numCellsE}
-netParams.popParams['L5Bas'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple',  'numCells': numCellsI}
+netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsE}
+netParams.popParams['L2Bas'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
+netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsE}
+netParams.popParams['L5Bas'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
 
 
 #------------------------------------------------------------------------------
@@ -82,6 +91,11 @@ connMetaParams['L2Pyr->L2Pyr'] = {}
 connMetaParams['L2Pyr->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
 connMetaParams['L2Pyr->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
 
+# L2 Pyr -> L2 Pyr
+connMetaParams['L2Basket->L2Pyr'] = {} 
+connMetaParams['L2Basket->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Basket_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 50, 'secs': ['soma']}
+connMetaParams['L2Basket->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Basket_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 50, 'secs': ['soma']}
+
 
 for rule, ruleParams in connMetaParams.items():
     for syn, synParams in ruleParams.items():
@@ -94,52 +108,6 @@ for rule, ruleParams in connMetaParams.items():
             'synsPerConn': len(synParams['secs']),
             'sec': synParams['secs']}
                 
-
-#     def parconnect_from_src (self, gid_presyn, nc_dict, postsyn):
-#       # nc_dict keys are: {pos_src, A_weight, A_delay, lamtha}
-#       nc = self.pc.gid_connect(gid_presyn, postsyn)
-#       # calculate distance between cell positions with pardistance()
-#       d = self.__pardistance(nc_dict['pos_src'])
-#       # set props here
-#       nc.threshold = nc_dict['threshold']
-#       nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
-#       nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
-
-
-
-#   # Connections FROM all other L2 Pyramidal cells to this one
-#   for gid_src, pos in zip(gid_dict['L2_pyramidal'], pos_dict['L2_pyramidal']):
-#       # don't be redundant, this is only possible for LIKE cells, but it might not hurt to check
-#       if gid_src != gid:
-#           nc_dict['ampa'] = {
-#               'pos_src': pos,
-#               'A_weight': p['gbar_L2Pyr_L2Pyr_ampa'],
-#               'A_delay': 1.,
-#               'lamtha': 3.,
-#               'threshold': p['threshold'],
-#               'type_src' : 'L2_pyramidal'
-#           }
-
-#           # parconnect_from_src(gid_presyn, nc_dict, postsyn)
-#           # ampa connections
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.apicaloblique_ampa))
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal2_ampa))
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['ampa'], self.basal3_ampa))
-
-#           nc_dict['nmda'] = {
-#               'pos_src': pos,
-#               'A_weight': p['gbar_L2Pyr_L2Pyr_nmda'],
-#               'A_delay': 1.,
-#               'lamtha': 3.,
-#               'threshold': p['threshold'],
-#               'type_src' : 'L2_pyramidal'
-#           }
-
-#           # parconnect_from_src(gid_presyn, nc_dict, postsyn)
-#           # nmda connections
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.apicaloblique_nmda))
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal2_nmda))
-#           self.ncfrom_L2Pyr.append(self.parconnect_from_src(gid_src, nc_dict['nmda'], self.basal3_nmda))
 
 """
 # ----------------------------------------------------------------------------
