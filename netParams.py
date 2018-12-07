@@ -66,48 +66,104 @@ for cellLabel in cellLabels:
 layers = {'L2': [0.1*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.5*cfg.sizeY, 0.55*cfg.sizeY]}
 
 netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsE}
-netParams.popParams['L2Bas'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
+netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
 netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsE}
-netParams.popParams['L5Bas'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
+netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
 
 
 #------------------------------------------------------------------------------
 # Synaptic mechanism parameters
 #------------------------------------------------------------------------------
-netParams.synMechParams['AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
-netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
-netParams.synMechParams['GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
-netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
+netParams.synMechParams['L2_AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
+netParams.synMechParams['L2_NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
+netParams.synMechParams['L2_GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
+netParams.synMechParams['L2_GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
+
+netParams.synMechParams['L5_AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
+netParams.synMechParams['L5_NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
+netParams.synMechParams['L5_GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
+netParams.synMechParams['L5_GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
 
 
 #------------------------------------------------------------------------------
-# Connectivity parameters
+# Connectivity parameters 
 #------------------------------------------------------------------------------
 
-connMetaParams = {}
+# Weight and delay distance-dependent functions (as strings) to use in conn rules
+weightDistFunc = '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2))'
+delayDistFunc = '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'
+
 
 # L2 Pyr -> L2 Pyr
-connMetaParams['L2Pyr->L2Pyr'] = {} 
-connMetaParams['L2Pyr->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
-connMetaParams['L2Pyr->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 3, 'secs': ['apical_oblique', 'basal_2', 'basal_3']}
+synParamsList = [{'synMech': 'L2_AMPA',
+            'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa,
+            'A_delay': 1.,
+            'lamtha': 50.},
 
-# L2 Pyr -> L2 Pyr
-connMetaParams['L2Basket->L2Pyr'] = {} 
-connMetaParams['L2Basket->L2Pyr']['AMPA'] = {'A_weight': cfg.gbar_L2Basket_L2Pyr_ampa, 'A_delay': 1., 'lamtha': 50, 'secs': ['soma']}
-connMetaParams['L2Basket->L2Pyr']['NMDA'] = {'A_weight': cfg.gbar_L2Basket_L2Pyr_nmda, 'A_delay': 1., 'lamtha': 50, 'secs': ['soma']}
+            {'synMech': 'L2_NMDA',
+            'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda,
+            'A_delay': 1.,
+            'lamtha': 50.}]
 
-
-for rule, ruleParams in connMetaParams.items():
-    for syn, synParams in ruleParams.items():
-        netParams.connParams[rule] = { 
-            'preConds': {'cellType': rule.split('->')[0]}, 
-            'postConds': {'cellType': rule.split('->')[1]},
-            'synMech': syn,
-            'weight': '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2))'.format(**synParams),
-            'delay': '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'.format(**synParams),
-            'synsPerConn': len(synParams['secs']),
-            'sec': synParams['secs']}
+for synParams in synParamsList:
+    netParams.connParams['L2Pyr->L2Pyr'] = { 
+        'preConds': {'pop': 'L2Pyr'}, 
+        'postConds': {'pop': 'L2Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'sec': ['apical_oblique', 'basal_2', 'basal_3']}
                 
+
+# L2 Basket -> L2 Pyr
+synParamsList = [{'synMech': 'L2_GABAA',
+            'A_weight': cfg.gbar_L2Basket_L2Pyr_ampa,
+            'A_delay': 1.,
+            'lamtha': 50.},
+
+            {'synMech': 'L2_GABAB',
+            'A_weight': cfg.gbar_L2Basket_L2Pyr_nmda,
+            'A_delay': 1.,
+            'lamtha': 50.}]
+
+for synParams in synParamsList:
+    netParams.connParams['L2Basket->L2Pyr'] = { 
+        'preConds': {'pop': 'L2Basket'}, 
+        'postConds': {'pop': 'L2Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'sec': ['soma']}
+
+
+# L2 Pyr -> L2 Basket 
+synParams = {'synMech': 'L2_AMPA',
+            'A_weight': cfg.gbar_L2Pyr_L2Basket,
+            'A_delay': 1.,
+            'lamtha': 3.}
+
+netParams.connParams['L2Pyr->L2Basket'] = { 
+    'preConds': {'pop': 'L2Pyr'}, 
+    'postConds': {'pop': 'L2Basket'},
+    'synMech': synParams['synMech'],
+    'weight': weightDistFunc.format(**synParams),
+    'delay': delayDistFunc.format(**synParams),
+    'sec': ['soma']}
+
+
+# L2 Basket -> L2 Basket 
+synParams = {'synMech': 'L2_GABAA',
+            'A_weight': cfg.gbar_L2Basket_L2Basket,
+            'A_delay': 1.,
+            'lamtha': 20.}
+
+netParams.connParams['L2Basket->L2Basket'] = { 
+    'preConds': {'pop': 'L2Basket'}, 
+    'postConds': {'pop': 'L2Basket'},
+    'synMech': synParams['synMech'],
+    'weight': weightDistFunc.format(**synParams),
+    'delay': delayDistFunc.format(**synParams),
+    'sec': ['soma']}
 
 """
 # ----------------------------------------------------------------------------
