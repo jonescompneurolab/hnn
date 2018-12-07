@@ -74,15 +74,21 @@ netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simp
 #------------------------------------------------------------------------------
 # Synaptic mechanism parameters
 #------------------------------------------------------------------------------
-netParams.synMechParams['L2_AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
-netParams.synMechParams['L2_NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
-netParams.synMechParams['L2_GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
-netParams.synMechParams['L2_GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
 
-netParams.synMechParams['L5_AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
-netParams.synMechParams['L5_NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
-netParams.synMechParams['L5_GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
-netParams.synMechParams['L5_GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
+netParams.synMechParams['L2Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_ampa_tau1, 'tau2': cfg.L2Pyr_ampa_tau2, 'e': cfg.L2Pyr_ampa_e}
+netParams.synMechParams['L2Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L2Pyr_nmda_tau1, 'tau2': cfg.L2Pyr_nmda_tau2, 'e': cfg.L2Pyr_nmda_e}
+netParams.synMechParams['L2Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabaa_tau1, 'tau2': cfg.L2Pyr_gabaa_tau2, 'e': cfg.L2Pyr_gabaa_e}
+netParams.synMechParams['L2Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabba_tau1, 'tau2': cfg.L2Pyr_gabba_tau2, 'e': cfg.L2Pyr_gabba_e}
+
+netParams.synMechParams['L5Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_ampa_tau1, 'tau2': cfg.L5Pyr_ampa_tau2, 'e': cfg.L5Pyr_ampa_e}
+netParams.synMechParams['L5Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L5Pyr_nmda_tau1, 'tau2': cfg.L5Pyr_nmda_tau2, 'e': cfg.L5Pyr_nmda_e}
+netParams.synMechParams['L5Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabaa_tau1, 'tau2': cfg.L5Pyr_gabaa_tau2, 'e': cfg.L5Pyr_gabaa_e}
+netParams.synMechParams['L5Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabba_tau1, 'tau2': cfg.L5Pyr_gabba_tau2, 'e': cfg.L5Pyr_gabba_e}
+
+netParams.synMechParams['AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
+netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
+netParams.synMechParams['GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
+netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
 
 
 #------------------------------------------------------------------------------
@@ -95,12 +101,12 @@ delayDistFunc = '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'
 
 
 # L2 Pyr -> L2 Pyr
-synParamsList = [{'synMech': 'L2_AMPA',
+synParamsList = [{'synMech': 'L2Pyr_AMPA',
             'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa,
             'A_delay': 1.,
             'lamtha': 50.},
 
-            {'synMech': 'L2_NMDA',
+            {'synMech': 'L2Pyr_NMDA',
             'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda,
             'A_delay': 1.,
             'lamtha': 50.}]
@@ -116,12 +122,12 @@ for synParams in synParamsList:
                 
 
 # L2 Basket -> L2 Pyr
-synParamsList = [{'synMech': 'L2_GABAA',
+synParamsList = [{'synMech': 'L2Pyr_GABAA',
             'A_weight': cfg.gbar_L2Basket_L2Pyr_ampa,
             'A_delay': 1.,
             'lamtha': 50.},
 
-            {'synMech': 'L2_GABAB',
+            {'synMech': 'L2Pyr_GABAB',
             'A_weight': cfg.gbar_L2Basket_L2Pyr_nmda,
             'A_delay': 1.,
             'lamtha': 50.}]
@@ -137,7 +143,7 @@ for synParams in synParamsList:
 
 
 # L2 Pyr -> L2 Basket 
-synParams = {'synMech': 'L2_AMPA',
+synParams = {'synMech': 'AMPA',
             'A_weight': cfg.gbar_L2Pyr_L2Basket,
             'A_delay': 1.,
             'lamtha': 3.}
@@ -152,7 +158,7 @@ netParams.connParams['L2Pyr->L2Basket'] = {
 
 
 # L2 Basket -> L2 Basket 
-synParams = {'synMech': 'L2_GABAA',
+synParams = {'synMech': 'GABAA',
             'A_weight': cfg.gbar_L2Basket_L2Basket,
             'A_delay': 1.,
             'lamtha': 20.}
