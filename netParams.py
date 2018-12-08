@@ -78,12 +78,12 @@ netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simp
 netParams.synMechParams['L2Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_ampa_tau1, 'tau2': cfg.L2Pyr_ampa_tau2, 'e': cfg.L2Pyr_ampa_e}
 netParams.synMechParams['L2Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L2Pyr_nmda_tau1, 'tau2': cfg.L2Pyr_nmda_tau2, 'e': cfg.L2Pyr_nmda_e}
 netParams.synMechParams['L2Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabaa_tau1, 'tau2': cfg.L2Pyr_gabaa_tau2, 'e': cfg.L2Pyr_gabaa_e}
-netParams.synMechParams['L2Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabba_tau1, 'tau2': cfg.L2Pyr_gabba_tau2, 'e': cfg.L2Pyr_gabba_e}
+netParams.synMechParams['L2Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabab_tau1, 'tau2': cfg.L2Pyr_gabab_tau2, 'e': cfg.L2Pyr_gabab_e}
 
 netParams.synMechParams['L5Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_ampa_tau1, 'tau2': cfg.L5Pyr_ampa_tau2, 'e': cfg.L5Pyr_ampa_e}
 netParams.synMechParams['L5Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L5Pyr_nmda_tau1, 'tau2': cfg.L5Pyr_nmda_tau2, 'e': cfg.L5Pyr_nmda_e}
 netParams.synMechParams['L5Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabaa_tau1, 'tau2': cfg.L5Pyr_gabaa_tau2, 'e': cfg.L5Pyr_gabaa_e}
-netParams.synMechParams['L5Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabba_tau1, 'tau2': cfg.L5Pyr_gabba_tau2, 'e': cfg.L5Pyr_gabba_e}
+netParams.synMechParams['L5Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabab_tau1, 'tau2': cfg.L5Pyr_gabab_tau2, 'e': cfg.L5Pyr_gabab_e}
 
 netParams.synMechParams['AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
 netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
@@ -124,12 +124,12 @@ for synParams in synParamsList:
 
 # L2 Basket -> L2 Pyr
 synParamsList = [{'synMech': 'L2Pyr_GABAA',
-            'A_weight': cfg.gbar_L2Basket_L2Pyr_ampa,
+            'A_weight': cfg.gbar_L2Basket_L2Pyr_gabaa,
             'A_delay': 1.,
             'lamtha': 50.},
 
             {'synMech': 'L2Pyr_GABAB',
-            'A_weight': cfg.gbar_L2Basket_L2Pyr_nmda,
+            'A_weight': cfg.gbar_L2Basket_L2Pyr_gabab,
             'A_delay': 1.,
             'lamtha': 50.}]
 
@@ -201,12 +201,12 @@ for synParams in synParamsList:
 
 # L5 Basket -> L5 Pyr
 synParamsList = [{'synMech': 'L5Pyr_GABAA',
-            'A_weight': cfg.gbar_L5Basket_L5Pyr_ampa,
+            'A_weight': cfg.gbar_L5Basket_L5Pyr_gabaa,
             'A_delay': 1.,
             'lamtha': 70.},
 
             {'synMech': 'L5Pyr_GABAB',
-            'A_weight': cfg.gbar_L5Basket_L5Pyr_nmda,
+            'A_weight': cfg.gbar_L5Basket_L5Pyr_gabab,
             'A_delay': 1.,
             'lamtha': 70.}]
 
@@ -223,7 +223,7 @@ for synParams in synParamsList:
 
 # L2 Pyr -> L5 Pyr
 synParams = {'synMech': 'L5Pyr_AMPA',
-            'A_weight': cfg.gbar_L2Pyr_L5Pyr_ampa,
+            'A_weight': cfg.gbar_L2Pyr_L5Pyr,
             'A_delay': 1.,
             'lamtha': 3.}
 
@@ -239,7 +239,7 @@ netParams.connParams['L2Pyr->L5Pyr'] = {
 
 # L2 Basket -> L5 Pyr
 synParams = {'synMech': 'L5Pyr_GABAA',
-            'A_weight': cfg.gbar_L2Basket_L5Pyr_ampa,
+            'A_weight': cfg.gbar_L2Basket_L5Pyr,
             'A_delay': 1.,
             'lamtha': 50.}
 
