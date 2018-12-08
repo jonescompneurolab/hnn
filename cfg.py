@@ -79,143 +79,143 @@ cfg.threshold = 0.0 # firing threshold (sets netParams.defaultThreshold)
 # ----------------------------------------------------------------------------
 # L2 cells
 # Soma
-L2Pyr_soma_L = 22.1
-L2Pyr_soma_diam = 23.4
-L2Pyr_soma_cm = 0.6195
-L2Pyr_soma_Ra = 200.
+cfg.L2Pyr_soma_L = 22.1
+cfg.L2Pyr_soma_diam = 23.4
+cfg.L2Pyr_soma_cm = 0.6195
+cfg.L2Pyr_soma_Ra = 200.
 
 # Dendrites
-L2Pyr_dend_cm = 0.6195
-L2Pyr_dend_Ra = 200.
+cfg.L2Pyr_dend_cm = 0.6195
+cfg.L2Pyr_dend_Ra = 200.
 
-L2Pyr_apicaltrunk_L = 59.5
-L2Pyr_apicaltrunk_diam = 4.25
+cfg.L2Pyr_apicaltrunk_L = 59.5
+cfg.L2Pyr_apicaltrunk_diam = 4.25
 
-L2Pyr_apical1_L = 306.
-L2Pyr_apical1_diam = 4.08
+cfg.L2Pyr_apical1_L = 306.
+cfg.L2Pyr_apical1_diam = 4.08
 
-L2Pyr_apicaltuft_L = 238.
-L2Pyr_apicaltuft_diam = 3.4
+cfg.L2Pyr_apicaltuft_L = 238.
+cfg.L2Pyr_apicaltuft_diam = 3.4
 
-L2Pyr_apicaloblique_L = 340.
-L2Pyr_apicaloblique_diam = 3.91
+cfg.L2Pyr_apicaloblique_L = 340.
+cfg.L2Pyr_apicaloblique_diam = 3.91
 
-L2Pyr_basal1_L = 85.
-L2Pyr_basal1_diam = 4.25
+cfg.L2Pyr_basal1_L = 85.
+cfg.L2Pyr_basal1_diam = 4.25
 
-L2Pyr_basal2_L = 255.
-L2Pyr_basal2_diam = 2.72
+cfg.L2Pyr_basal2_L = 255.
+cfg.L2Pyr_basal2_diam = 2.72
 
-L2Pyr_basal3_L = 255.
-L2Pyr_basal3_diam = 2.72
+cfg.L2Pyr_basal3_L = 255.
+cfg.L2Pyr_basal3_diam = 2.72
 
 # Synapses
-L2Pyr_ampa_e = 0.
-L2Pyr_ampa_tau1 = 0.5
-L2Pyr_ampa_tau2 = 5.
+cfg.L2Pyr_ampa_e = 0.
+cfg.L2Pyr_ampa_tau1 = 0.5
+cfg.L2Pyr_ampa_tau2 = 5.
 
-L2Pyr_nmda_e = 0.
-L2Pyr_nmda_tau1 = 1.
-L2Pyr_nmda_tau2 = 20.
+cfg.L2Pyr_nmda_e = 0.
+cfg.L2Pyr_nmda_tau1 = 1.
+cfg.L2Pyr_nmda_tau2 = 20.
 
-L2Pyr_gabaa_e = -80.
-L2Pyr_gabaa_tau1 = 0.5
-L2Pyr_gabaa_tau2 = 5.
+cfg.L2Pyr_gabaa_e = -80.
+cfg.L2Pyr_gabaa_tau1 = 0.5
+cfg.L2Pyr_gabaa_tau2 = 5.
 
-L2Pyr_gabab_e = -80.
-L2Pyr_gabab_tau1 = 1.
-L2Pyr_gabab_tau2 = 20.
+cfg.L2Pyr_gabab_e = -80.
+cfg.L2Pyr_gabab_tau1 = 1.
+cfg.L2Pyr_gabab_tau2 = 20.
 
 # Biophysics soma
-L2Pyr_soma_gkbar_hh2 = 0.01
-L2Pyr_soma_gnabar_hh2 = 0.18
-L2Pyr_soma_el_hh2 = -65.
-L2Pyr_soma_gl_hh2 = 4.26e-5
-L2Pyr_soma_gbar_km = 250.
+cfg.L2Pyr_soma_gkbar_hh2 = 0.01
+cfg.L2Pyr_soma_gnabar_hh2 = 0.18
+cfg.L2Pyr_soma_el_hh2 = -65.
+cfg.L2Pyr_soma_gl_hh2 = 4.26e-5
+cfg.L2Pyr_soma_gbar_km = 250.
 
 # Biophysics dends
-L2Pyr_dend_gkbar_hh2 = 0.01
-L2Pyr_dend_gnabar_hh2 = 0.15
-L2Pyr_dend_el_hh2 = -65.
-L2Pyr_dend_gl_hh2 = 4.26e-5
-L2Pyr_dend_gbar_km = 250.
+cfg.L2Pyr_dend_gkbar_hh2 = 0.01
+cfg.L2Pyr_dend_gnabar_hh2 = 0.15
+cfg.L2Pyr_dend_el_hh2 = -65.
+cfg.L2Pyr_dend_gl_hh2 = 4.26e-5
+cfg.L2Pyr_dend_gbar_km = 250.
 
 
 # L5 cells
 # Soma
-L5Pyr_soma_L = 39.
-L5Pyr_soma_diam = 28.9
-L5Pyr_soma_cm = 0.85
-L5Pyr_soma_Ra = 200.
+cfg.L5Pyr_soma_L = 39.
+cfg.L5Pyr_soma_diam = 28.9
+cfg.L5Pyr_soma_cm = 0.85
+cfg.L5Pyr_soma_Ra = 200.
 
 # Dendrites
-L5Pyr_dend_cm = 0.85
-L5Pyr_dend_Ra = 200.
+cfg.L5Pyr_dend_cm = 0.85
+cfg.L5Pyr_dend_Ra = 200.
 
-L5Pyr_apicaltrunk_L = 102.
-L5Pyr_apicaltrunk_diam = 10.2
+cfg.L5Pyr_apicaltrunk_L = 102.
+cfg.L5Pyr_apicaltrunk_diam = 10.2
 
-L5Pyr_apical1_L = 680.
-L5Pyr_apical1_diam = 7.48
+cfg.L5Pyr_apical1_L = 680.
+cfg.L5Pyr_apical1_diam = 7.48
 
-L5Pyr_apical2_L = 680.
-L5Pyr_apical2_diam = 4.93
+cfg.L5Pyr_apical2_L = 680.
+cfg.L5Pyr_apical2_diam = 4.93
 
-L5Pyr_apicaltuft_L = 425.
-L5Pyr_apicaltuft_diam = 3.4
+cfg.L5Pyr_apicaltuft_L = 425.
+cfg.L5Pyr_apicaltuft_diam = 3.4
 
-L5Pyr_apicaloblique_L = 255.
-L5Pyr_apicaloblique_diam = 5.1
+cfg.L5Pyr_apicaloblique_L = 255.
+cfg.L5Pyr_apicaloblique_diam = 5.1
 
-L5Pyr_basal1_L = 85.
-L5Pyr_basal1_diam = 6.8
+cfg.L5Pyr_basal1_L = 85.
+cfg.L5Pyr_basal1_diam = 6.8
 
-L5Pyr_basal2_L = 255.
-L5Pyr_basal2_diam = 8.5
+cfg.L5Pyr_basal2_L = 255.
+cfg.L5Pyr_basal2_diam = 8.5
 
-L5Pyr_basal3_L = 255.
-L5Pyr_basal3_diam = 8.5
+cfg.L5Pyr_basal3_L = 255.
+cfg.L5Pyr_basal3_diam = 8.5
 
 # Synapses
-L5Pyr_ampa_e = 0.
-L5Pyr_ampa_tau1 = 0.5
-L5Pyr_ampa_tau2 = 5.
+cfg.L5Pyr_ampa_e = 0.
+cfg.L5Pyr_ampa_tau1 = 0.5
+cfg.L5Pyr_ampa_tau2 = 5.
 
-L5Pyr_nmda_e = 0.
-L5Pyr_nmda_tau1 = 1.
-L5Pyr_nmda_tau2 = 20.
+cfg.L5Pyr_nmda_e = 0.
+cfg.L5Pyr_nmda_tau1 = 1.
+cfg.L5Pyr_nmda_tau2 = 20.
 
-L5Pyr_gabaa_e = -80.
-L5Pyr_gabaa_tau1 = 0.5
-L5Pyr_gabaa_tau2 = 5.
+cfg.L5Pyr_gabaa_e = -80.
+cfg.L5Pyr_gabaa_tau1 = 0.5
+cfg.L5Pyr_gabaa_tau2 = 5.
 
-L5Pyr_gabab_e = -80.
-L5Pyr_gabab_tau1 = 1.
-L5Pyr_gabab_tau2 = 20.
+cfg.L5Pyr_gabab_e = -80.
+cfg.L5Pyr_gabab_tau1 = 1.
+cfg.L5Pyr_gabab_tau2 = 20.
 
 # Biophysics soma
-L5Pyr_soma_gkbar_hh2 = 0.01
-L5Pyr_soma_gnabar_hh2 = 0.16
-L5Pyr_soma_el_hh2 = -65.
-L5Pyr_soma_gl_hh2 = 4.26e-5
-L5Pyr_soma_gbar_ca = 60.
-L5Pyr_soma_taur_cad = 20.
-L5Pyr_soma_gbar_kca = 2e-4
-L5Pyr_soma_gbar_km = 200.
-L5Pyr_soma_gbar_cat = 2e-4
-L5Pyr_soma_gbar_ar = 1e-6
+cfg.L5Pyr_soma_gkbar_hh2 = 0.01
+cfg.L5Pyr_soma_gnabar_hh2 = 0.16
+cfg.L5Pyr_soma_el_hh2 = -65.
+cfg.L5Pyr_soma_gl_hh2 = 4.26e-5
+cfg.L5Pyr_soma_gbar_ca = 60.
+cfg.L5Pyr_soma_taur_cad = 20.
+cfg.L5Pyr_soma_gbar_kca = 2e-4
+cfg.L5Pyr_soma_gbar_km = 200.
+cfg.L5Pyr_soma_gbar_cat = 2e-4
+cfg.L5Pyr_soma_gbar_ar = 1e-6
 
 # Biophysics dends
-L5Pyr_dend_gkbar_hh2 = 0.01
-L5Pyr_dend_gnabar_hh2 = 0.14
-L5Pyr_dend_el_hh2 = -71.
-L5Pyr_dend_gl_hh2 = 4.26e-5
-L5Pyr_dend_gbar_ca = 60.
-L5Pyr_dend_taur_cad = 20.
-L5Pyr_dend_gbar_kca = 2e-4
-L5Pyr_dend_gbar_km = 200.
-L5Pyr_dend_gbar_cat = 2e-4
-L5Pyr_dend_gbar_ar = 1e-6
+cfg.L5Pyr_dend_gkbar_hh2 = 0.01
+cfg.L5Pyr_dend_gnabar_hh2 = 0.14
+cfg.L5Pyr_dend_el_hh2 = -71.
+cfg.L5Pyr_dend_gl_hh2 = 4.26e-5
+cfg.L5Pyr_dend_gbar_ca = 60.
+cfg.L5Pyr_dend_taur_cad = 20.
+cfg.L5Pyr_dend_gbar_kca = 2e-4
+cfg.L5Pyr_dend_gbar_km = 200.
+cfg.L5Pyr_dend_gbar_cat = 2e-4
+cfg.L5Pyr_dend_gbar_ar = 1e-6
 
 
 
