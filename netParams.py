@@ -25,7 +25,6 @@ netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) si
 netParams.sizeZ = cfg.N_pyr_y * cfg.gridSpacing # z-dimension (horizontal depth) size in um
 netParams.shape = 'cuboid' 
 
-
 # ----------------------------------------------------------------------------
 # Cell parameters
 # ----------------------------------------------------------------------------
@@ -63,12 +62,13 @@ for cellLabel in cellLabels:
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-layers = {'L2': [0.1*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.5*cfg.sizeY, 0.55*cfg.sizeY]}
+layersE = {'L5': [0.5*cfg.sizeY, 0.5*cfg.sizeY], 'L2': [0.5*cfg.sizeY, 0.5*cfg.sizeY]}
+layersI = {'L5': [0.6*cfg.sizeY, 0.6*cfg.sizeY], 'L2': [1.4*cfg.sizeY, 1.4*cfg.sizeY]}
 
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsE}
-netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layers['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsE}
-netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layers['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
+netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsE}
+netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
+netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsE}
+netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
 
 
 #------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e':
 netParams.synMechParams['GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
 netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
 
-
+'''
 #------------------------------------------------------------------------------
 # Connectivity parameters 
 #------------------------------------------------------------------------------
@@ -302,7 +302,7 @@ netParams.connParams['L5Basket->L5Basket'] = {
 
 
 
-
+'''
 """
 # ----------------------------------------------------------------------------
 # Current inputs (IClamp)

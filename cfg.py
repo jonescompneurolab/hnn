@@ -54,8 +54,8 @@ cfg.analysis['plotTraces'] = {'include': ['L2Pyr','L5Pyr'], 'oneFigPer': 'cell',
 # ----------------------------------------------------------------------------
 # Network parameters
 # ----------------------------------------------------------------------------
-cfg.gridSpacing = 10
-cfg.sizeY = 500
+cfg.gridSpacing = 50
+cfg.sizeY = 1000
 
 
 # ----------------------------------------------------------------------------
@@ -223,8 +223,8 @@ cfg.L5Pyr_dend_gbar_ar = 1e-6
 # Network size parameters
 # ----------------------------------------------------------------------------
 # numbers of cells making up the pyramidal grids
-cfg.N_pyr_x = 1
-cfg.N_pyr_y = 1
+cfg.N_pyr_x = 10
+cfg.N_pyr_y = 10
 
 
 # ----------------------------------------------------------------------------
@@ -293,6 +293,7 @@ cfg.L5Basket_Pois_lamtha = 0.
 # default end time for pois inputs
 cfg.t0_pois = 0.
 cfg.T_pois = -1
+
 
 # ----------------------------------------------------------------------------
 # Rhythmic inputs parameters
