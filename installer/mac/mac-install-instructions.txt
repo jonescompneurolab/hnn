@@ -56,3 +56,14 @@ make
 
 # at this point you can run hnn by typing the command 
 python hnn.py hnn.cfg
+
+
+
+
+##################################################################################
+#
+# Troubleshooting
+#
+##################################################################################
+
+If you see the error "mpiexec noticed that the job aborted, but has no info as to the process that caused that situation." check under view - view simulation log for a more detailed error message. If it asks about openmpi, find the location of libmpi.so and add that path to your LD_LIBRARY_PATH in ~/.bash_profile
