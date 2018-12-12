@@ -17,9 +17,10 @@ For more information visit https://hnn.brown.edu . There, we describe the use of
 circuit-level origin of some of the most commonly measured MEG/EEG and ECoG signal: event related
 potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 
+For questions, comments/feedback, or troubleshooting information please contact
+us at hnneurosolver@gmail.com, and review our user forum at
+https://www.neuron.yale.edu/phpBB/viewforum.php?f=46 .
+
 To cite our software please use the following document object identifier:
  [![DOI](https://zenodo.org/badge/128077928.svg)](https://zenodo.org/badge/latestdoi/128077928)
-
-For questions/comments/feedback contact:
- samuel.neymotin@nki.rfmh.org stephanie_jones@brown.edu dylan_daniels@brown.edu
 
