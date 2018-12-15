@@ -185,49 +185,49 @@ cellParams['L5Pyr_rule'] = {
                 'topol': {}
             },
             'apical_1': {
-                'geom': {'L': 680.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 13,
-                    'pt3d': [[0.0, 83.0, 0.0, 7.480000019073486],
-                        [0.0, 763.0, 0.0, 7.480000019073486]]},
+                'geom': {'L': cfg.L5Pyr_apical1_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_apical1_diam, 'nseg': 13,
+                    'pt3d': [[0.0, 83.0, 0.0, cfg.L5Pyr_apical1_diam],
+                        [0.0, 83.0+cfg.L5Pyr_apical1_L, 0.0, cfg.L5Pyr_apical1_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk','parentX': 1.0}
             },
             'apical_2': {
-                'geom': {'L': 680.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 13,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 13,
                     'pt3d': [[0.0, 483.0, 0.0, 4.929999828338623],
                         [0.0, 1163.0, 0.0, 4.929999828338623]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_1', 'parentX': 1.0}
             },
             'apical_oblique': {
-                'geom': {'L': 255.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
                     'pt3d': [[0.0, 83.0, 0.0, 5.099999904632568],
                         [-255.0, 83.0, 0.0, 5.099999904632568]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_trunk': {
-                'geom': {'L': 102.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 3,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 3,
                     'pt3d': [[0.0, 23.0, 0.0, 10.199999809265137 ],
                         [0.0, 125.0, 0.0, 10.199999809265137]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 1.0}
             },
             'apical_tuft': {
-                'geom': {'L': 425.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 9,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 9,
                     'pt3d': [[0.0, 883.0, 0.0, 3.4000000953674316],
                         [0.0, 1308.0, 0.0, 3.4000000953674316]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_2', 'parentX': 1.0}
             },
             'basal_1': {
-                'geom': {'L': 85.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 1,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 1,
                     'pt3d': [[0.0, 0.0, 0.0, 6.800000190734863],
                         [0.0, -85.0, 0.0, 6.800000190734863]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 0.0}
             },
             'basal_2': {
-                'geom': {'L': 255.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
                     'pt3d': [[0.0, -50.0, 0.0, 8.5],
                         [-180.31222534179688, -230.31222534179688, 0.0, 8.5]]},
                 'topol': {'childX': 0.0, 'parentSec': 'basal_1', 'parentX': 1.0}
             },
             'basal_3': {
-                'geom': {'L': 255.0, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
+                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
                     'pt3d': [[0.0, -50.0, 0.0, 8.5],
                         [180.31222534179688, -230.31222534179688, 0.0, 8.5]]},
                 'topol': {
