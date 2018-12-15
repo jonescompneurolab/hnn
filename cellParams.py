@@ -42,26 +42,12 @@ cellParams['L2Pyr_rule'] = {
                     'pt3d': [
                         [-50.0, 813.0, 0.0, cfg.L2Pyr_apical1_diam],
                         [-50.0, 813.0+cfg.L2Pyr_apical1_L, 0.0, cfg.L2Pyr_apical1_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_oblique': {
                 'geom': {'L': cfg.L2Pyr_apicaloblique_L, 'Ra': cfg.L2Pyr_dend_Ra, 'cm': cfg.L2Pyr_dend_cm, 'diam': cfg.L2Pyr_apicaloblique_diam, 'nseg': 7,
                     'pt3d': [[-50.0, 813.0, 0.0, cfg.L2Pyr_apicaloblique_diam],
                         [-50-cfg.L2Pyr_apicaloblique_L, 813.0, 0.0, cfg.L2Pyr_apicaloblique_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_trunk': {
@@ -69,39 +55,18 @@ cellParams['L2Pyr_rule'] = {
                     'pt3d': [
                         [-50.0, 778.0, 0.0, cfg.L2Pyr_apicaltrunk_diam],
                         [-50.0, 778.0+cfg.L2Pyr_apicaltrunk_L, 0.0, cfg.L2Pyr_apicaltrunk_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': { 'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 1.0}
             },
             'apical_tuft': {
                 'geom': {'L': cfg.L2Pyr_apicaltuft_L, 'Ra': cfg.L2Pyr_dend_Ra, 'cm': cfg.L2Pyr_dend_cm, 'diam': cfg.L2Pyr_apicaltuft_diam, 'nseg': 5,
                     'pt3d': [[-50.0, 993.0, 0.0, cfg.L2Pyr_apicaltuft_diam],
                         [-50.0, 993.0+cfg.L2Pyr_apicaltuft_L, 0.0, cfg.L2Pyr_apicaltuft_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_1', 'parentX': 1.0}
             },
             'basal_1': {
                 'geom': {'L': cfg.L2Pyr_basal1_L, 'Ra': cfg.L2Pyr_dend_Ra, 'cm': cfg.L2Pyr_dend_cm, 'diam': cfg.L2Pyr_basal1_diam, 'nseg': 1,
                     'pt3d': [[-50.0, 765.0, 0.0, cfg.L2Pyr_basal1_diam],
                         [-50.0, 765.0-cfg.L2Pyr_basal1_L, 0.0, cfg.L2Pyr_basal1_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 0.0}
             },
             'basal_2': {
@@ -109,13 +74,6 @@ cellParams['L2Pyr_rule'] = {
                     'L': cfg.L2Pyr_basal2_L, 'Ra': cfg.L2Pyr_dend_Ra, 'cm': cfg.L2Pyr_dend_cm, 'diam': cfg.L2Pyr_basal2_diam, 'nseg': 5,
                     'pt3d': [[-50.0, 715.0, 0.0, cfg.L2Pyr_basal2_diam],
                         [-50-cfg.L2Pyr_basal2_L/np.sqrt(2), 715.0-cfg.L2Pyr_basal2_L/np.sqrt(2), 0.0, cfg.L2Pyr_basal2_diam]]},
-                'ions': {
-                    'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-                    'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
-                'mechs': {
-                    'dipole': {},
-                    'hh2': {'el': -65.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.15},
-                    'km': {'gbar': 250.0}},
                 'topol': {'childX': 0.0, 'parentSec': 'basal_1', 'parentX': 1.0}
             },
             'basal_3': {
@@ -126,7 +84,7 @@ cellParams['L2Pyr_rule'] = {
         }}}
 
 ## add biophysics (ions and mechs) to L2Pyr dendrites
-somaL = cellParams['L5Pyr_rule'].secs['soma']['geom']['L']
+somaL = cellParams['L2Pyr_rule'].secs['soma']['geom']['L']
 
 for sec in [sec for secName, sec in cellParams['L2Pyr_rule'].secs.items() if secName != 'soma']:
     sec['ions'] = {
@@ -191,45 +149,45 @@ cellParams['L5Pyr_rule'] = {
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk','parentX': 1.0}
             },
             'apical_2': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 13,
-                    'pt3d': [[0.0, 483.0, 0.0, 4.929999828338623],
-                        [0.0, 1163.0, 0.0, 4.929999828338623]]},
+                'geom': {'L': cfg.L5Pyr_apical2_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_apical2_diam, 'nseg': 13,
+                    'pt3d': [[0.0, 483.0, 0.0, cfg.L5Pyr_apical2_diam],
+                        [0.0, 483.0+cfg.L5Pyr_apical2_L, 0.0, cfg.L5Pyr_apical2_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_1', 'parentX': 1.0}
             },
             'apical_oblique': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
-                    'pt3d': [[0.0, 83.0, 0.0, 5.099999904632568],
-                        [-255.0, 83.0, 0.0, 5.099999904632568]]},
+                'geom': {'L': cfg.L5Pyr_apicaloblique_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_apicaloblique_diam, 'nseg': 5,
+                    'pt3d': [[0.0, 83.0, 0.0, cfg.L5Pyr_apicaloblique_diam],
+                        [0.0-cfg.L5Pyr_apicaloblique_L, 83.0, 0.0, cfg.L5Pyr_apicaloblique_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_trunk': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 3,
-                    'pt3d': [[0.0, 23.0, 0.0, 10.199999809265137 ],
-                        [0.0, 125.0, 0.0, 10.199999809265137]]},
+                'geom': {'L': cfg.L5Pyr_apicaltrunk_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_apicaltrunk_diam, 'nseg': 3,
+                    'pt3d': [[0.0, 23.0, 0.0, cfg.L5Pyr_apicaltrunk_diam ],
+                        [0.0, 23.0+cfg.L5Pyr_apicaltrunk_L, 0.0, cfg.L5Pyr_apicaltrunk_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 1.0}
             },
             'apical_tuft': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 9,
-                    'pt3d': [[0.0, 883.0, 0.0, 3.4000000953674316],
-                        [0.0, 1308.0, 0.0, 3.4000000953674316]]},
+                'geom': {'L': cfg.L5Pyr_apicaltuft_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_apicaltuft_diam, 'nseg': 9,
+                    'pt3d': [[0.0, 883.0, 0.0, cfg.L5Pyr_apicaltuft_diam],
+                        [0.0, 883.0+cfg.L5Pyr_apicaltuft_L, 0.0, cfg.L5Pyr_apicaltuft_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_2', 'parentX': 1.0}
             },
             'basal_1': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 1,
-                    'pt3d': [[0.0, 0.0, 0.0, 6.800000190734863],
-                        [0.0, -85.0, 0.0, 6.800000190734863]]},
+                'geom': {'L': cfg.L5Pyr_basal1_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_basal1_diam, 'nseg': 1,
+                    'pt3d': [[0.0, 0.0, 0.0, cfg.L5Pyr_basal1_diam],
+                        [0.0, 0.0-cfg.L5Pyr_basal1_L, 0.0, cfg.L5Pyr_basal1_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 0.0}
             },
             'basal_2': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
-                    'pt3d': [[0.0, -50.0, 0.0, 8.5],
-                        [-180.31222534179688, -230.31222534179688, 0.0, 8.5]]},
+                'geom': {'L': cfg.L5Pyr_basal2_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_basal2_diam, 'nseg': 5,
+                    'pt3d': [[0.0, -50.0, 0.0, cfg.L5Pyr_basal2_diam],
+                        [0.0-cfg.L5Pyr_basal2_L/np.sqrt(2), -50-cfg.L5Pyr_basal2_L/np.sqrt(2), 0.0, cfg.L5Pyr_basal2_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'basal_1', 'parentX': 1.0}
             },
             'basal_3': {
-                'geom': {'L': cfg.L5Pyr_dend_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_dend_diam, 'nseg': 5,
-                    'pt3d': [[0.0, -50.0, 0.0, 8.5],
-                        [180.31222534179688, -230.31222534179688, 0.0, 8.5]]},
+                'geom': {'L': cfg.L5Pyr_basal3_L, 'Ra': cfg.L5Pyr_dend_Ra, 'cm': cfg.L5Pyr_dend_cm, 'diam': cfg.L5Pyr_basal3_diam, 'nseg': 5,
+                    'pt3d': [[0.0, -50.0, 0.0, cfg.L5Pyr_basal3_diam],
+                        [0.0+cfg.L5Pyr_basal2_L/np.sqrt(2), -50-cfg.L5Pyr_basal2_L/np.sqrt(2), 0.0, cfg.L5Pyr_basal3_diam]]},
                 'topol': {
                     'childX': 0.0,
                     'parentSec': 'basal_1',
@@ -250,14 +208,14 @@ for sec in [sec for secName, sec in cellParams['L5Pyr_rule'].secs.items() if sec
     
     sec['mechs'] = {
         # gbar_ar value depends of distance from soma 
-        'ar': {'gbar': [1e-6*np.exp(3e-3 * ((L/nseg)*i+(L/nseg)/2)) for i in range(nseg)]},
-        'ca': {'gbar': 60.0},
-        'cad': {'taur': 20.0},
-        'cat': {'gbar': 0.0002},
+        'ar': {'gbar': [1e-6*np.exp(3e-3 * ((L/nseg)*i+(L/nseg)/2)) for i in range(nseg)]}, 
+        'ca': {'gbar': cfg.L5Pyr_dend_gbar_ca},
+        'cad': {'taur': cfg.L5Pyr_dend_gbar_cad},
+        'cat': {'gbar': cfg.L5Pyr_dend_gbar_cat},
         'dipole': {},
-        'hh2': {'el': -71.0, 'gkbar': 0.01, 'gl': 4.26e-05, 'gnabar': 0.14},
-        'kca': {'gbar': 0.0002},
-        'km': {'gbar': 200.0}}
+        'hh2': {'el': cfg.L5Pyr_dend_el_hh2, 'gkbar': cfg.L5Pyr_dend_gkbar_hh2, 'gl': cfg.L5Pyr_dend_gl_hh2, 'gnabar': cfg.L5Pyr_dend_gnabar_hh2},
+        'kca': {'gbar': cfg.L5Pyr_dend_gbar_kc2},
+        'km': {'gbar': cfg.L5Pyr_dend_gbar_km}}
 
 
 # ------------------------------------------------------------------------------------
