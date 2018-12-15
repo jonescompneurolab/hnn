@@ -5,6 +5,7 @@
 
 '''
 import numpy as np
+from netpyne import specs
 from cfg import cfg
 
 # ----------------------------------------------------------------------------
@@ -12,7 +13,7 @@ from cfg import cfg
 # ----------------------------------------------------------------------------
 
 # dictionary to store cellParams (cell property rules)
-cellParams = {}
+cellParams = specs.CellParams()
 
 # ------------------------------------------------------------------------------------
 # L2 Pyr cell rule
@@ -84,17 +85,17 @@ cellParams['L2Pyr_rule'] = {
         }}}
 
 ## add biophysics (ions and mechs) to L2Pyr dendrites
-somaL = cellParams['L2Pyr_rule'].secs['soma']['geom']['L']
+somaL = cellParams['L2Pyr_rule']['secs']['soma']['geom']['L']
 
-for sec in [sec for secName, sec in cellParams['L2Pyr_rule'].secs.items() if secName != 'soma']:
+for sec in [sec for secName, sec in cellParams['L2Pyr_rule']['secs'].items() if secName != 'soma']:
     sec['ions'] = {
         'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
-        'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}},
+        'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}}
     
     sec['mechs'] = {
         'dipole': {},
         'hh2': {'el': cfg.L2Pyr_dend_el_hh2, 'gkbar': cfg.L2Pyr_dend_gkbar_hh2, 'gl': cfg.L2Pyr_dend_gl_hh2, 'gnabar': cfg.L2Pyr_dend_gnabar_hh2},
-        'km': {'gbar': cfg.L2Pyr_dend_gbar_km}},
+        'km': {'gbar': cfg.L2Pyr_dend_gbar_km}}
 
 
 # ------------------------------------------------------------------------------------
@@ -134,11 +135,11 @@ cellParams['L5Pyr_rule'] = {
                 'mechs': {
                     'ar': {'gbar': cfg.L5Pyr_soma_gbar_ar}, 
                     'ca': {'gbar': cfg.L5Pyr_soma_gbar_ca},
-                    'cad': {'taur': cfg.L5Pyr_soma_gbar_cad},
+                    'cad': {'taur': cfg.L5Pyr_soma_taur_cad},
                     'cat': {'gbar': cfg.L5Pyr_soma_gbar_cat},
                     'dipole': {},
                     'hh2': {'el': cfg.L5Pyr_soma_el_hh2, 'gkbar': cfg.L5Pyr_soma_gkbar_hh2, 'gl': cfg.L5Pyr_soma_gl_hh2, 'gnabar': cfg.L5Pyr_soma_gnabar_hh2},
-                    'kca': {'gbar': cfg.L5Pyr_soma_gbar_kc2},
+                    'kca': {'gbar': cfg.L5Pyr_soma_gbar_kca},
                     'km': {'gbar': cfg.L5Pyr_soma_gbar_km}},
                 'topol': {}
             },
@@ -195,9 +196,9 @@ cellParams['L5Pyr_rule'] = {
         }}}
 
 ## add biophysics (ions and mechs) to L5Pyr dendrites
-somaL = cellParams['L5Pyr_rule'].secs['soma']['geom']['L']
+somaL = cellParams['L5Pyr_rule']['secs']['soma']['geom']['L']
 
-for sec in [sec for secName, sec in cellParams['L5Pyr_rule'].secs.items() if secName != 'soma']:
+for sec in [sec for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if secName != 'soma']:
     sec['ions'] = {
         'ca': {'e': 132.4579341637009, 'i': 5e-05, 'o': 2.0},
         'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
@@ -210,11 +211,11 @@ for sec in [sec for secName, sec in cellParams['L5Pyr_rule'].secs.items() if sec
         # gbar_ar value depends of distance from soma 
         'ar': {'gbar': [1e-6*np.exp(3e-3 * ((L/nseg)*i+(L/nseg)/2)) for i in range(nseg)]}, 
         'ca': {'gbar': cfg.L5Pyr_dend_gbar_ca},
-        'cad': {'taur': cfg.L5Pyr_dend_gbar_cad},
+        'cad': {'taur': cfg.L5Pyr_dend_taur_cad},
         'cat': {'gbar': cfg.L5Pyr_dend_gbar_cat},
         'dipole': {},
         'hh2': {'el': cfg.L5Pyr_dend_el_hh2, 'gkbar': cfg.L5Pyr_dend_gkbar_hh2, 'gl': cfg.L5Pyr_dend_gl_hh2, 'gnabar': cfg.L5Pyr_dend_gnabar_hh2},
-        'kca': {'gbar': cfg.L5Pyr_dend_gbar_kc2},
+        'kca': {'gbar': cfg.L5Pyr_dend_gbar_kca},
         'km': {'gbar': cfg.L5Pyr_dend_gbar_km}}
 
 

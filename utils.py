@@ -15,7 +15,7 @@ def setCfgFromFile (fn, cfg):
             sp = s.split(':')
             sp[1] = sp[1].strip()
             if len(sp[1]) > 1:
-                if '.' in sp[1]:
+                if '.' in sp[1] or 'e' in sp[1]:
                     try:
                         value = float(sp[1])
                     except:
