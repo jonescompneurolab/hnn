@@ -99,7 +99,7 @@ netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e':
 netParams.synMechParams['GABAA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5, 'e': -80}
 netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': -80}
 
-'''
+
 #------------------------------------------------------------------------------
 # Connectivity parameters 
 #------------------------------------------------------------------------------
@@ -311,7 +311,7 @@ netParams.connParams['L5Basket->L5Basket'] = {
 
 
 
-'''
+
 """
 # ----------------------------------------------------------------------------
 # Current inputs (IClamp)
