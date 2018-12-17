@@ -28,43 +28,7 @@ netParams.shape = 'cuboid'
 # ----------------------------------------------------------------------------
 # Cell parameters
 # ----------------------------------------------------------------------------
-
-'''
-OLD cellParams:
-
-# L2Pyr params
-netParams.importCellParams(label='L2Pyr_rule', conds={'cellType': 'L2Pyr'}, fileName='L2_pyramidal.py', cellName='L2Pyr')
-
-# L2Bas params
-netParams.importCellParams(label='L2Basket_rule', conds={'cellType': 'L2Basket'}, fileName='L2_basket.py', cellName='L2Basket')
-
-# L5Pyr params
-netParams.importCellParams(label='L5Pyr_rule', conds={'cellType':'L5Pyr'}, fileName='L5_pyramidal.py', cellName='L5Pyr')
-
-# L5Bas params
-netParams.importCellParams(label='L5Basket_rule', conds={'cellType':'L5Basket'}, fileName='L5_basket.py',cellName='L5Basket')
-
-
-
-# simplify section names and add section lists
-cellLabels = ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']
-secListLabels = ['basal', 'apical']
-
-for cellLabel in cellLabels:
-    cellRule = cellLabel+'_rule'
-
-    # remove cell name from section name
-    secs = list(netParams.cellParams[cellRule]['secs'].keys())
-    for secName in secs:
-        netParams.renameCellParamsSec(cellRule, secName, secName.replace(cellLabel+'_', '')) 
-
-    # create basal and apical sec lists (new list of secs with shorter names)
-    secs = list(netParams.cellParams[cellRule]['secs'].keys())
-    for secListLabel in secListLabels:
-        netParams.cellParams[cellRule]['secLists'][secListLabel] = [sec for sec in secs if secListLabel in sec]
-'''
-
-from cellParams import cellParams
+from cellParams import cellParams  # defined in separate module for clarity
 netParams.cellParams = cellParams
 
 
