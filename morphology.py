@@ -555,8 +555,21 @@ def branch_precedence(h):
 
 
 from neuron import h
-from neuron.rxd.morphology import parent, parent_loc
 import json
+
+def parent(sec):
+    seg = sec.trueparentseg()
+    if seg is None:
+        return None
+    else:
+        return seg.sec
+ 
+def parent_loc(sec, trueparent):
+    seg = sec.trueparentseg()
+    if seg is None:
+        return None
+    else:
+        return seg.x
 
 def morphology_to_dict(sections, outfile=None):
     section_map = {sec: i for i, sec in enumerate(sections)}
