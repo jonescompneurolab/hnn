@@ -6,3 +6,16 @@ gif
 hnndev
 hnntut
 notes.dol
+
+# PyCharm
+.idea/**
+
+# sublime
+*-e
+
+# Visual Studio Code
+.vscode
+
+# Emacs
+*.py#
+*.rst#
