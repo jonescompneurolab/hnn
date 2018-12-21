@@ -81,3 +81,4 @@ sudo updatedb
 echo '# these lines define global session variables for HNN'
 echo 'export CPU=$(uname -m)' >> ~/.bashrc
 echo 'export PATH=$PATH:/usr/local/nrn/$CPU/bin' >> ~/.bashrc
+echo 'export HNN_ROOT=/usr/local/hnn' >> ~/.bashrc

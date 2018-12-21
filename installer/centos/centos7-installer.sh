@@ -73,6 +73,7 @@ sudo ln -fs /usr/local/hnn/hnn /usr/local/bin/hnn
 echo '# these lines define global session variables for HNN' | sudo tee -a /etc/profile.d/hnn.sh
 echo 'export CPU=$(uname -m)' | sudo tee -a /etc/profile.d/hnn.sh
 echo 'export PATH=$PATH:/usr/lib64/openmpi/bin:/usr/local/nrn/$CPU/bin' | sudo tee -a /etc/profile.d/hnn.sh
+echo 'export HNN_ROOT=/usr/local/hnn' | sudo tee -a /etc/profile.d/hnn.sh
 
 # qt, pyqt, and supporting packages - needed for GUI
 # SIP unforutnately not available as a wheel for Python 3.4, so have to compile

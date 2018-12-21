@@ -1,2 +1,15 @@
-cd /usr/local/hnn
-python3 /usr/local/hnn/hnn.py /usr/local/hnn/hnn.cfg
+#!/bin/bash
+
+if [[ -z ${HNN_ROOT} ]]; then
+    export HNN_ROOT=/usr/local/hnn
+fi
+
+if [[ ! -f ${HNN_ROOT}/hnn.py ]]; then
+    echo "Error Can't find hnn.py in ${HNN_ROOT}"
+    echo "Please check installation and set HNN_ROOT environment variable appropriately"
+fi
+
+_cwd=`pwd`
+cd ${HNN_ROOT}
+python3 ./hnn.py ./hnn.cfg
+cd ${_cwd}
