@@ -172,7 +172,7 @@ def savefigs (ddir, prm, p_exp):
 
 #
 def setupsimdir (f_psim,p_exp,rank):
-  ddir = fio.SimulationPaths()
+  ddir = fio.SimulationPaths(dconf['dbase'])
   ddir.create_new_sim(dproj, p_exp.expmt_groups, p_exp.sim_prefix)
   if rank==0:
     ddir.create_datadir()
@@ -216,7 +216,7 @@ def setoutfiles (ddir,trial=0,ntrial=1):
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
   doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
   doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
-  # if pcID==0: print(doutf)
+  if pcID==0: print('doutf:',doutf)
   return doutf
 
 p_exp = paramrw.ExpParams(f_psim, debug=debug) # creates p_exp.sim_prefix and other param structures
