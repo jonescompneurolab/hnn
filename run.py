@@ -216,7 +216,7 @@ def setoutfiles (ddir,trial=0,ntrial=1):
   doutf['file_dpl_norm'] = getfname(ddir,'normdpl',trial,ntrial)
   doutf['file_vsoma'] = getfname(ddir,'vsoma',trial,ntrial)
   doutf['file_lfp'] = getfname(ddir,'lfp',trial,ntrial)
-  if pcID==0: print('doutf:',doutf)
+  #if pcID==0: print('doutf:',doutf)
   return doutf
 
 p_exp = paramrw.ExpParams(f_psim, debug=debug) # creates p_exp.sim_prefix and other param structures
