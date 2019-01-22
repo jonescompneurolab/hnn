@@ -16,7 +16,8 @@ import numpy as np
 #
 # ----------------------------------------------------------------------------
 
-netParams = specs.NetParams()   # object of class NetParams to store the network parameters
+netParams = specs.NetParams()  # object of class NetParams to store the network parameters
+
 #------------------------------------------------------------------------------
 # General network parameters
 #------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e':
 
 
 #------------------------------------------------------------------------------
-# Connectivity parameters 
+# Local connectivity parameters 
 #------------------------------------------------------------------------------
 
 # Weight and delay distance-dependent functions (as strings) to use in conn rules
@@ -274,37 +275,125 @@ netParams.connParams['L5Basket->L5Basket'] = {
     'sec': ['soma']}
 
 
+#------------------------------------------------------------------------------
+# Rhythmic proximal and distal inputs parameters 
+#------------------------------------------------------------------------------
+
+''' Note: built-in ad-hoc rules from original HNN implementation -- SDB: should be part of params file??
+
+# if stdev is zero, increase synaptic weights 5 fold to make
+# single input equivalent to 5 simultaneous input to prevent spiking    <<---- SN: WHAT IS THIS RULE!?!?!?
+if not d['stdev'] and d['distribution'] != 'uniform':
+        for key in d.keys():
+        if key.endswith('Pyramidal'):
+                d[key] = (d[key][0] * 5., d[key][1])
+        elif key.endswith('Basket'):
+                d[key] = (d[key][0] * 5., d[key][1])
+
+# if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1. <<---- SN: WHAT IS THIS RULE!?!?!?
+if d['L5Pyr_ampa'][1] == -1:                                  
+        for key in d.keys():
+        if key.startswith('L5'):
+                if d['L2Pyr'][1] != 0.1:
+                d[key] = (d[key][0], d['L2Pyr'][1])
+                else:
+                d[key] = (d[key][0], 1.)
+'''
+# Location of external inputs
+xrange = np.arange(cfg.N_pyr_x)
+extLocX = xrange[int((len(xrange) - 1) // 2)]
+zrange = np.arange(cfg.N_pyr_y)
+extLocZ = xrange[int((len(zrange) - 1) // 2)]
+extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
 
 
-"""
-# ----------------------------------------------------------------------------
-# Current inputs (IClamp)
-# ----------------------------------------------------------------------------
-if cfg.addIClamp:   
-    for iclabel in [k for k in dir(cfg) if k.startswith('IClamp')]:
-        ic = getattr(cfg, iclabel, None)  # get dict with params
+# L2 Pyr proximal
+netParams.popParams['extRhythmicProximal'] = {
+        'cellModel': 'VecStim', 
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(cfg.prng_seedcore_input_prox),
+        'spikePattern': {
+                'type': 'rhythmic',
+                'start': cfg.t0_input_prox,
+                'startStd': cfg.t0_input_stdev_prox,
+                'stop': cfg.tstop_input_prox,
+                'freqStd': cfg.f_stdev_prox,
+                'eventsPerCycle': cfg.events_per_cycle_prox,
+                'distribution': cfg.distribution_prox,
+                'repeats': cfg.repeats_prox}}
 
-        # add stim source
-        netParams.stimSourceParams[iclabel] = {'type': 'IClamp', 'delay': ic['start'], 'dur': ic['dur'], 'amp': ic['amp']}
-        
-        # connect stim source to target
-        netParams.stimTargetParams[iclabel+'_'+ic['pop']] = \
-            {'source': iclabel, 'conds': {'pop': ic['pop']}, 'sec': ic['sec'], 'loc': ic['loc']}
+synParamsList = [{'synMech': 'L2Pyr_AMPA',
+            'A_weight': cfg.input_prox_A_weight_L2Pyr_ampa,
+            'A_delay': cfg.input_prox_A_delay_L2,
+            'lamtha': 100.},
+
+            {'synMech': 'L2Pyr_NMDA',
+            'A_weight': cfg.input_prox_A_weight_L2Pyr_nmda,
+            'A_delay': cfg.input_prox_A_delay_L2,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicProx->L2Pyr'] = { 
+        'preConds': {'pop': 'extRhythmicProximal'}, 
+        'postConds': {'pop': 'L2Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': ['basal_2', 'basal_3','apical_oblique']}
+
+# L2 Pyr distal
+netParams.popParams['extRhythmicDistal'] = {
+        'cellModel': 'VecStim',
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(cfg.prng_seedcore_input_dist),
+        'spikePattern': {
+                'type': 'rhythmic',
+                'start': cfg.t0_input_dist,
+                'startStd': cfg.t0_input_stdev_dist,
+                'stop': cfg.tstop_input_dist,
+                'freqStd': cfg.f_stdev_dist,
+                'eventsPerCycle': cfg.events_per_cycle_dist,
+                'distribution': cfg.distribution_dist,
+                'repeats': cfg.repeats_dist}}
+
+synParamsList = [{'synMech': 'L2Pyr_AMPA',
+            'A_weight': cfg.input_dist_A_weight_L2Pyr_ampa,
+            'A_delay': cfg.input_dist_A_delay_L2,
+            'lamtha': 100.},
+
+            {'synMech': 'L2Pyr_NMDA',
+            'A_weight': cfg.input_dist_A_weight_L2Pyr_nmda,
+            'A_delay': cfg.input_dist_A_delay_L2,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicDistal->L2Pyr'] = { 
+        'preConds': {'pop': 'extRhythmicDistal'}, 
+        'postConds': {'pop': 'L2Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': ['apical_tuft']}
 
 
-# ----------------------------------------------------------------------------
-# NetStim inputs
-# ----------------------------------------------------------------------------
-if cfg.addNetStim:
-    for nslabel in [k for k in dir(cfg) if k.startswith('NetStim')]:
-        ns = getattr(cfg, nslabel, None)
 
-        # add stim source
-        netParams.stimSourceParams[nslabel] = {'type': 'NetStim', 'start': ns['start'], 'interval': ns['interval'], 
-                                               'noise': ns['noise'], 'number': ns['number']}
 
-        # connect stim source to target
-        netParams.stimTargetParams[nslabel+'_'+ns['pop']] = \
-            {'source': nslabel, 'conds': {'pop': ns['pop']}, 'sec': ns['sec'], 'loc': ns['loc'],
-             'synMech': ns['synMech'], 'weight': ns['weight'], 'delay': ns['delay']}
-"""
+
+#------------------------------------------------------------------------------
+# Evoked proximal and distal inputs parameters 
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Poisson-distributed input sparameters 
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+# Gaussian-distributed inputs parameters 
+#------------------------------------------------------------------------------
