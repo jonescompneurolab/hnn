@@ -305,7 +305,7 @@ extLocZ = xrange[int((len(zrange) - 1) // 2)]
 extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
 
 
-# L2 Pyr proximal
+# External Rhythmic proximal inputs (population of 1 VecStim)
 netParams.popParams['extRhythmicProximal'] = {
         'cellModel': 'VecStim',
         'numCells': 1,
@@ -324,6 +324,28 @@ netParams.popParams['extRhythmicProximal'] = {
                 'distribution': cfg.distribution_prox,
                 'repeats': cfg.repeats_prox}}
 
+
+# External Rhythmic distal inputs (population of 1 VecStim)
+netParams.popParams['extRhythmicDistal'] = {
+        'cellModel': 'VecStim',
+        'numCells': 1,
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(cfg.prng_seedcore_input_dist),
+        'spikePattern': {
+                'type': 'rhythmic',
+                'start': cfg.t0_input_dist,
+                'startStd': cfg.t0_input_stdev_dist,
+                'stop': cfg.tstop_input_dist,
+                'freq': cfg.f_input_dist,
+                'freqStd': cfg.f_stdev_dist,
+                'eventsPerCycle': cfg.events_per_cycle_dist,
+                'distribution': cfg.distribution_dist,
+                'repeats': cfg.repeats_dist}}
+
+
+# Rhytmic proximal -> L2 Pyr
 synParamsList = [{'synMech': 'L2Pyr_AMPA',
             'A_weight': cfg.input_prox_A_weight_L2Pyr_ampa,
             'A_delay': cfg.input_prox_A_delay_L2,
@@ -344,25 +366,8 @@ for synParams in synParamsList:
         'synsPerConn': 3,
         'sec': ['basal_2', 'basal_3','apical_oblique']}
 
-# L2 Pyr distal
-netParams.popParams['extRhythmicDistal'] = {
-        'cellModel': 'VecStim',
-        'numCells': 1,
-        'xRange': [extLocX, extLocX],
-        'yRange': [extLocY, extLocY],
-        'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_dist),
-        'spikePattern': {
-                'type': 'rhythmic',
-                'start': cfg.t0_input_dist,
-                'startStd': cfg.t0_input_stdev_dist,
-                'stop': cfg.tstop_input_dist,
-                'freq': cfg.f_input_dist,
-                'freqStd': cfg.f_stdev_dist,
-                'eventsPerCycle': cfg.events_per_cycle_dist,
-                'distribution': cfg.distribution_dist,
-                'repeats': cfg.repeats_dist}}
 
+# Rhythmic distal -> L2 Pyr
 synParamsList = [{'synMech': 'L2Pyr_AMPA',
             'A_weight': cfg.input_dist_A_weight_L2Pyr_ampa,
             'A_delay': cfg.input_dist_A_delay_L2,
@@ -384,8 +389,136 @@ for synParams in synParamsList:
         'sec': ['apical_tuft']}
 
 
+# Rhythmic proximal -> L5 Pyr
+synParamsList = [{'synMech': 'L5Pyr_AMPA',
+            'A_weight': cfg.input_prox_A_weight_L5Pyr_ampa,
+            'A_delay': cfg.input_prox_A_delay_L5,
+            'lamtha': 100.},
+
+            {'synMech': 'L5Pyr_NMDA',
+            'A_weight': cfg.input_prox_A_weight_L5Pyr_nmda,
+            'A_delay': cfg.input_prox_A_delay_L5,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicProx->L5Pyr'] = { 
+        'preConds': {'pop': 'extRhythmicProximal'}, 
+        'postConds': {'pop': 'L5Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': ['basal_2', 'basal_3','apical_oblique']}
 
 
+# Rhythmic distal -> L5 Pyr
+synParamsList = [{'synMech': 'L5Pyr_AMPA',
+            'A_weight': cfg.input_dist_A_weight_L5Pyr_ampa,
+            'A_delay': cfg.input_dist_A_delay_L5,
+            'lamtha': 100.},
+
+            {'synMech': 'L5Pyr_NMDA',
+            'A_weight': cfg.input_dist_A_weight_L5Pyr_nmda,
+            'A_delay': cfg.input_dist_A_delay_L5,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicDistal->L5Pyr'] = { 
+        'preConds': {'pop': 'extRhythmicDistal'}, 
+        'postConds': {'pop': 'L5Pyr'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': ['apical_tuft']}
+
+
+# Rhytmic proximal -> L2 Basket
+synParamsList = [{'synMech': 'L2Basket_AMPA',
+            'A_weight': cfg.input_prox_A_weight_L2Basket_ampa,
+            'A_delay': cfg.input_prox_A_delay_L2,
+            'lamtha': 100.},
+
+            {'synMech': 'L2Basket_NMDA',
+            'A_weight': cfg.input_prox_A_weight_L2Basket_nmda,
+            'A_delay': cfg.input_prox_A_delay_L2,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicProx->L2Basket'] = { 
+        'preConds': {'pop': 'extRhythmicProximal'}, 
+        'postConds': {'pop': 'L2Basket'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': 'soma'}
+
+
+# Rhythmic distal -> L2 Basket
+synParamsList = [{'synMech': 'L2Basket_AMPA',
+            'A_weight': cfg.input_dist_A_weight_L2Basket_ampa,
+            'A_delay': cfg.input_dist_A_delay_L2,
+            'lamtha': 100.},
+
+            {'synMech': 'L2Basket_NMDA',
+            'A_weight': cfg.input_dist_A_weight_L2Basket_nmda,
+            'A_delay': cfg.input_dist_A_delay_L2,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicDistal->L2Basket'] = { 
+        'preConds': {'pop': 'extRhythmicDistal'}, 
+        'postConds': {'pop': 'L2Basket'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': 'soma'}
+
+
+# Rhytmic proximal -> L5 Basket
+synParamsList = [{'synMech': 'L5Basket_AMPA',
+            'A_weight': cfg.input_prox_A_weight_L5Basket_ampa,
+            'A_delay': cfg.input_prox_A_delay_L5,
+            'lamtha': 100.},
+
+            {'synMech': 'L5Basket_NMDA',
+            'A_weight': cfg.input_prox_A_weight_L5Basket_nmda,
+            'A_delay': cfg.input_prox_A_delay_L5,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicProx->L5Basket'] = { 
+        'preConds': {'pop': 'extRhythmicProximal'}, 
+        'postConds': {'pop': 'L5Basket'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': 'soma'}
+
+
+# Rhythmic distal -> L5 Basket
+synParamsList = [{'synMech': 'L5Basket_AMPA',
+            'A_weight': cfg.input_dist_A_weight_L5Basket_ampa,
+            'A_delay': cfg.input_dist_A_delay_L5,
+            'lamtha': 100.},
+
+            {'synMech': 'L5Basket_NMDA',
+            'A_weight': cfg.input_dist_A_weight_L5Basket_nmda,
+            'A_delay': cfg.input_dist_A_delay_L5,
+            'lamtha': 100.}]
+
+for synParams in synParamsList:
+    netParams.connParams['extRhythmicDistal->L5Basket'] = { 
+        'preConds': {'pop': 'extRhythmicDistal'}, 
+        'postConds': {'pop': 'L5Basket'},
+        'synMech': synParams['synMech'],
+        'weight': weightDistFunc.format(**synParams),
+        'delay': delayDistFunc.format(**synParams),
+        'synsPerConn': 3,
+        'sec': 'soma'}
 
 #------------------------------------------------------------------------------
 # Evoked proximal and distal inputs parameters 
