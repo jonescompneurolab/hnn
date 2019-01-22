@@ -14,7 +14,7 @@ def setCfgFromFile (fn, cfg):
             if s.startswith('#'): continue
             sp = s.split(':')
             sp[1] = sp[1].strip()
-            if len(sp[1]) > 1:
+            if len(sp[1]) > 0:
                 if '.' in sp[1] or 'e' in sp[1]:
                     try:
                         value = float(sp[1])
@@ -26,7 +26,7 @@ def setCfgFromFile (fn, cfg):
                     except:
                         value = str(sp[1])
             
-            d[sp[0].strip()] = value
+                d[sp[0].strip()] = value
 
 
     for k,v in d.items():

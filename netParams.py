@@ -39,10 +39,10 @@ netParams.cellParams = cellParams
 layersE = {'L5': [0.5*cfg.sizeY, 0.5*cfg.sizeY], 'L2': [0.5*cfg.sizeY, 0.5*cfg.sizeY]}
 layersI = {'L5': [0.6*cfg.sizeY, 0.6*cfg.sizeY], 'L2': [1.4*cfg.sizeY, 1.4*cfg.sizeY]}
 
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsE}
-netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L2'], 'gridSpacing': cfg.gridSpacing} # 'numCells': numCellsI}
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsE}
-netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L5'], 'gridSpacing': cfg.gridSpacing} #  'numCells': numCellsI}
+netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L2'], 'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L2'], 'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L5'], 'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L5'], 'gridSpacing': cfg.gridSpacing} 
 
 
 #------------------------------------------------------------------------------
@@ -72,7 +72,6 @@ netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e':
 # Weight and delay distance-dependent functions (as strings) to use in conn rules
 weightDistFunc = '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2))'
 delayDistFunc = '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'
-
 
 # L2 Pyr -> L2 Pyr
 synParamsList = [{'synMech': 'L2Pyr_AMPA',
@@ -148,7 +147,6 @@ netParams.connParams['L2Basket->L2Basket'] = {
     'delay': delayDistFunc.format(**synParams),
     'synsPerConn': 1,
     'sec': ['soma']}
-
 
 
 # L5 Pyr -> L5 Pyr
@@ -309,7 +307,8 @@ extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/d
 
 # L2 Pyr proximal
 netParams.popParams['extRhythmicProximal'] = {
-        'cellModel': 'VecStim', 
+        'cellModel': 'VecStim',
+        'numCells': 1,
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -319,6 +318,7 @@ netParams.popParams['extRhythmicProximal'] = {
                 'start': cfg.t0_input_prox,
                 'startStd': cfg.t0_input_stdev_prox,
                 'stop': cfg.tstop_input_prox,
+                'freq': cfg.f_input_prox,
                 'freqStd': cfg.f_stdev_prox,
                 'eventsPerCycle': cfg.events_per_cycle_prox,
                 'distribution': cfg.distribution_prox,
@@ -347,6 +347,7 @@ for synParams in synParamsList:
 # L2 Pyr distal
 netParams.popParams['extRhythmicDistal'] = {
         'cellModel': 'VecStim',
+        'numCells': 1,
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -356,6 +357,7 @@ netParams.popParams['extRhythmicDistal'] = {
                 'start': cfg.t0_input_dist,
                 'startStd': cfg.t0_input_stdev_dist,
                 'stop': cfg.tstop_input_dist,
+                'freq': cfg.f_input_dist,
                 'freqStd': cfg.f_stdev_dist,
                 'eventsPerCycle': cfg.events_per_cycle_dist,
                 'distribution': cfg.distribution_dist,

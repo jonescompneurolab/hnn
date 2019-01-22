@@ -6,10 +6,11 @@ from netpyne import sim
 from utils import setCfgFromFile
 
 from cfg import cfg
-cfg = setCfgFromFile('param/ERPYes100Trials.param', cfg)
+# cfg = setCfgFromFile('param/ERPYes100Trials.param', cfg)
+cfg = setCfgFromFile('param/OnlyRhythmicProx.param', cfg)
 from netParams import netParams
 
-sim.create(simConfig = cfg, netParams = netParams) 
-#SimulateAnalyze
-sim.gatherData()
-sim.saveData()
+sim.create(simConfig=cfg, netParams=netParams)
+# SimulateAnalyze
+sim.simulate()
+#sim.saveData()
