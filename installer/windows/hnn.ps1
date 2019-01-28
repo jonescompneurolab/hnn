@@ -486,12 +486,19 @@ else {
 Write-Host ""
 Write-Host "Finished installing HNN and prerequisites."
 Write-Host "Activate the environment from cmd.exe (not Powershell):"
+Write-Host ""
+
 if ($null -ne $script:CONDA_PATH)  {
+  if ($script:installMiniconda) {
+    Write-Host "# *** run the commands below from a new command prompt or 'conda' will not be found ****"
+  }
   Write-Host "conda activate hnn"
 }
 elseif ($null -ne $script:VIRTUALENV) {
   Write-Host "$HOME\venv\hnn\Scripts\activate"
 }
-Write-Host "python $HNN_PATH\hnn.py $HNN_PATH\hnn.cfg"
+Write-Host "cd $HNN_PATH"
+Write-Host "python hnn.py hnn.cfg"
+Write-Host ""
 
 return
