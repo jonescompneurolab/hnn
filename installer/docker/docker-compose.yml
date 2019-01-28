@@ -1,0 +1,13 @@
+version: "3"
+services:
+
+  hnn:
+    build: .
+    image: jonescompneurolab/hnn
+    environment:
+      XAUTHORITY: "/.Xauthority"
+      DISPLAY:
+    volumes:
+      - "$HOME/.Xauthority:/.Xauthority"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+    command: python3 hnn.py hnn.cfg
