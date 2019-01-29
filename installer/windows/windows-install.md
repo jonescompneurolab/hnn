@@ -68,24 +68,22 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
     git clone https://github.com/jonescompneurolab/hnn.git
     cd hnn\installer\docker
     ```
-4. Build start the Docker container. Note: build may take more than 10 minutes
+4. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB)
     ```
-    docker-compose build
     docker-compose up -d
     ```
 5. A prompt from the dock will ask you to share the drive. Click 'Share'
 6. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
-7. **NOTE:** To access a command prompt in the container, use `docker exec`:
+7. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
     ```
     docker exec -ti docker_hnn_1 bash
     ```
+    If you'd like to be able to access files from the host Windows system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 4):
+    ```
+    mkdir %HOME%\dir_on_host
+    docker-compose run -d -v %HOME%\dir_on_host:/home/hnn_user/dir_from_host hnn
+    ```
 
-
-
-
-
-
-[](https://docs.docker.com/docker-for-windows/install/)
 ## Native Install
 
 The [HNN install powershell script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
