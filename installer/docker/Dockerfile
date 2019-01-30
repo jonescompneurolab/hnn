@@ -13,7 +13,8 @@ RUN apt-get update && \
                        python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial \
                        bison flex automake libtool libxext-dev libncurses-dev \
                        python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy \
-                       python3-pyqt4.qtopengl libxaw7 libxmu6 libxpm4 && \
+                       python3-pyqt4.qtopengl libxaw7 libxmu6 libxpm4 \
+                       git vim iputils-ping net-tools iproute2 nano sudo && \
     apt-get remove -y python3-matplotlib
 
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
@@ -22,7 +23,17 @@ RUN apt-get update && \
 RUN pip3 install PyOpenGL matplotlib && \
     pip3 install --upgrade PyOpenGL matplotlib
 
+# create the group hnn_group and user hnn_user
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user
+
+# add hnn_user to the sudo group
+RUN adduser hnn_user sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# copy the start script into the container
+COPY start_hnn_in_docker.sh /home/hnn_user/
+RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn_in_docker.sh && \
+    sudo chmod +x /home/hnn_user/start_hnn_in_docker.sh
 
 USER hnn_user
 # install NEURON dependencies
@@ -69,5 +80,7 @@ RUN cd /home/hnn_user/iv && \
     cd /home/hnn_user/nrn && \
     make clean
 
+# if users open up a shell, they should go to the hnn repo checkout
 WORKDIR /home/hnn_user/hnn
-CMD python3 hnn.py hnn.cfg
+
+CMD /home/hnn_user/start_hnn_in_docker.sh
