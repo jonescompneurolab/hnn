@@ -1,0 +1,12 @@
+version: "3"
+services:
+
+  hnn:
+    image: jonescompneurolab/hnn
+    environment:
+      XAUTHORITY: "/.Xauthority"
+      DISPLAY: "10.0.75.1:0"
+    volumes:
+      - "$HOME/.Xauthority:/.Xauthority"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+    command: /home/hnn_user/start_hnn_in_docker.sh

@@ -2,16 +2,16 @@
 
 This guide describes two methods for installing HNN and its prerequisistes on a Windows 10 system:
 
-1. A docker container running a Linux install of HNN (recommended)
+1. A Docker container running a Linux install of HNN (recommended)
 2. Natively running HNN on Windows (better performance)
 
-The docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version conflicts, or the wrong version being used. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+The Docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version conflicts, or the wrong version being used. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
 
-Method 1 (using Docker) displays the GUI through an X windows server which may lead to slower responsiveness as compared to using method 2, which displays the GUI running natively on Windows.
+Method 1 (using Docker) displays the GUI through an X server which may lead to slower responsiveness as compared to using method 2, which displays the GUI running natively on Windows.
 
-## Docker Install
+## Docker install
 
-[Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows 10 (Pro/Enterprise only) is capable of running both Linux containers and Windows containers. For HNN's GUI to display properly, only Linux containers work. Docker Desktop is installed with this configuration by default.  For Windows 10 Home or other versions of windows, use the legacy version of [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/).
+[Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows 10 (Pro/Enterprise only) is capable of running both Linux containers and Windows containers. For HNN's GUI to display properly, only Linux containers work. Docker Desktop is installed with this configuration by default.  For Windows 10 Home or other versions of windows, use the legacy version of [Docker Toolbox](https://docs.docker.com/toolbox/overview/).
 
 The only other component to install is an X server. Both [VcXsrv](https://sourceforge.net/projects/vcxsrv/) and [Xming](https://sourceforge.net/projects/xming/) are recommended free options. These install instructions will cover VcXsrv.
 
@@ -23,6 +23,8 @@ The only other component to install is an X server. Both [VcXsrv](https://source
 5. Select "Start no client" and click 'Next'.
 6. Under "Extra settings" make sure that "Disable access control" is checked.
 7. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that VcXsrv is waiting for connections.
+8. A message from Windows firewall to allow connections may pop up. If it does, choose options allowing connections to the VcXsrv when connected to both public and private networks.
+
 
 ### Install Docker Desktop (Windows 10 Pro/Enterprise)
 1. Download the installer (requires a free Docker Hub account):
@@ -45,46 +47,51 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 6. Run the commands below from a new cmd.exe window.
 
 ### Start the HNN Docker container
-1. Open a cmd.exe window and run `ipconfig` to get your external IPv4 address e.g. "Wireless LAN adapter Wi-Fi 2" 
+1. Verify that the docker interface on your system has an IP address of 10.0.75.1. If you see a different IP address from the output of ipconfig, use that instead. Open a cmd.exe window and run `ipconfig`. The output should be similar to below. If the IP address differs from 10.0.75.1, you need to correct it in [docker-compose.yml](../docker/docker-compose.yml).
     ```
-    C:\Users\myuser>ipconfig
+    C:\Users\[USER]>ipconfig
 
     Windows IP Configuration
-    ...
-    Wireless LAN adapter Wi-Fi 2:
+
+
+    Ethernet adapter vEthernet (DockerNAT):
 
        Connection-specific DNS Suffix  . :
-       ...
-       IPv4 Address. . . . . . . . . . . : 192.168.0.16
+       IPv4 Address. . . . . . . . . . . : 10.0.75.1
        Subnet Mask . . . . . . . . . . . : 255.255.255.0
-       ...
+       Default Gateway . . . . . . . . . :
+
     ```
-2. Set an environment variable DISPLAY containing "[IP address]:0" (e.g. `192.168.0.16:0`)
-    ```
-    set DISPLAY=[external IPv4 address]:0
-    ```
-3. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). Assuming [Git for Windows](https://gitforwindows.org/) is installed, type the following in a cmd.exe window:
+2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). Assuming [Git for Windows](https://gitforwindows.org/) is installed, type the following in a cmd.exe window:
     ```
     git clone https://github.com/jonescompneurolab/hnn.git
-    cd hnn\installer\docker
+    cd hnn\installer\windows
     ```
-4. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB)
+3. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB)
     ```
     docker-compose up -d
     ```
-5. A prompt from the dock will ask you to share the drive. Click 'Share'
-6. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
-7. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
+4. A prompt from the dock will ask you to share the drive. Click 'Share'
+5. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+
+   * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
+   * If you closed the HNN GUI, and would like to restart it, run the following:
+      ```
+      docker-compose restart
+      ```
+
+6. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
     ```
     docker exec -ti docker_hnn_1 bash
     ```
-    If you'd like to be able to access files from the host Windows system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 4):
+    If you'd like to be able to access files from the host Windows system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 3):
     ```
     mkdir %HOME%\dir_on_host
     docker-compose run -d -v %HOME%\dir_on_host:/home/hnn_user/dir_from_host hnn
     ```
+    * Note the different container name after running docker-compose
 
-## Native Install
+## Native install script
 
 The [HNN install powershell script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
 
