@@ -1,6 +1,6 @@
 # HNN Docker container
 
-This directory contains files for building he HNN container and using docker-compose to start the container on any platform. The container itself is running the Ubuntu 18.04 Linux distribution, but can run on any Operating system assuming that [Docker](https://www.docker.com/) is installed. For more specific instructions on installing Docker and starting the container, see one of the following pages that matches your operating system:
+This directory contains files for building the HNN container and using docker-compose to start the container on any platform. The container itself is running the Ubuntu 18.04 Linux distribution, but can run on any operating system assuming that [Docker](https://www.docker.com/) is installed. For more specific instructions on installing Docker and starting the HNN container, see one of the following pages that matches your operating system:
  * [Windows](../windows)
  * [Mac](../mac)
  * [Ubuntu](../ubuntu)
