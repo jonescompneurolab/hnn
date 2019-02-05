@@ -3,11 +3,11 @@
 There are two methods for installing HNN and its prerequisistes on Mac OS (tested on High Sierra):
 
 1. A Docker container running a Linux install of HNN (recommended)
-2. Natively running HNN on Mac OS (better performance)
+2. Natively running HNN on Mac OS (advanced users)
 
-The Docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version conflicts, or the wrong version being used. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+The Docker installation (Method 1) is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version incompatibilities. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
 
-Both methods display the GUI through an X server. Differences in performance may be due to overhead from running and container (especially using Docker Toolbox in Which Docker Runs in a Virtual Machine)
+Method 2 runs HNN directly on the Mac OS. This may result in slightly better performance without the overhead of virtualization or running in a container. Docker Toolbox which runs Docker in a virtual machine suffers the greatest overhead. However, the procedure is a set of steps that the user must follow, and there is a possibility that differences in the base environment may require additional troubleshooting. Thus, Method 2 is best suited for advanced users.
 
 ## Docker Install
 

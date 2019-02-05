@@ -3,11 +3,13 @@
 This guide describes two methods for installing HNN and its prerequisistes on a Windows 10 system:
 
 1. A Docker container running a Linux install of HNN (recommended)
-2. Natively running HNN on Windows (better performance)
+2. Natively running HNN on Windows (advanced users)
 
-The Docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version conflicts, or the wrong version being used. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+The Docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version incompatibilities. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
 
 Method 1 (using Docker) displays the GUI through an X server which may lead to slower responsiveness as compared to using method 2, which displays the GUI running natively on Windows.
+
+Method 2 (using Powershell) uses a script to download and install prerequisites without using Docker or virtualization. This may result in slightly better performance and the GUI may feel more responsive. The script is designed to detect and use software that's already installed when possible, so it is safe to run the script multiple times. However, it is more difficult to control the native environment than in Method 1 (with Docker), so it's possible that it will need user intervention. Thus, Method 2 is best suited for advanced users.
 
 ## Docker install
 
