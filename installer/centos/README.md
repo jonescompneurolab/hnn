@@ -3,9 +3,12 @@
 This guide describes two methods for installing HNN and its prerequisistes CentOS (tested on CentOS 7):
 
 1. A Docker container running a Linux install of HNN (recommended, CentOS 7 only) 
-2. Natively running HNN on CentOS 6 or 7 (better performance)
+2. Natively running HNN on CentOS 6 or 7 (advanced users)
 
-The Docker installation is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version conflicts, or the wrong version being used. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+The Docker installation (Method 1) is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version incompatibilities. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+
+Method 2 runs HNN directly on the OS and uses a script to download and install prerequisites. It is more difficult to control the native environment than in Method 1 (with Docker), so it's possible that the script will need user intervention. Thus, Method 2 is best suited for advanced users.
+
 
 ## Install Docker
 * Follow [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) to install the docker-ce RPM packages from Docker's official repository
