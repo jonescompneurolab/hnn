@@ -28,7 +28,6 @@ def setCfgFromFile (fn, cfg):
             
                 d[sp[0].strip()] = value
 
-
     for k,v in d.items():
         setattr(cfg, k, v)
 
