@@ -49,7 +49,9 @@ cfg.saveDataInclude = ['simData', 'simConfig', 'netParams', 'net']
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
 cfg.analysis['plotTraces'] = {'include': ['L2Pyr','L5Pyr'], 'oneFigPer': 'cell', 'saveFig': True, 
-							  'showFig': False, 'figSize': (10,8), 'timeRange': [0,cfg.duration]}
+							  'showFig': False, 'figSize': (10, 8), 'timeRange': [0, cfg.duration]}
+cfg.analysis['plotRaster'] = True
+cfg.analysis['plotDipole'] = True
 
 # ----------------------------------------------------------------------------
 # Network parameters
