@@ -1,4 +1,11 @@
-# cfg.py  - Simulation configuration 
+"""
+cfg.py 
+
+Simulationg configuration for NetPyNE-based HNN network model
+
+Contributors: salvadordura@gmail.com
+"""
+
 from netpyne import specs
 
 cfg = specs.SimConfig()  

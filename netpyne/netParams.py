@@ -1,4 +1,11 @@
-# netParams.py - High-level specifications for network model using NetPyNE
+
+"""
+netParams.py 
+
+High-level specifications for HNN network model using NetPyNE
+
+Contributors: salvadordura@gmail.com
+"""
 
 from netpyne import specs
 

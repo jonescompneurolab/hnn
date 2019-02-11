@@ -1,9 +1,10 @@
 '''
  cellParams.py - High-level specifications for cells (redefine in netpyne instead of import)
  
- Modified from netpyne-generated JSON resulting from importing original Python cell templates
+ Modified from NetPyNE-generated JSON resulting from importing original Python cell templates
 
 '''
+
 import numpy as np
 from netpyne import specs
 from cfg import cfg
