@@ -297,6 +297,7 @@ if d['L5Pyr_ampa'][1] == -1:
                 else:
                 d[key] = (d[key][0], 1.)
 '''
+
 # Location of external inputs
 xrange = np.arange(cfg.N_pyr_x)
 extLocX = xrange[int((len(xrange) - 1) // 2)]
@@ -307,42 +308,42 @@ extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/d
 
 # External Rhythmic proximal inputs (population of 1 VecStim)
 netParams.popParams['extRhythmicProximal'] = {
-        'cellModel': 'VecStim',
-        'numCells': 1,
-        'xRange': [extLocX, extLocX],
-        'yRange': [extLocY, extLocY],
-        'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_prox),
-        'spikePattern': {
-                'type': 'rhythmic',
-                'start': cfg.t0_input_prox,
-                'startStd': cfg.t0_input_stdev_prox,
-                'stop': cfg.tstop_input_prox,
-                'freq': cfg.f_input_prox,
-                'freqStd': cfg.f_stdev_prox,
-                'eventsPerCycle': cfg.events_per_cycle_prox,
-                'distribution': cfg.distribution_prox,
-                'repeats': cfg.repeats_prox}}
+    'cellModel': 'VecStim',
+    'numCells': 1,
+    'xRange': [extLocX, extLocX],
+    'yRange': [extLocY, extLocY],
+    'zRange': [extLocZ, extLocZ],
+    'seed': int(cfg.prng_seedcore_input_prox),
+    'spikePattern': {
+            'type': 'rhythmic',
+            'start': cfg.t0_input_prox,
+            'startStd': cfg.t0_input_stdev_prox,
+            'stop': cfg.tstop_input_prox,
+            'freq': cfg.f_input_prox,
+            'freqStd': cfg.f_stdev_prox,
+            'eventsPerCycle': cfg.events_per_cycle_prox,
+            'distribution': cfg.distribution_prox,
+            'repeats': cfg.repeats_prox}}
 
 
 # External Rhythmic distal inputs (population of 1 VecStim)
 netParams.popParams['extRhythmicDistal'] = {
-        'cellModel': 'VecStim',
-        'numCells': 1,
-        'xRange': [extLocX, extLocX],
-        'yRange': [extLocY, extLocY],
-        'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_dist),
-        'spikePattern': {
-                'type': 'rhythmic',
-                'start': cfg.t0_input_dist,
-                'startStd': cfg.t0_input_stdev_dist,
-                'stop': cfg.tstop_input_dist,
-                'freq': cfg.f_input_dist,
-                'freqStd': cfg.f_stdev_dist,
-                'eventsPerCycle': cfg.events_per_cycle_dist,
-                'distribution': cfg.distribution_dist,
-                'repeats': cfg.repeats_dist}}
+    'cellModel': 'VecStim',
+    'numCells': 1,
+    'xRange': [extLocX, extLocX],
+    'yRange': [extLocY, extLocY],
+    'zRange': [extLocZ, extLocZ],
+    'seed': int(cfg.prng_seedcore_input_dist),
+    'spikePattern': {
+            'type': 'rhythmic',
+            'start': cfg.t0_input_dist,
+            'startStd': cfg.t0_input_stdev_dist,
+            'stop': cfg.tstop_input_dist,
+            'freq': cfg.f_input_dist,
+            'freqStd': cfg.f_stdev_dist,
+            'eventsPerCycle': cfg.events_per_cycle_dist,
+            'distribution': cfg.distribution_dist,
+            'repeats': cfg.repeats_dist}}
 
 
 # Rhytmic proximal -> L2 Pyr
@@ -480,6 +481,136 @@ for synParams in synParamsList:
 #------------------------------------------------------------------------------
 # Evoked proximal and distal inputs parameters 
 #------------------------------------------------------------------------------
+
+# Evoked proximal inputs (population of 1 VecStim)
+nprox = len([k for k in cfg.__dict__ if k.startswith('t_evprox')])
+ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
+
+for iprox in range(nprox):
+    skey = 'evprox_' + str(i+1)
+    netParams.popParams['evokedProximal'] = {
+        'cellModel': 'VecStim',
+        'numCells': 1,
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
+        'spikePattern': {
+                'type': 'evoked',
+                'start': getattr(cfg, 't_' + skey),
+                'startStd': getattr(cfg, 'sigma_t_' + skey),
+                'numspikes': getattr(cfg, 'numspikes_' + skey)
+                'sync': getattr(cfg, 'sync_evinput')}
+
+
+          't0': p['t_' + skey],
+          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_'+skey]),
+          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],1.,p['sigma_t_'+skey]),
+          'L5_basket':(p['gbar_'+skey+'_L5Basket_ampa'],p['gbar_'+skey+'_L5Basket_nmda'],1.,p['sigma_t_'+skey]),
+          'prng_seedcore': int(p['prng_seedcore_' + skey]),
+          'lamtha_space': 3.,
+          'loc': 'proximal',
+          'sync_evinput': p['sync_evinput'],
+          'threshold': p['threshold'],
+          'numspikes': p['numspikes_' + skey]
+
+
+# Evoked distal inputs (population of 1 VecStim)
+netParams.popParams['evokedDistal'] = {
+        'cellModel': 'VecStim',
+        'numCells': 1,
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(cfg.prng_seedcore_input_dist),
+        'spikePattern': {
+                'type': 'evoked',
+                'start': cfg.t0_input_dist,
+                'startStd': cfg.t0_input_stdev_dist,
+                'stop': cfg.tstop_input_dist,
+                'freq': cfg.f_input_dist,
+                'freqStd': cfg.f_stdev_dist,
+                'eventsPerCycle': cfg.events_per_cycle_dist,
+                'distribution': cfg.distribution_dist,
+                'repeats': cfg.repeats_dist}}
+
+
+
+        if type.startswith(('evprox', 'evdist')):
+            if self.celltype in p_ext.keys():
+                gid_ev = gid + gid_dict[type][0]
+
+                # separate dictionaries for ampa and nmda evoked inputs
+                nc_dict_ampa = {
+                    'pos_src': pos_dict[type][gid],
+                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
+                }
+
+                nc_dict_nmda = {
+                    'pos_src': pos_dict[type][gid],
+                    'A_weight': p_ext[self.celltype][1], # index 1 for nmda weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
+                }
+
+                if p_ext['loc'] is 'proximal':
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal2_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal3_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaloblique_ampa))
+
+                    # NEW: note that default/original is 0 nmda weight for these proximal dends
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal2_nmda))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal3_nmda))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaloblique_nmda))
+
+                elif p_ext['loc'] is 'distal':
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaltuft_ampa))
+                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaltuft_nmda))
+
+
+
+   # Create proximal evoked response parameters
+    # f_input needs to be defined as 0
+    for i in range(nprox):
+      skey = 'evprox_' + str(i+1)
+      p_unique['evprox' + str(i+1)] = {
+          't0': p['t_' + skey],
+          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_'+skey]),
+          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],1.,p['sigma_t_'+skey]),
+          'L5_basket':(p['gbar_'+skey+'_L5Basket_ampa'],p['gbar_'+skey+'_L5Basket_nmda'],1.,p['sigma_t_'+skey]),
+          'prng_seedcore': int(p['prng_seedcore_' + skey]),
+          'lamtha_space': 3.,
+          'loc': 'proximal',
+          'sync_evinput': p['sync_evinput'],
+          'threshold': p['threshold'],
+          'numspikes': p['numspikes_' + skey]
+      }
+
+    # Create distal evoked response parameters
+    # f_input needs to be defined as 0
+    for i in range(ndist):
+      skey = 'evdist_' + str(i+1)
+      p_unique['evdist' + str(i+1)] = {
+          't0': p['t_' + skey],
+          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],0.1,p['sigma_t_'+skey]),
+          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_' + skey]),
+          'prng_seedcore': int(p['prng_seedcore_' + skey]),
+          'lamtha_space': 3.,
+          'loc': 'distal',
+          'sync_evinput': p['sync_evinput'],
+          'threshold': p['threshold'],
+          'numspikes': p['numspikes_' + skey]
+      }
+
 
 #------------------------------------------------------------------------------
 # Poisson-distributed input sparameters 
