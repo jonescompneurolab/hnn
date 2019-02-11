@@ -486,6 +486,7 @@ for synParams in synParamsList:
 nprox = len([k for k in cfg.__dict__ if k.startswith('t_evprox')])
 ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
+# Evoked proximal inputs (population of 1 VecStim)
 for iprox in range(nprox):
     skey = 'evprox_' + str(i+1)
     netParams.popParams['evokedProximal'] = {
@@ -499,121 +500,175 @@ for iprox in range(nprox):
                 'type': 'evoked',
                 'start': getattr(cfg, 't_' + skey),
                 'startStd': getattr(cfg, 'sigma_t_' + skey),
-                'numspikes': getattr(cfg, 'numspikes_' + skey)
-                'sync': getattr(cfg, 'sync_evinput')}
+                'numspikes': getattr(cfg, 'numspikes_' + skey),
+                'sync': getattr(cfg, 'sync_evinput')}}
 
+
+    # Evoked proximal -> L2 Pyr
+    synParamsList = [{'synMech': 'L2Pyr_AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 3.},
+
+                {'synMech': 'L2Pyr_NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L2Pyr'] = { 
+            'preConds': {'pop': 'evokedProximal'}, 
+            'postConds': {'pop': 'L2Pyr'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 3,
+            'sec': ['basal_2', 'basal_3','apical_oblique']}
+
+    # Evoked proximal -> L5 Pyr
+    synParamsList = [{'synMech': 'L5Pyr_AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_ampa'),
+                'A_delay': 1.0,
+                'lamtha': 3.},
+
+                {'synMech': 'L5Pyr_NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_nmda'),
+                'A_delay': 1.0,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L5Pyr'] = { 
+            'preConds': {'pop': 'evokedProximal'}, 
+            'postConds': {'pop': 'L5Pyr'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 3,
+            'sec': ['basal_2', 'basal_3','apical_oblique']}
+
+    # Evoked proximal -> L2 Basket
+    synParamsList = [{'synMech': 'AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 3.},
+
+                {'synMech': 'NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L2Basket'] = { 
+            'preConds': {'pop': 'evokedProximal'}, 
+            'postConds': {'pop': 'L2Basket'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 1,
+            'sec': 'soma'}
+
+    # Evoked proximal -> L5 Basket
+    synParamsList = [{'synMech': 'AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Basket_ampa'),
+                'A_delay': 1.0,
+                'lamtha': 3.},
+
+                {'synMech': 'NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Basket_nmda'),
+                'A_delay': 1.0,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L5Basket'] = { 
+            'preConds': {'pop': 'evokedProximal'}, 
+            'postConds': {'pop': 'L5Basket'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 1,
+            'sec': 'soma'}
 
 
 # Evoked distal inputs (population of 1 VecStim)
-netParams.popParams['evokedDistal'] = {
+for iprox in range(nprox):
+    skey = 'evdist_' + str(i+1)
+    netParams.popParams['evokedDistal'] = {
         'cellModel': 'VecStim',
         'numCells': 1,
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_dist),
+        'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
         'spikePattern': {
                 'type': 'evoked',
-                'start': cfg.t0_input_dist,
-                'startStd': cfg.t0_input_stdev_dist,
-                'stop': cfg.tstop_input_dist,
-                'freq': cfg.f_input_dist,
-                'freqStd': cfg.f_stdev_dist,
-                'eventsPerCycle': cfg.events_per_cycle_dist,
-                'distribution': cfg.distribution_dist,
-                'repeats': cfg.repeats_dist}}
-
-'''
-
-        if type.startswith(('evprox', 'evdist')):
-            if self.celltype in p_ext.keys():
-                gid_ev = gid + gid_dict[type][0]
-
-                # separate dictionaries for ampa and nmda evoked inputs
-                nc_dict_ampa = {
-                    'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
-                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
-                    'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold'],
-                    'type_src': type
-                }
-
-                nc_dict_nmda = {
-                    'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][1], # index 1 for nmda weight
-                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
-                    'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold'],
-                    'type_src': type
-                }
-
-                if p_ext['loc'] is 'proximal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal2_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal3_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaloblique_ampa))
-
-                    # NEW: note that default/original is 0 nmda weight for these proximal dends
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal2_nmda))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal3_nmda))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaloblique_nmda))
-
-                elif p_ext['loc'] is 'distal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaltuft_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaltuft_nmda))
+                'start': getattr(cfg, 't_' + skey),
+                'startStd': getattr(cfg, 'sigma_t_' + skey),
+                'numspikes': getattr(cfg, 'numspikes_' + skey),
+                'sync': getattr(cfg, 'sync_evinput')}}
 
 
-def checkevokedsynkeys (p, nprox, ndist):
-  # make sure ampa,nmda gbar values are in the param dict for evoked inputs(for backwards compatibility)
-  lctprox = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # evoked distal target cell types
-  lctdist = ['L2Pyr','L5Pyr','L2Basket'] # evoked proximal target cell types
-  lsy = ['ampa','nmda'] # synapse types used in evoked inputs
-  for nev,pref,lct in zip([nprox,ndist],['evprox_','evdist_'],[lctprox,lctdist]):
-    for i in range(nev):
-      skey = pref + str(i+1)
-      for sy in lsy:
-        for ct in lct:
-          k = 'gbar_'+skey+'_'+ct+'_'+sy
-          # if the synapse-specific gbar not present, use the existing weight for both ampa,nmda
-          if k not in p: 
-            p[k] = p['gbar_'+skey+'_'+ct]
+    # Evoked Distal -> L2 Pyr
+    synParamsList = [{'synMech': 'L2Pyr_AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 3.},
 
-'''
+                {'synMech': 'L2Pyr_NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 3.}]
 
-   # Create proximal evoked response parameters
-    # f_input needs to be defined as 0
-    for i in range(nprox):
-      skey = 'evprox_' + str(i+1)
-      p_unique['evprox' + str(i+1)] = {
-          't0': p['t_' + skey],
-          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
-          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_'+skey]),
-          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],1.,p['sigma_t_'+skey]),
-          'L5_basket':(p['gbar_'+skey+'_L5Basket_ampa'],p['gbar_'+skey+'_L5Basket_nmda'],1.,p['sigma_t_'+skey]),
-          'prng_seedcore': int(p['prng_seedcore_' + skey]),
-          'lamtha_space': 3.,
-          'loc': 'proximal',
-          'sync_evinput': p['sync_evinput'],
-          'threshold': p['threshold'],
-          'numspikes': p['numspikes_' + skey]
-      }
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L2Pyr'] = { 
+            'preConds': {'pop': 'evokedDistal'}, 
+            'postConds': {'pop': 'L2Pyr'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 3,
+            'sec': 'apical_tuft'}
 
-    # Create distal evoked response parameters
-    # f_input needs to be defined as 0
-    for i in range(ndist):
-      skey = 'evdist_' + str(i+1)
-      p_unique['evdist' + str(i+1)] = {
-          't0': p['t_' + skey],
-          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
-          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],0.1,p['sigma_t_'+skey]),
-          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_' + skey]),
-          'prng_seedcore': int(p['prng_seedcore_' + skey]),
-          'lamtha_space': 3.,
-          'loc': 'distal',
-          'sync_evinput': p['sync_evinput'],
-          'threshold': p['threshold'],
-          'numspikes': p['numspikes_' + skey]
-      }
+    # Evoked Distal -> L5 Pyr
+    synParamsList = [{'synMech': 'L5Pyr_AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 3.},
+
+                {'synMech': 'L5Pyr_NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L5Pyr'] = { 
+            'preConds': {'pop': 'evokedDistal'}, 
+            'postConds': {'pop': 'L5Pyr'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 3,
+            'sec': 'apical_tuft'}
+
+    # Evoked Distal -> L2 Basket
+    synParamsList = [{'synMech': 'AMPA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 3.},
+
+                {'synMech': 'NMDA',
+                'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 3.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['evokedProx->L2Basket'] = { 
+            'preConds': {'pop': 'evokedDistal'}, 
+            'postConds': {'pop': 'L2Basket'},
+            'synMech': synParams['synMech'],
+            'weight': weightDistFunc.format(**synParams),
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 1,
+            'sec': 'soma'}
 
 
 #------------------------------------------------------------------------------
