@@ -503,18 +503,6 @@ for iprox in range(nprox):
                 'sync': getattr(cfg, 'sync_evinput')}
 
 
-          't0': p['t_' + skey],
-          'L2_pyramidal':(p['gbar_'+skey+'_L2Pyr_ampa'],p['gbar_'+skey+'_L2Pyr_nmda'],0.1,p['sigma_t_'+skey]),
-          'L2_basket':(p['gbar_'+skey+'_L2Basket_ampa'],p['gbar_'+skey+'_L2Basket_nmda'],0.1,p['sigma_t_'+skey]),
-          'L5_pyramidal':(p['gbar_'+skey+'_L5Pyr_ampa'],p['gbar_'+skey+'_L5Pyr_nmda'],1.,p['sigma_t_'+skey]),
-          'L5_basket':(p['gbar_'+skey+'_L5Basket_ampa'],p['gbar_'+skey+'_L5Basket_nmda'],1.,p['sigma_t_'+skey]),
-          'prng_seedcore': int(p['prng_seedcore_' + skey]),
-          'lamtha_space': 3.,
-          'loc': 'proximal',
-          'sync_evinput': p['sync_evinput'],
-          'threshold': p['threshold'],
-          'numspikes': p['numspikes_' + skey]
-
 
 # Evoked distal inputs (population of 1 VecStim)
 netParams.popParams['evokedDistal'] = {
@@ -535,7 +523,7 @@ netParams.popParams['evokedDistal'] = {
                 'distribution': cfg.distribution_dist,
                 'repeats': cfg.repeats_dist}}
 
-
+'''
 
         if type.startswith(('evprox', 'evdist')):
             if self.celltype in p_ext.keys():
@@ -575,6 +563,22 @@ netParams.popParams['evokedDistal'] = {
                     self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaltuft_nmda))
 
 
+def checkevokedsynkeys (p, nprox, ndist):
+  # make sure ampa,nmda gbar values are in the param dict for evoked inputs(for backwards compatibility)
+  lctprox = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # evoked distal target cell types
+  lctdist = ['L2Pyr','L5Pyr','L2Basket'] # evoked proximal target cell types
+  lsy = ['ampa','nmda'] # synapse types used in evoked inputs
+  for nev,pref,lct in zip([nprox,ndist],['evprox_','evdist_'],[lctprox,lctdist]):
+    for i in range(nev):
+      skey = pref + str(i+1)
+      for sy in lsy:
+        for ct in lct:
+          k = 'gbar_'+skey+'_'+ct+'_'+sy
+          # if the synapse-specific gbar not present, use the existing weight for both ampa,nmda
+          if k not in p: 
+            p[k] = p['gbar_'+skey+'_'+ct]
+
+'''
 
    # Create proximal evoked response parameters
     # f_input needs to be defined as 0
