@@ -1,7 +1,7 @@
 '''
  cellParams.py - High-level specifications for cells (redefine in netpyne instead of import)
  
- Modified from NetPyNE-generated JSON resulting from importing original Python cell templates
+ Modified from netpyne-generated JSON resulting from importing original Python cell templates
 
 '''
 

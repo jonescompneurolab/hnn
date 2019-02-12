@@ -437,10 +437,10 @@ def runsim ():
 
   pc.barrier() # make sure all done in case multiple trials
 
-# if __name__ == "__main__":
-#   if dconf['dorun']:
-#     if ntrial > 1: runtrials(ntrial,p['inc_evinput'])
-#     else: runsim()
-#     pc.runworker()
-#     pc.done()
-#   if dconf['doquit']: h.quit()
+if __name__ == "__main__":
+  if dconf['dorun']:
+    if ntrial > 1: runtrials(ntrial,p['inc_evinput'])
+    else: runsim()
+    pc.runworker()
+    pc.done()
+  #if dconf['doquit']: h.quit()

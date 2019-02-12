@@ -15,10 +15,10 @@ Contributors: salvadordura@gmail.com
 from netpyne import sim
 from utils import setCfgFromFile
 
-cfgFile = 'param/ERPYes100Trials.param' # ../param/OnlyRhythmicProx.param'
+cfgFile = '../param/default.param' #../param/ERPYes100Trials.param' # ../param/OnlyRhythmicProx.param'
 
 from cfg import cfg
 cfg = setCfgFromFile(cfgFile, cfg)
 from netParams import netParams
 
-sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)
+sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams) # SimulateAnalyze

@@ -28,6 +28,7 @@ cfg.checkErrors = False # True # leave as False to avoid extra printouts
 # ----------------------------------------------------------------------------
 # Run parameters
 # ----------------------------------------------------------------------------
+cfg.duration = 250 
 cfg.seeds = {'conn': 4321, 'stim': 1234, 'loc': 4321} 
 cfg.hParams['v_init'] = -80  
 cfg.verbose = 0
@@ -50,21 +51,26 @@ cfg.sim_prefix = cfg.simLabel = 'default'
 cfg.saveFolder = 'data'
 cfg.savePickle = False
 cfg.saveJson = True
-cfg.saveDataInclude = ['simData', 'simConfig', 'netParams', 'net']
+cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 
 # ----------------------------------------------------------------------------
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
-cfg.analysis['plotTraces'] = {'include': ['L2Pyr','L5Pyr'], 'oneFigPer': 'cell', 'saveFig': True, 
+cfg.analysis['plotTraces'] = {'include': [('L2Pyr',0), ('L5Pyr',0),('L2Basket',0), ('L5Basket',0) ], 'oneFigPer': 'trace', 'overlay': True, 'saveFig': True, 
 							  'showFig': False, 'figSize': (10, 8), 'timeRange': [0, cfg.duration]}
-cfg.analysis['plotRaster'] = True
-cfg.analysis['plotDipole'] = True
+cfg.analysis['plotRaster'] = {'include': ['all'], 'popRates': True, 'orderInverse': True}
+#cfg.analysis['plotDipole'] = True
 
 # ----------------------------------------------------------------------------
 # Network parameters
 # ----------------------------------------------------------------------------
-cfg.gridSpacing = 50
-cfg.sizeY = 1000
+cfg.gridSpacing = 50 # 50
+cfg.sizeY = 1000 
+cfg.localConn = False
+cfg.rhythmicInputs = False
+cfg.evokedInputs = False
+cfg.poissonInputs = True
+cfg.gaussInputs = True
 
 
 # ----------------------------------------------------------------------------
@@ -76,7 +82,7 @@ cfg.sizeY = 1000
 # ----------------------------------------------------------------------------
 # Run parameters
 # ----------------------------------------------------------------------------
-cfg.duration = cfg.tstop  = 250 
+cfg.tstop = cfg.duration 
 cfg.dt = 0.025
 cfg.celsius = 37.0
 cfg.hParams['celsius'] = cfg.celsius = 37 
@@ -232,8 +238,8 @@ cfg.L5Pyr_dend_gbar_ar = 1e-6
 # Network size parameters
 # ----------------------------------------------------------------------------
 # numbers of cells making up the pyramidal grids
-cfg.N_pyr_x = 10
-cfg.N_pyr_y = 10
+cfg.N_pyr_x = 1 #10
+cfg.N_pyr_y = 1 #10
 
 
 # ----------------------------------------------------------------------------
