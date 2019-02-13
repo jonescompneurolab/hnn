@@ -2,9 +2,9 @@
 utils.py 
 
 Helper functions for NetPyNE implementationf of HNN
-
 '''
 
+# Set cfg params from .param file
 def setCfgFromFile (fn, cfg):
     d = {}
     with open(fn,'r') as fp:

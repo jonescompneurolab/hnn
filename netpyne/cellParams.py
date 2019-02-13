@@ -31,8 +31,8 @@ cellParams['L2Pyr_rule'] = {
                         'cm': cfg.L2Pyr_soma_cm, 
                         'diam': cfg.L2Pyr_soma_diam, 
                         'nseg': 1,
-                    'pt3d': [[-50.0, 765.0, 0.0, cfg.L2Pyr_soma_diam],
-                        [-50.0, 765.0+cfg.L2Pyr_soma_L, 0.0, cfg.L2Pyr_soma_diam]]},
+                    'pt3d': [[-50.0, 0.0, 0.0, cfg.L2Pyr_soma_diam],
+                        [-50.0, 0.0+cfg.L2Pyr_soma_L, 0.0, cfg.L2Pyr_soma_diam]]},
                 'ions': {
                     'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
                     'na': {'e': 50.0, 'i': 10.0, 'o': 140.0}
@@ -53,8 +53,8 @@ cellParams['L2Pyr_rule'] = {
                         'diam': cfg.L2Pyr_apical1_diam, 
                         'nseg': 7,
                     'pt3d': [
-                        [-50.0, 813.0, 0.0, cfg.L2Pyr_apical1_diam],
-                        [-50.0, 813.0+cfg.L2Pyr_apical1_L, 0.0, cfg.L2Pyr_apical1_diam]]},
+                        [-50.0, 48.0, 0.0, cfg.L2Pyr_apical1_diam],
+                        [-50.0, 48.0+cfg.L2Pyr_apical1_L, 0.0, cfg.L2Pyr_apical1_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_oblique': {
@@ -63,8 +63,8 @@ cellParams['L2Pyr_rule'] = {
                         'cm': cfg.L2Pyr_dend_cm, 
                         'diam': cfg.L2Pyr_apicaloblique_diam, 
                         'nseg': 7,
-                    'pt3d': [[-50.0, 813.0, 0.0, cfg.L2Pyr_apicaloblique_diam],
-                        [-50-cfg.L2Pyr_apicaloblique_L, 813.0, 0.0, cfg.L2Pyr_apicaloblique_diam]]},
+                    'pt3d': [[-50.0, 48.0, 0.0, cfg.L2Pyr_apicaloblique_diam],
+                        [-50-cfg.L2Pyr_apicaloblique_L, 48.0, 0.0, cfg.L2Pyr_apicaloblique_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_trunk', 'parentX': 1.0}
             },
             'apical_trunk': {
@@ -74,8 +74,8 @@ cellParams['L2Pyr_rule'] = {
                         'diam': cfg.L2Pyr_apicaltrunk_diam, 
                         'nseg': 1,
                     'pt3d': [
-                        [-50.0, 778.0, 0.0, cfg.L2Pyr_apicaltrunk_diam],
-                        [-50.0, 778.0+cfg.L2Pyr_apicaltrunk_L, 0.0, cfg.L2Pyr_apicaltrunk_diam]]},
+                        [-50.0, 13.0, 0.0, cfg.L2Pyr_apicaltrunk_diam],
+                        [-50.0, 13.0+cfg.L2Pyr_apicaltrunk_L, 0.0, cfg.L2Pyr_apicaltrunk_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 1.0}
             },
             'apical_tuft': {
@@ -84,8 +84,8 @@ cellParams['L2Pyr_rule'] = {
                         'cm': cfg.L2Pyr_dend_cm, 
                         'diam': cfg.L2Pyr_apicaltuft_diam, 
                         'nseg': 5,
-                    'pt3d': [[-50.0, 993.0, 0.0, cfg.L2Pyr_apicaltuft_diam],
-                        [-50.0, 993.0+cfg.L2Pyr_apicaltuft_L, 0.0, cfg.L2Pyr_apicaltuft_diam]]},
+                    'pt3d': [[-50.0, 228.0, 0.0, cfg.L2Pyr_apicaltuft_diam],
+                        [-50.0, 228.0+cfg.L2Pyr_apicaltuft_L, 0.0, cfg.L2Pyr_apicaltuft_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'apical_1', 'parentX': 1.0}
             },
             'basal_1': {
@@ -94,8 +94,8 @@ cellParams['L2Pyr_rule'] = {
                         'cm': cfg.L2Pyr_dend_cm, 
                         'diam': cfg.L2Pyr_basal1_diam, 
                         'nseg': 1,
-                    'pt3d': [[-50.0, 765.0, 0.0, cfg.L2Pyr_basal1_diam],
-                        [-50.0, 765.0-cfg.L2Pyr_basal1_L, 0.0, cfg.L2Pyr_basal1_diam]]},
+                    'pt3d': [[-50.0, 0.0, 0.0, cfg.L2Pyr_basal1_diam],
+                        [-50.0, 0.0-cfg.L2Pyr_basal1_L, 0.0, cfg.L2Pyr_basal1_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'soma', 'parentX': 0.0}
             },
             'basal_2': {
@@ -105,8 +105,8 @@ cellParams['L2Pyr_rule'] = {
                             'cm': cfg.L2Pyr_dend_cm, 
                             'diam': cfg.L2Pyr_basal2_diam, 
                             'nseg': 5,
-                    'pt3d': [[-50.0, 715.0, 0.0, cfg.L2Pyr_basal2_diam],
-                        [-50-cfg.L2Pyr_basal2_L/np.sqrt(2), 715.0-cfg.L2Pyr_basal2_L/np.sqrt(2), 0.0, cfg.L2Pyr_basal2_diam]]},
+                    'pt3d': [[-50.0, -50.0, 0.0, cfg.L2Pyr_basal2_diam],
+                        [-50-cfg.L2Pyr_basal2_L/np.sqrt(2), -50.0-cfg.L2Pyr_basal2_L/np.sqrt(2), 0.0, cfg.L2Pyr_basal2_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'basal_1', 'parentX': 1.0}
             },
             'basal_3': {
@@ -115,8 +115,8 @@ cellParams['L2Pyr_rule'] = {
                         'cm': cfg.L2Pyr_dend_cm, 
                         'diam': cfg.L2Pyr_basal3_diam, 
                         'nseg': 5,
-                    'pt3d': [[-50.0, 715.0, 0.0, cfg.L2Pyr_basal3_diam],
-                        [-50.0+cfg.L2Pyr_basal3_L/np.sqrt(2), 715.0-cfg.L2Pyr_basal3_L/np.sqrt(2), 0.0, cfg.L2Pyr_basal3_diam]]},
+                    'pt3d': [[-50.0, -50.0, 0.0, cfg.L2Pyr_basal3_diam],
+                        [-50.0+cfg.L2Pyr_basal3_L/np.sqrt(2), -50.0-cfg.L2Pyr_basal3_L/np.sqrt(2), 0.0, cfg.L2Pyr_basal3_diam]]},
                 'topol': {'childX': 0.0, 'parentSec': 'basal_1', 'parentX': 1.0}
         }}}
 

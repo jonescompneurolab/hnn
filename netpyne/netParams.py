@@ -33,6 +33,7 @@ netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) si
 netParams.sizeZ = (cfg.N_pyr_y * cfg.gridSpacing) - 1 # z-dimension (horizontal depth) size in um
 netParams.shape = 'cuboid' 
 
+
 # ----------------------------------------------------------------------------
 # Cell parameters
 # ----------------------------------------------------------------------------
@@ -43,13 +44,13 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-layersE = {'L5': [0.5*cfg.sizeY, 0.5*cfg.sizeY], 'L2': [0.5*cfg.sizeY, 0.5*cfg.sizeY]}
-layersI = {'L5': [0.6*cfg.sizeY, 0.6*cfg.sizeY], 'L2': [1.4*cfg.sizeY, 1.4*cfg.sizeY]}
+layersE = {'L2': [0.2*cfg.sizeY, 0.2*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
+layersI = {'L2': [0.15*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
 
-netParams.popParams['L2Pyr'] = {'cellType': 'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L2'], 'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L2Basket'] = {'cellType': 'L2Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L2'], 'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L5Pyr'] = {'cellType': 'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L5'], 'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L5Basket'] = {'cellType': 'L5Basket', 'cellModel': 'HH_simple', 'yRange': layersI['L5'], 'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'gridSpacing': cfg.gridSpacing} 
 
 
 #------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ netParams.synMechParams['GABAB'] = {'mod':'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e':
 
 # Weight and delay distance-dependent functions (as strings) to use in conn rules
 weightDistFunc = '{A_weight} * exp(-(dist_2D**2) / ({lamtha}**2))'
-delayDistFunc = '{A_weight} / exp(-(dist_2D**2) / ({lamtha}**2))'
+delayDistFunc = '{A_delay} / exp(-(dist_2D**2) / ({lamtha}**2))'
 
 if cfg.localConn:
 
@@ -98,7 +99,7 @@ if cfg.localConn:
             'preConds': {'pop': 'L2Pyr'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': weightDistFunc.format(**synParams), # equivalent to weightDistFunc.format(A_weight=cfg.gbar_L2Pyr_L2Pyr_ampa, lamtha=1.)
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique', ]}
@@ -286,15 +287,14 @@ if cfg.localConn:
 # Rhythmic proximal and distal inputs parameters 
 #------------------------------------------------------------------------------
 
+# Location of external inputs
+xrange = np.arange(cfg.N_pyr_x)
+extLocX = xrange[int((len(xrange) - 1) // 2)]
+zrange = np.arange(cfg.N_pyr_y)
+extLocZ = xrange[int((len(zrange) - 1) // 2)]
+extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
+
 if cfg.rhythmicInputs:
-
-    # Location of external inputs
-    xrange = np.arange(cfg.N_pyr_x)
-    extLocX = xrange[int((len(xrange) - 1) // 2)]
-    zrange = np.arange(cfg.N_pyr_y)
-    extLocZ = xrange[int((len(zrange) - 1) // 2)]
-    extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
-
 
     # External Rhythmic proximal inputs (population of 1 VecStim)
     netParams.popParams['extRhythmicProximal'] = {
