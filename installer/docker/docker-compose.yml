@@ -5,7 +5,7 @@ services:
     image: jonescompneurolab/hnn
     environment:
       XAUTHORITY: "/.Xauthority"
-      DISPLAY:
+      DISPLAY: ":0"
     volumes:
       - "$HOME/.Xauthority:/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
