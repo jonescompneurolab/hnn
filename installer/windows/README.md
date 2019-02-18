@@ -45,7 +45,7 @@ https://hub.docker.com/editions/community/docker-ce-desktop-windows
      <img src="install_pngs/enable_hyperv.png" height="150" />
 
 6. Docker Desktop will start automatically and the Docker icon will show up in the lower-right dock
-   * If you get the error message shown below, there was a problem turning on virtualization, which is required for Docker on Windows. This may be fixable by changing [settings in your motherboard's BIOS](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-this-computer-doesnt-have-vt-xamd-v-enabled), however we recommend to instead use the powershell script (method 2) to install HNN. Please uninstall Docker, and then proceed with the instructions below for method 2.
+   * If you get the error message shown below, there was a problem turning on virtualization, which is required for Docker on Windows. This may be fixable by changing settings in your motherboard's BIOS menu (see [step-by-step guide](https://blogs.technet.microsoft.com/canitpro/2015/09/08/step-by-step-enabling-hyper-v-for-use-on-windows-10/)), however at this point, the easiest option for installing HNN would be to switch to using the powershell script (method 2). Please uninstall Docker, and then proceed with the instructions below for method 2.
 
      <img src="install_pngs/hyperv_error.png" height="150" />
 
@@ -74,28 +74,20 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
     ```
 4. A prompt will ask you to share the drive. Click 'Share'
 5. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
-
+   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI, and would like to restart it, run the following:
       ```
       docker-compose restart
       ```
 
-6. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
+6. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/):
     ```
-    C:\Users\myuser>docker exec -ti windows_hnn_1 bash
-    To run a command as administrator (user "root"), use "sudo <command>".
-    See "man sudo_root" for details.
-
-    hnn_user@054ba0c64625:/home/hnn_user/hnn$
+    C:\Users\myuser>docker exec -ti mac_hnn_1 bash
+    hnn_user@054ba0c64625:/home/hnn_user$
     ```
 
-    If you'd like to be able to access files from the host Windows system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 3):
-    ```
-    mkdir %HOME%\dir_on_host
-    docker-compose run -d -v %HOME%\dir_on_host:/home/hnn_user/dir_from_host hnn
-    ```
-    * Note the different container name after running docker-compose
+    If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
 ## Method 2: native install script
 

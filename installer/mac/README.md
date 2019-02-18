@@ -62,25 +62,19 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
     docker-compose up -d
     ```    
 4. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI, and would like to restart it, run the following:
       ```
       docker-compose restart
       ```
-5. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
+5. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/):
     ```
-    $ docker exec -ti mac_hnn_1 bash
-    To run a command as administrator (user "root"), use "sudo <command>".
-    See "man sudo_root" for details.
+    C:\Users\myuser>docker exec -ti mac_hnn_1 bash
+    hnn_user@054ba0c64625:/home/hnn_user$
+    ```
 
-    hnn_user@054ba0c64625:/home/hnn_user/hnn$
-    ```
-    If you'd like to be able to access files from the host system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 4):
-    ```
-    mkdir $HOME/dir_on_host
-    docker-compose run -d -v $HOME/dir_on_host:/home/hnn_user/dir_from_host hnn
-    ```
-    * Note the different container name after running docker-compose
+    If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
 ## Method 2: native install
 

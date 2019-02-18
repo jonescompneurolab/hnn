@@ -63,6 +63,7 @@ ps auxw
 ```
 If HNN hasn't started, try starting it manually:
 ```
+cd hnn_repo
 python3 hnn.py hnn.cfg
 ```
 

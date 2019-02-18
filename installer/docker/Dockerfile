@@ -27,13 +27,13 @@ RUN pip3 install PyOpenGL matplotlib && \
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user
 
 # add hnn_user to the sudo group
-RUN adduser hnn_user sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN adduser hnn_user sudo && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # copy the start script into the container
-COPY start_hnn_in_docker.sh /home/hnn_user/
-RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn_in_docker.sh && \
-    sudo chmod +x /home/hnn_user/start_hnn_in_docker.sh
+COPY start_hnn.sh /home/hnn_user/
+RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
+    sudo chmod +x /home/hnn_user/start_hnn.sh
 
 USER hnn_user
 # install NEURON dependencies
@@ -69,9 +69,9 @@ ENV PATH=${PATH}:/home/hnn_user/nrn/build/$CPU/bin
 # setup HNN itself
 # HNN repo from github - moved to github on April 8, 2018
 RUN cd /home/hnn_user && \
-    git clone https://github.com/jonescompneurolab/hnn.git
+    git clone https://github.com/jonescompneurolab/hnn.git hnn_repo
 # make compiles the mod files
-RUN cd /home/hnn_user/hnn && \
+RUN cd /home/hnn_user/hnn_repo && \
     make
 
 # cleanup these folders
@@ -80,7 +80,10 @@ RUN cd /home/hnn_user/iv && \
     cd /home/hnn_user/nrn && \
     make clean
 
-# if users open up a shell, they should go to the hnn repo checkout
-WORKDIR /home/hnn_user/hnn
+# run sudo to get rid of message on first login about using sudo
+RUN sudo -l
 
-CMD /home/hnn_user/start_hnn_in_docker.sh
+# if users open up a shell, they should go to the hnn repo checkout
+WORKDIR /home/hnn_user
+
+CMD /home/hnn_user/start_hnn.sh
