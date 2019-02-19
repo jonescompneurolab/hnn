@@ -1,33 +1,34 @@
 # Installing HNN on Mac OS
 
-There are two methods for installing HNN and its prerequisistes on Mac OS (tested on High Sierra):
+This guide describes two methods for installing HNN and its prerequisistes on Mac OS (tested on High Sierra):
 
-1. A Docker container running a Linux install of HNN (recommended)
-2. Natively running HNN on Mac OS (advanced users)
+Method 1: A Docker container running a Linux install of HNN (recommended)
+   - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+   
+Method 2: Installing HNN natively on Mac OS (advanced users)
+   - This method will run HNN without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. However, the procedure is a set of steps that the user must follow, and there is a possibility that differences in the base environment may require additional troubleshooting. Thus, Method 2 is best suited for advanced users.
 
-The Docker installation (Method 1) is recommended because the python environment and the NEURON installation are fully isolated, reducing the possibility of version incompatibilities. The same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
-
-Method 2 runs HNN directly on the Mac OS. This may result in slightly better performance without the overhead of virtualization or running in a container. Docker Toolbox which runs Docker in a virtual machine suffers the greatest overhead. However, the procedure is a set of steps that the user must follow, and there is a possibility that differences in the base environment may require additional troubleshooting. Thus, Method 2 is best suited for advanced users.
-
-## Docker Install
+## Method 1: Docker install
 
 [Docker Desktop](https://www.docker.com/products/docker-desktop) requires Mac OS Sierra 10.12 or above. For earlier versions of Mac OS, use the legacy version of [Docker Toolbox](https://docs.docker.com/toolbox/overview/).
 
-The only other component to install is an X server. [XQuartz](https://www.xquartz.org/) is a recommended free option.
+The only other prerequisite besides docker is an X server. [XQuartz](https://www.xquartz.org/) is free and the recommended option for Mac OS.
 
-### Install XQuartz
+### Prerequisite: install XQuartz
 1. Download the installer image (version 2.7.11 tested): https://www.xquartz.org/
 2. Run the XQuartz.pkg installer within the image, granting privileges when requested.
 3. Start the XQuartz application. An "X" icon will appear in the taskbar along with a terminal, signaling that XQuartz is waiting for connections. You can minimize the terminal, but do not close it.
+4. Open the XQuartz preferences and navigate to the "security" tab. Make sure "Authenticate connections" is unchecked and "Allow connections from network clients" is checked.
+![XQuartz preferences](install_pngs/xquartz_preferences.png)
 
-### Install Docker Desktop (Mac OS Sierra 10.12 or above)
+### Prerequisite (Mac OS Sierra 10.12 or above): install Docker Desktop
 1. Download the installer image (requires a free Docker Hub account):
 https://hub.docker.com/editions/community/docker-ce-desktop-mac
 2. Run the Docker Desktop installer, moving docker to the applications folder.
 3. Start the Docker application, acknowledging that it was downloaded from the Internet and you still want to open it.
 4. The Docker Desktop icon will appear in the taskbar with the message "Docker Desktop is starting", Followed by "Docker Desktop is running".
 
-### Install Docker Toolbox (pre-10.12)
+### Prerequisite (Mac OS pre-10.12): install Docker Toolbox
 1. Download the installer image:
 https://docs.docker.com/toolbox/toolbox_install_mac/
 2. Run the installer, selecting any directory for installation.
@@ -38,43 +39,43 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
     docker-compose --version
     ```
 5. Run the following commands in the same terminal window or by relaunching "Docker Quickstart Terminal".
+6. For Docker Toolbox only, we will need to set an IP address in the file docker-compose.yml before starting the HNN container.
+    - Get the IP address of the local interface that Docker Toolbox created. It will be named similar to vboxnet1 with an IP address such as 192.168.99.1
+      ```
+      ifconfig vboxnet1
+      ```
+    - Edit the docker-compose.yml file in `hnn/installer/mac/`, replacing `host.docker.internal:0` with the IP address such as `192.168.99.1:0` (**The ":0" is required**). Save the file before running the commands below.
 
-### Start the HNN Docker container
-1. Get the IP address of a local interface on the host(e.g. using ifconfig)
-    * For Docker Toolbox you can use interface that will be named similar to vboxnet1 with an IP address such as 192.168.99.1
-    * For Docker Desktop an additional interface is not created, so you'll have to use one that's in existence already. Ideally, find one that belongs to a local interface that will not go away when you connection disappears. If there are no other options besides your external network interface, you can get its IP address using:
+
+### Start HNN
+1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window.
     ```
-    export IP=$(ifconfig en0 | awk '$1 == "inet" {print $2}')
-2. Set an environment variable DISPLAY containing "[IP address]:0"
+    docker info
     ```
-    export DISPLAY=$IP:0
-    ```
-3. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn):
+2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
     ```
     git clone https://github.com/jonescompneurolab/hnn.git
-    cd hnn/installer/docker
+    cd hnn/installer/mac
     ```
-4. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB)
+3. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB). Docker-compose starts a docker container based on the specification file docker-compose.yml and "up" starts the containers in that file and "-d" starts the docker containers in the background.
     ```
     docker-compose up -d
     ```    
-5. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+4. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI, and would like to restart it, run the following:
       ```
       docker-compose restart
       ```
-6. **NOTE:** You may want to edit files within the container. To access a command prompt in the container, use `docker exec`:
+5. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/):
     ```
-    docker exec -ti docker_hnn_1 bash
+    C:\Users\myuser>docker exec -ti mac_hnn_1 bash
+    hnn_user@054ba0c64625:/home/hnn_user$
     ```
-    If you'd like to be able to access files from the host system within the container, you can either copy files with [docker cp](https://docs.docker.com/engine/reference/commandline/cp/) or start the container with host directory that is visible as a "volume" within the container (instead of step 4):
-    ```
-    mkdir $HOME/dir_on_host
-    docker-compose run -d -v $HOME/dir_on_host:/home/hnn_user/dir_from_host hnn
-    ```
-    * Note the different container name after running docker-compose
 
-## Native install
+    If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
+
+## Method 2: native install
 
 See the instructions in the file [mac-install-instructions.txt](mac-install-instructions.txt)

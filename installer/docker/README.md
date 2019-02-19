@@ -21,12 +21,15 @@ docker build --tag jonescompneurolab/hnn .
 ## Running HNN container without docker-compose
 Using docker-compose is the preferred way to run HNN containers, because it sets needed environment variables and defines volumes automatically. However, if docker-compose is not available or the user wants to modify docker run arguments, the following command Replicates behavior by docker-compose:
 ```
-# Set DISPLAY on Mac 
-export DISPLAY=$(ifconfig en0 | awk '/inet /{print $2 ":0"}')
-# Set DISPLAY on Windows
-set DISPLAY=10.0.75.1:0
+# Set DISPLAY for Mac and Windows
+export DOCKER_DISPLAY=host.docker.internal:0
+# For docker toolbox only 
+export DOCKER_DISPLAY=192.168.99.1:0
+# For Linux
+export DOCKER_DISPLAY=host.docker.internal:0
+
 # Start container
-docker run -d -e XAUTHORITY="/.Xauthority" -e DISPLAY -v ~/.Xauthority:/.Xauthority -v /tmp/.X11-unix:/tmp/.X11-unix jonescompneurolab/hnn /home/hnn_user/start_hnn_in_docker.sh
+docker run -d -e XAUTHORITY="/.Xauthority" -e DISPLAY=$DOCKER_DISPLAY -v ~/.Xauthority:/.Xauthority -v /tmp/.X11-unix:/tmp/.X11-unix jonescompneurolab/hnn /home/hnn_user/start_hnn_in_docker.sh
 ```
 
 ## Troubleshooting
@@ -44,7 +47,7 @@ docker logs docker_hnn_1
 If HNN fails to start, the startup script will fall back to running the command "sleep infinity" which allows you to open up a shell in the container and debug what went wrong. An example of not being able to connect to the X server:
 
     QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-hnn_user'
-    qt.qpa.screen: QXcbConnection: Could not connect to display 10.0.75.1:0
+    qt.qpa.screen: QXcbConnection: Could not connect to display 192.168.99.1:0
     Could not connect to any X display.
 
 * The first line is not indicative of any error, and is always present. In this case, the next two lines indicate that the X display for HNN GUI was not started. Check for connectivity from within the container to the address given. This may be because of firewalls or an incorrect IP address. When in doubt, an IP address of the external interface (e.g. wireless)will work in most cases.
@@ -60,6 +63,7 @@ ps auxw
 ```
 If HNN hasn't started, try starting it manually:
 ```
+cd hnn_repo
 python3 hnn.py hnn.cfg
 ```
 
