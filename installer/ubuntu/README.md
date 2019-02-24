@@ -1,6 +1,6 @@
 # Installing HNN on Ubuntu
 
-This guide describes two methods for installing HNN and its prerequisistes Ubuntu (tested on Ubuntu 18.04 LTS):
+This guide describes two methods for installing HNN and its prerequisites Ubuntu (tested on Ubuntu 18.04 LTS):
 
 Method 1: A Docker container running a Linux install of HNN (recommended)
    - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
@@ -41,7 +41,7 @@ Method 2: Natively running HNN on Ubuntu (advanced users)
     ```
     docker-compose up -d
     ```    
-4. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+4. The HNN GUI should show up and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
    * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI, and would like to restart it, run the following:

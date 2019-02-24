@@ -1,6 +1,6 @@
 # Installing HNN on Windows systems
 
-This guide describes two methods for installing HNN and its prerequisistes on a Windows 10 system:
+This guide describes two methods for installing HNN and its prerequisites on a Windows 10 system:
 
 Method 1: A Docker container running a Linux install of HNN (recommended)
    - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
@@ -40,12 +40,12 @@ The only other component to install is an X server. Both [VcXsrv](https://source
 https://hub.docker.com/editions/community/docker-ce-desktop-windows
 2. Run the installer. **DO NOT check** "Use Windows containers instead of Linux containers".
 3. Start the Docker Desktop app from the start menu.
-4. The installer may prompt you to turn on Hyper-V, which will not allow you to also run virtual machines through applications such as VirtualBox. If you get an error saying that Hyper-V needs to be enabled, you can do it manually by: Go to "Control Panel" → Programs → "Turn Windows features on or off" and select all Hyper-V options (a reboot is required).
+4. The installer may prompt you to turn on Hyper-V, which will not allow you to also run virtual machines through applications such as VirtualBox. If you get an error saying that Hyper-V needs to be enabled, you can do it manually by "Control Panel" -> Programs -> "Turn Windows features on or off" and select all Hyper-V options (a reboot is required).
    * If you get a message similar to the screen below, click 'Ok' and restart your computer.
      <img src="install_pngs/enable_hyperv.png" height="150" />
 
 6. Docker Desktop will start automatically and the Docker icon will show up in the lower-right dock
-   * If you get the error message shown below, there was a problem turning on virtualization, which is required for Docker on Windows. This may be fixable by changing settings in your motherboard's BIOS menu (see [step-by-step guide](https://blogs.technet.microsoft.com/canitpro/2015/09/08/step-by-step-enabling-hyper-v-for-use-on-windows-10/)), however at this point, the easiest option for installing HNN would be to switch to using the powershell script (method 2). Please uninstall Docker, and then proceed with the instructions below for method 2.
+   * If you get the error message shown below, there was a problem turning on virtualization, which is required for Docker on Windows. This may be fixable by changing settings in your motherboard's BIOS menu (see [step-by-step guide](https://blogs.technet.microsoft.com/canitpro/2015/09/08/step-by-step-enabling-hyper-v-for-use-on-windows-10/)), however, at this point, the easiest option for installing HNN would be to switch to using the PowerShell script (method 2). Please uninstall Docker, and then proceed with the instructions below for method 2.
 
      <img src="install_pngs/hyperv_error.png" height="150" />
 
@@ -73,7 +73,7 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
     docker-compose up -d
     ```
 4. A prompt will ask you to share the drive. Click 'Share'
-5. The HNN GUI should show up and you should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+5. The HNN GUI should show up and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
    * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI, and would like to restart it, run the following:
@@ -91,12 +91,12 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
 ## Method 2: native install script
 
-The [HNN install powershell script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
+The [HNN install PowerShell script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
 
 Requirements:
  - A 64-bit OS
  - Windows 7 or later. Windows Vista is not supported for lack of multiprocessing support.
- - Powershell version 1.0 or later. If Powershell is not installed, please follow the link below for downloading and running the Powershell installer:
+ - PowerShell version 1.0 or later. If PowerShell is not installed, please follow the link below for downloading and running the PowerShell installer:
  https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell
 
 Install procedure:
@@ -118,12 +118,12 @@ Install procedure:
 open up. There will be a prompt for pressing ENTER after nrnmech.dll has been built
    * If an existing Python 3.X installation isn't found, expect that installation will pause for ~5min while installing Miniconda
 
-3. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. Open up a new cmd.exe window (not Powershell) for the environment variables to get set in the session.
+3. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. Open up a new cmd.exe window (not PowerShell) for the environment variables to get set in the session.
 4. Run:
     ```
     activate hnn
     cd hnn
     python hnn.py hnn.cfg
     ```
-5. That will launch the HNN GUI. You should now be able to run the tutorials at: https://hnn.brown.edu/index.php/tutorials/
+5. That will launch the HNN GUI. You should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
 
