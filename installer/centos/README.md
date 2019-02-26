@@ -1,17 +1,9 @@
-# Installing HNN on CentOS
+# Installing HNN on CentOS (Docker install)
 
-This guide describes two methods for installing HNN and its prerequisites CentOS (tested on CentOS 7):
+This guide describes installing HNN on CentOS using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time. If you would prefer to install HNN without Docker, please see the instructions below.
+  - Alternative: [Native install instructions (advanced users)](native_install.md)
 
-Method 1: A Docker container running a Linux install of HNN (recommended)
-   - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
-   - See [OS requirements](https://docs.docker.com/install/linux/docker-ce/ubuntu/#os-requirements)
-
-Method 2: Natively running HNN on CentOS 6 or 7 (advanced users)
-   - HNN runs directly on the OS and uses a script to download and install prerequisites. It is more difficult to control the native environment than in Method 1 (with Docker), so it's possible that the script will need user intervention. Thus, Method 2 is best suited for advanced users.
-
-## Method 1: Docker install
-
-### Prerequisite: install Docker
+## Prerequisite: install Docker
 * Follow [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) to install the docker-ce RPM packages from Docker's official repository
 * Add your user to the docker group to avoid having to run docker commands with "sudo"
     ```
@@ -19,7 +11,7 @@ Method 2: Natively running HNN on CentOS 6 or 7 (advanced users)
     ```
 * Log out and back in for the group change to take effect
 
-### Prerequisite: install Docker Compose
+## Prerequisite: install Docker Compose
 * From https://docs.docker.com/compose/install/:
     ```
     sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -27,7 +19,8 @@ Method 2: Natively running HNN on CentOS 6 or 7 (advanced users)
     docker-compose --version
     ```
 
-### Start HNN
+## Start HNN
+
 1. Check that Docker is running properly by typing the following in a new terminal window.
     ```
     docker info
@@ -56,16 +49,8 @@ Method 2: Natively running HNN on CentOS 6 or 7 (advanced users)
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
-## Method 2: native install
-See the scripts in this directory:
-* CentOS 6: [centos6-installer.sh](centos6-installer.sh)
-* CentOS 7: [centos7-installer.sh](centos7-installer.sh)
-  ```
-  chmod +x ./centos7-installer.sh
-  ./centos7-installer.sh
-  ```
-* [uninstall.sh](uninstall.sh)
-  ```
-  chmod +x ./uninstall.sh
-  ./uninstall.sh
-  ```
+# Troubleshooting
+
+If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
+
+For other HNN software issues, please visit the [HNN bullentin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)
