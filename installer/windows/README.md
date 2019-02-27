@@ -86,11 +86,20 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
 6. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/):
     ```
-    C:\Users\myuser>docker exec -ti mac_hnn_1 bash
+    C:\Users\myuser>docker exec -ti windows_hnn_1 bash
     hnn_user@054ba0c64625:/home/hnn_user$
     ```
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
+
+## Uninstalling HNN
+
+If you want to remove the container and 1.5 GB HNN image, run the following commands from a cmd.exe window. You can then remove Docker Desktop using "Add/Remove Programs"
+```
+docker rm -f windows_hnn_1
+docker rmi jonescompneurolab/hnn
+```
+
 
 # Troubleshooting
 

@@ -80,6 +80,14 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
+## Uninstalling HNN
+
+If you want to remove the container and 1.5 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
+```
+docker rm -f mac_hnn_1
+docker rmi jonescompneurolab/hnn
+```
+
 # Troubleshooting
 
 For Mac OS specific issues: please see the [Mac OS troubleshooting page](troubleshooting.md)
