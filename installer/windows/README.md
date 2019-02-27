@@ -1,29 +1,19 @@
-# Installing HNN on Windows systems
+# Installing HNN on Windows (Docker install)
 
-This guide describes two methods for installing HNN and its prerequisites on a Windows 10 system:
+This guide describes installing HNN on Windows 10 using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time. If you would prefer to install HNN without Docker, please see the instructions below.
+  - Alternative: [Native install instructions (advanced users)](native_install.md)
 
-Method 1: A Docker container running a Linux install of HNN (recommended)
-   - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
-
-Method 2: Running a script to install HNN natively on Windows (advanced users)
-   - A script will download and install prerequisites without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. The script will detect installed Python environments, and install the HNN prerequisites in an isolated environment using conda or virtualenv. It is safe to run the script multiple times.
-
-**Note (only for method 1):**  the Hyper-V feature must be enabled on your computer to use the Docker-based installation. Not all systems support this feature, and it may require making changes to your computer's BIOS settings. You can check whether it is enabled with the following procedure.
+## Prerequisite: Hyper-V support
+The Hyper-V feature must be enabled on your computer to use the Docker-based installation. Not all systems support this feature, and it may require making changes to your computer's BIOS settings. If you run into problems enabling Hyper-V, we recommend that you follow the [native install instructions](native_install.md) instead. You can check whether it is enabled with the following procedure.
 
 1. Open the Control Panel "Turn Windows features on or off" (search bar next to start menu).
 2. Make sure that Hyper-V is turned on as in the image below
 
     <img src="install_pngs/hyper-V.png" height="200" />
 
-3. If Hyper-V was disabled, please reboot your computer before continuing below to install docker.
+3. If you enabled Hyper-V, please reboot your computer before continuing below to install docker.
 
-## Method 1: Docker install
-
-[Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows 10 (Pro/Enterprise only) is capable of running both Linux containers and Windows containers. For HNN's GUI to display properly, only Linux containers work. Docker Desktop is installed with this configuration by default.  For Windows 10 Home or other versions of windows, use the legacy version of [Docker Toolbox](https://docs.docker.com/toolbox/overview/).
-
-The only other component to install is an X server. Both [VcXsrv](https://sourceforge.net/projects/vcxsrv/) and [Xming](https://sourceforge.net/projects/xming/) are recommended free options. These install instructions will cover VcXsrv.
-
-### Prerequisite: install VcXsrv
+## Prerequisite: VcXsrv
 1. Download the installer (version 64.1.20.1.4 tested): https://sourceforge.net/projects/vcxsrv/files/latest/download
    * [Alternative direct download link](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
 2. Run the installer, choosing any installation folder.
@@ -34,13 +24,18 @@ The only other component to install is an X server. Both [VcXsrv](https://source
 7. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that VcXsrv is waiting for connections.
 8. A message from Windows firewall to allow connections may pop up. If it does, choose options allowing connections to the VcXsrv when connected to both public and private networks.
 
+## Prerequisite: Docker
 
-### Prerequisite (Windows 10 Pro/Enterprise): install Docker Desktop
-1. Download the installer (requires a free Docker Hub account):
+Click on your version of Windows to expand instructions:
+<details><summary>Windows 10 (Pro/Enterprise only): Docker Desktop</summary>
+<p>
+
+1. In order to download Docker Desktop, you'll need to sign up for a Docker Hub account. It only requires an email address to confirm the account. Sign up here: [Docker Hub Sign-up](https://hub.docker.com/signup)
+2. Download the installer (requires logging in to your Docker Hub account):
 https://hub.docker.com/editions/community/docker-ce-desktop-windows
-2. Run the installer. **DO NOT check** "Use Windows containers instead of Linux containers".
-3. Start the Docker Desktop app from the start menu.
-4. The installer may prompt you to turn on Hyper-V, which will not allow you to also run virtual machines through applications such as VirtualBox. If you get an error saying that Hyper-V needs to be enabled, you can do it manually by "Control Panel" -> Programs -> "Turn Windows features on or off" and select all Hyper-V options (a reboot is required).
+3. Run the installer. **DO NOT check** "Use Windows containers instead of Linux containers".
+4. Start the Docker Desktop app from the start menu (requires logging in to your Docker Hub account).
+5. The installer may prompt you to turn on Hyper-V, which will not allow you to also run virtual machines through applications such as VirtualBox. If you get an error saying that Hyper-V needs to be enabled, you can do it manually by "Control Panel" -> Programs -> "Turn Windows features on or off" and select all Hyper-V options (a reboot is required).
    * If you get a message similar to the screen below, click 'Ok' and restart your computer.
      <img src="install_pngs/enable_hyperv.png" height="150" />
 
@@ -49,7 +44,12 @@ https://hub.docker.com/editions/community/docker-ce-desktop-windows
 
      <img src="install_pngs/hyperv_error.png" height="150" />
 
-### Prerequisite (Windows 10 Home only): install Docker Toolbox
+</p>
+</details>
+
+<details><summary>Windows 10 Home: Docker Toolbox</summary>
+<p>
+
 1. Download the installer:
 https://docs.docker.com/toolbox/toolbox_install_windows/
 2. Run the installer. In "Select Components" check the component "Docker Compose for Windows". Click 'Next'.
@@ -58,7 +58,10 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 5. Launch "Docker Quickstart Terminal" from the Desktop or start menu.
 6. Run the commands below from a new cmd.exe window.
 
-### Start HNN
+</p>
+</details>
+
+## Start HNN
 1. Verify that VcXsrv (XLaunch application) and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new cmd.exe window.
     ```
     docker info
@@ -89,41 +92,8 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
-## Method 2: native install script
+# Troubleshooting
 
-The [HNN install PowerShell script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
+If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
 
-Requirements:
- - A 64-bit OS
- - Windows 7 or later. Windows Vista is not supported for lack of multiprocessing support.
- - PowerShell version 1.0 or later. If PowerShell is not installed, please follow the link below for downloading and running the PowerShell installer:
- https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell
-
-Install procedure:
-1. Download Microsoft MPI (msmpisetup.exe) from the link below and save it to the user's Downloads  folder (C:\Users\\[MY_USERNAME]\Downloads): https://msdn.microsoft.com/en-us/library/bb524831.aspx
-
-2. Run the script from a cmd prompt:
-    ```
-    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))"
-    ```
-    OR from a powershell prompt:
-    ```
-    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))
-    ```
-    OR from a local copy:
-    ```
-    powershell.exe -ExecutionPolicy Bypass -File .\hnn\installer\windows\hnn.ps1
-    ```
-   * There will be a permission prompt to install Microsoft MPI and a couple of terminal windows will
-open up. There will be a prompt for pressing ENTER after nrnmech.dll has been built
-   * If an existing Python 3.X installation isn't found, expect that installation will pause for ~5min while installing Miniconda
-
-3. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. Open up a new cmd.exe window (not PowerShell) for the environment variables to get set in the session.
-4. Run:
-    ```
-    activate hnn
-    cd hnn
-    python hnn.py hnn.cfg
-    ```
-5. That will launch the HNN GUI. You should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
-
+For other HNN software issues, please visit the [HNN bullentin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)

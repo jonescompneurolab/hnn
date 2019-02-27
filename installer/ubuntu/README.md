@@ -1,15 +1,10 @@
-# Installing HNN on Ubuntu
+# Installing HNN on Ubuntu (Docker install)
 
-This guide describes two methods for installing HNN and its prerequisites Ubuntu (tested on Ubuntu 18.04 LTS):
+This guide describes installing HNN on Ubuntu using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time. If you would prefer to install HNN without Docker, please see the instructions below.
+  - Alternative: [Native install instructions (advanced users)](native_install.md)
 
-Method 1: A Docker container running a Linux install of HNN (recommended)
-   - The Docker installation fully isolates HNN's python environment and the NEURON installation from the rest of your system, reducing the possibility of version incompatibilities. Additionally, the same Docker container is used for all platforms (Windows/Linux/Mac) meaning it has likely been tested more recently.
+**Note: please verify your OS supports Docker CE**
    - See [OS requirements](https://docs.docker.com/install/linux/docker-ce/ubuntu/#os-requirements)
-
-Method 2: Natively running HNN on Ubuntu (advanced users)
-   - HNN runs directly on the OS and uses a script to download and install prerequisites. It is more difficult to control the native environment than in Method 1 (with Docker), so it's possible that the script will need user intervention. Thus, Method 2 is best suited for advanced users.
-
-## Method 1: Docker install
 
 ### Prerequisite: install Docker
 * Follow [Docker's Ubuntu install instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install the docker-ce packages from Docker's official repository
@@ -56,20 +51,8 @@ Method 2: Natively running HNN on Ubuntu (advanced users)
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
-## Method 2: native install
-See the scripts in this directory:
-* [installer.sh](installer.sh)
-  ```
-  chmod +x ./installer.sh
-  ./installer.sh
-  ```
-* [uninstaller.sh](uninstaller.sh)
-  ```
-  chmod +x ./uninstaller.sh
-  ./uninstaller.sh
-  ```
-* [updater.sh](updater.sh)
-  ```
-  chmod +x ./updater.sh
-  ./updater.sh
-  ```
+# Troubleshooting
+
+If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
+
+For other HNN software issues, please visit the [HNN bullentin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)
