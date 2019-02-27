@@ -83,6 +83,10 @@ RUN cd /home/hnn_user/iv && \
 # run sudo to get rid of message on first login about using sudo
 RUN sudo -l
 
+# create the hnn shared folder (don't rely on docker daemon
+# to create it)
+RUN mkdir /home/hnn_user/hnn
+
 # if users open up a shell, they should go to the hnn repo checkout
 WORKDIR /home/hnn_user
 
