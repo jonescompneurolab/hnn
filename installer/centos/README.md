@@ -3,8 +3,13 @@
 This guide describes installing HNN on CentOS using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time. If you would prefer to install HNN without Docker, please see the instructions below.
   - Alternative: [Native install instructions (advanced users)](native_install.md)
 
+**Note: please verify that your OS supports Docker CE**
+   - CentOS 7 and later versions are supported
+   - See [OS requirements](https://docs.docker.com/install/linux/docker-ce/centos/#os-requirements)
+   - It may be possible to install older versions of docker meant for earlier CentOS versions. We recommend following the currently supported procedure from Docker, but you may find a version of Docker in the [EPEL repositories](https://fedoraproject.org/wiki/EPEL) for CentOS 6, which would would work for your OS.
+
 ## Prerequisite: install Docker
-* Follow [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) to install the docker-ce RPM packages from Docker's official repository
+* Open a bash terminal and follow [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) to install the docker-ce RPM packages from Docker's official repository
 * Add your user to the docker group to avoid having to run docker commands with "sudo"
     ```
     sudo usermod -a -G docker [username]
@@ -12,7 +17,7 @@ This guide describes installing HNN on CentOS using Docker. This method will aut
 * Log out and back in for the group change to take effect
 
 ## Prerequisite: install Docker Compose
-* From https://docs.docker.com/compose/install/:
+* Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
     ```
     sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
@@ -48,6 +53,16 @@ This guide describes installing HNN on CentOS using Docker. This method will aut
     ```
 
     If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
+
+## Uninstalling HNN
+
+1. If you want to just remove the container and 1.5 GB HNN image, run these commands from a terminal window:
+    ```
+    docker rm -f docker_hnn_1
+    docker rmi jonescompneurolab/hnn
+    ```
+2. To continue and remove Docker, follow these instructions: [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/centos/#uninstall-docker-ce)
+
 
 # Troubleshooting
 
