@@ -61,18 +61,18 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
     git clone https://github.com/jonescompneurolab/hnn.git
     cd hnn/installer/mac
     ```
-3. Start the Docker container. Note: the jonescompneurolab/hnn docker image will be downloaded from Docker Hub (about 1.5 GB). Docker-compose starts a docker container based on the specification file docker-compose.yml and "up" starts the containers in that file and "-d" starts the docker containers in the background.
+3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
     docker-compose up -d
     ```    
-4. The HNN GUI should show up and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
-   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory where step 3 was run) that can be used to share files between the container and your host OS.
+4. The HNN GUI should show up and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
+   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
-   * If you closed the HNN GUI, and would like to restart it, run the following:
+   * If you closed the HNN GUI or it is no longer running, and you would like to restart it, run the following command from the same directory set in step 2:
       ```
       docker-compose restart
       ```
-5. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/):
+5. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
     ```
     C:\Users\myuser>docker exec -ti mac_hnn_1 bash
     hnn_user@054ba0c64625:/home/hnn_user$
