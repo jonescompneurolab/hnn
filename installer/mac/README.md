@@ -13,10 +13,9 @@ This guide describes installing HNN on Mac OS using Docker. This method will aut
 
 ## Prerequisite: Docker
 
-Click on your version of Mac OS to expand instructions:
+**Follow the instructions for your version of Mac OS:**
 
-<details><summary>10.12 (Sierra) or above: Docker Desktop</summary>
-<p>
+### 10.12 (Sierra) or above: Docker Desktop
 
 1. In order to download Docker Desktop, you'll need to sign up for a Docker Hub account. It only requires an email address to confirm the account. Sign up here: [Docker Hub Sign-up](https://hub.docker.com/signup)
 2. Download the installer image (requires logging in to your Docker Hub account):
@@ -26,11 +25,7 @@ https://hub.docker.com/editions/community/docker-ce-desktop-mac
 5. Log into your Docker Hub account if prompted by the Docker Desktop application.
 6. The Docker Desktop icon will appear in the taskbar with the message "Docker Desktop is starting", Followed by "Docker Desktop is running".
 
-</p>
-</details>
-
-<details><summary>Pre 10.12: Docker Toolbox</summary>
-<p>
+### Pre 10.12: Docker Toolbox
 
 1. Download the installer image:
 https://docs.docker.com/toolbox/toolbox_install_mac/
@@ -48,8 +43,6 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
       ifconfig vboxnet1
       ```
     - Edit the docker-compose.yml file in `hnn/installer/mac/`, replacing `host.docker.internal:0` with the IP address such as `192.168.99.1:0` (**The ":0" is required**). Save the file before running the commands below.
-</p>
-</details>
 
 ## Start HNN
 1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window.

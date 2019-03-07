@@ -6,23 +6,17 @@ This guide describes installing HNN on Windows 10 using Docker. This method will
 ## Prerequisite: Virtualization support
 There are two related requirements needed for Docker to be able to run HNN in a virtual machine on your Windows system
 1. Hardware virtualization features (manual setting)
-   <details><summary>More info:</summary>
-   <p>
 
     If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. Only old systems do not support this feature. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manger. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
 
-      <img src="install_pngs/virtualization_disabled.png" height="300" />
+      <img src="install_pngs/virtualization_disabled.png" height="250" />
     
     See [https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10](https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10) for more details.
 
     If you run into problems enabling hardware virtualization support, we recommend that you follow the [native install instructions](native_install.md) instead. Also running our [VirtualBox VM with HNN pre-installed](https://hnn.brown.edu/index.php/installation-instructions/) is possible without hardware virtualization support.
 
-   </p>
-   </details>
-
 2. Hyper-V support (can be turned on in software)
-   <details><summary>More info:</summary>
-   <p>
+
    While it is necessary to turn on Hyper-V for using HNN with Docker, you should be aware that it will not allow you to also run virtual machines through applications such as VirtualBox. We recommend that you let Docker automatically attempt to turn this feature on during installation. Alternatively, the procedure below allows you to verify that it is turned on and enable it if necessary.
 
    1. Start typing "Turn Windows features on or off" in the search bar next to start menu and click on it to launch the control panel dialog window shown below.
@@ -32,8 +26,6 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
    3. **If you enabled Hyper-V, please reboot your computer before continuing below to install docker.**
 
-   </p>
-   </details>
 ## Prerequisite: VcXsrv
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download)
    * Here's the link to the [direct download of version 64.1.20.1.4](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
@@ -47,9 +39,9 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
 ## Prerequisite: Docker
 
-Click on your version of Windows to expand instructions:
-<details><summary>Windows 10 (Pro/Enterprise only): Docker Desktop</summary>
-<p>
+**Follow the instructions for your version of Windows:**
+
+### Windows 10 (Pro/Enterprise only): Docker Desktop
 
 1. In order to download Docker Desktop, you'll need to sign up for a Docker Hub account. It only requires an email address to confirm the account. Sign up here: [Docker Hub Sign-up](https://hub.docker.com/signup)
 2. Download the installer (requires logging in to your Docker Hub account):
@@ -68,12 +60,9 @@ https://hub.docker.com/editions/community/docker-ce-desktop-windows
 
 7. Reboot your computer after installing Docker
 
-</p>
-</details>
 
 
-<details><summary>Windows 10 Home: Docker Toolbox</summary>
-<p>
+### Windows 10 Home: Docker Toolbox
 
 1. Download the installer:
 https://docs.docker.com/toolbox/toolbox_install_windows/
@@ -87,46 +76,31 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
 6. Run the commands below from a new cmd.exe window.
 
-</p>
-</details>
-
 ## Start HNN
 1. Verify that VcXsrv (XLaunch application) and Docker are running. VcXsrv will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing the following in a new cmd.exe window.
     ```
     docker info
     ```
-2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn).
+2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
 
-   Chose one of the following methods: 
-   <details><summary>Cloning (requires Git for Windows)</summary>
-   <p>
+   * Option 1: Cloning (requires Git for Windows)
 
-    1. First install [Git for Windows](https://gitforwindows.org/)
-    2. Type the following in a cmd.exe window. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
+     1. First install [Git for Windows](https://gitforwindows.org/)
+     2. Type the following in a cmd.exe window. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
-       ```
-       git clone https://github.com/jonescompneurolab/hnn.git
-       cd hnn\installer\windows
-       ```
+        ```
+        git clone https://github.com/jonescompneurolab/hnn.git
+        cd hnn\installer\windows
+        ```
    
-   </p>
-   </details>
+   * Option 2: Downloading a HNN release
 
-   <details><summary>Downloading a HNN release</summary>
-   <p>
-
-   1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
-   2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
-   3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
-      ```
-      cd [destination folder for extracted .zip]\hnn\installer\windows
-      ```
-   </p>
-   </details>
-
-   </p>
-   </details>
-
+     1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
+     2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
+     3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
+        ```
+        cd [destination folder for extracted .zip]\hnn\installer\windows
+        ```
 
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
