@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [! -d /home/hnn_user/hnn ]; then
+if [ ! -d /home/hnn_user/hnn ]; then
   echo "creating /home/hnn_user/hnn"
   mkdir /home/hnn_user/hnn
 else

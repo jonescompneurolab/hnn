@@ -10,20 +10,34 @@ This guide describes installing HNN on Ubuntu using Docker. This method will aut
 
 
 ## Prerequisite: install Docker
-* Open a bash terminal and follow [Docker's Ubuntu install instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/) to install the docker-ce packages from Docker's official repository
-* Add your user to the docker group to avoid having to run docker commands with "sudo"
+1. To install docker, type the following commands in a terminal (x86_64 only). They are from [Docker's Ubuntu install instructions](https://docs.docker.com/install/linux/docker-ce/ubuntu/) for installing docker-ce from Docker's official repository.
+    ```
+    # get prerequisites for adding the docker repository and verifying with the GPG key
+    sudo apt-get update
+    sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo apt-key fingerprint 0EBFCD88
+    # add the docker repository to apt sources list
+    bash -c 'sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"'
+    sudo apt-get update
+    # install docker packages
+    sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+    # verify that docker runs
+    sudo docker run hello-world
+    ```
+2. Add your user to the docker group to avoid having to run docker commands with "sudo"
     ```
     sudo usermod -a -G docker [username]
     ```
-* Log out and back in (may need to reboot) for the group change to take effect
+3. Log out and back in (may need to reboot) for the group change to take effect
 
 ## Prerequisite: install Docker Compose
-* Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
-    ```
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    docker-compose --version
-    ```
+Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
+  ```
+  bash -c 'sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+  sudo chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+  ```
 
 ## Start HNN
 1. Check that Docker is running properly by typing the following in a new terminal window.
@@ -61,7 +75,11 @@ This guide describes installing HNN on Ubuntu using Docker. This method will aut
     docker rm -f docker_hnn_1
     docker rmi jonescompneurolab/hnn
     ```
-2. To continue and remove Docker, follow these instructions: [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce)
+2. To continue and remove Docker, follow these instructions from [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce)
+    ```
+    sudo apt-get purge docker-ce
+    sudo rm -rf /var/lib/docker
+    ```
 
 # Troubleshooting
 

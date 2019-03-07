@@ -9,20 +9,33 @@ This guide describes installing HNN on CentOS using Docker. This method will aut
    - It may be possible to install older versions of docker meant for earlier CentOS versions. We recommend following the currently supported procedure from Docker, but you may find a version of Docker in the [EPEL repositories](https://fedoraproject.org/wiki/EPEL) for CentOS 6, which would would work for your OS.
 
 ## Prerequisite: install Docker
-* Open a bash terminal and follow [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) to install the docker-ce RPM packages from Docker's official repository
-* Add your user to the docker group to avoid having to run docker commands with "sudo"
+1. To install docker, type the following commands in a terminal (x86_64 only). They are from [Docker's CentOS install instructions](https://docs.docker.com/install/linux/docker-ce/centos/) for installing docker-ce from Docker's official repository.
+    ```
+    # get prerequisites for docker
+    sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+    # add the repository
+    sudo yum-config-manager --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+    # install docker-ce
+    sudo yum install -y docker-ce docker-ce-cli containerd.io
+    # start docker
+    sudo systemctl start docker
+    # verify that docker runs
+    sudo docker run hello-world
+    ```
+2. Add your user to the docker group to avoid having to run docker commands with "sudo"
     ```
     sudo usermod -a -G docker [username]
     ```
-* Log out and back in for the group change to take effect
+3. Log out and back in (may need to reboot) for the group change to take effect
 
 ## Prerequisite: install Docker Compose
-* Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
-    ```
-    sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    docker-compose --version
-    ```
+Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
+  ```
+  bash -c 'sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+  sudo chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+  ```
 
 ## Start HNN
 
@@ -61,7 +74,11 @@ This guide describes installing HNN on CentOS using Docker. This method will aut
     docker rm -f docker_hnn_1
     docker rmi jonescompneurolab/hnn
     ```
-2. To continue and remove Docker, follow these instructions: [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/centos/#uninstall-docker-ce)
+2. To continue and remove Docker, follow these instructions from [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/centos/#uninstall-docker-ce)
+    ```
+    sudo yum remove docker-ce
+    sudo rm -rf /var/lib/docker
+    ```
 
 
 # Troubleshooting
