@@ -51,16 +51,14 @@ Common problems that one might encounter running the HNN docker container are li
    Could not connect to any X display.
    ```
 
-   The first line is not indicative of any error, and is always present. In this case, the next two lines indicate that the X display for HNN GUI was not started. Troubleshooting steps diverge for each operating system. Plase choose your OS below:
-     <details><summary>Mac/Windows</summary>
-     <p>
+   The first line is not indicative of any error, and is always present. In this case, the next two lines indicate that the X display for HNN GUI was not started. Troubleshooting steps diverge for each operating system.
+
+   * Mac/Windows
 
       1. Check that the X server is started (VcXsrv for Windows and XQuartz for Mac).
       2. Check for connectivity from within the container to the address given. This may be because of firewalls or an incorrect IP address. When in doubt, an IP address of the external interface (e.g. wireless) will work in most cases.
-     </p>
-     </details>
-     <details><summary>Linux</summary>
-     <p>
+
+   * Linux
 
       1. Try explicitly giving the docker container authentication for display on the X server
 
@@ -69,8 +67,6 @@ Common problems that one might encounter running the HNN docker container are li
          cd hnn/installer/docker
          docker-compose restart
          ```
-     </p>
-     </details>
 
 2. If HNN fails to start, the startup script will fall back to running the command "sleep infinity" which allows you to open up a shell in the container and debug what went wrong. Open a shell by running
    ```
@@ -88,5 +84,6 @@ Common problems that one might encounter running the HNN docker container are li
    ```
    If you see something other than messages similar to above, please [open an issue](https://github.com/jonescompneurolab/hnn/issues) on GitHub, including the output from the commands above.
 
- ### Problem: [This computer doesn't have VT-x/AMD-v enabled. (MetaCell documentation)](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-this-computer-doesnt-have-vt-xamd-v-enabled)
- ### Problem: [Image operating system linux cannot be used on this platform (MetaCell documentation)](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-image-operating-system-linux-cannot-be-used-on-this-platform)
+### Problem: [This computer doesn't have VT-x/AMD-v enabled. (MetaCell documentation)](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-this-computer-doesnt-have-vt-xamd-v-enabled)
+
+### Problem: [Image operating system linux cannot be used on this platform (MetaCell documentation)](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-image-operating-system-linux-cannot-be-used-on-this-platform)
