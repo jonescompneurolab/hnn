@@ -10,6 +10,7 @@ This guide describes installing HNN on Mac OS using Docker. This method will aut
 4. **Important** - Open the XQuartz preferences and navigate to the "security" tab. Make sure "Authenticate connections" is unchecked and "Allow connections from network clients" is checked.
 
    <img src="install_pngs/xquartz_preferences.png" height="250" />
+5. Quit X11 and the restart the application. This is needed for the setting above to take effect.
 
 ## Prerequisite: Docker
 

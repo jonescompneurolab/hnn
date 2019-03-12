@@ -29,7 +29,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 ## Prerequisite: VcXsrv
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download)
    * Here's the link to the [direct download of version 64.1.20.1.4](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
-2. Run the installer, choosing any installation folder./
+2. Run the installer, choosing any installation folder.
 3. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
 4. Choose "Multiple windows" and click 'Next'. Leave "Display number" at '-1'.
 5. Select "Start no client" and click 'Next'.
