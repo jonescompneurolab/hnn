@@ -89,8 +89,8 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
      2. Type the following in a cmd.exe window. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
         ```
-        git clone https://github.com/jonescompneurolab/hnn.git
-        cd hnn\installer\windows
+        C:\Users\myuser> git clone https://github.com/jonescompneurolab/hnn.git
+        C:\Users\myuser\hnn\installer\windows> cd hnn\installer\windows
         ```
    
    * Option 2: Downloading a HNN release
@@ -99,7 +99,7 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
      2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
      3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
         ```
-        cd [destination folder for extracted .zip]\hnn\installer\windows
+        C:\Users\myuser> cd REPLACE-WITH-EXTRACTED-FOLDER\hnn\installer\windows
         ```
 
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
@@ -116,7 +116,7 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
     * If starting the GUI doesn't work the first time, the output above will not include the windows_hnn_1 container. The first thing to check is vcXsrv settings have "Disable access control" (see above). Then restart vcXsrv and try starting the HNN container again with
       ```
-      docker-compose restart
+      C:\Users\myuser\hnn\installer\windows> docker-compose restart
       ```
 4. A prompt from the lower-right will ask you to share the drive. Click 'Share'.
 5. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
@@ -130,12 +130,12 @@ The HNN GUI should show up and you should now be able to run the tutorials at ht
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI or it is no longer running, and you would like to restart it, run the following command from the same directory set in step 2:
       ```
-      docker-compose restart
+      C:\Users\myuser> docker-compose restart
       ```
 
 7. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
     ```
-    C:\Users\myuser>docker exec -ti windows_hnn_1 bash
+    C:\Users\myuser> docker exec -ti windows_hnn_1 bash
     hnn_user@054ba0c64625:/home/hnn_user$
     ```
 
@@ -145,8 +145,8 @@ The HNN GUI should show up and you should now be able to run the tutorials at ht
 
 If you want to remove the container and 1.5 GB HNN image, run the following commands from a cmd.exe window. You can then remove Docker Desktop using "Add/Remove Programs"
 ```
-docker rm -f windows_hnn_1
-docker rmi jonescompneurolab/hnn
+C:\Users\myuser> docker rm -f windows_hnn_1
+C:\Users\myuser> docker rmi jonescompneurolab/hnn
 ```
 
 

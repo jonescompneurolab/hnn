@@ -25,32 +25,32 @@ This guide describes installing HNN on CentOS using Docker. This method will aut
     ```
 2. Add your user to the docker group to avoid having to run docker commands with "sudo"
     ```
-    sudo usermod -a -G docker [username]
+    $ sudo usermod -a -G docker [username]
     ```
 3. Log out and back in (may need to reboot) for the group change to take effect
 
 ## Prerequisite: install Docker Compose
 Open a bash terminal and run these commands (from [Docker Compose installation](https://docs.docker.com/compose/install/)):
   ```
-  bash -c 'sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-  sudo chmod +x /usr/local/bin/docker-compose
-  docker-compose --version
+  $ bash -c 'sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+  $ sudo chmod +x /usr/local/bin/docker-compose
+  $ docker-compose --version
   ```
 
 ## Start HNN
 
 1. Check that Docker is running properly by typing the following in a new terminal window.
     ```
-    docker info
+    $ docker info
     ```
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
     ```
-    git clone https://github.com/jonescompneurolab/hnn.git
-    cd hnn/installer/docker
+    $ git clone https://github.com/jonescompneurolab/hnn.git
+    $ cd hnn/installer/docker
     ```
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
-    docker-compose up -d
+    $ docker-compose up -d
     ```    
 4. The HNN GUI should show up. Make sure that you can run similations by cliking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 5. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
@@ -58,11 +58,11 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI or it is no longer running, and you would like to restart it, run the following command from the same directory set in step 2:
       ```
-      docker-compose restart
+      $ docker-compose restart
       ```
 6. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
     ```
-    C:\Users\myuser>docker exec -ti docker_hnn_1 bash
+    $ docker exec -ti docker_hnn_1 bash
     hnn_user@054ba0c64625:/home/hnn_user$
     ```
 
@@ -72,13 +72,13 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
 
 1. If you want to just remove the container and 1.5 GB HNN image, run these commands from a terminal window:
     ```
-    docker rm -f docker_hnn_1
-    docker rmi jonescompneurolab/hnn
+    $ docker rm -f docker_hnn_1
+    $ docker rmi jonescompneurolab/hnn
     ```
 2. To continue and remove Docker, follow these instructions from [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/centos/#uninstall-docker-ce)
     ```
-    sudo yum remove docker-ce
-    sudo rm -rf /var/lib/docker
+    $ sudo yum remove docker-ce
+    $ sudo rm -rf /var/lib/docker
     ```
 
 

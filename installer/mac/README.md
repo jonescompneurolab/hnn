@@ -34,26 +34,26 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
 3. Choose "Docker Quickstart Terminal" tool
 4. Verify that Docker has started by running the following in the provided terminal window. 
     ```
-    docker info
-    docker-compose --version
+    $ docker info
+    $ docker-compose --version
     ```
 5. Run the following commands in the same terminal window or by relaunching "Docker Quickstart Terminal".
 6. For Docker Toolbox only, we will need to set an IP address in the file docker-compose.yml before starting the HNN container.
     - Get the IP address of the local interface that Docker Toolbox created. It will be named similar to vboxnet1 with an IP address such as 192.168.99.1
       ```
-      ifconfig vboxnet1
+      $ ifconfig vboxnet1
       ```
     - Edit the docker-compose.yml file in `hnn/installer/mac/`, replacing `host.docker.internal:0` with the IP address such as `192.168.99.1:0` (**The ":0" is required**). Save the file before running the commands below.
 
 ## Start HNN
 1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window.
     ```
-    docker info
+    $ docker info
     ```
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
     ```
-    git clone https://github.com/jonescompneurolab/hnn.git
-    cd hnn/installer/mac
+    [~]$ git clone https://github.com/jonescompneurolab/hnn.git
+    [~/hnn/installer/mac]$ cd hnn/installer/mac
     ```
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
@@ -69,14 +69,14 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
 
     * If starting the GUI doesn't work the first time, the output above will not include the mac_hnn_1 container. The first thing to check is XQuartz settings (see screnshot above). Then restart XQuartz and try starting the HNN container again with
       ```
-      docker-compose restart
+      [~/hnn/installer/mac]$ docker-compose restart
       ```
 4. The HNN GUI should show up and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
    * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
    * If you closed the HNN GUI or it is no longer running, and you would like to restart it, run the following command from the same directory set in step 2:
       ```
-      docker-compose restart
+      [~/hnn/installer/mac]$ docker-compose restart
       ```
 5. **NOTE:** You may want run commands or edit files within the container. To access a command prompt in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
     ```
@@ -90,8 +90,8 @@ https://docs.docker.com/toolbox/toolbox_install_mac/
 
 If you want to remove the container and 1.5 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
 ```
-docker rm -f mac_hnn_1
-docker rmi jonescompneurolab/hnn
+$ docker rm -f mac_hnn_1
+$ docker rmi jonescompneurolab/hnn
 ```
 
 # Troubleshooting
