@@ -104,8 +104,20 @@ https://docs.docker.com/toolbox/toolbox_install_windows/
 
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
-    docker-compose up -d
+    C:\Users\myuser\hnn\installer\windows> docker-compose up -d
+    Starting windows_hnn_1 ... done
     ```
+    * You can see that the HNN container is running
+      ```
+      C:\Users\myuser> docker ps -a
+      CONTAINER ID  IMAGE                 COMMAND                 CREATED        STATUS       PORTS  NAMES
+      1fa235c2f831  jonescompneurolab/hnn "/home/hnn_user/star…"  6 seconds ago  Up 5 seconds        windows_hnn_1
+      ```
+
+    * If starting the GUI doesn't work the first time, the output above will not include the windows_hnn_1 container. The first thing to check is vcXsrv settings have "Disable access control" (see above). Then restart vcXsrv and try starting the HNN container again with
+      ```
+      docker-compose restart
+      ```
 4. A prompt from the lower-right will ask you to share the drive. Click 'Share'.
 5. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
