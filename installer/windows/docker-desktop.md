@@ -6,7 +6,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
     If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. Only old systems do not support this feature. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manger. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
 
-      <img src="install_pngs/virtualization_disabled.png" height="250" />
+      <img src="install_pngs/virtualization_disabled.png" height="150" />
     
     See [https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10](https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10) for more details.
 
@@ -19,7 +19,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
    1. Start typing "Turn Windows features on or off" in the search bar next to start menu and click on it to launch the control panel dialog window shown below.
    2. Make sure that "Hyper-V" and "Hyper-V Platform" is turned on as shown in the image below
 
-      <img src="install_pngs/hyper-V.png" height="250" />
+      <img src="install_pngs/hyper-V.png" height="150" />
 
    3. **If you enabled Hyper-V, please reboot your computer before continuing below to install docker.**
 
@@ -43,12 +43,12 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 5. When Docker Desktop is initializing, it may prompt you to turn on Hyper-V. 
    * If you get a message similar to the screen below, click 'Ok' and restart your computer.
 
-     <img src="install_pngs/enable_hyperv.png" height="150" />
+     <img src="install_pngs/enable_hyperv.png" height="80" />
 
 6. Docker Desktop will start after the install has completed and the Docker icon will show up in the lower-right dock with a message "Docker Desktop is running"
    * If you get the error message shown below, there was a problem turning on hardware support for virtualization, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
 
-     <img src="install_pngs/hyperv_error.png" height="150" />
+     <img src="install_pngs/hyperv_error.png" height="80" />
 7. Increase the number of cores that Docker can use (we recommend all cores) by clicking on the Docker Desktop icon in the lower-right dock and then clicking "Preferences". Choose the "Advanced" tab, and adjust with the slider.
 8. Reboot your computer after installing Docker
 
@@ -98,7 +98,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 4. If a prompt appears from the lower-right and ask you to share the drive, click 'Share'.
 5. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
-   <img src="install_pngs/access_filesystem.png" height="200" />
+   <img src="install_pngs/access_filesystem.png" height="120" />
 
 5. The HNN GUI should show up. Make sure that you can run simulations by cliking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:

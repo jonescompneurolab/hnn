@@ -1,4 +1,4 @@
-# Installing HNN on Windows (Docker install)
+# Installing HNN on Windows
 
 This guide describes installing HNN on Windows 10 using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time.
 

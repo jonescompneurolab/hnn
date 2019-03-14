@@ -4,7 +4,7 @@
 
 Nearly all PC's have this feature, but it may not be enabled by default. If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manger. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
 
-<img src="install_pngs/virtualization_disabled.png" height="175" />
+  <img src="install_pngs/virtualization_disabled.png" height="150" />
     
 See [https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10](https://www.trishtech.com/2017/08/check-if-virtualization-is-enabled-in-windows-10) for more details.
 
@@ -32,7 +32,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 6. When the installer has finished, it will leave a "Docker Quickstart Terminal" window open. Use this window for the remaining commands below
    * If, during installation, you get the error message shown below, hardware support for virtualization isn't turned on, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
 
-     <img src="install_pngs/vtx_disabled.png" height="100" />
+     <img src="install_pngs/vtx_disabled.png" height="60" />
 
 ## Start HNN
 1. Verify that VcXsrv (XLaunch application) and Docker are running. Both will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
@@ -79,7 +79,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
       ```
 4. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
-   <img src="install_pngs/access_filesystem.png" height="150" />
+    <img src="install_pngs/access_filesystem.png" height="70" />
 
 5. The HNN GUI should show up. Make sure that you can run simulations by cliking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
