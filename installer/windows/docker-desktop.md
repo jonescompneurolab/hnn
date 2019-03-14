@@ -27,7 +27,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download) (click [here](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133) for the direct download link for version 64.1.20.1.4)
 2. Run the installer, choosing any installation folder.
 3. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
-4. Choose "Multiple windows" and click 'Next'. Leave "Display number" at '-1'.
+4. Choose "Multiple windows" and change "Display number" at '0'. Click 'Next'.
 5. Select "Start no client" and click 'Next'.
 6. Under "Extra settings" make sure that "Disable access control" is checked.
 7. Click "Save configuration" to create a shortcut with the settings we just chose. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that VcXsrv has started.
@@ -48,7 +48,10 @@ There are two related requirements needed for Docker to be able to run HNN in a 
    * If you get the error message shown below, there was a problem turning on hardware support for virtualization, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
 
      <img src="install_pngs/hyperv_error.png" width="500" />
-7. Increase the number of cores that Docker can use (we recommend all cores) by clicking on the Docker Desktop icon in the lower-right dock and then clicking "Preferences". Choose the "Advanced" tab, and adjust with the slider.
+7. Increase the number of cores that Docker can use (we recommend all cores) by right-clicking on the Docker Desktop icon in the lower-right dock and then clicking "Settings". Choose the "Advanced" tab, and adjust the CPU slider all the way to the right.
+
+    <img src="install_pngs/docker_cores.png" width="400"/>
+
 8. Reboot your computer after installing Docker
 
 
@@ -66,7 +69,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
         ```
         C:\Users\myuser> git clone https://github.com/jonescompneurolab/hnn.git
-        C:\Users\myuser\hnn\installer\windows> cd hnn\installer\windows
+        C:\Users\myuser> cd hnn\installer\windows
         ```
    
    * Option 2: Downloading a HNN release

@@ -15,7 +15,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
    * Here's the link to the [direct download of version 64.1.20.1.4](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
 2. Run the installer, choosing any installation folder.
 3. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
-4. Choose "Multiple windows" and click 'Next'. Leave "Display number" at '-1'.
+4. Choose "Multiple windows" and change "Display number" at '0'. Click 'Next'.
 5. Select "Start no client" and click 'Next'.
 6. Under "Extra settings" make sure that "Disable access control" is checked.
 7. Click "Save configuration" to create a shortcut with the settings we just chose. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that XLaunch has started.
@@ -32,7 +32,18 @@ If you run into problems enabling hardware virtualization support, we recommend 
 6. When the installer has finished, it will leave a "Docker Quickstart Terminal" window open. Use this window for the remaining commands below
    * If, during installation, you get the error message shown below, hardware support for virtualization isn't turned on, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
 
-     <img src="install_pngs/vtx_disabled.png" width="500"/>
+      <img src="install_pngs/vtx_disabled.png" width="500"/>
+7. We want HNN to use all of the CPU cores available on your system when it runs a simulation, and Docker only uses half by default. To change this setting we need to first stop the Docker VM that was started above in step 5.
+    ```
+    $ docker-machine stop
+    ```
+8. Type 'VirtualBox' into the start menu search bar and launch "Oracle VM VirtualBox"
+9. Click on the VM "default" in the left pane and then click "Settings"
+10. Navigate to "System", then the "Processor" tab and move the slider all the way to the right.
+
+    <img src="install_pngs/virtualbox_cores.png" width="400"/>
+
+11. Click 'Ok', then restart "Docker Quickstart Terminal". When you get the "interactive shell" prompt, you can continue on.
 
 ## Start HNN
 1. Verify that VcXsrv (XLaunch application) and Docker are running. Both will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
@@ -95,6 +106,10 @@ If you run into problems enabling hardware virtualization support, we recommend 
     $ cd hnn/installer/windows
     $ docker restart windows_hnn_1
     ```
+3. To stop the HNN and Docker Toolbox
+   ```
+   $ docker-machine stop
+   ```
 
 ## Editing files within HNN container
 You may want run commands or edit files within the container. To access a command shell in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
