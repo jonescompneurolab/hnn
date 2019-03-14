@@ -14,22 +14,27 @@
 1. Download the installer image: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
 2. Run the installer, selecting any directory for installation.
 3. Choose "Docker Quickstart Terminal" tool
-4. Verify that Docker has started by running the following in the provided terminal window. 
-    ```
-    $ docker info
-    $ docker-compose --version
-    ```
-5. Run the following commands in the same terminal window or by relaunching "Docker Quickstart Terminal".
+4. You may get an error such as the one below. You need to grant Docker Quickstart Terminal permission to control you computer in System Preferences -> Security -> Privacy -> Privacy -> Accessibility. If it's already checked, uncheck it and check it again. 
+4. After a couple of minutes the "Waiting for an IP" task should complete.
+5. Run the commands below in the same terminal window or by relaunching "Docker Quickstart Terminal".
 
 ## Start HNN
-1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window.
+1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
     ```
     $ docker info
     ```
 
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
+   * Option 1: Downloading a HNN release
 
-   * Option 1: Cloning (requires Xcode Command Line Tools)
+     1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
+     2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
+     3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
+        ```
+        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn/installer/mac
+        ```
+        
+   * Option 2: Cloning (requires Xcode Command Line Tools)
 
      1. Check that you have Git installed from a terminal window
         ```
@@ -43,14 +48,7 @@
         $ cd hnn/installer/mac
         ```
    
-   * Option 2: Downloading a HNN release
 
-     1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
-     2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
-     3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
-        ```
-        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn/installer/mac
-        ```
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
     [~/hnn/installer/mac]$ docker-compose run -d --name mac_hnn_1 -e "DISPLAY=192.168.99.1:0" hnn

@@ -1,10 +1,10 @@
-# Installing HNN on Mac OS (Docker install)
+# Installing HNN on Mac OS
 
-This guide describes installing HNN on Mac OS using Docker. This method will automatically download the HNN Docker container image when HNN is started for the first time.
-
-The version of Docker to install differs depending on your version of Mac OS. Choose the link below that matches your OS below for instructions to complete installing HNN
+This guide describes installing HNN on Mac OS. For recent Mac OS versions 10.12 (Sierra) and above, we recommend the Docker install. This method will automatically download the HNN Docker container image when HNN is started for the first time.
   * [10.12 (Sierra) or above: Docker Desktop](./docker-desktop.md)
-  * [Pre 10.12: Docker Toolbox](./docker-toolbox.md)
 
- If you want to install HNN without Docker, please see the instructions below.
+For earlier versions of Mac OS, or if you want to install HNN without Docker, please see the instructions below.
   - Alternative: [Native install instructions (advanced users)](native_install.md)
+
+Finally another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
+  - [VirtualBox VM instructions](https://hnn.brown.edu/index.php/installation-instructions/)

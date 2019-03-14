@@ -37,8 +37,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 ## Prerequisite: Docker Desktop
 
 1. In order to download Docker Desktop, you'll need to sign up for a Docker Hub account. It only requires an email address to confirm the account. Sign up here: [Docker Hub Sign-up](https://hub.docker.com/signup)
-2. Download the installer (requires logging in to your Docker Hub account):
-https://hub.docker.com/editions/community/docker-ce-desktop-windows
+2. Download the installer (requires logging in to your Docker Hub account): [Docker Desktop](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
 3. Run the installer. **DO NOT check** "Use Windows containers instead of Linux containers".
 4. Start the Docker Desktop app from the start menu or desktop (requires logging in to your Docker Hub account). This takes about 30 seconds and the Docker icon will appear in the lower-right dock
 5. When Docker Desktop is initializing, it may prompt you to turn on Hyper-V. 

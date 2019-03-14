@@ -12,8 +12,7 @@
 ## Prerequisite: Docker Desktop
 
 1. In order to download Docker Desktop, you'll need to sign up for a Docker Hub account. It only requires an email address to confirm the account. Sign up here: [Docker Hub Sign-up](https://hub.docker.com/signup)
-2. Download the installer image (requires logging in to your Docker Hub account):
-https://hub.docker.com/editions/community/docker-ce-desktop-mac
+2. Download the installer image (requires logging in to your Docker Hub account): [Docker Desktop](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
 3. Run the Docker Desktop installer, moving docker to the applications folder.
 4. Start the Docker application, acknowledging that it was downloaded from the Internet and you still want to open it.
 5. Log into your Docker Hub account if prompted by the Docker Desktop application.
