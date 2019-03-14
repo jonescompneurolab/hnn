@@ -14,7 +14,8 @@ RUN apt-get update && \
                        bison flex automake libtool libxext-dev libncurses-dev \
                        python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy \
                        python3-pyqt4.qtopengl libxaw7 libxmu6 libxpm4 \
-                       git vim iputils-ping net-tools iproute2 nano sudo && \
+                       git vim iputils-ping net-tools iproute2 nano sudo \
+                       telnet && \
     apt-get remove -y python3-matplotlib
 
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
