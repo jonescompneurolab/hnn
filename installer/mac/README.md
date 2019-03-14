@@ -4,7 +4,7 @@ This guide describes installing HNN on Mac OS. For recent Mac OS versions 10.12 
   * [10.12 (Sierra) or above: Docker Desktop](./docker-desktop.md)
 
 For earlier versions of Mac OS, or if you want to install HNN without Docker, please see the instructions below.
-  - Alternative: [Native install instructions (advanced users)](native_install.md)
+  - [Native install instructions (advanced users)](native_install.md)
 
 Finally another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
-  - [VirtualBox VM instructions](https://hnn.brown.edu/index.php/installation-instructions/)
+  - Please [contact us](mailto: hnneurosolver@gmail.com) for VirtualBox VM instructions

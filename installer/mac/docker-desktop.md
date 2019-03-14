@@ -55,7 +55,7 @@
 
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
     ```
-    [~/hnn/installer/mac]$ docker-compose up -d
+    $ docker-compose up -d
     Starting mac_hnn_1 ... done
     ```
     * You can see that the HNN container is running
@@ -67,7 +67,7 @@
 
     * If starting the GUI doesn't work the first time, the first thing to check is XQuartz settings (see screnshot above). Then restart XQuartz and try starting the HNN container again with
       ```
-      [~/hnn/installer/mac]$ docker-compose restart
+      $ docker-compose restart
       ```
 5. The HNN GUI should show up. Make sure that you can run simulations by cliking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:

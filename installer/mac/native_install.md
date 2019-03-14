@@ -45,7 +45,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 2. Then select `Install` at the prompt
 
-  <img src="install_pngs/xcode_tools.png" height="250" />
+  <img src="install_pngs/xcode_tools.png" width="400" />
 
 ## Prerequisite 3: NEURON
 
@@ -53,15 +53,15 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 2. You will be asked about variables in .bashrc, .tcshrc, etc. Say `No`.
 
-  <img src="install_pngs/neuron_path.png" height="250" />
+  <img src="install_pngs/neuron_path.png" width="400" />
 
 3. Another window will ask about PYTHONPATH. Say `No`.
 
-  <img src="install_pngs/neuron_path2.png" height="250" />
+  <img src="install_pngs/neuron_path2.png" width="400" />
 
 4. Afterward, you will be presented with a confirmation message that NEURON has been installed. Click `Continue`
 
-  <img src="install_pngs/neuron_continue.png" height="250" />
+  <img src="install_pngs/neuron_continue.png" width="400" />
 
 5. Press `Close` to finish the installation of NEURON
 
@@ -113,7 +113,7 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 3. Create a conda environment with the Python prerequisites for HNN.
 
     ```
-    conda create -n hnn mpi4py pyqtgraph pyopengl matplotlib scipy
+    conda create -n hnn python=3.6 mpi4py pyqtgraph pyopengl matplotlib scipy
     ```
 4. Activate the HNN conda environment
 
@@ -144,8 +144,9 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 2. The HNN GUI should appear and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
 3. When you run simulations for the first time, the following dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.
 
-<img src="install_pngs/nrniv_firewall.png" height="250" />
-<img src="install_pngs/orterun_firewall.png" height="250" />
+<img src="install_pngs/nrniv_firewall.png" width="400" />
+
+<img src="install_pngs/orterun_firewall.png" width="400" />
 
 # Troubleshooting
 
