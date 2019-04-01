@@ -24,9 +24,6 @@ This method will run HNN without using virtualization, meaning the GUI may feel 
      rm ~/Downloads/XQuartz-2.7.11.dmg
      open /Applications/Utilities/XQuartz.app
      ```
-    
-4. Reboot your system before proceeding. A reboot is really needed after installing Xquartz.
-
 
 ## Opening a terminal window
 1. Open up macOS's terminal.app by searching for terminal in Spotlight (upper right search icon). We will use this terminal for running the commands below.
