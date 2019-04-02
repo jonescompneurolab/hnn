@@ -8,6 +8,7 @@ This directory contains instructions and files supporting installation of HNN on
 
  HNN also works on cloud and HPC environments:
  * [Amazon Web Services](aws)
+ * [Neuroscience Gateway Portal (NSG)](nsg)
  * [Oscar (for Brown students, staff, faculty)](brown_ccv)
 
  If you are running into problems with the instructions given for your machine, we recommed using the VirtualBox VM with HNN pre-installed:
