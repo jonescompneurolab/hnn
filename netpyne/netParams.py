@@ -352,7 +352,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
@@ -374,7 +374,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicDistal'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['apical_tuft']}
@@ -396,7 +396,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
@@ -418,7 +418,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicDistal'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['apical_tuft']}
@@ -440,7 +440,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L2Basket'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': 'soma'}
@@ -462,7 +462,7 @@ if cfg.rhythmicInputs:
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L5Basket'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams),
+            'weight': synParams['A_weight'],
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': 'soma'}
@@ -512,7 +512,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
                 'postConds': {'pop': 'L2Pyr'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 3,
                 'sec': ['basal_2', 'basal_3','apical_oblique']}
@@ -533,7 +533,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
                 'postConds': {'pop': 'L5Pyr'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 3,
                 'sec': ['basal_2', 'basal_3','apical_oblique']}
@@ -554,7 +554,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
                 'postConds': {'pop': 'L2Basket'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 1,
                 'sec': 'soma'}
@@ -575,7 +575,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
                 'postConds': {'pop': 'L5Basket'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 1,
                 'sec': 'soma'}
@@ -615,7 +615,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedDistal'}, 
                 'postConds': {'pop': 'L2Pyr'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 3,
                 'sec': 'apical_tuft'}
@@ -636,7 +636,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedDistal_%s'%(str(idist+1))}, 
                 'postConds': {'pop': 'L5Pyr'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 3,
                 'sec': 'apical_tuft'}
@@ -657,7 +657,7 @@ if cfg.evokedInputs:
                 'preConds': {'pop': 'evokedDistal_%s'%(str(idist+1))}, 
                 'postConds': {'pop': 'L2Basket'},
                 'synMech': synParams['synMech'],
-                'weight': weightDistFunc.format(**synParams),
+                'weight': synParams['A_weight'],
                 'delay': delayDistFunc.format(**synParams),
                 'synsPerConn': 1,
                 'sec': 'soma'}
@@ -669,66 +669,6 @@ if cfg.evokedInputs:
 
 if cfg.poissonInputs:
     pass
-''''
-    # define T_pois as 0 or -1 to reset automatically to tstop
-    if p['T_pois'] in (0, -1): p['T_pois'] = tstop
-
-    # Poisson distributed inputs to proximal
-    p_unique['extpois'] = {# NEW: setting up AMPA and NMDA for Poisson inputs; why delays differ?
-        'stim': 'poisson',
-        'L2_basket': (p['L2Basket_Pois_A_weight_ampa'],p['L2Basket_Pois_A_weight_nmda'],1.,p['L2Basket_Pois_lamtha']),
-        'L2_pyramidal': (p['L2Pyr_Pois_A_weight_ampa'],p['L2Pyr_Pois_A_weight_nmda'], 0.1,p['L2Pyr_Pois_lamtha']),
-        'L5_basket': (p['L5Basket_Pois_A_weight_ampa'],p['L5Basket_Pois_A_weight_nmda'],1.,p['L5Basket_Pois_lamtha']),
-        'L5_pyramidal': (p['L5Pyr_Pois_A_weight_ampa'],p['L5Pyr_Pois_A_weight_nmda'],1.,p['L5Pyr_Pois_lamtha']),
-        'lamtha_space': 100.,
-        'prng_seedcore': int(p['prng_seedcore_extpois']),
-        't_interval': (p['t0_pois'], p['T_pois']),
-        'loc': 'proximal',
-        'threshold': p['threshold']
-    }
-
-- - - - - - - -
-
-    def parreceive_ext (self, type, gid, gid_dict, pos_dict, p_ext):
-        if type.startswith(('evprox', 'evdist')):
-            if self.celltype in p_ext.keys():
-                gid_ev = gid + gid_dict[type][0]
-
-                # separate dictionaries for ampa and nmda evoked inputs
-                nc_dict_ampa = {
-                    'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
-                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
-                    'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold'],
-                    'type_src': type
-                }
-
-                nc_dict_nmda = {
-                    'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][1], # index 1 for nmda weight
-                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
-                    'lamtha': p_ext['lamtha_space'],
-                    'threshold': p_ext['threshold'],
-                    'type_src': type
-                }
-
-                if p_ext['loc'] is 'proximal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal2_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.basal3_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaloblique_ampa))
-
-                    # NEW: note that default/original is 0 nmda weight for these proximal dends
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal2_nmda))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.basal3_nmda))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaloblique_nmda))
-
-                elif p_ext['loc'] is 'distal':
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_ampa, self.apicaltuft_ampa))
-                    self.ncfrom_ev.append(self.parconnect_from_src(gid_ev, nc_dict_nmda, self.apicaltuft_nmda))
-
-
-'''
 
 #------------------------------------------------------------------------------
 # Gaussian-distributed inputs parameters 
@@ -736,3 +676,5 @@ if cfg.poissonInputs:
 
 if cfg.gaussInputs:
     pass
+
+

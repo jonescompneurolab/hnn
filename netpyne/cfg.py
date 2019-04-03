@@ -48,9 +48,9 @@ cfg.recordStep = 0.1
 # ----------------------------------------------------------------------------
 cfg.sim_prefix = cfg.simLabel = 'default'
 
-cfg.saveFolder = 'data'
+cfg.saveFolder = '.'
 cfg.savePickle = False
-cfg.saveJson = True
+cfg.saveJson = False
 cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 
 # ----------------------------------------------------------------------------
@@ -58,8 +58,11 @@ cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 # ----------------------------------------------------------------------------
 cfg.analysis['plotTraces'] = {'include': [('L2Pyr',0), ('L5Pyr',0),('L2Basket',0), ('L5Basket',0) ], 'oneFigPer': 'trace', 'overlay': True, 'saveFig': False, 
 							  'showFig': False, 'figSize': (10, 8), 'timeRange': [0, cfg.duration]}
+
 cfg.analysis['plotRaster'] = {'include': ['all'], 'popRates': True, 'orderInverse': True}
-cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], 'includePost': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], 'feature': 'numConns'}
+
+cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], 'includePost': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'],
+                            'feature': 'numConns'}
 #cfg.analysis['plotDipole'] = True
 
 
