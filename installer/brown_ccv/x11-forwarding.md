@@ -52,6 +52,7 @@
    ```bash
    singularity pull docker://jonescompneurolab/hnn
    singularity shell hnn.simg
+   export PYTHONPATH=/home/hnn_user/nrn/build/lib/python/
    cd /home/hnn_user/hnn_repo/
    python3 hnn.py hnn.cfg
    ```
