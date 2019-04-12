@@ -89,9 +89,9 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     Add the following in your ~/.bash_profile (e.g. type "open ~/.bash_profile" in the terminal without the quotes to edit it):
 
     ```
-    export PYTHONPATH=/Applications/NEURON-7.6/nrn/lib/python:$PYTHONPATH
-    export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
-    export PATH=$HOME/miniconda3/bin/:$PATH
+    export PYTHONPATH=$PYTHONPATH:/Applications/NEURON-7.6/nrn/lib/python
+    export PATH=$PATH:/Applications/NEURON-7.6/nrn/x86_64/bin
+    export PATH=$PATH:$HOME/miniconda3/bin/
     export NRN_PYLIB="~/anaconda3/lib/libpython3.6m.dylib"
     ```
   * tcsh
@@ -99,7 +99,7 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     Add the following in your ~/.cshrc and/or ~/.tcshrc (e.g. type "open ~/.cshrc" or as appropriate in the terminal without the quotes to edit the file):
 
     ```
-    set PYTHONPATH=(/Applications/NEURON-7.6/nrn/lib/python $PYTHONPATH)
+    set PYTHONPATH=($PYTHONPATH /Applications/NEURON-7.6/nrn/lib/python)
     set path = ($path /Applications/NEURON-7.6/nrn/x86_64/bin)
     set path = ($path $HOME/miniconda3/bin/)
     set NRN_PYLIB="~/anaconda3/lib/libpython3.6m.dylib"
