@@ -17,8 +17,7 @@ def_config = """
 dorun = 1
 doquit = 1
 debug = 0
-testlfp = 0
-testlaminarlfp = 0
+laminarlfp = 0
 nsgrun = 0
 [paths]
 paramindir = param
@@ -156,8 +155,7 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)
   d['debug'] = confint("run","debug",0)
-  d['testlfp'] = confint("run","testlfp",0)
-  d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
+  d['laminarlfp'] = confint("run","laminarlfp",0)
   d['nsgrun'] = confint("run","nsgrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)

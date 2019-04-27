@@ -198,7 +198,7 @@ class LFPCanvas (FigureCanvas):
           ax.plot(tvec,y,clr,linewidth=lw)
     else:
       # draw CSD as image; blue/red corresponds to excit/inhib
-      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap),interpolation='None')
+      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap),interpolation='None')
       # overlay the time-series
       yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][0])
       for i in range(ddat['CSD'][0].shape[0]):

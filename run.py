@@ -41,8 +41,7 @@ pcID = int(pc.id())
 f_psim = ''
 ntrial = 1
 simlength = 0.0
-testLFP = dconf['testlfp']; 
-testlaminarLFP = dconf['testlaminarlfp']
+laminarLFP = dconf['laminarlfp']
 lelec = [] # list of LFP electrodes
 
 # reads the specified param file
@@ -400,11 +399,49 @@ initrands(0) # init once
 
 def setupLFPelectrodes ():
   lelec = []
-  if testlaminarLFP:
-    for y in np.linspace(1466.0,-72.0,16): lelec.append(LFPElectrode([370.0, y, 450.0], pc = pc))
-  elif testLFP:
-    lelec.append(LFPElectrode([370.0, 1050.0, 450.0], pc = pc))
-    lelec.append(LFPElectrode([370.0, 208.0, 450.0], pc = pc))
+
+  # define locations in pixels (microns) of HNN model features
+  top_l5 = 1466
+  bottom_l5 = -72
+
+  # define laminar probe properties
+  num_contacts = 20
+  contact_spacing = (top_l5 - bottom_l5)/(num_contacts - 5.0)
+
+  """
+
+  scheme for obtaining results that are analogous to laminar recordings:
+
+  Laminar probe  | L5 Pyr. | Location in HNN  | Label
+  -----------------------------------------------------------------------
+   |
+   |
+  --- contact 1             1466 + 2*spacing   first LFP electrode
+   |
+  --- contact 2             1466 + spacing     top of CSD plot
+   |
+  --- contact 3      |      1466               top of L5 apical dendrite
+   |                 |
+   ~                 ~
+   ~                 ~
+   |                 |
+  ~~~ contact N-4   /_\     ~177.5             (approx) center of L5 soma
+   |                 |
+  --- contact N-3    |
+   |                 |
+  --- contact N-2    |      -72                bottom of L5 basal dedrite
+   |
+  --- contact N-1           -72 - spacing      bottom of CSD plot
+   |
+  --- contact N             -72 - 2*spacing    last LFP electrode
+  """
+
+  first_contact = top_l5+2*contact_spacing
+  last_contact = bottom_l5-2*contact_spacing
+
+  if laminarLFP:
+    for y in np.linspace(first_contact,last_contact,num_contacts):
+      lelec.append(LFPElectrode([370.0, y, 450.0], pc = pc))
   return lelec
 
 lelec = setupLFPelectrodes()

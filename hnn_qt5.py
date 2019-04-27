@@ -64,7 +64,7 @@ parseargs()
 simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
-testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
+LFP = dconf['laminarlfp']
 param_fname = os.path.splitext(os.path.basename(paramf))
 basedir = os.path.join(dconf['datdir'], param_fname[0])
 
@@ -3824,7 +3824,7 @@ class HNNGUI (QMainWindow):
     viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
 
-    if testLFP:
+    if LFP:
       viewLFPAction = QAction('View Simulation LFPs',self)
       viewLFPAction.setStatusTip('View LFP')
       viewLFPAction.triggered.connect(self.showLFPPlot)
