@@ -24,9 +24,6 @@ This method will run HNN without using virtualization, meaning the GUI may feel 
      rm ~/Downloads/XQuartz-2.7.11.dmg
      open /Applications/Utilities/XQuartz.app
      ```
-    
-4. Reboot your system before proceeding. A reboot is really needed after installing Xquartz.
-
 
 ## Opening a terminal window
 1. Open up macOS's terminal.app by searching for terminal in Spotlight (upper right search icon). We will use this terminal for running the commands below.
@@ -92,9 +89,9 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     Add the following in your ~/.bash_profile (e.g. type "open ~/.bash_profile" in the terminal without the quotes to edit it):
 
     ```
-    export PYTHONPATH=/Applications/NEURON-7.6/nrn/lib/python:$PYTHONPATH
-    export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
-    export PATH=$HOME/miniconda3/bin/:$PATH
+    export PYTHONPATH=$PYTHONPATH:/Applications/NEURON-7.6/nrn/lib/python
+    export PATH=$PATH:/Applications/NEURON-7.6/nrn/x86_64/bin
+    export PATH=$PATH:$HOME/miniconda3/bin/
     export NRN_PYLIB="~/anaconda3/lib/libpython3.6m.dylib"
     ```
   * tcsh
@@ -102,7 +99,7 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     Add the following in your ~/.cshrc and/or ~/.tcshrc (e.g. type "open ~/.cshrc" or as appropriate in the terminal without the quotes to edit the file):
 
     ```
-    set PYTHONPATH=(/Applications/NEURON-7.6/nrn/lib/python $PYTHONPATH)
+    set PYTHONPATH=($PYTHONPATH /Applications/NEURON-7.6/nrn/lib/python)
     set path = ($path /Applications/NEURON-7.6/nrn/x86_64/bin)
     set path = ($path $HOME/miniconda3/bin/)
     set NRN_PYLIB="~/anaconda3/lib/libpython3.6m.dylib"
@@ -154,4 +151,4 @@ For Mac OS specific issues: please see the [Mac OS troubleshooting page](trouble
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
 
-For other HNN software issues, please visit the [HNN bullentin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)
+For other HNN software issues, please visit the [HNN bulletin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)
