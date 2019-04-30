@@ -664,11 +664,149 @@ if cfg.evokedInputs:
 
 
 #------------------------------------------------------------------------------
-# Poisson-distributed input sparameters 
+# Poisson-distributed input parameters 
 #------------------------------------------------------------------------------
 
 if cfg.poissonInputs:
-    pass
+
+    # Evoked proximal -> L2 Pyr
+    netParams.popParams['extPoisson_L2Pyr'] = {
+        'cellModel': 'VecStim',
+        'numCells': 1,
+        'xRange': [extLocX, extLocX],
+        'yRange': [extLocY, extLocY],
+        'zRange': [extLocZ, extLocZ],
+        'seed': int(getattr(cfg, 'prng_seedcore_extpois')),
+        'spikePattern': {
+                'type': 'poisson',
+                'start': getattr(cfg, 't0_pois'),
+                'interval': getattr(cfg, 'T_pois'),
+                'frequency': getattr(cfg, 'L2Pyr_Pois_lamtha')}}
+
+    synParamsList = [{'synMech': 'L2Pyr_AMPA',
+                'A_weight': getattr(cfg, 'L2Pyr_Pois_A_weight_ampa'),
+                'A_delay': 0.1,
+                'lamtha': 100.},
+
+                {'synMech': 'L2Pyr_NMDA',
+                'A_weight': getattr(cfg, 'L2Pyr_Pois_A_weight_nmda'),
+                'A_delay': 0.1,
+                'lamtha': 100.}]
+
+    for synParams in synParamsList:
+        netParams.connParams['extPoisson->L2Pyr'] = { 
+            'preConds': {'pop': 'extPoisson_L2Pyr'}, 
+            'postConds': {'pop': 'L2Pyr'},
+            'synMech': synParams['synMech'],
+            'weight': synParams['A_weight'],
+            'delay': delayDistFunc.format(**synParams),
+            'synsPerConn': 3,
+            'sec': ['basal_2', 'basal_3','apical_oblique']}
+
+
+
+
+
+'''
+.param
+L2Pyr_Pois_A_weight_ampa: 0.0
+L2Pyr_Pois_A_weight_nmda: 0.0
+L2Pyr_Pois_lamtha: 0.0
+L2Basket_Pois_A_weight_ampa: 0.0
+L2Basket_Pois_A_weight_nmda: 0.0
+L2Basket_Pois_lamtha: 0.0
+L5Pyr_Pois_A_weight_ampa: 0.0
+L5Pyr_Pois_A_weight_nmda: 0.0
+L5Pyr_Pois_lamtha: 0.0
+L5Basket_Pois_A_weight_ampa: 0.0
+L5Basket_Pois_A_weight_nmda: 0.0
+L5Basket_Pois_lamtha: 0.0
+t0_pois: 0.0
+T_pois: -1
+
+netpyne input.py
+    t0 = params['start'] # self.p_ext['t_interval'][0]
+    T = params['interval'] #self.p_ext['t_interval'][1]
+    lamtha = params['frequency'] # self.p_ext[self.celltype][3] # index 3 is frequency (lamtha)
+
+
+paramrw.py:
+    # Poisson distributed inputs to proximal
+    p_unique['extpois'] = {# NEW: setting up AMPA and NMDA for Poisson inputs; why delays differ?
+        'stim': 'poisson',
+        'L2_basket': (p['L2Basket_Pois_A_weight_ampa'],p['L2Basket_Pois_A_weight_nmda'],1.,p['L2Basket_Pois_lamtha']),
+        'L2_pyramidal': (p['L2Pyr_Pois_A_weight_ampa'],p['L2Pyr_Pois_A_weight_nmda'], 0.1,p['L2Pyr_Pois_lamtha']),
+        'L5_basket': (p['L5Basket_Pois_A_weight_ampa'],p['L5Basket_Pois_A_weight_nmda'],1.,p['L5Basket_Pois_lamtha']),
+        'L5_pyramidal': (p['L5Pyr_Pois_A_weight_ampa'],p['L5Pyr_Pois_A_weight_nmda'],1.,p['L5Pyr_Pois_lamtha']),
+        'lamtha_space': 100.,
+        'prng_seedcore': int(p['prng_seedcore_extpois']),
+        't_interval': (p['t0_pois'], p['T_pois']),
+        'loc': 'proximal',
+        'threshold': p['threshold']
+    }
+
+    return p_ext, p_unique
+
+
+feed.py:
+      # new external pois designation
+  def __create_extpois (self):
+    #print("__create_extpois")
+    if self.p_ext[self.celltype][0] <= 0.0 and \
+       self.p_ext[self.celltype][1] <= 0.0: return False # 0 ampa and 0 nmda weight
+    # check the t interval
+    t0 = self.p_ext['t_interval'][0]
+    T = self.p_ext['t_interval'][1]
+    lamtha = self.p_ext[self.celltype][3] # index 3 is frequency (lamtha)
+    # values MUST be sorted for VecStim()!
+    # start the initial value
+    if lamtha > 0.:
+      t_gen = t0 + self.__t_wait(lamtha)
+      val_pois = np.array([])
+      if t_gen < T: np.append(val_pois, t_gen)
+      # vals are guaranteed to be monotonically increasing, no need to sort
+      while t_gen < T:
+        # so as to not clobber confusingly base off of t_gen ...
+        t_gen += self.__t_wait(lamtha)
+        if t_gen < T: val_pois = np.append(val_pois, t_gen)
+    else:
+      val_pois = np.array([])
+    # checks the distribution stats
+    # if len(val_pois):
+    #     xdiff = np.diff(val_pois/1000)
+    #     print(lamtha, np.mean(xdiff), np.var(xdiff), 1/lamtha**2)
+    # Convert array into nrn vector
+    # if len(val_pois)>0: print('val_pois:',val_pois)
+    self.eventvec.from_python(val_pois)
+    return self.eventvec.size() > 0
+
+L2_pyramidal.py
+        elif type == 'extpois':
+            if self.celltype in p_ext.keys():
+                gid_extpois = gid + gid_dict['extpois'][0]
+
+                nc_dict = {
+                    'pos_src': pos_dict['extpois'][gid],
+                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_delay': p_ext[self.celltype][2], # index 2 for delay
+                    'lamtha': p_ext['lamtha_space'],
+                    'threshold': p_ext['threshold'],
+                    'type_src': type
+                }
+
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal2_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal3_ampa))
+                self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.apicaloblique_ampa))
+
+                if p_ext[self.celltype][1] > 0.0:
+                  nc_dict['A_weight'] = p_ext[self.celltype][1] # index 1 for nmda weight
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal2_nmda))
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.basal3_nmda))
+                  self.ncfrom_extpois.append(self.parconnect_from_src(gid_extpois,nc_dict,self.apicaloblique_nmda))
+
+
+'''
+
 
 #------------------------------------------------------------------------------
 # Gaussian-distributed inputs parameters 
