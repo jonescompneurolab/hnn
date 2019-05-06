@@ -85,12 +85,12 @@ if cfg.localConn:
 
     # L2 Pyr -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                'A_weight': cfg.gbar_L2Pyr_L2Pyr_ampa,
+                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L2Pyr_ampa,
                 'A_delay': 1.,
                 'lamtha': 3.},
 
                 {'synMech': 'L2Pyr_NMDA',
-                'A_weight': cfg.gbar_L2Pyr_L2Pyr_nmda,
+                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L2Pyr_nmda,
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
@@ -107,12 +107,12 @@ if cfg.localConn:
 
     # L2 Basket -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_GABAA',
-                'A_weight': cfg.gbar_L2Basket_L2Pyr_gabaa,
+                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L2Pyr_gabaa,
                 'A_delay': 1.,
                 'lamtha': 50.},
 
                 {'synMech': 'L2Pyr_GABAB',
-                'A_weight': cfg.gbar_L2Basket_L2Pyr_gabab,
+                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L2Pyr_gabab,
                 'A_delay': 1.,
                 'lamtha': 50.}]
 
@@ -129,7 +129,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L2 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.gbar_L2Pyr_L2Basket,
+                'A_weight': cfg.EIgain * cfg.gbar_L2Pyr_L2Basket,
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -145,7 +145,7 @@ if cfg.localConn:
 
     # L2 Basket -> L2 Basket 
     synParams = {'synMech': 'GABAA',
-                'A_weight': cfg.gbar_L2Basket_L2Basket,
+                'A_weight': cfg.IIgain * cfg.gbar_L2Basket_L2Basket,
                 'A_delay': 1.,
                 'lamtha': 20.}
 
@@ -161,12 +161,12 @@ if cfg.localConn:
 
     # L5 Pyr -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.gbar_L5Pyr_L5Pyr_ampa,
+                'A_weight': cfg.EEgain * cfg.gbar_L5Pyr_L5Pyr_ampa,
                 'A_delay': 1.,
                 'lamtha': 3.},
 
                 {'synMech': 'L5Pyr_NMDA',
-                'A_weight': cfg.gbar_L5Pyr_L5Pyr_nmda,
+                'A_weight': cfg.EEgain * cfg.gbar_L5Pyr_L5Pyr_nmda,
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
@@ -183,12 +183,12 @@ if cfg.localConn:
 
     # L5 Basket -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_GABAA',
-                'A_weight': cfg.gbar_L5Basket_L5Pyr_gabaa,
+                'A_weight': cfg.IEgain * cfg.gbar_L5Basket_L5Pyr_gabaa,
                 'A_delay': 1.,
                 'lamtha': 70.},
 
                 {'synMech': 'L5Pyr_GABAB',
-                'A_weight': cfg.gbar_L5Basket_L5Pyr_gabab,
+                'A_weight': cfg.IEgain * cfg.gbar_L5Basket_L5Pyr_gabab,
                 'A_delay': 1.,
                 'lamtha': 70.}]
 
@@ -205,7 +205,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L5 Pyr
     synParams = {'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.gbar_L2Pyr_L5Pyr,
+                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L5Pyr,
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -221,7 +221,7 @@ if cfg.localConn:
 
     # L2 Basket -> L5 Pyr
     synParams = {'synMech': 'L5Pyr_GABAA',
-                'A_weight': cfg.gbar_L2Basket_L5Pyr,
+                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L5Pyr,
                 'A_delay': 1.,
                 'lamtha': 50.}
 
@@ -237,7 +237,7 @@ if cfg.localConn:
 
     # L5 Pyr -> L5 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.gbar_L5Pyr_L5Basket,
+                'A_weight': cfg.EIgain * cfg.gbar_L5Pyr_L5Basket,
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -253,7 +253,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L5 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.gbar_L2Pyr_L5Basket,
+                'A_weight': cfg.EIgain * cfg.gbar_L2Pyr_L5Basket,
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -269,7 +269,7 @@ if cfg.localConn:
 
     # L5 Basket -> L5 Basket 
     synParams = {'synMech': 'GABAA',
-                'A_weight': cfg.gbar_L5Basket_L5Basket,
+                'A_weight': cfg.IIgain * cfg.gbar_L5Basket_L5Basket,
                 'A_delay': 1.,
                 'lamtha': 20.}
 
