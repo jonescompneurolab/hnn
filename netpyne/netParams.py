@@ -296,6 +296,32 @@ extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/d
 
 if cfg.rhythmicInputs:
 
+    # Ad hoc rules copied from original code (need to improve!! -- maybe add to .param files?)
+
+    ## "if stdev is zero, increase synaptic weights 5 fold to make"
+    ## "single input equivalent to 5 simultaneous input to prevent spiking <<---- SN: WHAT IS THIS RULE!?!?!?"
+    if cfg.t0_input_stdev_prox == 0.0 and cfg.distribution_prox != 'uniform':
+        for key in [k for k in cfg.__dict__ if k.startswith('input_prox_A_weight')]:
+            cfg.__dict__[key] *= 5.0
+
+    if cfg.t0_input_stdev_dist == 0.0 and cfg.distribution_dist != 'uniform':
+        for key in [k for k in cfg.__dict__ if k.startswith('input_dist_A_weight')]:
+            cfg.__dict__[key] *= 5.0
+
+    ## "if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1. <<---- SN: WHAT IS THIS RULE!?!?!?"
+    if cfg.input_prox_A_delay_L5 == -1:
+        if cfg.input_prox_A_delay_L2 != 0.1:
+            cfg.input_prox_A_delay_L5 = cfg.input_prox_A_delay_L2
+        else:
+            cfg.input_prox_A_delay_L5 = 1.0
+
+    if cfg.input_dist_A_delay_L5 == -1:
+        if cfg.input_dist_A_delay_L2 != 0.1:
+            cfg.input_dist_A_delay_L5 = cfg.input_dist_A_delay_L2
+        else:
+            cfg.input_dist_A_delay_L5 = 1.0
+            
+
     # External Rhythmic proximal inputs (population of 1 VecStim)
     netParams.popParams['extRhythmicProximal'] = {
         'cellModel': 'VecStim',
