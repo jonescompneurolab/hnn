@@ -753,12 +753,12 @@ if cfg.poissonInputs:
                 'interval': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L2Basket_Pois_lamtha')}}
 
-    synParamsList = [{'synMech': 'L2Basket_AMPA',
+    synParamsList = [{'synMech': 'AMPA',
                 'A_weight': getattr(cfg, 'L2Basket_Pois_A_weight_ampa'),
                 'A_delay': 1.0,
                 'lamtha': 100.},
 
-                {'synMech': 'L2Basket_NMDA',
+                {'synMech': 'NMDA',
                 'A_weight': getattr(cfg, 'L2Basket_Pois_A_weight_nmda'),
                 'A_delay': 1.0,
                 'lamtha': 100.}]
@@ -788,12 +788,12 @@ if cfg.poissonInputs:
                 'interval': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L5Basket_Pois_lamtha')}}
 
-    synParamsList = [{'synMech': 'L5Basket_AMPA',
+    synParamsList = [{'synMech': 'AMPA',
                 'A_weight': getattr(cfg, 'L5Basket_Pois_A_weight_ampa'),
                 'A_delay': 1.0,
                 'lamtha': 100.},
 
-                {'synMech': 'L5Basket_NMDA',
+                {'synMech': 'NMDA',
                 'A_weight': getattr(cfg, 'L5Basket_Pois_A_weight_nmda'),
                 'A_delay': 1.0,
                 'lamtha': 100.}]
