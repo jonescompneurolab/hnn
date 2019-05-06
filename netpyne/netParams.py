@@ -690,6 +690,52 @@ if cfg.evokedInputs:
 
 
 #------------------------------------------------------------------------------
+# Tonic input parameters 
+#------------------------------------------------------------------------------
+
+if cfg.tonicInputs:
+
+    # Tonic inputs (IClamp) -> L2Pyr
+    if cfg.Itonic_T_L2Pyr_soma == -1:
+        t_dur = cfg.duration - cfg.Itonic_t0_L2Pyr_soma
+    else:
+        t_dur = cfg.Itonic_T_L2Pyr_soma - cfg.Itonic_t0_L2Pyr_soma
+
+    netParams.stimSourceParams['ITonic_L2Pyr'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L2Pyr_soma, 'dur': t_dur, 'amp': cfg.Itonic_A_L2Pyr_soma}
+    netParams.stimTargetParams['ITonic->L2Pyr'] = {'source': 'ITonic_L2Pyr', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L2Pyr'}}
+
+
+    # Tonic inputs (IClamp) -> L5Pyr
+    if cfg.Itonic_T_L5Pyr_soma == -1:
+        t_dur = cfg.duration - cfg.Itonic_t0_L5Pyr_soma
+    else:
+        t_dur = cfg.Itonic_T_L5Pyr_soma - cfg.Itonic_t0_L5Pyr_soma
+
+    netParams.stimSourceParams['ITonic_L5Pyr'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L5Pyr_soma, 'dur': t_dur, 'amp': cfg.Itonic_A_L5Pyr_soma}
+    netParams.stimTargetParams['ITonic->L5Pyr'] = {'source': 'ITonic_L5Pyr', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L5Pyr'}}
+
+
+    # Tonic inputs (IClamp) -> L2Basket
+    if cfg.Itonic_T_L2Basket == -1:
+        t_dur = cfg.duration - cfg.Itonic_t0_L2Basket
+    else:
+        t_dur = cfg.Itonic_T_L2Basket - cfg.Itonic_t0_L2Basket
+
+    netParams.stimSourceParams['ITonic_L2Basket'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L2Basket, 'dur': t_dur, 'amp': cfg.Itonic_A_L2Basket}
+    netParams.stimTargetParams['ITonic->L2Basket'] = {'source': 'ITonic_L2Basket', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L2Basket'}}
+
+
+    # Tonic inputs (IClamp) -> L5Basket
+    if cfg.Itonic_T_L5Basket == -1:
+        t_dur = cfg.duration - cfg.Itonic_t0_L5Basket
+    else:
+        t_dur = cfg.Itonic_T_L5Basket - cfg.Itonic_t0_L5Basket
+
+    netParams.stimSourceParams['ITonic_L5Basket'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L5Basket, 'dur': t_dur, 'amp': cfg.Itonic_A_L5Basket}
+    netParams.stimTargetParams['ITonic->L5Basket'] = {'source': 'ITonic_L5Basket', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L5Basket'}}
+
+
+#------------------------------------------------------------------------------
 # Poisson-distributed input parameters 
 #------------------------------------------------------------------------------
 

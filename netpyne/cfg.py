@@ -74,8 +74,17 @@ cfg.sizeY = 1000
 cfg.localConn = True
 cfg.rhythmicInputs = True
 cfg.evokedInputs = True
+cfg.tonicInputs = True
 cfg.poissonInputs = True
 cfg.gaussInputs = True
+
+
+# ----------------------------------------------------------------------------
+#
+# HNN parameters in original GUI but not in config files (adapted to NetPyNE)
+#
+# ----------------------------------------------------------------------------
+
 
 
 # ----------------------------------------------------------------------------
