@@ -111,6 +111,7 @@ def save_vsoma ():
 #
 def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   global doutf
+  print('SAVING!!!')
   # write time and calculated dipole to data file only if on the first proc
   # only execute this statement on one proc
   if rank == 0:
@@ -141,6 +142,7 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
   # write output spikes
   file_spikes_tmp = fio.file_spike_tmp(dproj)
   spikes_write(net, file_spikes_tmp)
+
   # move the spike file to the spike dir
   if rank == 0: shutil.move(file_spikes_tmp, doutf['file_spikes'])
   if p['save_vsoma']: save_vsoma()
@@ -442,5 +444,6 @@ if __name__ == "__main__":
     if ntrial > 1: runtrials(ntrial,p['inc_evinput'])
     else: runsim()
     pc.runworker()
+    spikes_write(net, 'spike.txt')
     pc.done()
   #if dconf['doquit']: h.quit()

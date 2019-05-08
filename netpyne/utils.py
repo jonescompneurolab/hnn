@@ -31,4 +31,5 @@ def setCfgFromFile (fn, cfg):
     for k, v in d.items():
         setattr(cfg, k, v)
 
+    cfg.duration = cfg.tstop
     return cfg

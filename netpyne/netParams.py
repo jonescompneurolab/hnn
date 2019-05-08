@@ -47,10 +47,10 @@ netParams.cellParams = cellParams
 layersE = {'L2': [0.2*cfg.sizeY, 0.2*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
 layersI = {'L2': [0.15*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
 
-netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
 netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
 netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'gridSpacing': cfg.gridSpacing} 
+netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacing} 
 
 
 #------------------------------------------------------------------------------
@@ -888,7 +888,7 @@ if cfg.poissonInputs:
 if cfg.gaussInputs:
 
     # Gaussian inputs -> L2 Pyr
-    netParams.popParams['Gauss_L2Pyr'] = {
+    netParams.popParams['extGauss_L2Pyr'] = {
         'cellModel': 'VecStim',
         'numCells': 1,
         'xRange': [extLocX, extLocX],
@@ -916,7 +916,7 @@ if cfg.gaussInputs:
 
 
     # Gaussian inputs -> L5 Pyr
-    netParams.popParams['Gauss_L5Pyr'] = {
+    netParams.popParams['extGauss_L5Pyr'] = {
         'cellModel': 'VecStim',
         'numCells': 1,
         'xRange': [extLocX, extLocX],

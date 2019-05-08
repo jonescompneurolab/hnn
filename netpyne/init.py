@@ -15,7 +15,7 @@ Contributors: salvadordura@gmail.com
 from netpyne import sim
 from utils import setCfgFromFile
 
-cfgFile = '../param/netpyne_test.param' #../param/ERPYes100Trials.param' # ../param/OnlyRhythmicProx.param'
+cfgFile = '../param/ERPYes1Trial.param' # ../param/netpyne_test.param' ../param/ERPYes100Trials.param' # ../param/OnlyRhythmicProx.param'
 
 from cfg import cfg
 cfg = setCfgFromFile(cfgFile, cfg)

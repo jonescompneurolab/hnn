@@ -30,11 +30,12 @@ cfg.checkErrors = False # True # leave as False to avoid extra printouts
 # ----------------------------------------------------------------------------
 cfg.duration = 250 
 cfg.seeds = {'conn': 4321, 'stim': 1234, 'loc': 4321} 
-cfg.hParams['v_init'] = -80  
+cfg.hParams['v_init'] = -65  
 cfg.verbose = 0
 cfg.cvode_active = False
 cfg.printRunTime = 0.1
 cfg.printPopAvgRates = True
+cfg.distributeSynsUniformly = True  # one syn per section in list of sections
 
 # ----------------------------------------------------------------------------
 # Recording 
@@ -71,13 +72,21 @@ cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Bask
 # ----------------------------------------------------------------------------
 cfg.gridSpacing = 50 # 50
 cfg.sizeY = 1000 
+cfg.localConn = 0
+cfg.rhythmicInputs = 0
+cfg.evokedInputs = 0
+cfg.tonicInputs = 0
+cfg.poissonInputs = 0
+cfg.gaussInputs = 0
+
+'''
 cfg.localConn = True
 cfg.rhythmicInputs = True
 cfg.evokedInputs = True
 cfg.tonicInputs = True
 cfg.poissonInputs = True
 cfg.gaussInputs = True
-
+'''
 
 # ----------------------------------------------------------------------------
 #

@@ -9,6 +9,30 @@ import numpy as np
 from netpyne import specs
 from cfg import cfg
 
+def state_init (self):
+  for cell in self.cells:
+    seclist = h.SectionList()
+    seclist.wholetree(sec=cell.soma)
+    for sect in seclist:
+      for seg in sect:
+        if cell.celltype == 'L2_pyramidal': X
+          seg.v = -71.46
+        elif cell.celltype == 'L5_pyramidal':
+          if sect.name() == 'L5Pyr_apical_1':
+            seg.v = -71.32
+          elif sect.name() == 'L5Pyr_apical_2':
+            seg.v = -69.08
+          elif sect.name() == 'L5Pyr_apical_tuft':
+            seg.v = -67.30
+          else:
+
+
+        elif cell.celltype == 'L2_basket':
+          seg.v = -64.9737
+        elif cell.celltype == 'L5_basket':
+          seg.v = -64.9737
+
+
 # ----------------------------------------------------------------------------
 # Cell parameters
 # ----------------------------------------------------------------------------
@@ -136,6 +160,10 @@ for sec in [sec for secName, sec in cellParams['L2Pyr_rule']['secs'].items() if 
                 'gnabar': cfg.L2Pyr_dend_gnabar_hh2},
         'km': {'gbar': cfg.L2Pyr_dend_gbar_km}}
 
+## set vinit
+for sec in cellParams['L2Pyr_rule']['secs'].values():
+    sec['vinit'] = -71.46
+
 
 # ------------------------------------------------------------------------------------
 # L2 Basket cell rule
@@ -160,6 +188,10 @@ cellParams['L2Basket_rule'] = {
                 'topol': {}
         }}}
 
+## set vinit
+for secName,sec in cellParams['L2Basket_rule']['secs'].items():
+    sec['vinit'] = -64.9737
+
 
 # ------------------------------------------------------------------------------------
 # L5 Pyramidal cell rule
@@ -177,7 +209,7 @@ cellParams['L5Pyr_rule'] = {
                         'diam': cfg.L5Pyr_soma_diam, 
                         'nseg': 1,
                     'pt3d': [[0.0, 0.0, 0.0, cfg.L5Pyr_soma_diam],
-                        [0.0, 0.0+cfg.L5Pyr_soma_diam, 0.0, cfg.L5Pyr_soma_diam]]},
+                        [0.0, 0.0+cfg.L5Pyr_soma_L, 0.0, cfg.L5Pyr_soma_diam]]},
                 'ions': {
                     'ca': {'e': 132.4579341637009, 'i': 5e-05, 'o': 2.0},
                     'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
@@ -306,6 +338,16 @@ for sec in [sec for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if 
         'kca': {'gbar': cfg.L5Pyr_dend_gbar_kca},
         'km': {'gbar': cfg.L5Pyr_dend_gbar_km}}
 
+## set vinit
+for secName,sec in cellParams['L5Pyr_rule']['secs'].items():
+    if secName == 'apical_1':
+        sec['vinit'] = -71.46
+    elif secName == 'apical_2':
+        sec['vinit'] = -69.08
+    elif secName == 'apical_tuft'
+        sec['vinit'] == -67.30
+    else:
+        sec['vinit'] = -72.
 
 # ------------------------------------------------------------------------------------
 # L5 Basket cell rule
@@ -329,3 +371,7 @@ cellParams['L5Basket_rule'] = {
                             'gnabar': 0.12}},
                 'topol': {}
         }}}
+
+## set vinit
+for secName,sec in cellParams['L5Basket_rule']['secs'].items():
+    sec['vinit'] = -64.9737
