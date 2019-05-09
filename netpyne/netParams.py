@@ -44,8 +44,8 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-layersE = {'L2': [0.2*cfg.sizeY, 0.2*cfg.sizeY], 'L5': [2*0.7*cfg.sizeY, 2*0.7*cfg.sizeY]}
-layersI = {'L2': [0.15*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [2*0.65*cfg.sizeY, 2*0.65*cfg.sizeY]}
+layersE = {'L2': [0.1*cfg.sizeY, 0.1*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
+layersI = {'L2': [0.05*cfg.sizeY, 0.05*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
 
 netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
 netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
@@ -534,7 +534,7 @@ if cfg.evokedInputs:
                     'lamtha': 3.}]
 
         for i,synParams in enumerate(synParamsList):
-            netParams.connParams['evokedProx_%d->L2Pyr_%d'%(iprox+1, i] = { 
+            netParams.connParams['evokedProx_%d->L2Pyr_%d'%(iprox+1, i)] = { 
                 'preConds': {'pop': 'evokedProximal_%d'%(iprox+1)}, 
                 'postConds': {'pop': 'L2Pyr'},
                 'synMech': synParams['synMech'],
