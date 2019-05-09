@@ -255,7 +255,9 @@ class Cell ():
       # set props here
       nc.threshold = nc_dict['threshold']
       nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
-      nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
+      nc.delay = nc_dict['A_delay'] / (np.exp(-(d ** 2) / (nc_dict['lamtha']** 2)))
+      
+      print(gid_presyn, nc_dict, nc.weight[0], nc.delay) 
       # print("parconnect_from_src in cell.py, weight = ",nc.weight[0])
       #fp = open('delays.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_delay'])+' ' +str(nc.delay)+'\n'); fp.close()
       #fp = open('weights.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_weight'])+' ' +str(nc.weight[0])+'\n'); fp.close()

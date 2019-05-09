@@ -9,30 +9,6 @@ import numpy as np
 from netpyne import specs
 from cfg import cfg
 
-def state_init (self):
-  for cell in self.cells:
-    seclist = h.SectionList()
-    seclist.wholetree(sec=cell.soma)
-    for sect in seclist:
-      for seg in sect:
-        if cell.celltype == 'L2_pyramidal': X
-          seg.v = -71.46
-        elif cell.celltype == 'L5_pyramidal':
-          if sect.name() == 'L5Pyr_apical_1':
-            seg.v = -71.32
-          elif sect.name() == 'L5Pyr_apical_2':
-            seg.v = -69.08
-          elif sect.name() == 'L5Pyr_apical_tuft':
-            seg.v = -67.30
-          else:
-
-
-        elif cell.celltype == 'L2_basket':
-          seg.v = -64.9737
-        elif cell.celltype == 'L5_basket':
-          seg.v = -64.9737
-
-
 # ----------------------------------------------------------------------------
 # Cell parameters
 # ----------------------------------------------------------------------------
@@ -344,8 +320,8 @@ for secName,sec in cellParams['L5Pyr_rule']['secs'].items():
         sec['vinit'] = -71.46
     elif secName == 'apical_2':
         sec['vinit'] = -69.08
-    elif secName == 'apical_tuft'
-        sec['vinit'] == -67.30
+    elif secName == 'apical_tuft':
+        sec['vinit'] = -67.30
     else:
         sec['vinit'] = -72.
 

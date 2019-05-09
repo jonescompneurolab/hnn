@@ -44,8 +44,8 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-layersE = {'L2': [0.2*cfg.sizeY, 0.2*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
-layersI = {'L2': [0.15*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
+layersE = {'L2': [0.2*cfg.sizeY, 0.2*cfg.sizeY], 'L5': [2*0.7*cfg.sizeY, 2*0.7*cfg.sizeY]}
+layersI = {'L2': [0.15*cfg.sizeY, 0.15*cfg.sizeY], 'L5': [2*0.65*cfg.sizeY, 2*0.65*cfg.sizeY]}
 
 netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
 netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
@@ -94,8 +94,8 @@ if cfg.localConn:
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['L2Pyr->L2Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['L2Pyr->L2Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'L2Pyr'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
@@ -116,8 +116,8 @@ if cfg.localConn:
                 'A_delay': 1.,
                 'lamtha': 50.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['L2Basket->L2Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['L2Basket->L2Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'L2Basket'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
@@ -133,7 +133,7 @@ if cfg.localConn:
                 'A_delay': 1.,
                 'lamtha': 3.}
 
-    netParams.connParams['L2Pyr->L2Basket'] = { 
+    netParams.connParams['L2Pyr->L2Basket_%s'%(synParams['synMech'])] = { 
         'preConds': {'pop': 'L2Pyr'}, 
         'postConds': {'pop': 'L2Basket'},
         'synMech': synParams['synMech'],
@@ -170,8 +170,8 @@ if cfg.localConn:
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['L5Pyr->L5Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['L5Pyr->L5Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'L5Pyr'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
@@ -192,8 +192,8 @@ if cfg.localConn:
                 'A_delay': 1.,
                 'lamtha': 70.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['L5Basket->L5Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['L5Basket->L5Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'L5Basket'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
@@ -292,7 +292,7 @@ xrange = np.arange(cfg.N_pyr_x)
 extLocX = xrange[int((len(xrange) - 1) // 2)]
 zrange = np.arange(cfg.N_pyr_y)
 extLocZ = xrange[int((len(zrange) - 1) // 2)]
-extLocY = 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
+extLocY = 650 # 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
 
 if cfg.rhythmicInputs:
 
@@ -373,8 +373,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_prox_A_delay_L2,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicProx->L2Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicProx->L2Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
@@ -395,8 +395,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_dist_A_delay_L2,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicDistal->L2Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicDistal->L2Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicDistal'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
@@ -417,8 +417,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_prox_A_delay_L5,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicProx->L5Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicProx->L5Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
@@ -439,8 +439,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_dist_A_delay_L5,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicDistal->L5Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicDistal->L5Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicDistal'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
@@ -461,8 +461,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_prox_A_delay_L2,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicProx->L2Basket'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicProx->L2Basket_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L2Basket'},
             'synMech': synParams['synMech'],
@@ -483,8 +483,8 @@ if cfg.rhythmicInputs:
                 'A_delay': cfg.input_prox_A_delay_L5,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extRhythmicProx->L5Basket'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extRhythmicProx->L5Basket_%d'%(i)] = { 
             'preConds': {'pop': 'extRhythmicProximal'}, 
             'postConds': {'pop': 'L5Basket'},
             'synMech': synParams['synMech'],
@@ -533,9 +533,9 @@ if cfg.evokedInputs:
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedProx_%s->L2Pyr'%(str(iprox+1))] = { 
-                'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedProx_%d->L2Pyr_%d'%(iprox+1, i] = { 
+                'preConds': {'pop': 'evokedProximal_%d'%(iprox+1)}, 
                 'postConds': {'pop': 'L2Pyr'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -554,9 +554,9 @@ if cfg.evokedInputs:
                     'A_delay': 1.0,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedProx_%s->L5Pyr'%(str(iprox+1))] = { 
-                'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedProx_%d->L5Pyr_%d'%(iprox+1, i)] = { 
+                'preConds': {'pop': 'evokedProximal_%d'%(iprox+1)}, 
                 'postConds': {'pop': 'L5Pyr'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -575,9 +575,9 @@ if cfg.evokedInputs:
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedProx_%s->L2Basket'%(str(iprox+1))] = { 
-                'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedProx_%d->L2Basket_%d'%(iprox+1, i)] = { 
+                'preConds': {'pop': 'evokedProximal_%d'%(iprox+1)}, 
                 'postConds': {'pop': 'L2Basket'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -596,9 +596,9 @@ if cfg.evokedInputs:
                     'A_delay': 1.0,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedProx_%s->L5Basket'%(str(iprox+1))] = { 
-                'preConds': {'pop': 'evokedProximal_%s'%(str(iprox+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedProx_%d->L5Basket_%d'%(iprox+1, i)] = { 
+                'preConds': {'pop': 'evokedProximal_%d'%(iprox+1)}, 
                 'postConds': {'pop': 'L5Basket'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -636,8 +636,8 @@ if cfg.evokedInputs:
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedDistal_%s->L2Pyr'%(str(idist+1))] = { 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedDistal_%d->L2Pyr_%d'%(idist+1, i)] = { 
                 'preConds': {'pop': 'evokedDistal'}, 
                 'postConds': {'pop': 'L2Pyr'},
                 'synMech': synParams['synMech'],
@@ -657,9 +657,9 @@ if cfg.evokedInputs:
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedDistal_%s->L5Pyr'%(str(idist+1))] = { 
-                'preConds': {'pop': 'evokedDistal_%s'%(str(idist+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedDistal_%d->L5Pyr_%d'%(idist+1, i)] = { 
+                'preConds': {'pop': 'evokedDistal_%d'%(idist+1)}, 
                 'postConds': {'pop': 'L5Pyr'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -678,9 +678,9 @@ if cfg.evokedInputs:
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
-        for synParams in synParamsList:
-            netParams.connParams['evokedDistal_%s->L2Basket'%(str(idist+1))] = { 
-                'preConds': {'pop': 'evokedDistal_%s'%(str(idist+1))}, 
+        for i,synParams in enumerate(synParamsList):
+            netParams.connParams['evokedDistal_%d->L2Basket_%d'%(idist+1, i)] = { 
+                'preConds': {'pop': 'evokedDistal_%d'%(idist+1)}, 
                 'postConds': {'pop': 'L2Basket'},
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
@@ -765,8 +765,8 @@ if cfg.poissonInputs:
                 'A_delay': 0.1,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extPoisson->L2Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extPoisson->L2Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extPoisson_L2Pyr'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
@@ -800,8 +800,8 @@ if cfg.poissonInputs:
                 'A_delay': 0.1,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extPoisson->L5Pyr'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extPoisson->L5Pyr_%d'%(i)] = { 
             'preConds': {'pop': 'extPoisson_L5Pyr'}, 
             'postConds': {'pop': 'L5Pyr'},
             'synMech': synParams['synMech'],
@@ -835,8 +835,8 @@ if cfg.poissonInputs:
                 'A_delay': 1.0,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extPoisson->L2Basket'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extPoisson->L2Basket_%d'%(i)] = { 
             'preConds': {'pop': 'extPoisson_L2Basket'}, 
             'postConds': {'pop': 'L2Basket'},
             'synMech': synParams['synMech'],
@@ -870,8 +870,8 @@ if cfg.poissonInputs:
                 'A_delay': 1.0,
                 'lamtha': 100.}]
 
-    for synParams in synParamsList:
-        netParams.connParams['extPoisson->L5Basket'] = { 
+    for i,synParams in enumerate(synParamsList):
+        netParams.connParams['extPoisson->L5Basket_%d'%(i)] = { 
             'preConds': {'pop': 'extPoisson_L5Basket'}, 
             'postConds': {'pop': 'L5Basket'},
             'synMech': synParams['synMech'],

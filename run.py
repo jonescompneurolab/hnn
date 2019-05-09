@@ -445,5 +445,6 @@ if __name__ == "__main__":
     else: runsim()
     pc.runworker()
     spikes_write(net, 'spike.txt')
+    save_vsoma()
     pc.done()
   #if dconf['doquit']: h.quit()

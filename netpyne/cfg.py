@@ -73,20 +73,20 @@ cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Bask
 cfg.gridSpacing = 50 # 50
 cfg.sizeY = 1000 
 cfg.localConn = 0
-cfg.rhythmicInputs = 0
-cfg.evokedInputs = 0
-cfg.tonicInputs = 0
-cfg.poissonInputs = 0
-cfg.gaussInputs = 0
+# cfg.rhythmicInputs = 0
+# cfg.evokedInputs = 0
+# cfg.tonicInputs = 0
+# cfg.poissonInputs = 0
+# cfg.gaussInputs = 0
 
-'''
+
 cfg.localConn = True
 cfg.rhythmicInputs = True
 cfg.evokedInputs = True
 cfg.tonicInputs = True
 cfg.poissonInputs = True
 cfg.gaussInputs = True
-'''
+
 
 # ----------------------------------------------------------------------------
 #
