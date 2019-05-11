@@ -57,7 +57,7 @@ cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 # ----------------------------------------------------------------------------
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
-cfg.analysis['plotTraces'] = {'include': [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0) ], 'oneFigPer': 'trace', 'overlay': True, 'saveFig': False, 
+cfg.analysis['plotTraces'] = {'include': [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0) ], 'oneFigPer': 'trace', 'overlay': False, 'saveFig': False, 
 							  'showFig': False, 'figSize': (10, 8), 'timeRange': [0, cfg.duration]}
 
 cfg.analysis['plotRaster'] = {'include': ['all'], 'popRates': True, 'orderInverse': True}
@@ -70,17 +70,10 @@ cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Bask
 # ----------------------------------------------------------------------------
 # Network parameters
 # ----------------------------------------------------------------------------
-cfg.gridSpacing = 50 # 50
+cfg.gridSpacing = 1 # 50
 cfg.sizeY = 2000 
-cfg.localConn = 0
-# cfg.rhythmicInputs = 0
-# cfg.evokedInputs = 0
-# cfg.tonicInputs = 0
-# cfg.poissonInputs = 0
-# cfg.gaussInputs = 0
 
-
-cfg.localConn = True
+cfg.localConn = False
 cfg.rhythmicInputs = True
 cfg.evokedInputs = True
 cfg.tonicInputs = True

@@ -44,8 +44,11 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-layersE = {'L2': [0.1*cfg.sizeY, 0.1*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
-layersI = {'L2': [0.05*cfg.sizeY, 0.05*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
+#layersE = {'L2': [0.1*cfg.sizeY, 0.1*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
+#layersI = {'L2': [0.05*cfg.sizeY, 0.05*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
+layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.675*cfg.sizeY, 0.675*cfg.sizeY]}
+layersI = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.675*cfg.sizeY, 0.675*cfg.sizeY]}
+
 
 netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
 netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
