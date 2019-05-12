@@ -349,7 +349,7 @@ if cfg.rhythmicInputs:
         # External Rhythmic distal inputs (population of 1 VecStim)
         netParams.popParams['extRhythmicDistal_%s'%(pop)] = {
             'cellModel': 'VecStim',
-            'numCells': 1,
+            'numCells': cellsPerPop,
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -517,10 +517,10 @@ if cfg.evokedInputs:
     # Evoked proximal inputs (population of 1 VecStim)
     for pop in pops:
         for iprox in range(nprox):
-            skey = 'evprox_%d_%s'%(iprox+1, pop)
+            skey = 'evprox_%d'%(iprox+1)
             netParams.popParams['evokedProximal_%d_%s'%(iprox+1, pop)] = {
                 'cellModel': 'VecStim',
-                'numCells': 1,
+                'numCells': cellsPerPop,
                 'xRange': [extLocX, extLocX],
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
@@ -625,10 +625,10 @@ if cfg.evokedInputs:
     # Evoked distal inputs (population of 1 VecStim)
     for pop in pops:
         for idist in range(ndist):
-            skey = 'evdist_%d_%s'%(idist+1, pop)
+            skey = 'evdist_%d'%(idist+1)
             netParams.popParams['evokedDistal_%d_%s'%(idist+1, pop)] = {
             'cellModel': 'VecStim',
-            'numCells': 1,
+            'numCells': cellsPerPop,
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],

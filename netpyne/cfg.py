@@ -74,7 +74,7 @@ cfg.gridSpacing = 1  # 50
 cfg.xzScaling = 50
 cfg.sizeY = 2000 
 
-cfg.localConn = False
+cfg.localConn = True
 cfg.rhythmicInputs = True
 cfg.evokedInputs = True
 cfg.tonicInputs = True
