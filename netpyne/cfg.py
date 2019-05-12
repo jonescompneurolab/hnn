@@ -70,7 +70,8 @@ cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Bask
 # ----------------------------------------------------------------------------
 # Network parameters
 # ----------------------------------------------------------------------------
-cfg.gridSpacing = 1 # 50
+cfg.gridSpacing = 1  # 50  
+cfg.xzScaling = 50
 cfg.sizeY = 2000 
 
 cfg.localConn = False
