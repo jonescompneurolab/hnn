@@ -64,7 +64,7 @@ cfg.analysis['plotRaster'] = {'include': ['all'], 'popRates': True, 'orderInvers
 
 cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], 'includePost': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'],
                             'feature': 'numConns'}
-cfg.analysis['plotDipole'] = {'showFig': True}
+cfg.analysis['iplotDipole'] = {'showFig': True}
 
 
 # ----------------------------------------------------------------------------
