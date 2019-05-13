@@ -41,8 +41,9 @@ cfg.distributeSynsUniformly = True  # one syn per section in list of sections
 # Recording 
 # ----------------------------------------------------------------------------
 cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
+cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]
 cfg.recordStims = False  
-cfg.recordStep = 0.1 
+cfg.recordStep = 0.025
 
 # ----------------------------------------------------------------------------
 # Saving
@@ -57,20 +58,29 @@ cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 # ----------------------------------------------------------------------------
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
-cfg.analysis['plotTraces'] = {'include': [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0) ], 'oneFigPer': 'trace', 'overlay': False, 'saveFig': False, 
-							  'showFig': False, 'figSize': (10, 8), 'timeRange': [0, cfg.duration]}
+pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
+  'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
+evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
+popColors = {'L2Basket': [1.0, 1.0, 1.0], 'L2Pyr': [0.0, 1.0, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0]}
 
-cfg.analysis['plotRaster'] = {'include': ['all'], 'popRates': True, 'orderInverse': True}
+cfg.analysis['iplotTraces'] = {'include': [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
+							  'showFig': True, 'timeRange': [0, cfg.duration]}
 
-cfg.analysis['plotConn'] = {'includePre': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], 'includePost': ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'],
-                            'feature': 'numConns'}
+cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True}  # 'popColors': popColors, 'orderInverse': True,
+
+cfg.analysis['iplotSpikeHist'] = {'include': pops + evprox + evdist, 'showFig': True}
+
 cfg.analysis['iplotDipole'] = {'showFig': True}
+
+cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
 
 # ----------------------------------------------------------------------------
 # Network parameters
 # ----------------------------------------------------------------------------
-cfg.gridSpacing = 1  # 50  
+cfg.gridSpacingPyr = 1  # 50
+cfg.gridSpacingBasket = [1, 1, 3]  
 cfg.xzScaling = 50
 cfg.sizeY = 2000 
 

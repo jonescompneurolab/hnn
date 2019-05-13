@@ -28,10 +28,11 @@ netParams = specs.NetParams()  # object of class NetParams to store the network 
 #------------------------------------------------------------------------------
 # General network parameters
 #------------------------------------------------------------------------------
-netParams.sizeX = (cfg.N_pyr_x * cfg.gridSpacing) - 1  # x-dimension (horizontal length) size in um
+netParams.sizeX = (cfg.N_pyr_x * cfg.gridSpacingPyr) - 1  # x-dimension (horizontal length) size in um
 netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) size in um
-netParams.sizeZ = (cfg.N_pyr_y * cfg.gridSpacing) - 1 # z-dimension (horizontal depth) size in um
-netParams.shape = 'cuboid' 
+netParams.sizeZ = (cfg.N_pyr_y * cfg.gridSpacingPyr) - 1 # z-dimension (horizontal depth) size in um
+netParams.shape = 'cuboid'
+
 
 # ----------------------------------------------------------------------------
 # Cell parameters
@@ -43,18 +44,18 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
-#layersE = {'L2': [0.1*cfg.sizeY, 0.1*cfg.sizeY], 'L5': [0.7*cfg.sizeY, 0.7*cfg.sizeY]}
-#layersI = {'L2': [0.05*cfg.sizeY, 0.05*cfg.sizeY], 'L5': [0.65*cfg.sizeY, 0.65*cfg.sizeY]}
-layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.675*cfg.sizeY, 0.675*cfg.sizeY]}
-layersI = {'L2': [0.0 * cfg.sizeY, 0.0 * cfg.sizeY], 'L5': [0.675 * cfg.sizeY, 0.675 * cfg.sizeY]}
+layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]} # 0.654 = 1308/2000
+layersI = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]}
 
-cellsPerPop = cfg.N_pyr_x * cfg.N_pyr_x
-pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacingBasket} 
+netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacingPyr} 
+netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'gridSpacing': cfg.gridSpacingBasket} 
+netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacingPyr} 
 
-netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'gridSpacing': cfg.gridSpacing} 
-netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacing} 
+pops = list(netParams.popParams.keys())
+cellsPerPop = {}
+cellsPerPop['L2Pyr'] = cellsPerPop['L5Pyr'] = int(cfg.N_pyr_x * cfg.N_pyr_x)
+cellsPerPop['L2Basket'] = cellsPerPop['L5Basket'] = int(np.ceil(cfg.N_pyr_x * cfg.N_pyr_x / cfg.gridSpacingBasket[2]) + 1)
 
 
 #------------------------------------------------------------------------------
@@ -296,7 +297,10 @@ xrange = np.arange(cfg.N_pyr_x)
 extLocX = xrange[int((len(xrange) - 1) // 2)]
 zrange = np.arange(cfg.N_pyr_y)
 extLocZ = xrange[int((len(zrange) - 1) // 2)]
-extLocY = 650 # 1307.4  # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
+extLocY = 650 # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
+
+conn1to1Pyr = np.array([range(0,cellsPerPop['L2Pyr']), range(0,cellsPerPop['L2Pyr'])]).T
+conn1to1Basket = np.array([range(0,cellsPerPop['L2Basket']), range(0,cellsPerPop['L2Basket'])]).T
 
 if cfg.rhythmicInputs:
 
@@ -329,7 +333,7 @@ if cfg.rhythmicInputs:
     for pop in pops:
         netParams.popParams['extRhythmicProximal_%s'%(pop)] = {
             'cellModel': 'VecStim',
-            'numCells': cellsPerPop,
+            'numCells': cellsPerPop[pop],
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -349,7 +353,7 @@ if cfg.rhythmicInputs:
         # External Rhythmic distal inputs (population of 1 VecStim)
         netParams.popParams['extRhythmicDistal_%s'%(pop)] = {
             'cellModel': 'VecStim',
-            'numCells': cellsPerPop,
+            'numCells': cellsPerPop[pop],
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -384,7 +388,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -407,7 +411,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['apical_tuft']}
 
@@ -430,7 +434,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -453,7 +457,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Basket,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['apical_tuft']}
 
@@ -476,7 +480,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Basket,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': 'soma'}
 
@@ -499,7 +503,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,  # 1-to-1 mapping
+            'connList': conn1to1Basket,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': 'soma'}
 
@@ -515,12 +519,12 @@ if cfg.evokedInputs:
     ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
     # Evoked proximal inputs (population of 1 VecStim)
-    for pop in pops:
-        for iprox in range(nprox):
+    for iprox in range(nprox):
+        for pop in pops:
             skey = 'evprox_%d'%(iprox+1)
             netParams.popParams['evokedProximal_%d_%s'%(iprox+1, pop)] = {
                 'cellModel': 'VecStim',
-                'numCells': cellsPerPop,
+                'numCells': cellsPerPop[pop],
                 'xRange': [extLocX, extLocX],
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
@@ -551,7 +555,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Pyr,
                 'synsPerConn': 3,
                 'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -573,7 +577,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Pyr,
                 'synsPerConn': 3,
                 'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -595,7 +599,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Basket,
                 'synsPerConn': 1,
                 'sec': 'soma'}
 
@@ -617,18 +621,18 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Basket,
                 'synsPerConn': 1,
                 'sec': 'soma'}
 
 
     # Evoked distal inputs (population of 1 VecStim)
-    for pop in pops:
-        for idist in range(ndist):
+    for idist in range(ndist):
+        for pop in pops:
             skey = 'evdist_%d'%(idist+1)
             netParams.popParams['evokedDistal_%d_%s'%(idist+1, pop)] = {
             'cellModel': 'VecStim',
-            'numCells': cellsPerPop,
+            'numCells': cellsPerPop[pop],
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -659,7 +663,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Pyr,
                 'synsPerConn': 3,
                 'sec': 'apical_tuft'}
 
@@ -681,7 +685,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Pyr,
                 'synsPerConn': 3,
                 'sec': 'apical_tuft'}
 
@@ -703,7 +707,7 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': np.array([range(0,cellsPerPop), range(0,cellsPerPop)]).T,
+                'connList': conn1to1Basket,
                 'synsPerConn': 1,
                 'sec': 'soma'}
 
