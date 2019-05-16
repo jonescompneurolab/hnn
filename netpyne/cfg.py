@@ -426,13 +426,13 @@ cfg.Itonic_T_L5Basket = -1.
 # ----------------------------------------------------------------------------
 cfg.save_spec_data = 0
 cfg.f_max_spec = 40.
-cfg.dipole_scalefctr = 30e3, # scale factor for dipole - default at 30e
+cfg.dipole_scalefctr = 30e3 # scale factor for dipole - default at 30e
 #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
 # for ongoing rhythms + ERPs ... use ... ?
-cfg.dipole_smooth_win = 15.0, # window for smoothing (box filter) - 15 ms from jones 2009; shorte
+cfg.dipole_smooth_win = 15.0 # window for smoothing (box filter) - 15 ms from jones 2009; shorte
 # in case want to look at higher frequency activity
 cfg.save_figs = 0
-cfg.save_vsoma = 0, # whether to record/save somatic voltag
+cfg.save_vsoma = 0 # whether to record/save somatic voltag
 
 # ----------------------------------------------------------------------------
 # Trials/seeding parameters
