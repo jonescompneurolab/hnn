@@ -43,7 +43,9 @@ cfg.distributeSynsUniformly = True  # one syn per section in list of sections
 cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
 cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]
 cfg.recordStims = False  
-cfg.recordStep = 0.025
+cfg.recordStep = 0.25
+
+#cfg.recordLFP = [[50, 50, 50], [50, 1300, 50]]
 
 # ----------------------------------------------------------------------------
 # Saving
@@ -64,14 +66,18 @@ evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal
 evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
 popColors = {'L2Basket': [1.0, 1.0, 1.0], 'L2Pyr': [0.0, 1.0, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0]}
 
-cfg.analysis['iplotTraces'] = {'include': [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
+cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
 							  'showFig': True, 'timeRange': [0, cfg.duration]}
 
 cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True}  # 'popColors': popColors, 'orderInverse': True,
 
-cfg.analysis['iplotSpikeHist'] = {'include': pops + evprox + evdist, 'showFig': True}
+cfg.analysis['iplotSpikeHist'] = {'include': [pops, evprox, evdist], 'showFig': True}
+
+cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
 
 cfg.analysis['iplotDipole'] = {'showFig': True}
+
+# cfg.analysis['iplotLFP'] = {'showFig': True}
 
 cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
