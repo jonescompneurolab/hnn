@@ -492,7 +492,7 @@ if cfg.rhythmicInputs:
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
             'connList': conn1to1Basket,  # 1-to-1 mapping
-            'synsPerConn': 3,
+            'synsPerConn': 1,
             'sec': 'soma'}
 
 
@@ -515,7 +515,7 @@ if cfg.rhythmicInputs:
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
             'connList': conn1to1Basket,  # 1-to-1 mapping
-            'synsPerConn': 3,
+            'synsPerConn': 1,
             'sec': 'soma'}
 
 
@@ -675,7 +675,7 @@ if cfg.evokedInputs:
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
                 'connList': conn1to1Pyr,
-                'synsPerConn': 3,
+                'synsPerConn': 1,
                 'sec': 'apical_tuft'}
 
         # Evoked Distal -> L5 Pyr
@@ -697,7 +697,7 @@ if cfg.evokedInputs:
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
                 'connList': conn1to1Pyr,
-                'synsPerConn': 3,
+                'synsPerConn': 1,
                 'sec': 'apical_tuft'}
 
         # Evoked Distal -> L2 Basket
