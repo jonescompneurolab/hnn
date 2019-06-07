@@ -529,6 +529,11 @@ if cfg.evokedInputs:
     nprox = len([k for k in cfg.__dict__ if k.startswith('t_evprox')])
     ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
+    # TEMPORARY CODE TO HARD CODE SAME SPIKE TIMES AS IN ORIGINAL MODEL (ERP TUT)
+    import json
+    with open('../input_spikes.json', 'r') as f:
+        input_spikes = json.load(f)
+
     # Evoked proximal inputs (population of 1 VecStim)
     for iprox in range(nprox):
         for pop in pops:
@@ -540,12 +545,13 @@ if cfg.evokedInputs:
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
                 'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-                'spikePattern': {
-                        'type': 'evoked',
-                        'start': getattr(cfg, 't_' + skey),
-                        'startStd': getattr(cfg, 'sigma_t_' + skey),
-                        'numspikes': getattr(cfg, 'numspikes_' + skey),
-                        'sync': getattr(cfg, 'sync_evinput')}}
+                'spkTimes': input_spikes['evprox'+str(iprox+1)]}
+                # 'spikePattern': {
+                #         'type': 'evoked',
+                #         'start': getattr(cfg, 't_' + skey),
+                #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+                #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+                #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked proximal -> L2 Pyr
@@ -648,12 +654,13 @@ if cfg.evokedInputs:
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
             'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-            'spikePattern': {
-                    'type': 'evoked',
-                    'start': getattr(cfg, 't_' + skey),
-                    'startStd': getattr(cfg, 'sigma_t_' + skey),
-                    'numspikes': getattr(cfg, 'numspikes_' + skey),
-                    'sync': getattr(cfg, 'sync_evinput')}}
+            'spkTimes': input_spikes['evdist'+str(idist+1)]}
+            # 'spikePattern': {
+            #         'type': 'evoked',
+            #         'start': getattr(cfg, 't_' + skey),
+            #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+            #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+            #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked Distal -> L2 Pyr
