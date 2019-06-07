@@ -15,10 +15,17 @@ Contributors: salvadordura@gmail.com
 from netpyne import sim
 from utils import setCfgFromFile
 
-cfgFile = '../param/ERPYes100Trials.param' # '../param/AlphaAndBeta.param' # #../param/ERPYes1Trial_test.param' # ../param/netpyne_test.param'  # ../param/OnlyRhythmicProx.param'
 
+
+# Parameters file to read
+cfgFile ='../param/ERPYes100Trials.param' # '../param/AlphaAndBeta.param' # #../param/ERPYes1Trial_test.param'
+
+# Import simConfig and set parameters from file
 from cfg import cfg
 cfg = setCfgFromFile(cfgFile, cfg)
+
+# Import netParams
 from netParams import netParams
 
-sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams) # SimulateAnalyze
+# Create, simulate and analyze model
+sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams) 

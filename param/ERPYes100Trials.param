@@ -1,7 +1,7 @@
 sim_prefix: ERPYes100Trials
 expmt_groups: {ERPYes100Trials}
-tstop: 150
-dt: 0.25
+tstop: 170
+dt: 0.025
 celsius: 37.0
 N_trials: 100
 threshold: 0.0

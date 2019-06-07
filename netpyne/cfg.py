@@ -35,7 +35,8 @@ cfg.verbose = 0
 cfg.cvode_active = False
 cfg.printRunTime = 0.1
 cfg.printPopAvgRates = True
-cfg.distributeSynsUniformly = True  # one syn per section in list of sections
+cfg.distributeSynsUniformly = False  # one syn per section in list of sections
+cfg.allowSelfConns = False # allow connections from a cell to itself
 
 # ----------------------------------------------------------------------------
 # Recording 
@@ -43,9 +44,9 @@ cfg.distributeSynsUniformly = True  # one syn per section in list of sections
 cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
 cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]
 cfg.recordStims = False  
-cfg.recordStep = 0.25
+cfg.recordStep = 0.025
 
-#cfg.recordLFP = [[50, 50, 50], [50, 1300, 50]]
+# cfg.recordLFP = [[50, 50, 50], [50, 1300, 50]]
 
 # ----------------------------------------------------------------------------
 # Saving
@@ -130,7 +131,7 @@ cfg.threshold = 0.0 # firing threshold (sets netParams.defaultThreshold)
 
 
 # ----------------------------------------------------------------------------
-# Connectivity/synaptic parameters
+# Cell parameters
 # ----------------------------------------------------------------------------
 # L2 cells
 # Soma

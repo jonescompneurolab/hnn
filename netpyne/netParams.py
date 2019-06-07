@@ -15,6 +15,7 @@ except:
   from cfg import cfg  # if no simConfig in parent module, import directly from cfg module
 
 import numpy as np
+import itertools as it
 
 
 # ----------------------------------------------------------------------------
@@ -47,9 +48,19 @@ netParams.cellParams = cellParams
 layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]} # 0.654 = 1308/2000
 layersI = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]}
 
-netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'],  'gridSpacing': cfg.gridSpacingBasket} 
+# Create list of locations for Basket cells based on original ad hoc rules 
+# define relevant x spacings for basket cells
+xzero = np.arange(0, cfg.N_pyr_x, 3)
+xone = np.arange(1, cfg.N_pyr_x, 3)
+yeven = np.arange(0, cfg.N_pyr_y, 2)
+yodd = np.arange(1, cfg.N_pyr_y, 2)
+coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
+coords_sorted = sorted(coords, key=lambda pos: pos[1])
+BasketLocs = [{'x': coord[0], 'z': coord[1]} for coord in coords_sorted]
+
+netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'], 'numCells': len(BasketLocs), 'cellsList': BasketLocs} 
 netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacingPyr} 
-netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'gridSpacing': cfg.gridSpacingBasket} 
+netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'numCells': len(BasketLocs), 'cellsList': BasketLocs} 
 netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacingPyr} 
 
 pops = list(netParams.popParams.keys())
@@ -236,7 +247,7 @@ if cfg.localConn:
         'synMech': synParams['synMech'],
         'weight': weightDistFunc.format(**synParams),
         'delay': delayDistFunc.format(**synParams),
-        'synsPerConn': 4,
+        'synsPerConn': 1,
         'sec': ['apical_tuft']}
         
 
@@ -412,7 +423,7 @@ if cfg.rhythmicInputs:
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
             'connList': conn1to1Pyr,  # 1-to-1 mapping
-            'synsPerConn': 3,
+            'synsPerConn': 1,
             'sec': ['apical_tuft']}
 
 
@@ -458,7 +469,7 @@ if cfg.rhythmicInputs:
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
             'connList': conn1to1Basket,  # 1-to-1 mapping
-            'synsPerConn': 3,
+            'synsPerConn': 1,
             'sec': ['apical_tuft']}
 
 
