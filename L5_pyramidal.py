@@ -413,7 +413,7 @@ class L5Pyr(Pyr):
             if gid_src != gid:
                 nc_dict['ampa'] = {
                     'pos_src': pos,
-                    'A_weight': p['gbar_L5Pyr_L5Pyr_ampa'],
+                    'A_weight': 0, #p['gbar_L5Pyr_L5Pyr_ampa'],
                     'A_delay': 1.,
                     'lamtha': 3.,
                     'threshold': p['threshold'],
@@ -443,7 +443,7 @@ class L5Pyr(Pyr):
         for gid_src, pos in zip(gid_dict['L5_basket'], pos_dict['L5_basket']):
             nc_dict['gabaa'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L5Basket_L5Pyr_gabaa'],
+                'A_weight': 0, #p['gbar_L5Basket_L5Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 70.,
                 'threshold': p['threshold'],
@@ -468,7 +468,7 @@ class L5Pyr(Pyr):
             # this delay is longer than most
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L2Pyr_L5Pyr'],
+                'A_weight': 0, #p['gbar_L2Pyr_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 3.,
                 'threshold': p['threshold'],
@@ -484,7 +484,7 @@ class L5Pyr(Pyr):
         for gid_src, pos in zip(gid_dict['L2_basket'], pos_dict['L2_basket']):
             nc_dict = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L2Basket_L5Pyr'],
+                'A_weight': 0, #p['gbar_L2Basket_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.,
                 'threshold': p['threshold'],
