@@ -147,12 +147,19 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['simf'] = confstr('sim','simf','run.py')
   d['paramf'] = confstr('sim','paramf',os.path.join('param','default.param'))
 
-  if d['homeout']: # user home directory for output
-    dbase = os.path.join(os.path.expanduser('~'),'hnn') # user home directory
-    if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
-  else: # cwd for output
-    dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG
 
+  # dbase - optional config setting to change base output directory
+  if config.has_option('paths','dbase'):
+    dbase = config.get('paths','dbase').strip()
+    if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
+  else:
+    if d['homeout']: # user home directory for output
+      dbase = os.path.join(os.path.expanduser('~'),'hnn') # user home directory
+      if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
+    else: # cwd for output
+      dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG
+
+  d['dbase'] = dbase
   d['datdir'] = os.path.join(dbase,'data') # data output directory
   d['paramoutdir'] = os.path.join(dbase, 'param')
   d['paramindir'] = confstr('paths','paramindir','param') # this depends on hnn install location  

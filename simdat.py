@@ -52,7 +52,7 @@ def readdpltrials (basedir,ntrial):
   ldpl = []
   for i in range(ntrial):
     fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
-    if not os.path.exists(fn): break    
+    if not os.path.exists(fn): break
     ldpl.append(np.loadtxt(fn))
     if debug: print('loaded ', fn)
   return ldpl
@@ -79,7 +79,7 @@ def updatedat (paramf):
     ddat['dpl'] = np.loadtxt(dfile['dpl']);
     if os.path.isfile(dfile['spec']): ddat['spec'] = np.load(dfile['spec'])
     else: ddat['spec'] = None
-    ddat['spk'] = np.loadtxt(dfile['spk']); 
+    ddat['spk'] = np.loadtxt(dfile['spk']);
     ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
     return True
   except:
@@ -97,7 +97,7 @@ def getscalefctr (paramf):
     return dconf['dipole_scalefctr']
   return 30e3
 
-def drawraster ():  
+def drawraster ():
   # draw raster to standalone matplotlib figure - for debugging (not used in main HNN GUI)
   if 'spk' in ddat:
     # print('spk shape:',ddat['spk'].shape)
@@ -116,7 +116,7 @@ def calcerr (ddat):
       shp = dat.shape
       # first downsample simulation timeseries to 600 Hz (assumes same time length as data)
       dpldown = signal.resample(ddat['dpl'][:,1], len(dat[:,1]))
-      for c in range(1,shp[1],1): 
+      for c in range(1,shp[1],1):
         err0 = rmse(dat[:,c], dpldown)
         lerr.append(err0)
         errtot += err0
@@ -131,15 +131,16 @@ def calcerr (ddat):
     #print('exception in calcerr')
     return [],-1.0
 
-class SIMCanvas (FigureCanvas): 
+class SIMCanvas (FigureCanvas):
   # matplotlib/pyqt-compatible canvas for drawing simulation & external data
   # based on https://pythonspot.com/en/pyqt5-matplotlib/
 
   def __init__ (self, paramf, parent=None, width=5, height=4, dpi=40, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
-    self.lextdatobj = []
-    self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
+    self.lextdatobj = [] # external data object
+    self.clridx = 5 # index for next color for drawing external data
+    self.lpatch = [mpatches.Patch(color='black', label='Sim.')] # legend for dipole signals
     self.setParent(parent)
     self.gui = parent
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
@@ -195,14 +196,14 @@ class SIMCanvas (FigureCanvas):
     # check distal inputs, create subplot
     if (len(dinput['dist']) > 0 and dinty['OngoingDist']) or \
        (len(dinput['evdist']) > 0 and dinty['EvokedDist']):
-      self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]); 
-      gRow+=1 
+      self.axdist = axdist = self.figure.add_subplot(self.G[gRow,0]);
+      gRow+=1
       self.lax.append(axdist)
 
     # check proximal inputs, create subplot
     if (len(dinput['prox']) > 0 and dinty['OngoingProx']) or \
        (len(dinput['evprox']) > 0 and dinty['EvokedProx']):
-      self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]); 
+      self.axprox = axprox = self.figure.add_subplot(self.G[gRow,0]);
       gRow+=1
       self.lax.append(axprox)
 
@@ -225,7 +226,7 @@ class SIMCanvas (FigureCanvas):
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
         hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step',lw=self.gui.linewidth+1)
-      
+
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
          hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
          hist['feed_pois'] is None:
@@ -239,7 +240,7 @@ class SIMCanvas (FigureCanvas):
         for ax in [axpois,axdist,axprox]:
           if ax:
             ax.set_xlim(xlim_new)
-            ax.legend()          
+            ax.legend()
         return True,gRow
 
   def clearaxes (self):
@@ -283,13 +284,13 @@ class SIMCanvas (FigureCanvas):
       print('except in getEVInputTimes')
     return ltprox, ltdist
 
-  def drawEVInputTimes (self, ax, yl, h=0.1, w=15):
+  def drawEVInputTimes (self, ax, yl, h=0.1, hw=15, hl=15):
     # draw the evoked input times using arrows
     ltprox, ltdist = self.getEVInputTimes()
     yrange = abs(yl[1] - yl[0])
-    #print('drawEVInputTimes:',yl,yrange,h,w,h*yrange,-h*yrange,yl[0]+h*yrange,yl[1]-h*yrange)
-    for tt in ltprox: ax.arrow(tt,yl[0],0,h*yrange,fc='r',ec='r', head_width=w,head_length=w)#head_length=w,head_width=1.)#w/4)#length_includes_head=True,
-    for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,fc='g',ec='g',head_width=w,head_length=w)#head_length=w,head_width=1.)#w/4)
+    #print('drawEVInputTimes:',yl,yrange,h,hw,hl,h*yrange,-h*yrange,yl[0]+h*yrange,yl[1]-h*yrange)
+    for tt in ltprox: ax.arrow(tt,yl[0],0,h*yrange,fc='r',ec='r', head_width=hw,head_length=hl)#head_length=w,head_width=1.)#w/4)#length_includes_head=True,
+    for tt in ltdist: ax.arrow(tt,yl[1],0,-h*yrange,fc='g',ec='g',head_width=hw,head_length=hl)#head_length=w,head_width=1.)#w/4)
 
   def getInputs (self):
     """ get a dictionary of input types used in simulation
@@ -330,7 +331,13 @@ class SIMCanvas (FigureCanvas):
     else:
       self.axdipole = ax = self.figure.add_subplot(self.G[gRow:-1,0]); # dipole
 
-  def plotextdat (self, recalcErr=True): 
+  def getnextcolor (self):
+    # get next color for external data (colors selected in order)
+    self.clridx += 5
+    if self.clridx > 100: self.clridx = 5
+    return self.clridx
+
+  def plotextdat (self, recalcErr=True):
     # plot 'external' data (e.g. from experiment/other simulation)
     try:
       #self.plotsimdat()
@@ -351,20 +358,20 @@ class SIMCanvas (FigureCanvas):
 
       self.clearlextdatobj() # clear annotation objects
 
+      ddx = 0
       for fn,dat in ddat['dextdata'].items():
         shp = dat.shape
-        for c in range(1,shp[1],1): 
-          clr = csm.to_rgba(int(np.random.RandomState().uniform(5,101,1)))
-          self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],color=clr,linewidth=self.gui.linewidth+1))
-          yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
-
-          fx = int(shp[0] * float(c) / shp[1])
-
-          if lerr:
-            tx,ty=dat[fx,0],dat[fx,c]
-            txt='RMSE:' + str(round(lerr[c-1],2))
-            self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
-          self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
+        clr = csm.to_rgba(self.getnextcolor())
+        c = min(shp[1],1)
+        self.lextdatobj.append(ax.plot(dat[:,0],dat[:,c],color=clr,linewidth=self.gui.linewidth+1))
+        yl = ((min(yl[0],min(dat[:,c]))),(max(yl[1],max(dat[:,c]))))
+        fx = int(shp[0] * float(c) / shp[1])
+        if lerr:
+          tx,ty=dat[fx,0],dat[fx,c]
+          txt='RMSE:' + str(round(lerr[ddx],2))
+          self.lextdatobj.append(ax.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
+        self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
+        ddx+=1
 
       ax.set_ylim(yl)
 
@@ -404,8 +411,9 @@ class SIMCanvas (FigureCanvas):
         except:
           o[0].set_visible(False)
       del self.lextdatobj
-      self.lextdatobj = []
-      self.lpatch = []
+      self.lextdatobj = [] # reset list of external data objects
+      self.lpatch = [] # reset legend
+      self.clridx = 5 # reset index for next color for drawing external data
       if self.hassimdata(): self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
       if hasattr(self,'annot_avg'):
         self.annot_avg.set_visible(False)
@@ -419,7 +427,7 @@ class SIMCanvas (FigureCanvas):
     if not updatedat(self.paramf): return # if no data from sim, or data load problem return
 
     self.clearaxes()
-    plt.close(self.figure); 
+    plt.close(self.figure);
     if len(ddat.keys()) == 0: return
 
     dinty = self.getInputs() # get dict of input types used (influences which/how plots drawn)
@@ -432,7 +440,7 @@ class SIMCanvas (FigureCanvas):
       dt = find_param(dfile['outparam'],'dt')
 
       # get spectrogram if it exists, then adjust axis limits but only if drawing spectrogram
-      if DrawSpec and 'spec' in ddat: 
+      if DrawSpec and 'spec' in ddat:
         if ddat['spec'] is not None:
           ds = ddat['spec'] # spectrogram
           xl = (ds['time'][0],ds['time'][-1]) # use specgram time limits
@@ -463,7 +471,7 @@ class SIMCanvas (FigureCanvas):
         if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
         ax.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
         yl[0] = min(yl[0],olddpl[sidx:eidx,1].min())
-        yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())      
+        yl[1] = max(yl[1],olddpl[sidx:eidx,1].max())
 
       if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
@@ -471,13 +479,13 @@ class SIMCanvas (FigureCanvas):
           yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
-      if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02)#15.0)
-      #if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,15.0)      
+      if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,(xl[1]-xl[0])*.02,(yl[1]-yl[0])*.02)#15.0)
+      #if dinty['Evoked']: self.drawEVInputTimes(ax,yl,0.1,15.0)
 
       if conf.dconf['drawavgdpl'] or N_trials <= 1:
         # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
-        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+1) 
+        ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+1)
 
       scalefctr = getscalefctr(self.paramf)
       NEstPyr = int(self.getNPyr() * scalefctr)
@@ -493,7 +501,7 @@ class SIMCanvas (FigureCanvas):
       w,h=getscreengeom()
       if w < 2800: left = 0.1
 
-      if DrawSpec: # 
+      if DrawSpec: #
         if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
         gRow = 6
         self.axspec = ax = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
@@ -503,7 +511,7 @@ class SIMCanvas (FigureCanvas):
         ax.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
         ax.set_xlim(xl)
         ax.set_ylim(ds['freq'][-1],ds['freq'][0])
-        cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005]) 
+        cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
         cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
         for ax in self.lax:
           if ax: ax.set_xlim(xl)

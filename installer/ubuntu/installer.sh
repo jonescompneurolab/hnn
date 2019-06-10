@@ -31,8 +31,8 @@ sudo pip3 install --upgrade matplotlib
 startdir=$(pwd)
 echo $startdir
 
-git clone https://github.com/nrnhines/nrn
-git clone https://github.com/nrnhines/iv
+git clone https://github.com/neuronsimulator/nrn
+git clone https://github.com/neuronsimulator/iv
 cd iv
 git checkout d4bb059
 ./build.sh

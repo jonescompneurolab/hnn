@@ -825,18 +825,87 @@ class EvokedInputParamDialog (QDialog):
     for i in range(len(self.ltabs)): self.removeCurrentInput()
     self.nprox = self.ndist = 0
 
+  def IsProx (self,idx):
+    # is this evoked input proximal (True) or distal (False) ?
+    try:
+      d = self.ld[idx]
+      for k in d.keys():
+        if k.count('evprox'):
+          return True
+    except:
+      pass
+    return False
+
+  def getInputID (self,idx):
+    # get evoked input number of the evoked input associated with idx
+    try:
+      d = self.ld[idx]
+      for k in d.keys():
+        lk = k.split('_')
+        if len(lk) >= 3:
+          return int(lk[2])
+    except:
+      pass
+    return -1
+
+  def downShift (self,idx):
+    # downshift the evoked input ID, keys, values
+    d = self.ld[idx]
+    dnew = {} # new dictionary
+    newidx = 0 # new evoked input ID
+    for k,v in d.items():
+      lk = k.split('_')
+      if len(lk) >= 3:
+        if lk[0]=='sigma':
+          newidx = int(lk[3])-1
+          lk[3] = str(newidx)
+        else:
+          newidx = int(lk[2])-1
+          lk[2] = str(newidx)
+      newkey = '_'.join(lk)
+      dnew[newkey] = v
+      if k in self.dqline:
+        self.dqline[newkey] = self.dqline[k]
+        del self.dqline[k]
+    self.ld[idx] = dnew
+    currtxt = self.tabs.tabText(idx)
+    newtxt = currtxt.split(' ')[0] + ' ' + str(newidx)
+    self.tabs.setTabText(idx,newtxt)
+    # print('d original:',d, 'd new:',dnew)
+
   def removeInput (self,idx):
+    # remove the evoked input specified by idx
     if idx < 0 or idx > len(self.ltabs): return
     # print('removing input at index', idx)
     self.tabs.removeTab(idx)
     tab = self.ltabs[idx]
     self.ltabs.remove(tab)
     d = self.ld[idx]
+
+    isprox = self.IsProx(idx) # is it a proximal input?
+    isdist = not isprox # is it a distal input?
+    inputID = self.getInputID(idx) # wht's the proximal/distal input number?
+
+    # print('isprox,isdist,inputid',isprox,isdist,inputID)
+
     for k in d.keys(): 
       if k in self.dqline:
         del self.dqline[k]
     self.ld.remove(d)
     tab.setParent(None)
+
+    # now downshift the evoked inputs (only proximal or only distal) that came after this one
+    #  first get the IDs of the evoked inputs to downshift
+    lds = [] # list of inputs to downshift
+    for jdx in range(len(self.ltabs)):
+      if isprox and self.IsProx(jdx) and self.getInputID(jdx) > inputID:
+        #print('downshift prox',self.getInputID(jdx))
+        lds.append(jdx)
+      elif isdist and not self.IsProx(jdx) and self.getInputID(jdx) > inputID:
+        #print('downshift dist',self.getInputID(jdx))
+        lds.append(jdx)
+    for jdx in lds: self.downShift(jdx) # then do the downshifting
+
     # print(self) # for testing
 
   def removeCurrentInput (self): # removes currently selected input
@@ -1131,8 +1200,8 @@ class CellParamDialog (DictDialog):
                                        ('L5Pyr_dend_gbar_ar', 1e-6)])
 
     dtrans = {'gkbar':'Kv', 'gnabar':'Na', 'km':'Km', 'gl':'leak',\
-              'ca':'Ca', 'kca':'KCa','cat':'CaT','ar':'HCN','dend':'Dendrite',\
-              'soma':'Soma','apicaltrunk':'Apical Dendrite Trunk',\
+              'ca':'Ca', 'kca':'KCa','cat':'CaT','ar':'HCN','cad':'Ca decay time',\
+              'dend':'Dendrite','soma':'Soma','apicaltrunk':'Apical Dendrite Trunk',\
               'apical1':'Apical Dendrite 1','apical2':'Apical Dendrite 2',\
               'apical3':'Apical Dendrite 3','apicaltuft':'Apical Dendrite Tuft',\
               'apicaloblique':'Oblique Apical Dendrite','basal1':'Basal Dendrite 1',\
@@ -1170,7 +1239,10 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
           if lk[3] == 'hh2': nv += '(S/cm2)'
           else: nv += '(pS/micron2)'
-        elif lk[2].count('el') > 0: nv = dtrans[lk[1]] + ' leak reversal (mV)'
+        elif lk[2].count('el') > 0: 
+          nv = dtrans[lk[1]] + ' leak reversal (mV)'
+        elif lk[2].count('taur') > 0:
+          nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' (ms)'
         self.addtransvar(k,nv)
 
     self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,\
@@ -1656,7 +1728,7 @@ class HNNGUI (QMainWindow):
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
     global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file', 'param') # uses forward slash, even on Windows OS
+    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
       try:
@@ -1694,7 +1766,7 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    fn = QFileDialog.getOpenFileName(self, 'Open file', 'data')
+    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'data'))
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
@@ -1719,7 +1791,7 @@ class HNNGUI (QMainWindow):
     msgBox.setText("Human Neocortical Neurosolver (HNN) v" + __version__ + "<br>"+\
                    "<a href=https://hnn.brown.edu>https://hnn.brown.edu</a><br>"+\
                    "<a href=https://github.com/jonescompneurolab/hnn>HNN On Github</a><br>"+\
-                   "© 2017-2018 <a href=http://brown.edu>Brown University, Providence, RI</a><br>"+\
+                   "© 2017-2019 <a href=http://brown.edu>Brown University, Providence, RI</a><br>"+\
                    "<a href=https://github.com/jonescompneurolab/hnn/blob/master/LICENSE>Software License</a>")
     msgBox.setStandardButtons(QMessageBox.Ok)
     msgBox.exec_()

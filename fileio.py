@@ -13,7 +13,7 @@ import paramrw
 # self.dfig is a dictionary of experiments, which is each a dictionary of data type
 # keys and the specific directories that contain them.
 class SimulationPaths ():
-  def __init__ (self):
+  def __init__ (self, dbase=None):
     # hard coded data types
     # fig extensions are not currently being used as well as they could be
     # add new directories here to be automatically created for every simulation
@@ -42,6 +42,10 @@ class SimulationPaths ():
     self.dsim = None
     self.dexpmt_dict = {}
     self.dfig = {}
+    if dbase is None:
+      self.dbase = os.path.join(os.path.expanduser('~'),'hnn')
+    else:
+      self.dbase = dbase
 
   # reads sim information based on sim directory and param files
   def read_sim (self, dproj, dsim):
@@ -113,6 +117,7 @@ class SimulationPaths ():
   # create the data directory for the sim
   def create_datadir (self):
     dout = self.__simdir()
+    print('making dout:',dout)
     if not safemkdir(dout):
       print("ERR: could not create output dir",dout)
 
@@ -134,7 +139,9 @@ class SimulationPaths ():
     return ddate
 
   # returns the directory for the sim
-  def __simdir (self): return os.path.join(os.path.expanduser('~'),'hnn','data',self.sim_prefix)
+  def __simdir (self):
+    return os.path.join(self.dbase,'data',self.sim_prefix)
+    # return os.path.join(os.path.expanduser('~'),'hnn','data',self.sim_prefix)
 
   # creates all the experimental directories based on dproj
   def __create_dexpmt (self, expmt_groups):
