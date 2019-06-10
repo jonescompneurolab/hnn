@@ -117,7 +117,7 @@ class L5Pyr(Pyr):
             'loc': 0.5,
             'delay': t_delay,
             'dur': t_dur,
-            'amp': p['Itonic_A_L5Pyr_soma']
+            'amp': 0, #p['Itonic_A_L5Pyr_soma']
         }
 
         # iterate through list of sect_list_IClamp to create a persistent IClamp object
@@ -427,7 +427,7 @@ class L5Pyr(Pyr):
 
                 nc_dict['nmda'] = {
                     'pos_src': pos,
-                    'A_weight': p['gbar_L5Pyr_L5Pyr_nmda'],
+                    'A_weight': 0, #p['gbar_L5Pyr_L5Pyr_nmda'],
                     'A_delay': 1.,
                     'lamtha': 3.,
                     'threshold': p['threshold'],
@@ -452,7 +452,7 @@ class L5Pyr(Pyr):
 
             nc_dict['gabab'] = {
                 'pos_src': pos,
-                'A_weight': p['gbar_L5Basket_L5Pyr_gabab'],
+                'A_weight': 0, #p['gbar_L5Basket_L5Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 70.,
                 'threshold': p['threshold'],
@@ -500,7 +500,7 @@ class L5Pyr(Pyr):
             if 'L5Pyr_ampa' in p_src.keys():
                 nc_dict_ampa = {
                     'pos_src': pos,
-                    'A_weight': p_src['L5Pyr_ampa'][0],
+                    'A_weight': 0, #p_src['L5Pyr_ampa'][0],
                     'A_delay': p_src['L5Pyr_ampa'][1],
                     'lamtha': p_src['lamtha'],
                     'threshold': p_src['threshold'],
@@ -522,7 +522,7 @@ class L5Pyr(Pyr):
             if 'L5Pyr_nmda' in p_src.keys():
                 nc_dict_nmda = {
                     'pos_src': pos,
-                    'A_weight': p_src['L5Pyr_nmda'][0],
+                    'A_weight': 0, #p_src['L5Pyr_nmda'][0],
                     'A_delay': p_src['L5Pyr_nmda'][1],
                     'lamtha': p_src['lamtha'],
                     'threshold': p_src['threshold'],
@@ -549,7 +549,7 @@ class L5Pyr(Pyr):
 
                 nc_dict_ampa = {
                     'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_weight': 0,#p_ext[self.celltype][0], # index 0 for ampa weight
                     'A_delay': p_ext[self.celltype][2], # index 2 for delay
                     'lamtha': p_ext['lamtha_space'],
                     'threshold': p_ext['threshold'],
@@ -558,7 +558,7 @@ class L5Pyr(Pyr):
 
                 nc_dict_nmda = {
                     'pos_src': pos_dict[type][gid],
-                    'A_weight': p_ext[self.celltype][1], # index 1 for nmda weight
+                    'A_weight': 0,#p_ext[self.celltype][1], # index 1 for nmda weight
                     'A_delay': p_ext[self.celltype][2], # index 2 for delay
                     'lamtha': p_ext['lamtha_space'],
                     'threshold': p_ext['threshold'],
@@ -597,7 +597,7 @@ class L5Pyr(Pyr):
 
                 nc_dict = {
                     'pos_src': pos_dict['extgauss'][gid],
-                    'A_weight': p_ext['L5_pyramidal'][0], # index 0 for ampa weight
+                    'A_weight': 0, #p_ext['L5_pyramidal'][0], # index 0 for ampa weight
                     'A_delay': p_ext['L5_pyramidal'][2], # index 2 for delay
                     'lamtha': p_ext['lamtha'],
                     'threshold': p_ext['threshold'],
@@ -614,7 +614,7 @@ class L5Pyr(Pyr):
 
                 nc_dict = {
                     'pos_src': pos_dict['extpois'][gid],
-                    'A_weight': p_ext[self.celltype][0], # index 0 for ampa weight
+                    'A_weight': 0, #p_ext[self.celltype][0], # index 0 for ampa weight
                     'A_delay': p_ext[self.celltype][2], # index 2 for delay
                     'lamtha': p_ext['lamtha_space'],
                     'threshold': p_ext['threshold'],
