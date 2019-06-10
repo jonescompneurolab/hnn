@@ -532,7 +532,7 @@ def feed_validate(p_ext, d, tstop):
         # single input equivalent to 5 simultaneous input to prevent spiking    <<---- SN: WHAT IS THIS RULE!?!?!?
         if not d['stdev'] and d['distribution'] != 'uniform':
             for key in d.keys():
-                if key.endswith('Pyramidal'):
+                if key.endswith('Pyr'):
                     d[key] = (d[key][0] * 5., d[key][1])
                 elif key.endswith('Basket'):
                     d[key] = (d[key][0] * 5., d[key][1])
