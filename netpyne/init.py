@@ -18,7 +18,7 @@ from utils import setCfgFromFile
 
 
 # Parameters file to read
-cfgFile = '../param/AlphaAndBeta.param'#'../param/ERPYes100Trials.param' # '../param/AlphaAndBeta.param' # #../param/ERPYes1Trial_test.param'
+cfgFile = '../param/ERPYes100Trials.param' # '../param/AlphaAndBeta.param' # #../param/ERPYes1Trial_test.param'
 
 # Import simConfig and set parameters from file
 from cfg import cfg
