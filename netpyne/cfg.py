@@ -42,7 +42,7 @@ cfg.allowSelfConns = False # allow connections from a cell to itself
 # Recording 
 # ----------------------------------------------------------------------------
 cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
-cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]
+cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]  
 cfg.recordStims = False  
 cfg.recordStep = 0.025
 

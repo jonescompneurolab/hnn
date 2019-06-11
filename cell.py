@@ -342,7 +342,7 @@ class Pyr (Cell):
         return d
 
     def create_dends (self, p_dend_props):
-      for key in p_dend_props: self.dends[key] = h.Section(name=self.name+'_'+key) # create dend
+      for key in p_dend_props: self.dends[key] = h.Section(name=self.name+'_'+key)#, cell=self) # create dend
       # apical: 0--4; basal: 5--7
       self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_oblique', 'apical_1', 'apical_2', 'apical_tuft', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
 
@@ -366,7 +366,7 @@ class Pyr (Cell):
         # iterate over keys in p_dend_props. Create dend for each key.
         for key in p_dend_props:
             # create dend
-            self.dends[key] = h.Section(name=self.name+'_'+key)
+            self.dends[key] = h.Section(name=self.name+'_'+key)#, cell=self)
 
             # set dend props
             self.dends[key].L = p_dend_props[key]['L']
