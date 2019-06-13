@@ -1237,7 +1237,7 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
-          if lk[3] == 'hh2': nv += '(S/cm2)'
+          if lk[3] == 'hh2' or lk[3] == 'cat' or lk[3] == 'ar' : nv += '(S/cm2)'
           else: nv += '(pS/micron2)'
         elif lk[2].count('el') > 0: 
           nv = dtrans[lk[1]] + ' leak reversal (mV)'
