@@ -29,9 +29,9 @@ netParams = specs.NetParams()  # object of class NetParams to store the network 
 #------------------------------------------------------------------------------
 # General network parameters
 #------------------------------------------------------------------------------
-netParams.sizeX = (cfg.N_pyr_x * cfg.gridSpacingPyr) - 1  # x-dimension (horizontal length) size in um
+netParams.sizeX = ((cfg.N_pyr_x * cfg.gridSpacingPyr) - 1) * cfg.xzScaling  # x-dimension (horizontal length) size in um
 netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) size in um
-netParams.sizeZ = (cfg.N_pyr_y * cfg.gridSpacingPyr) - 1 # z-dimension (horizontal depth) size in um
+netParams.sizeZ = ((cfg.N_pyr_y * cfg.gridSpacingPyr) - 1) * cfg.xzScaling # z-dimension (horizontal depth) size in um
 netParams.shape = 'cuboid'
 
 
@@ -45,6 +45,8 @@ netParams.cellParams = cellParams
 # ----------------------------------------------------------------------------
 # Population parameters
 # ----------------------------------------------------------------------------
+
+# layer locations
 layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]} # 0.654 = 1308/2000
 layersI = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]}
 
@@ -56,13 +58,16 @@ yeven = np.arange(0, cfg.N_pyr_y, 2)
 yodd = np.arange(1, cfg.N_pyr_y, 2)
 coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
 coords_sorted = sorted(coords, key=lambda pos: pos[1])
-BasketLocs = [{'x': coord[0], 'z': coord[1]} for coord in coords_sorted]
+L2BasketLocs = [{'x': coord[0]*cfg.xzScaling, 'y': layersI['L2'][0], 'z': coord[1]*cfg.xzScaling} for coord in coords_sorted]
+L5BasketLocs = [{'x': coord[0]*cfg.xzScaling, 'y': layersI['L5'][0], 'z': coord[1]*cfg.xzScaling} for coord in coords_sorted]
 
-netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L2'], 'numCells': len(BasketLocs), 'cellsList': BasketLocs} 
-netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacingPyr} 
-netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',   'yRange': layersI['L5'],  'numCells': len(BasketLocs), 'cellsList': BasketLocs} 
-netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced',  'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacingPyr} 
+# create popParams
+netParams.popParams['L2Pyr'] =    {'cellType':  'L2Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L2'],  'gridSpacing': cfg.gridSpacingPyr*cfg.xzScaling} 
+netParams.popParams['L2Basket'] = {'cellType':  'L2Basket', 'cellModel': 'HH_simple', 'numCells': len(L2BasketLocs), 'cellsList': L2BasketLocs} 
+netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_reduced', 'yRange': layersE['L5'],  'gridSpacing': cfg.gridSpacingPyr*cfg.xzScaling} 
+netParams.popParams['L5Basket'] = {'cellType':  'L5Basket', 'cellModel': 'HH_simple',  'numCells': len(L5BasketLocs), 'cellsList': L5BasketLocs} 
 
+# create variables useful for connectivity
 pops = list(netParams.popParams.keys())
 cellsPerPop = {}
 cellsPerPop['L2Pyr'] = cellsPerPop['L5Pyr'] = int(cfg.N_pyr_x * cfg.N_pyr_x)
@@ -530,10 +535,10 @@ if cfg.evokedInputs:
     ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
     # TEMPORARY CODE TO HARD CODE SAME SPIKE TIMES AS IN ORIGINAL MODEL (ERP TUT)
-    # import json
-    # with open('../input_spikes.json', 'r') as f:
-    #     input_spikes = json.load(f)
-    # ev_gids = {'L2Basket': [0,35], 'L2Pyr': [35,135], 'L5Basket': [135,170], 'L5Pyr': [170,270]}
+    import json
+    with open('../input_spikes.json', 'r') as f:
+        input_spikes = json.load(f)
+    ev_gids = {'L2Basket': [0,35], 'L2Pyr': [35,135], 'L5Basket': [135,170], 'L5Pyr': [170,270]}
 
     # Evoked proximal inputs (population of 1 VecStim)
     for iprox in range(nprox):
@@ -546,13 +551,13 @@ if cfg.evokedInputs:
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
                 'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-                #'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-                'spikePattern': {
-                        'type': 'evoked',
-                        'start': getattr(cfg, 't_' + skey),
-                        'startStd': getattr(cfg, 'sigma_t_' + skey),
-                        'numspikes': getattr(cfg, 'numspikes_' + skey),
-                        'sync': getattr(cfg, 'sync_evinput')}}
+                'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+                # 'spikePattern': {
+                #         'type': 'evoked',
+                #         'start': getattr(cfg, 't_' + skey),
+                #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+                #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+                #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked proximal -> L2 Pyr
@@ -655,13 +660,13 @@ if cfg.evokedInputs:
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
             'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-            #'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-            'spikePattern': {
-                    'type': 'evoked',
-                    'start': getattr(cfg, 't_' + skey),
-                    'startStd': getattr(cfg, 'sigma_t_' + skey),
-                    'numspikes': getattr(cfg, 'numspikes_' + skey),
-                    'sync': getattr(cfg, 'sync_evinput')}}
+            'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+            # 'spikePattern': {
+            #         'type': 'evoked',
+            #         'start': getattr(cfg, 't_' + skey),
+            #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+            #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+            #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked Distal -> L2 Pyr
