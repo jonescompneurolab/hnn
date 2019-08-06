@@ -91,7 +91,7 @@ cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 
 # ----------------------------------------------------------------------------
 cfg.gridSpacingPyr = 1  # 50
 cfg.gridSpacingBasket = [1, 1, 3]  
-cfg.xzScaling = 1 #50
+cfg.xzScaling = 1 #100
 cfg.sizeY = 2000 
 
 cfg.localConn = 0 #True

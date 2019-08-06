@@ -48,7 +48,7 @@ netParams.cellParams = cellParams
 
 # layer locations
 layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]} # 0.654 = 1308/2000
-layersI = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]}
+layersI = {'L2': [0.0*cfg.sizeY-0.0, 0.0*cfg.sizeY-0.0], 'L5': [0.654*cfg.sizeY-0.0, 0.654*cfg.sizeY-0.0]}
 
 # Create list of locations for Basket cells based on original ad hoc rules 
 # define relevant x spacings for basket cells
