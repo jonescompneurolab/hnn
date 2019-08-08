@@ -94,12 +94,12 @@ cfg.gridSpacingBasket = [1, 1, 3]
 cfg.xzScaling = 1 #100
 cfg.sizeY = 2000 
 
-cfg.localConn = 0 #True
-cfg.rhythmicInputs = 0 #True
-cfg.evokedInputs = 0 #True
-cfg.tonicInputs = 0 #True
-cfg.poissonInputs = 0 #True
-cfg.gaussInputs = 0 #True
+cfg.localConn = True
+cfg.rhythmicInputs = True
+cfg.evokedInputs = True
+cfg.tonicInputs = True
+cfg.poissonInputs = True
+cfg.gaussInputs = True
 
 
 # ----------------------------------------------------------------------------
