@@ -62,7 +62,11 @@ paramf = dconf['paramf']
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
-defncore = multiprocessing.cpu_count() # default number of cores
+# get default number of cores
+try:
+  defncore = len(os.sched_getaffinity(0))
+except AttributeError:
+  defncore = 4
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
