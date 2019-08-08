@@ -36,7 +36,8 @@ cfg.cvode_active = False
 cfg.printRunTime = 0.1
 cfg.printPopAvgRates = True
 cfg.distributeSynsUniformly = False  # one syn per section in list of sections
-cfg.allowSelfConns = False # allow connections from a cell to itself
+cfg.allowSelfConns = False  # allow connections from a cell to itself
+cfg.allowConnsWithWeight0 = False # do not allow conns with weight 0 (faster)
 
 # ----------------------------------------------------------------------------
 # Recording 
@@ -69,7 +70,7 @@ evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5B
 popColors = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
     'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
 
-cfg.analysis['iplotTraces'] = {'include': [('L2Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
+cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
 							  'showFig': True, 'timeRange': [0, cfg.duration]}
 
 cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True, 'popColors': popColors, 'markerSize': 6, 'orderInverse': True}
@@ -83,7 +84,7 @@ cfg.analysis['iplotDipole'] = {'showFig': True}
 
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
-#cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
 
 # ----------------------------------------------------------------------------
