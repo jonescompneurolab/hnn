@@ -1,6 +1,6 @@
 sim_prefix: AlphaAndBeta
 expmt_groups: {AlphaAndBeta}
-tstop: 200.
+tstop: 710.
 dt: 0.025
 celsius: 37.0
 N_trials: 0

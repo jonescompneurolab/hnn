@@ -533,6 +533,8 @@ def feed_validate(p_ext, d, tstop):
         if not d['stdev'] and d['distribution'] != 'uniform':
             for key in d.keys():
                 if key.endswith('Pyr'):
+                    print(key)
+                    import IPython; IPython.embed()
                     d[key] = (d[key][0] * 5., d[key][1])
                 elif key.endswith('Basket'):
                     d[key] = (d[key][0] * 5., d[key][1])

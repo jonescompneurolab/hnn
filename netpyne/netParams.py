@@ -48,7 +48,7 @@ netParams.cellParams = cellParams
 
 # layer locations
 layersE = {'L2': [0.0*cfg.sizeY, 0.0*cfg.sizeY], 'L5': [0.654*cfg.sizeY, 0.654*cfg.sizeY]} # 0.654 = 1308/2000
-layersI = {'L2': [0.0*cfg.sizeY-0.0, 0.0*cfg.sizeY-0.0], 'L5': [0.654*cfg.sizeY-0.0, 0.654*cfg.sizeY-0.0]}
+layersI = {'L2': [0.0*cfg.sizeY-00.0, 0.0*cfg.sizeY-00.0], 'L5': [0.654*cfg.sizeY-00.0, 0.654*cfg.sizeY-00.0]}
 
 # Create list of locations for Basket cells based on original ad hoc rules 
 # define relevant x spacings for basket cells
@@ -324,11 +324,11 @@ if cfg.rhythmicInputs:
 
     ## "if stdev is zero, increase synaptic weights 5 fold to make"
     ## "single input equivalent to 5 simultaneous input to prevent spiking <<---- SN: WHAT IS THIS RULE!?!?!?"
-    if cfg.t0_input_stdev_prox == 0.0 and cfg.distribution_prox != 'uniform':
+    if cfg.f_stdev_prox == 0.0 and cfg.distribution_prox != 'uniform':
         for key in [k for k in cfg.__dict__ if k.startswith('input_prox_A_weight')]:
             cfg.__dict__[key] *= 5.0
 
-    if cfg.t0_input_stdev_dist == 0.0 and cfg.distribution_dist != 'uniform':
+    if cfg.f_stdev_dist == 0.0 and cfg.distribution_dist != 'uniform':
         for key in [k for k in cfg.__dict__ if k.startswith('input_dist_A_weight')]:
             cfg.__dict__[key] *= 5.0
 
@@ -349,7 +349,7 @@ if cfg.rhythmicInputs:
     for pop in pops:
         netParams.popParams['extRhythmicProximal_%s'%(pop)] = {
             'cellModel': 'VecStim',
-            'numCells': cellsPerPop[pop],
+            'numCells': 1,#cellsPerPop[pop],
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -369,7 +369,7 @@ if cfg.rhythmicInputs:
         # External Rhythmic distal inputs (population of 1 VecStim)
         netParams.popParams['extRhythmicDistal_%s'%(pop)] = {
             'cellModel': 'VecStim',
-            'numCells': cellsPerPop[pop],
+            'numCells': 1, #cellsPerPop[pop],
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
@@ -404,7 +404,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Pyr,  # 1-to-1 mapping
+            #'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -427,7 +427,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Pyr,  # 1-to-1 mapping
+            #'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 1,
             'sec': ['apical_tuft']}
 
@@ -450,7 +450,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Pyr,  # 1-to-1 mapping
+            #'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -473,7 +473,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Basket,  # 1-to-1 mapping
+            #'connList': conn1to1Pyr,  # 1-to-1 mapping
             'synsPerConn': 1,
             'sec': ['apical_tuft']}
 
@@ -496,7 +496,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Basket,  # 1-to-1 mapping
+            #'connList': conn1to1Basket,  # 1-to-1 mapping
             'synsPerConn': 1,
             'sec': 'soma'}
 
@@ -519,7 +519,7 @@ if cfg.rhythmicInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
-            'connList': conn1to1Basket,  # 1-to-1 mapping
+            #'connList': conn1to1Basket,  # 1-to-1 mapping
             'synsPerConn': 1,
             'sec': 'soma'}
 
@@ -551,13 +551,13 @@ if cfg.evokedInputs:
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
                 'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-                'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-                # 'spikePattern': {
-                #         'type': 'evoked',
-                #         'start': getattr(cfg, 't_' + skey),
-                #         'startStd': getattr(cfg, 'sigma_t_' + skey),
-                #         'numspikes': getattr(cfg, 'numspikes_' + skey),
-                #         'sync': getattr(cfg, 'sync_evinput')}}
+                #'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+                'spikePattern': {
+                        'type': 'evoked',
+                        'start': getattr(cfg, 't_' + skey),
+                        'startStd': getattr(cfg, 'sigma_t_' + skey),
+                        'numspikes': getattr(cfg, 'numspikes_' + skey),
+                        'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked proximal -> L2 Pyr
@@ -660,13 +660,13 @@ if cfg.evokedInputs:
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
             'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-            'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-            # 'spikePattern': {
-            #         'type': 'evoked',
-            #         'start': getattr(cfg, 't_' + skey),
-            #         'startStd': getattr(cfg, 'sigma_t_' + skey),
-            #         'numspikes': getattr(cfg, 'numspikes_' + skey),
-            #         'sync': getattr(cfg, 'sync_evinput')}}
+            #'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+            'spikePattern': {
+                    'type': 'evoked',
+                    'start': getattr(cfg, 't_' + skey),
+                    'startStd': getattr(cfg, 'sigma_t_' + skey),
+                    'numspikes': getattr(cfg, 'numspikes_' + skey),
+                    'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked Distal -> L2 Pyr
