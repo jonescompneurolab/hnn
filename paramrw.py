@@ -804,6 +804,8 @@ def consolidate_chunks(inputs):
     return consolidated_chunks
 
 def combine_chunks(input_chunks):
+    # Used for creating the opt params of the last step with all inputs
+
     combined_chunk = {'inputs': [],
                       'opt_start': 0.0,
                       'opt_end': 0.0,
@@ -814,6 +816,7 @@ def combine_chunks(input_chunks):
         if evinput['opt_end'] > combined_chunk['opt_end']:
             combined_chunk['opt_end'] = evinput['opt_end']
 
+    # wRMSE with weights of 1's is the same as regular RMSE.
     combined_chunk['weights'] = np.ones(len(input_chunks[-1]['weights']))
     return combined_chunk
 
@@ -822,60 +825,46 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
     import scipy.stats as stats
     from math import ceil, floor
 
-    input_info = {}
-
-    # first pass through opt_params to get mu and sigma for each
-    # TODO warn user if sigma selected for opt, but timing is not
-    for input_name in opt_params:
-        input_info[input_name] = {}
-        input_info[input_name]['mean'] = opt_params[input_name]['mean_time']
-        # start and end are used to determine whether chunks should be combined
-        input_info[input_name]['start'] = opt_params[input_name]['start_time']
-        input_info[input_name]['end'] = opt_params[input_name]['end_time']
-        input_info[input_name]['sigma'] = opt_params[input_name]['sigma']
-        if input_info[input_name]['sigma'] == 0.0:
-            # sigma of 0 will not produce a CDF
-            input_info[input_name]['sigma'] = 0.01
-
-
     num_step = ceil(sim_tstop / sim_dt) + 1
     times = np.linspace(0, sim_tstop, num_step)
 
-    for input_name in input_info.keys():
+    for input_name in opt_params.keys():
         # calculate cdf using start time (minival of optimization range)
-        cdf = stats.norm.cdf(times, input_info[input_name]['start'],
-                             input_info[input_name]['sigma'])
-        input_info[input_name]['cdf'] = cdf.copy()
+        cdf = stats.norm.cdf(times, opt_params[input_name]['start'],
+                             opt_params[input_name]['sigma'])
+        opt_params[input_name]['cdf'] = cdf.copy()
 
-    for input_name in input_info.keys():
-        input_info[input_name]['weights'] = input_info[input_name]['cdf'].copy()
+    for input_name in opt_params.keys():
+        opt_params[input_name]['weights'] = opt_params[input_name]['cdf'].copy()
 
-        for other_input in input_info:
+        for other_input in opt_params:
             if input_name == other_input:
                 # don't subtract our own cdf(s)
                 continue
-            if input_info[other_input]['mean'] < \
-               input_info[input_name]['mean']:
+            if opt_params[other_input]['mean'] < \
+               opt_params[input_name]['mean']:
                 # check ordering to only use inputs after us
                 continue
             else:
-                decay_factor = 1.6*(input_info[other_input]['mean'] - \
-                                  input_info[input_name]['mean']) / \
+                decay_factor = opt_params[input_name]['decay_multiplier']*(opt_params[other_input]['mean'] - \
+                                  opt_params[input_name]['mean']) / \
                                   sim_tstop
-                input_info[input_name]['weights'] -= input_info[other_input]['cdf'] * decay_factor
+                opt_params[input_name]['weights'] -= opt_params[other_input]['cdf'] * decay_factor
 
-        input_info[input_name]['weights'] = np.clip(input_info[input_name]['weights'], a_min=0, a_max=None)
-        # input_info[input_name]['weights'] /= input_info[input_name]['weights'].mean()
+        # weights should not drop below 0
+        opt_params[input_name]['weights'] = np.clip(opt_params[input_name]['weights'], a_min=0, a_max=None)
 
-        input_info[input_name]['opt_start'] = min(input_info[input_name]['start'], times[np.where( input_info[input_name]['weights'] > 0.01)][0])
-        input_info[input_name]['opt_end'] = max(input_info[input_name]['end'], times[np.where( input_info[input_name]['weights'] > 0.01)][-1])
+        # start and stop optimization where the weights are insignificant
+        opt_params[input_name]['opt_start'] = min(opt_params[input_name]['start'], times[np.where( opt_params[input_name]['weights'] > 0.01)][0])
+        opt_params[input_name]['opt_end'] = max(opt_params[input_name]['end'], times[np.where( opt_params[input_name]['weights'] > 0.01)][-1])
 
         # convert to multiples of dt
-        input_info[input_name]['opt_start'] = floor(input_info[input_name]['opt_start']/sim_dt)*sim_dt
-        input_info[input_name]['opt_end'] = ceil(input_info[input_name]['opt_end']/sim_dt)*sim_dt
+        opt_params[input_name]['opt_start'] = floor(opt_params[input_name]['opt_start']/sim_dt)*sim_dt
+        opt_params[input_name]['opt_end'] = ceil(opt_params[input_name]['opt_end']/sim_dt)*sim_dt
 
     # combined chunks that have overlapping ranges
-    input_chunks = consolidate_chunks(input_info)
+    # opt_params is a dict, turn into a list
+    input_chunks = consolidate_chunks(opt_params)
 
     # add one last chunk to the end
     if len(input_chunks) > 1:
@@ -896,7 +885,7 @@ def get_inputs (params):
 
     return input_list
 
-def trans_inputs (input_var):
+def trans_input (input_var):
     import re
 
     input_str = input_var
