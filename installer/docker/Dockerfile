@@ -24,6 +24,10 @@ RUN apt-get update && \
 RUN pip3 install PyOpenGL matplotlib && \
     pip3 install --upgrade PyOpenGL matplotlib
 
+# this was needed to get a newer version of nlopt
+RUN pip3 install pip --upgrade && \
+    pip install --upgrade nlopt scipy
+
 # create the group hnn_group and user hnn_user
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user
 
@@ -71,6 +75,7 @@ ENV PATH=${PATH}:/home/hnn_user/nrn/build/$CPU/bin
 # HNN repo from github - moved to github on April 8, 2018
 RUN cd /home/hnn_user && \
     git clone https://github.com/jonescompneurolab/hnn.git hnn_repo
+
 # make compiles the mod files
 RUN cd /home/hnn_user/hnn_repo && \
     make
