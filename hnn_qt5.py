@@ -1130,7 +1130,7 @@ class EvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket_nmda', 0.)])
     self.ld.append(dprox)
     self.addtransvarfromdict(dprox)
-    self.addFormToTab(dprox, self.addTab('Proximal ' + str(self.nprox))
+    self.addFormToTab(dprox, self.addTab('Proximal ' + str(self.nprox)))
     self.ltabs[-1].layout.addRow(self.makePixLabel(lookupresource('proxfig')))
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
@@ -2264,9 +2264,8 @@ class HNNGUI (QMainWindow):
 
   def redraw (self):
     # redraw simulation & external data
-    self.m.plotsimdat()
-    self.m.draw()
     self.m.plot()
+    self.m.draw()
 
   def changeFontSize (self):
     # bring up window to change font sizes
@@ -2326,7 +2325,7 @@ class HNNGUI (QMainWindow):
       print('WARNING: could not load data in ', fn)
       return False
     try:
-      self.m.plotextdat()
+      self.m.plot()
       self.m.draw() # make sure new lines show up in plot
 
       if paramf:
@@ -2447,7 +2446,7 @@ class HNNGUI (QMainWindow):
   def togAvgDpl (self):
     # toggle drawing of the average (across trials) dipole
     conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
-    self.m.plotsimdat()
+    self.m.plot()
     self.m.draw()
 
   def hidesubwin (self):
@@ -2938,8 +2937,7 @@ class HNNGUI (QMainWindow):
     if len(self.dextdata.keys()) > 0:
       import simdat
       simdat.ddat['dextdata'] = self.dextdata
-      self.m.plotextdat(recalcErr)
-      # self.m.plotsimdat()
+      self.m.plot(recalcErr)
       self.m.draw()
 
   def setcursors (self,cursor):
