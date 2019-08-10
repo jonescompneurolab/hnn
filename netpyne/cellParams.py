@@ -168,10 +168,10 @@ cellParams['L2Basket_rule'] = {
 for secName,sec in cellParams['L2Basket_rule']['secs'].items():
     sec['vinit'] = -64.9737
 
-
 # ------------------------------------------------------------------------------------
 # L5 Pyramidal cell rule
 # ------------------------------------------------------------------------------------
+
 cellParams['L5Pyr_rule'] = {
         'conds': {'cellType': 'L5Pyr'},
         'secLists': {
@@ -289,9 +289,18 @@ cellParams['L5Pyr_rule'] = {
         }}}
 
 ## add biophysics (ions and mechs) to L5Pyr dendrites
+
+gbar_ar = {  # values calculated for each segment as: seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x)) (from orig HNN)
+    'apical_trunk': [1.183e-06, 1.31e-06, 1.451e-06],
+    'apical_1': [1.651e-06, 1.932e-06, 2.26e-06, 2.644e-06, 3.093e-06, 3.619e-06, 4.233e-06, 4.953e-06, 5.794e-06, 6.779e-06, 7.93e-06, 9.278e-06, 1.085e-05], 'apical_2': [1.27e-05, 1.486e-05, 1.738e-05, 2.033e-05, 2.379e-05, 2.783e-05, 3.256e-05, 3.809e-05, 4.456e-05, 5.213e-05, 6.099e-05, 7.135e-05, 8.347e-05], 'apical_tuft': [9.691e-05, 0.0001117, 0.0001287, 0.0001482, 0.0001708, 0.0001968, 0.0002267, 0.0002613, 0.000301],
+    'apical_oblique': [1.648e-06, 1.92e-06, 2.238e-06, 2.608e-06, 3.039e-06],
+    'basal_1': [1.136e-06],
+    'basal_2': [1.393e-06, 1.623e-06, 1.892e-06, 2.204e-06, 2.569e-06],
+    'basal_3': [1.393e-06, 1.623e-06, 1.892e-06, 2.204e-06, 2.569e-06]}
+
 somaL = cellParams['L5Pyr_rule']['secs']['soma']['geom']['L']
 
-for sec in [sec for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if secName != 'soma']:
+for secName, sec in [(secName, sec) for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if secName != 'soma']:
     sec['ions'] = {
         'ca': {'e': 132.4579341637009, 'i': 5e-05, 'o': 2.0},
         'k': {'e': -77.0, 'i': 54.4, 'o': 2.5},
@@ -302,7 +311,7 @@ for sec in [sec for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if 
     
     sec['mechs'] = {
         # gbar_ar value depends of distance from soma 
-        'ar': {'gbar': [1e-6*np.exp(3e-3 * ((L/nseg)*i+(L/nseg)/2)) for i in range(nseg)]}, 
+        'ar': {'gbar': gbar_ar[secName]}, #[1e-6*np.exp(3e-3 * ((L/nseg)*i+(L/nseg)/2)) for i in range(nseg)]}, 
         'ca': {'gbar': cfg.L5Pyr_dend_gbar_ca},
         'cad': {'taur': cfg.L5Pyr_dend_taur_cad},
         'cat': {'gbar': cfg.L5Pyr_dend_gbar_cat},
@@ -317,13 +326,14 @@ for sec in [sec for secName, sec in cellParams['L5Pyr_rule']['secs'].items() if 
 ## set vinit
 for secName,sec in cellParams['L5Pyr_rule']['secs'].items():
     if secName == 'apical_1':
-        sec['vinit'] = -71.46
+        sec['vinit'] = -71.32
     elif secName == 'apical_2':
         sec['vinit'] = -69.08
     elif secName == 'apical_tuft':
         sec['vinit'] = -67.30
     else:
         sec['vinit'] = -72.
+
 
 # ------------------------------------------------------------------------------------
 # L5 Basket cell rule
@@ -351,3 +361,5 @@ cellParams['L5Basket_rule'] = {
 ## set vinit
 for secName,sec in cellParams['L5Basket_rule']['secs'].items():
     sec['vinit'] = -64.9737
+
+
