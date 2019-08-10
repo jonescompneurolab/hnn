@@ -43,19 +43,13 @@ RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
 USER hnn_user
 # install NEURON dependencies
 RUN cd /home/hnn_user && \
-    git clone https://github.com/neuronsimulator/nrn && \
-    git clone https://github.com/neuronsimulator/iv
+    git clone https://github.com/neuronsimulator/nrn
 
-RUN cd /home/hnn_user/iv && \
-    git checkout d4bb059 && \
-    ./build.sh && \
-    ./configure --prefix=/home/hnn_user/iv/build && \
-    make -j4 && \
-    make install -j4
 RUN cd /home/hnn_user/nrn && \
     ./build.sh && \
     ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-      --with-iv=/home/hnn_user/iv/build --prefix=/home/hnn_user/nrn/build && \
+      --without-iv  --without-nrnoc-x11 --with-mpi \
+      --prefix=/home/hnn_user/nrn/build && \
     make -j4 && \
     make install -j4 && \
     cd src/nrnpython && \
@@ -81,9 +75,7 @@ RUN cd /home/hnn_user/hnn_repo && \
     make
 
 # cleanup these folders
-RUN cd /home/hnn_user/iv && \
-    make clean && \
-    cd /home/hnn_user/nrn && \
+RUN cd /home/hnn_user/nrn && \
     make clean
 
 # run sudo to get rid of message on first login about using sudo
@@ -94,6 +86,6 @@ RUN sudo -l
 RUN mkdir /home/hnn_user/hnn
 
 # if users open up a shell, they should go to the hnn repo checkout
-WORKDIR /home/hnn_user
+WORKDIR /home/hnn_user/hnn_repo
 
 CMD /home/hnn_user/start_hnn.sh
