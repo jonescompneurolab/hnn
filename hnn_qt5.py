@@ -76,8 +76,10 @@ if debug: print('getPyComm:',getPyComm())
 
 # for signaling
 class Communicate (QObject):
-  finishSim = pyqtSignal()
   updateRanges = pyqtSignal()
+
+class DoneSignal (QObject):
+  finishSim = pyqtSignal(bool)
 
 # for signaling - passing text
 class TextSignal (QObject):
@@ -88,7 +90,7 @@ class ParamSignal (QObject):
   psig = pyqtSignal(OrderedDict)
 
 class CanvSignal (QObject):
-  csig = pyqtSignal(bool)
+  csig = pyqtSignal(bool, bool)
 
 def bringwintobot (win):
   #win.show()
@@ -110,9 +112,10 @@ def bringwintotop (win):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
+  def __init__ (self,c,d,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
     QThread.__init__(self)
     self.c = c
+    self.d = d
     self.killed = False
     self.proc = None
     self.ntrial = ntrial
@@ -134,10 +137,6 @@ class RunSimThread (QThread):
     if self.mainwin is not None:
       self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
-    self.canvComm = CanvSignal()
-    if self.mainwin is not None:
-      self.canvComm.csig.connect(self.mainwin.initSimCanvas)
-
   def updateoptparams (self):
     self.c.updateRanges.emit()
 
@@ -149,7 +148,7 @@ class RunSimThread (QThread):
     self.prmComm.psig.emit(d)
 
   def updatedrawerr (self):
-    self.canvComm.csig.emit(False) # False means do not recalculate error
+    self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
 
   def stop (self): self.killed = True
 
@@ -160,9 +159,10 @@ class RunSimThread (QThread):
   def run (self):
     if self.opt and self.baseparamwin is not None:
       self.optmodel() # run optimization
+      self.d.finishSim.emit(True) # send the finish signal
     else:
       self.runsim() # run simulation
-    self.c.finishSim.emit() # send the finish signal
+      self.d.finishSim.emit(False) # send the finish signal
 
   def killproc (self):
     if self.proc is None: return
@@ -287,6 +287,7 @@ class RunSimThread (QThread):
 
     # one final sim with the best parameters to update display
     self.runsim(is_opt=True)
+    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
   def runOptStep (self):
     import simdat
@@ -2255,6 +2256,7 @@ class HNNGUI (QMainWindow):
     self.schemwin = SchematicDialog(self)
     self.m = self.toolbar = None
     self.baseparamwin = BaseParamDialog(self, self.startoptmodel)
+    self.optMode = False
     self.initUI()
     self.visnetwin = VisnetDialog(self)
     self.helpwin = HelpDialog(self)
@@ -2300,7 +2302,7 @@ class HNNGUI (QMainWindow):
         pass
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
-      self.initSimCanvas(reInit=True) # recreate canvas
+      self.initSimCanvas() # recreate canvas
       # self.m.plot() # replot data
       self.setWindowTitle(paramf)
       # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
@@ -2322,6 +2324,7 @@ class HNNGUI (QMainWindow):
       simdat.ddat['dextdata'] = self.dextdata
       print('Loaded data in ', fn)
     except:
+      raise
       print('WARNING: could not load data in ', fn)
       return False
     try:
@@ -2333,6 +2336,7 @@ class HNNGUI (QMainWindow):
       return True
     except:
       print('WARNING: could not plot data from ', fn)
+      raise
       return False
 
   def loadDataFileDialog (self):
@@ -2483,7 +2487,7 @@ class HNNGUI (QMainWindow):
       pass
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam()
-    self.initSimCanvas(reInit=True) # recreate canvas
+    self.initSimCanvas() # recreate canvas
     self.setWindowTitle(fn)
 
   def removeSim (self):
@@ -2547,7 +2551,7 @@ class HNNGUI (QMainWindow):
   def clearSimulations (self):
     # clear all simulation data and erase simulations from canvas (does not clear external data)
     self.clearSimulationData()
-    self.initSimCanvas(reInit=True) # recreate canvas
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
@@ -2557,7 +2561,7 @@ class HNNGUI (QMainWindow):
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
-    self.initSimCanvas(reInit=True) # recreate canvas
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
@@ -2602,11 +2606,6 @@ class HNNGUI (QMainWindow):
     runSimNSGAct.setShortcut('Ctrl+N')
     runSimNSGAct.setStatusTip('Run simulation on Neuroscience Gateway Portal (requires NSG account and internet connection).')
     runSimNSGAct.triggered.connect(self.controlNSGsim)
-
-    optSimAct = QAction('Optimize model', self)
-    optSimAct.setShortcut('Ctrl+O')
-    optSimAct.setStatusTip('Optimize Model')
-    optSimAct.triggered.connect(self.startoptmodel)
 
     self.menubar = self.menuBar()
     fileMenu = self.menubar.addMenu('&File')
@@ -2855,7 +2854,7 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    self.initSimCanvas(gRow=gRow)
+    self.initSimCanvas(gRow=gRow, reInit=False)
     gRow += 2
 
     # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
@@ -2882,8 +2881,10 @@ class HNNGUI (QMainWindow):
     self.setCentralWidget(widget)
 
     self.c = Communicate()
-    self.c.finishSim.connect(self.done)
     self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateRanges)
+
+    self.d = DoneSignal()
+    self.d.finishSim.connect(self.done)
 
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass
@@ -2917,17 +2918,17 @@ class HNNGUI (QMainWindow):
       self.cbsim.addItem(l[0])
     self.cbsim.setCurrentIndex(simdat.lsimidx)
 
-  def initSimCanvas (self,gRow=1,recalcErr=True,reInit=False):
+  def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
     # initialize the simulation canvas, loading any required data
 
     gCol = 0
 
     if reInit == True:
+      self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
       self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
-      self.m = None
 
     if debug: print('paramf in initSimCanvas:',paramf)
-    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI()) # also loads data
+    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
@@ -2958,6 +2959,7 @@ class HNNGUI (QMainWindow):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
+      self.optMode = True
       self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def controlsim (self):
@@ -2965,6 +2967,7 @@ class HNNGUI (QMainWindow):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
+      self.optMode = False
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def controlNSGsim (self):
@@ -2999,7 +3002,7 @@ class HNNGUI (QMainWindow):
     self.btnsim.setText("Stop Optimization") 
     self.qbtn.setEnabled(False)
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
+    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3023,7 +3026,7 @@ class HNNGUI (QMainWindow):
     else:
       self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
+    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3037,7 +3040,7 @@ class HNNGUI (QMainWindow):
 
     bringwintotop(self.waitsimwin)
 
-  def done (self):
+  def done (self, optMode):
     # called when the simulation completes running
     if debug: print('done')
     self.runningsim = False
@@ -3045,12 +3048,15 @@ class HNNGUI (QMainWindow):
     self.statusBar().showMessage("")
     self.btnsim.setText("Start Simulation")
     self.qbtn.setEnabled(True)
-    self.initSimCanvas() # recreate canvas (plots too) to avoid incorrect axes
+    self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
     global basedir
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     self.setcursors(Qt.ArrowCursor)
-    QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
+    if optMode:
+      QMessageBox.information(self, "Done!", "Finished running optimization using " + paramf + '. Saved data/figures in: ' + basedir)
+    else:
+      QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle(paramf)
     self.populateSimCB() # populate the combobox
 
