@@ -86,6 +86,8 @@ cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
 
 cfg.analysis['iplotDipole'] = {'showFig': True}
 
+cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 40}
+
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
 cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}

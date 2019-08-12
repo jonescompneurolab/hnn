@@ -367,18 +367,17 @@ class L5Pyr(Pyr):
         # SECTION!!!
         h.distance(sec=self.soma)
 
-        ar_gbar_scaling = {}
+        # ar_gbar_scaling = {}  # to use in netpyne model
         for key in self.dends:
-            ar_gbar_scaling[key] = []
+            # ar_gbar_scaling[key] = []
             self.dends[key].push()
             for seg in self.dends[key]:
-                oldgbar = float(seg.gbar_ar)
                 seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x))
-                ar_gbar_scaling[key].append(float('%.4g'%(seg.gbar_ar)))
+                #ar_gbar_scaling[key].append(float('%.4g'%(seg.gbar_ar)))
 
             h.pop_section()
 
-        print(ar_gbar_scaling)
+        #print(ar_gbar_scaling)
 
     def __synapse_create(self, p_syn):
         # creates synapses onto this cell
