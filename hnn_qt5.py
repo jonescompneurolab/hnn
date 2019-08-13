@@ -1281,7 +1281,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
       if k.startswith('t'):
         tab.layout.addWidget(QLabel("range (sd)"), row, 3)
-        tab.layout.addWidget(QLineEdit("1.0"), row, 4)
+        tab.layout.addWidget(QLineEdit("3.0"), row, 4)
         tab.layout.addWidget(QLabel(), row, 5)
       elif k.startswith('sigma'):
         tab.layout.addWidget(QLabel("range (%)"), row, 3)
