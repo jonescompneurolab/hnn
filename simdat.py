@@ -315,7 +315,7 @@ class SIMCanvas (FigureCanvas):
         for ax in [axpois,axdist,axprox]:
           if ax:
             ax.set_xlim(xlim_new)
-            ax.legend()
+            ax.legend(loc=1)  # legend in upper right
         return True,gRow
 
   def clearaxes (self):
@@ -434,7 +434,7 @@ class SIMCanvas (FigureCanvas):
     self.axdipole.set_ylim(yl)
 
     if self.lextdatobj and self.lpatch:
-      self.lextdatobj.append(self.axdipole.legend(handles=self.lpatch))
+      self.lextdatobj.append(self.axdipole.legend(handles=self.lpatch, loc=2))
 
     if errtot:
       tx,ty=0,0
