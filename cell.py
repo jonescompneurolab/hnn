@@ -254,8 +254,11 @@ class Cell ():
       d = self.__pardistance(nc_dict['pos_src'])
       # set props here
       nc.threshold = nc_dict['threshold']
-      nc.weight[0] = 0. #nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
-      nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
+      nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
+      nc.delay = nc_dict['A_delay'] / (np.exp(-(d ** 2) / (nc_dict['lamtha']** 2)))
+      
+      #print(gid_presyn, nc_dict, self.pos, d, nc.weight[0], nc.delay) 
+      
       # print("parconnect_from_src in cell.py, weight = ",nc.weight[0])
       #fp = open('delays.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_delay'])+' ' +str(nc.delay)+'\n'); fp.close()
       #fp = open('weights.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_weight'])+' ' +str(nc.weight[0])+'\n'); fp.close()
@@ -342,7 +345,7 @@ class Pyr (Cell):
         return d
 
     def create_dends (self, p_dend_props):
-      for key in p_dend_props: self.dends[key] = h.Section(name=self.name+'_'+key)#, cell=self) # create dend
+      for key in p_dend_props: self.dends[key] = h.Section(name=self.name+'_'+key, cell=self) # create dend
       # apical: 0--4; basal: 5--7
       self.list_dend = [self.dends[key] for key in ['apical_trunk', 'apical_oblique', 'apical_1', 'apical_2', 'apical_tuft', 'basal_1', 'basal_2', 'basal_3'] if key in self.dends]
 
@@ -366,7 +369,7 @@ class Pyr (Cell):
         # iterate over keys in p_dend_props. Create dend for each key.
         for key in p_dend_props:
             # create dend
-            self.dends[key] = h.Section(name=self.name+'_'+key)#, cell=self)
+            self.dends[key] = h.Section(name=self.name+'_'+key, cell=self)
 
             # set dend props
             self.dends[key].L = p_dend_props[key]['L']

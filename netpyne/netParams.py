@@ -526,12 +526,6 @@ if cfg.evokedInputs:
     nprox = len([k for k in cfg.__dict__ if k.startswith('t_evprox')])
     ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
-    # TEMPORARY CODE TO HARD CODE SAME SPIKE TIMES AS IN ORIGINAL MODEL (ERP TUT)
-    # import json
-    # with open('../input_spikes.json', 'r') as f:
-    #     input_spikes = json.load(f)
-    # ev_gids = {'L2Basket': [0,35], 'L2Pyr': [35,135], 'L5Basket': [135,170], 'L5Pyr': [170,270]}
-
     # Evoked proximal inputs (population of 1 VecStim)
     for iprox in range(nprox):
         for pop in pops:
@@ -543,7 +537,6 @@ if cfg.evokedInputs:
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
                 'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-                #'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
                 'spikePattern': {
                         'type': 'evoked',
                         'start': getattr(cfg, 't_' + skey),
@@ -652,7 +645,6 @@ if cfg.evokedInputs:
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
             'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-            #'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
             'spikePattern': {
                     'type': 'evoked',
                     'start': getattr(cfg, 't_' + skey),

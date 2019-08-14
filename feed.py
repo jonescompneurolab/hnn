@@ -179,7 +179,7 @@ class ParFeedAll ():
       isi_array = np.arange(t0, self.p_ext['tstop'], 1000. / f_input)
       # array of single stimulus times -- no doublets
       if stdev:
-        t_array = self.prng.normal(np.repeat(isi_array, self.p_ext['repeats']), stdev)        
+        t_array = self.prng.normal(np.repeat(isi_array, self.p_ext['repeats']), stdev)
       else:
         t_array = isi_array
       if events_per_cycle == 2: # spikes/burst in GUI
@@ -198,7 +198,6 @@ class ParFeedAll ():
     elif distribution == 'uniform':
       n_inputs = self.p_ext['repeats'] * f_input * (self.p_ext['tstop'] - t0) / 1000.
       t_array = self.prng.uniform(t0, self.p_ext['tstop'], n_inputs)
-
       if events_per_cycle == 2:
         # Two arrays store doublet times
         t_input_low = t_array - 5

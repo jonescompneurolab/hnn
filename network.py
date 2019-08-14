@@ -285,8 +285,7 @@ class NetworkOnNode ():
             # run the IClamp function here
             # create_all_IClamp() is defined in L2Pyr (etc)
             self.cells[-1].create_all_IClamp(self.p)
-            if self.p['save_vsoma']: 
-                self.cells[-1].record_volt_soma()
+            if self.p['save_vsoma']: self.cells[-1].record_volt_soma()
           elif type == 'L5_pyramidal':
             self.cells.append(L5Pyr(gid, pos, self.p))
             self.pc.cell(gid, self.cells[-1].connect_to_target(None,self.p['threshold']))
