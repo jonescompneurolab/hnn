@@ -24,7 +24,7 @@ from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
-from paramrw import chunk_evinputs, get_inputs, trans_input
+from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
@@ -174,13 +174,15 @@ class RunSimThread (QThread):
       print('ERR: could not stop simulation process.')
 
   # run sim command via mpi, then delete the temp file.
-  def runsim (self, is_opt=False):
+  def runsim (self, simlength=None, is_opt=False):
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
     if debug: print('self.onNSG:',self.onNSG)
     if self.onNSG:
       cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
+    elif not simlength is None:
+      cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi -nobanner ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
     else:
       cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi -nobanner ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     simdat.dfile = getinputfiles(paramf)
@@ -325,13 +327,11 @@ class RunSimThread (QThread):
                   self.opt_params['ranges'][param_name]['maxval'])
           return 1e9 # invalid param value -> large error
 
-      # stop the sim early if possible
-      dtest['tstop'] = self.opt_params['opt_end']
-
       self.updatebaseparamwin(dtest) # put new param values into GUI
       sleep(1)
 
-      self.runsim(is_opt=True) # run the simulation as usual and read its output
+       # run the simulation, but stop early if possible
+      self.runsim(simlength=self.opt_params['opt_end'], is_opt=True)
 
       # calculate wRMSE for all steps
       simdat.weighted_rmse(simdat.ddat,

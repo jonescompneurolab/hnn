@@ -39,6 +39,7 @@ pc = h.ParallelContext()
 pcID = int(pc.id())
 f_psim = ''
 ntrial = 1
+simlength = 0.0
 testLFP = dconf['testlfp']; 
 testlaminarLFP = dconf['testlaminarlfp']
 lelec = [] # list of LFP electrodes
@@ -54,6 +55,9 @@ for i in range(len(sys.argv)):
     ntrial = int(sys.argv[i+1])
     if ntrial < 1: ntrial = 1
     if pcID==0 and debug: print('ntrial:',ntrial)
+  elif sys.argv[i] == 'simlength' and i+1<len(sys.argv):
+    simlength = float(sys.argv[i+1])
+    if pcID==0 and debug: print('simlength:',simlength)
 
 if not foundprm:
   f_psim = os.path.join('param','default.param')
@@ -235,7 +239,12 @@ pc.gid_clear()
 h("dp_total_L2 = 0."); h("dp_total_L5 = 0.")
 
 # Set tstop before instantiating any classes
-h.tstop = p['tstop']; h.dt = p['dt'] # simulation duration and time-step
+if simlength > 0.0:
+  h.tstop = simlength
+else:
+  h.tstop = p['tstop'] # simulation duration
+
+h.dt = p['dt'] # simulation time-step
 h.celsius = p['celsius'] # 37.0 # p['celsius'] # set temperature
 # spike file needs to be known by all nodes
 file_spikes_tmp = fio.file_spike_tmp(dproj)  
