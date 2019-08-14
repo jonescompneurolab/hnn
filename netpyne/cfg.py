@@ -77,15 +77,17 @@ cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True, 'popColors': po
 
 cfg.analysis['iplotSpikeHist'] = {'include': [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal'], 'legendLabels': pops + ['Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal'], 'popColors': popColors, 'yaxis': 'count', 'showFig': True}
 
-#cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
+cfg.analysis['iplotDipole'] = {'showFig': True}
 
 cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 80}  # change freq to 40 for alpha&beta tut
 
 cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80} # change freq to 40 for alpha&beta tut
 
+cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
-cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+#cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
 
 
 # ----------------------------------------------------------------------------
