@@ -319,6 +319,12 @@ conn1to1Basket = np.array([range(0,cellsPerPop['L2Basket']), range(0,cellsPerPop
 
 if cfg.rhythmicInputs:
 
+    # TEMPORARY CODE TO HARD CODE SAME SPIKE TIMES AS IN ORIGINAL MODEL (ERP TUT)
+    import json
+    with open('../input_spikes_erp.json', 'r') as f: # ../input_spikes_ERP.json
+        input_spikes = json.load(f)
+    
+
     # Ad hoc rules copied from original code (need to improve!! -- maybe add to .param files?)
 
     ## "if stdev is zero, increase synaptic weights 5 fold to make"
@@ -352,16 +358,17 @@ if cfg.rhythmicInputs:
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
         'seed': int(cfg.prng_seedcore_input_prox),
-        'spikePattern': {
-                'type': 'rhythmic',
-                'start': cfg.t0_input_prox,
-                'startStd': cfg.t0_input_stdev_prox,
-                'stop': cfg.tstop_input_prox,
-                'freq': cfg.f_input_prox,
-                'freqStd': cfg.f_stdev_prox,
-                'eventsPerCycle': cfg.events_per_cycle_prox,
-                'distribution': cfg.distribution_prox,
-                'repeats': cfg.repeats_prox}}
+        'spkTimes': input_spikes['extinput_proximal'] if 'extinput_proximal' in input_spikes else [-1]}
+        # 'spikePattern': {
+        #         'type': 'rhythmic',
+        #         'start': cfg.t0_input_prox,
+        #         'startStd': cfg.t0_input_stdev_prox,
+        #         'stop': cfg.tstop_input_prox,
+        #         'freq': cfg.f_input_prox,
+        #         'freqStd': cfg.f_stdev_prox,
+        #         'eventsPerCycle': cfg.events_per_cycle_prox,
+        #         'distribution': cfg.distribution_prox,
+        #         'repeats': cfg.repeats_prox}}
 
 
     # External Rhythmic distal inputs (population of 1 VecStim)
@@ -372,16 +379,17 @@ if cfg.rhythmicInputs:
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
         'seed': int(cfg.prng_seedcore_input_dist),
-        'spikePattern': {
-                'type': 'rhythmic',
-                'start': cfg.t0_input_dist,
-                'startStd': cfg.t0_input_stdev_dist,
-                'stop': cfg.tstop_input_dist,
-                'freq': cfg.f_input_dist,
-                'freqStd': cfg.f_stdev_dist,
-                'eventsPerCycle': cfg.events_per_cycle_dist,
-                'distribution': cfg.distribution_dist,
-                'repeats': cfg.repeats_dist}}
+        'spkTimes': input_spikes['extinput_distal'] if 'extinput_distal' in input_spikes else [-1]}
+        # 'spikePattern': {
+        #         'type': 'rhythmic',
+        #         'start': cfg.t0_input_dist,
+        #         'startStd': cfg.t0_input_stdev_dist,
+        #         'stop': cfg.tstop_input_dist,
+        #         'freq': cfg.f_input_dist,
+        #         'freqStd': cfg.f_stdev_dist,
+        #         'eventsPerCycle': cfg.events_per_cycle_dist,
+        #         'distribution': cfg.distribution_dist,
+        #         'repeats': cfg.repeats_dist}}
 
 
     # Rhytmic proximal -> L2 Pyr
@@ -527,10 +535,10 @@ if cfg.evokedInputs:
     ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
 
     # TEMPORARY CODE TO HARD CODE SAME SPIKE TIMES AS IN ORIGINAL MODEL (ERP TUT)
-    # import json
-    # with open('../input_spikes.json', 'r') as f:
-    #     input_spikes = json.load(f)
-    # ev_gids = {'L2Basket': [0,35], 'L2Pyr': [35,135], 'L5Basket': [135,170], 'L5Pyr': [170,270]}
+    import json
+    with open('../input_spikes_erp.json', 'r') as f: # ../input_spikes_ERP.json
+        input_spikes = json.load(f)
+    ev_gids = {'L2Basket': [0,35], 'L2Pyr': [35,135], 'L5Basket': [135,170], 'L5Pyr': [170,270]}
 
     # Evoked proximal inputs (population of 1 VecStim)
     for iprox in range(nprox):
@@ -543,13 +551,13 @@ if cfg.evokedInputs:
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
                 'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-                #'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-                'spikePattern': {
-                        'type': 'evoked',
-                        'start': getattr(cfg, 't_' + skey),
-                        'startStd': getattr(cfg, 'sigma_t_' + skey),
-                        'numspikes': getattr(cfg, 'numspikes_' + skey),
-                        'sync': getattr(cfg, 'sync_evinput')}}
+                'spkTimes': input_spikes['evprox'+str(iprox+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+                # 'spikePattern': {
+                #         'type': 'evoked',
+                #         'start': getattr(cfg, 't_' + skey),
+                #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+                #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+                #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked proximal -> L2 Pyr
@@ -652,13 +660,13 @@ if cfg.evokedInputs:
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
             'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
-            #'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
-            'spikePattern': {
-                    'type': 'evoked',
-                    'start': getattr(cfg, 't_' + skey),
-                    'startStd': getattr(cfg, 'sigma_t_' + skey),
-                    'numspikes': getattr(cfg, 'numspikes_' + skey),
-                    'sync': getattr(cfg, 'sync_evinput')}}
+            'spkTimes': input_spikes['evdist'+str(idist+1)][ev_gids[pop][0]:ev_gids[pop][1]]}
+            # 'spikePattern': {
+            #         'type': 'evoked',
+            #         'start': getattr(cfg, 't_' + skey),
+            #         'startStd': getattr(cfg, 'sigma_t_' + skey),
+            #         'numspikes': getattr(cfg, 'numspikes_' + skey),
+            #         'sync': getattr(cfg, 'sync_evinput')}}
 
 
         # Evoked Distal -> L2 Pyr

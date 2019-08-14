@@ -67,10 +67,6 @@ evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal
   'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
 evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
 
-rhythprox = ['extRhythmicProximal_L2Basket', 'extRhythmicProximal_L2Pyr', 'extRhythmicProximal_L5Basket', 'extRhythmicProximal_L5Pyr']
-rhythdist = ['extRhythmicDistal_L2Basket', 'extRhythmicDistal_L2Pyr', 'extRhythmicDistal_L5Basket', 'extRhythmicDistal_L5Pyr']
-
-
 popColors = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
     'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
 
@@ -79,18 +75,19 @@ cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', '
 
 cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True, 'popColors': popColors, 'markerSize': 6, 'orderInverse': True}
 
-cfg.analysis['iplotSpikeHist'] = {'include': [*pops, evprox, evdist, rhythprox, rhythdist], 'legendLabels': pops + ['Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal'],
-    'popColors': popColors, 'yaxis': 'count', 'showFig': True}
+cfg.analysis['iplotSpikeHist'] = {'include': [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal'], 'legendLabels': pops + ['Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal'], 'popColors': popColors, 'yaxis': 'count', 'showFig': True}
 
-cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
+#cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
 
 cfg.analysis['iplotDipole'] = {'showFig': True}
 
-cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 40}
+cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 80}
+
+cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80}
 
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
-cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+#cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
 
 # ----------------------------------------------------------------------------

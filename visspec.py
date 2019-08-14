@@ -72,7 +72,8 @@ def extractspec (dat, fmax=40.0):
 def loaddat (fname):
   try:
     if fname.endswith('.txt'):
-      dat = np.loadtxt(fname)
+      #dat = np.loadtxt(fname)
+      dat = np.loadtxt(specpath)
       print('Loaded data in ' + fname + '. Extracting Spectrograms.')
       return dat
     elif fname.endswith('.param'):
@@ -90,7 +91,8 @@ def loaddat (fname):
           dout[:,i+1] = ddat[i][:,1]
         return dout
       else:
-        ddat = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+        #ddat = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+        ddat = np.loadtxt(specpath)
         #print('ddat.shape:',ddat.shape)
         dout = np.zeros((ddat.shape[0],2))
         #print('dout.shape:',dout.shape)

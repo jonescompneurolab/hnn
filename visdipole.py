@@ -41,9 +41,9 @@ for i in range(len(sys.argv)):
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 
 ddat = {}
-ddat['dpltrials'] = readdpltrials(basedir,ntrial)
+ddat['dpltrials'] = [np.loadtxt('/u/salvadord/hnn/data/ERPYes100Trials/dpl.txt')] # gamma_L5ping_L2ping# readdpltrials(basedir,ntrial)
 try:
-  ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+  ddat['dpl'] = np.loadtxt(dplpath) #os.path.join(basedir,'dpl.txt'))
 except:
   print('Could not load',dplpath)
   quit()
@@ -75,8 +75,8 @@ class DipoleCanvas (FigureCanvas):
 
     ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
 
-    white_patch = mpatches.Patch(color='white', label='Average')
-    gray_patch = mpatches.Patch(color='gray', label='Individual')
+    white_patch = mpatches.Patch(color='white', label='NetPyNE HNN')
+    gray_patch = mpatches.Patch(color='green', label='Original HNN')
     lpatch = []
 
     if len(ddat['dpltrials']) > 0: lpatch = [white_patch,gray_patch]
@@ -104,13 +104,14 @@ class DipoleCanvas (FigureCanvas):
       lw = self.gui.linewidth
       if self.index != 0: lw = self.gui.linewidth + 2
 
+      # average dipole (across trials)
+      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=self.gui.linewidth+2) 
+
       if len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for ddx,dpltrial in enumerate(ddat['dpltrials']):
           if self.index == 0 or (self.index > 0 and ddx == self.index-1):
-            ax.plot(dpltrial[:,0],dpltrial[:,i],color='gray',linewidth=lw)
+            ax.plot(dpltrial[:,0],dpltrial[:,i],color='green',linewidth=self.gui.linewidth+1)
 
-      # average dipole (across trials)
-      if self.index == 0: ax.plot(ddat['dpl'][:,0],ddat['dpl'][:,i],'w',linewidth=self.gui.linewidth+2) 
 
       ax.set_ylabel(r'(nAm $\times$ '+str(scalefctr)+')')
       if tstop != -1: ax.set_xlim((0,tstop))
