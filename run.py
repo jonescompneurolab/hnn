@@ -315,7 +315,11 @@ def catdpl ():
   ldpl = []
   for pre in ['dpl','rawdpl']:
     lf = [os.path.join(datdir,pre+'_'+str(i)+'.txt') for i in range(ntrial)]
-    dpl = np.mean(np.array([np.loadtxt(f) for f in lf]),axis=0)
+    dpl_dat = np.array([np.loadtxt(f) for f in lf])
+    try:
+      dpl = np.mean(dpl_dat,axis=0)
+    except ValueError:
+      print("ERROR: could not caluclate mean. Inconsistent trial lengths?")
     with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
       for i in range(dpl.shape[0]):
         fp.write("%03.3f\t" % dpl[i,0])
