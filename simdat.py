@@ -464,6 +464,10 @@ class SIMCanvas (FigureCanvas):
     # check if any simulation data available in ddat dictionary
     return 'dpl' in ddat
 
+  def hasinitoptdata (self):
+    # check if any simulation data available in ddat dictionary
+    return 'dpl' in initial_ddat
+
   def clearlextdatobj (self):
     # clear list of external data objects
     try:
@@ -560,10 +564,11 @@ class SIMCanvas (FigureCanvas):
           yl[0] = min(yl[0],optdpl[sidx:eidx,1].min())
           yl[1] = max(yl[1],optdpl[sidx:eidx,1].max())
 
-      # show initial dipole in dotted black line
-      self.axdipole.plot(initial_ddat['dpl'][:,0],initial_ddat['dpl'][:,1],'--',color='black',linewidth=self.gui.linewidth)
-      yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
-      yl[1] = max(yl[1],initial_ddat['dpl'][sidx:eidx,1].max())
+      if self.hasinitoptdata():
+        # show initial dipole in dotted black line
+        self.axdipole.plot(initial_ddat['dpl'][:,0],initial_ddat['dpl'][:,1],'--',color='black',linewidth=self.gui.linewidth)
+        yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
+        yl[1] = max(yl[1],initial_ddat['dpl'][sidx:eidx,1].max())
 
     scalefctr = getscalefctr(self.paramf)
     NEstPyr = int(self.getNPyr() * scalefctr)
