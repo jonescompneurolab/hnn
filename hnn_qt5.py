@@ -355,7 +355,12 @@ class RunSimThread (QThread):
 
       self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
 
-      with open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'a') as fpopt:
+      # Be ready in case the user changes the simulation name in the middle of an optimization
+      fnoptinf = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt')
+      optinf_dir = os.path.dirname(fnoptinf)
+      os.makedirs(optinf_dir, exist_ok=True)
+      
+      with open(fnoptinf,'a') as fpopt:
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
       # backup the current param file
