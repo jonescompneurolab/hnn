@@ -2998,7 +2998,7 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
-      self.btnsim.setText("Start Simulation")
+      self.btnsim.setText("Run Simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
       self.setcursors(Qt.ArrowCursor)
@@ -3059,7 +3059,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.waitsimwin.hide()
     self.statusBar().showMessage("")
-    self.btnsim.setText("Start Simulation")
+    self.btnsim.setText("Run Simulation")
     self.qbtn.setEnabled(True)
     self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
