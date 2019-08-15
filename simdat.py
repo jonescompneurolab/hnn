@@ -454,7 +454,7 @@ class SIMCanvas (FigureCanvas):
     if not hassimdata: # need axis labels
       left = 0.08
       w,h=getscreengeom()
-      if w < 2800: left = 0.12
+      if w < 2800: left = 0.1
       self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
       self.axdipole.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
       myxl = self.axdipole.get_xlim()
@@ -583,7 +583,7 @@ class SIMCanvas (FigureCanvas):
     bottom = 0.0
     left = 0.08
     w,h=getscreengeom()
-    if w < 2800: left = 0.13
+    if w < 2800: left = 0.1
 
     if DrawSpec: #
       if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
