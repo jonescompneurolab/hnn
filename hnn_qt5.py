@@ -1178,7 +1178,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
     self.sim_dt = 0.0
-    self.default_num_sims = 50
+    self.default_num_step_sims = 30
+    self.default_num_total_sims = 50
     self.optrun_func = optrun_func
     self.initUI()
 
@@ -1375,9 +1376,12 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         # get number of sims from GUI
         num_sims = int(self.sublayout.itemAtPosition(row_count - row,4).widget().text())
         self.old_numsims[row_count - row] = num_sims
-      except AttributeError:
+      except (AttributeError, ValueError):
         # couldn't get value for some reason (invalid), so set to the default
-        self.old_numsims[row_count - row] = self.default_num_sims
+        if row == 1:
+          self.old_numsims[row_count - row] = self.default_num_total_sims
+        else:
+          self.old_numsims[row_count - row] = self.default_num_step_sims
 
       for column in range(column_count-1):  # last column is a spacer item
         try:
@@ -1400,10 +1404,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # create a new grid sublayout with a row for each optimization step
     for chunk_index, evinput in enumerate(input_chunks):
 
-      try:
+      if len(input_chunks) == len(self.old_numsims):
+        # can we reuse the previous number of sims for each step?
         num_sims = self.old_numsims[chunk_index]
-      except IndexError:
-        num_sims = self.default_num_sims
+      else:
+        if chunk_index == len(input_chunks) - 1:
+          num_sims = self.default_num_total_sims
+        else:
+          num_sims = self.default_num_step_sims
 
       self.updateOptDict(chunk_index, evinput, num_sims)
 
