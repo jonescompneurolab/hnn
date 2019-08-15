@@ -24,7 +24,7 @@ from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
-from paramrw import chunk_evinputs, get_inputs, trans_input
+from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
@@ -174,13 +174,15 @@ class RunSimThread (QThread):
       print('ERR: could not stop simulation process.')
 
   # run sim command via mpi, then delete the temp file.
-  def runsim (self, is_opt=False):
+  def runsim (self, simlength=None, is_opt=False):
     import simdat
     self.killed = False
     if debug: print("Running simulation using",self.ncore,"cores.")
     if debug: print('self.onNSG:',self.onNSG)
     if self.onNSG:
       cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
+    elif not simlength is None:
+      cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi -nobanner ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
     else:
       cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi -nobanner ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     simdat.dfile = getinputfiles(paramf)
@@ -325,13 +327,11 @@ class RunSimThread (QThread):
                   self.opt_params['ranges'][param_name]['maxval'])
           return 1e9 # invalid param value -> large error
 
-      # stop the sim early if possible
-      dtest['tstop'] = self.opt_params['opt_end']
-
       self.updatebaseparamwin(dtest) # put new param values into GUI
       sleep(1)
 
-      self.runsim(is_opt=True) # run the simulation as usual and read its output
+       # run the simulation, but stop early if possible
+      self.runsim(simlength=self.opt_params['opt_end'], is_opt=True)
 
       # calculate wRMSE for all steps
       simdat.weighted_rmse(simdat.ddat,
@@ -355,7 +355,12 @@ class RunSimThread (QThread):
 
       self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
 
-      with open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'a') as fpopt:
+      # Be ready in case the user changes the simulation name in the middle of an optimization
+      fnoptinf = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt')
+      optinf_dir = os.path.dirname(fnoptinf)
+      os.makedirs(optinf_dir, exist_ok=True)
+      
+      with open(fnoptinf,'a') as fpopt:
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
       # backup the current param file
@@ -1173,7 +1178,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
     self.sim_dt = 0.0
-    self.default_num_sims = 50
+    self.default_num_step_sims = 30
+    self.default_num_total_sims = 50
     self.optrun_func = optrun_func
     self.initUI()
 
@@ -1370,9 +1376,12 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         # get number of sims from GUI
         num_sims = int(self.sublayout.itemAtPosition(row_count - row,4).widget().text())
         self.old_numsims[row_count - row] = num_sims
-      except AttributeError:
+      except (AttributeError, ValueError):
         # couldn't get value for some reason (invalid), so set to the default
-        self.old_numsims[row_count - row] = self.default_num_sims
+        if row == 1:
+          self.old_numsims[row_count - row] = self.default_num_total_sims
+        else:
+          self.old_numsims[row_count - row] = self.default_num_step_sims
 
       for column in range(column_count-1):  # last column is a spacer item
         try:
@@ -1395,10 +1404,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # create a new grid sublayout with a row for each optimization step
     for chunk_index, evinput in enumerate(input_chunks):
 
-      try:
+      if len(input_chunks) == len(self.old_numsims):
+        # can we reuse the previous number of sims for each step?
         num_sims = self.old_numsims[chunk_index]
-      except IndexError:
-        num_sims = self.default_num_sims
+      else:
+        if chunk_index == len(input_chunks) - 1:
+          num_sims = self.default_num_total_sims
+        else:
+          num_sims = self.default_num_step_sims
 
       self.updateOptDict(chunk_index, evinput, num_sims)
 
@@ -2985,7 +2998,7 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
-      self.btnsim.setText("Start Simulation")
+      self.btnsim.setText("Run Simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
       self.setcursors(Qt.ArrowCursor)
@@ -3046,7 +3059,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = False
     self.waitsimwin.hide()
     self.statusBar().showMessage("")
-    self.btnsim.setText("Start Simulation")
+    self.btnsim.setText("Run Simulation")
     self.qbtn.setEnabled(True)
     self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()

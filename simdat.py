@@ -315,7 +315,7 @@ class SIMCanvas (FigureCanvas):
         for ax in [axpois,axdist,axprox]:
           if ax:
             ax.set_xlim(xlim_new)
-            ax.legend()
+            ax.legend(loc=1)  # legend in upper right
         return True,gRow
 
   def clearaxes (self):
@@ -406,8 +406,9 @@ class SIMCanvas (FigureCanvas):
 
     if self.axdipole is None:
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
-
-    yl = self.axdipole.get_ylim()
+      yl = (-0.001,0.001)
+    else:
+      yl = self.axdipole.get_ylim()
 
     cmap=plt.get_cmap('nipy_spectral')
     csm = plt.cm.ScalarMappable(cmap=cmap);
@@ -434,7 +435,7 @@ class SIMCanvas (FigureCanvas):
     self.axdipole.set_ylim(yl)
 
     if self.lextdatobj and self.lpatch:
-      self.lextdatobj.append(self.axdipole.legend(handles=self.lpatch))
+      self.lextdatobj.append(self.axdipole.legend(handles=self.lpatch, loc=2))
 
     if errtot:
       tx,ty=0,0
@@ -453,7 +454,7 @@ class SIMCanvas (FigureCanvas):
     if not hassimdata: # need axis labels
       left = 0.08
       w,h=getscreengeom()
-      if w < 2800: left = 0.1
+      if w < 2800: left = 0.12
       self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
       self.axdipole.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
       myxl = self.axdipole.get_xlim()
@@ -463,6 +464,10 @@ class SIMCanvas (FigureCanvas):
   def hassimdata (self):
     # check if any simulation data available in ddat dictionary
     return 'dpl' in ddat
+
+  def hasinitoptdata (self):
+    # check if any simulation data available in ddat dictionary
+    return 'dpl' in initial_ddat
 
   def clearlextdatobj (self):
     # clear list of external data objects
@@ -526,7 +531,7 @@ class SIMCanvas (FigureCanvas):
     N_trials = self.getNTrials()
     if debug: print('simdat: N_trials:',N_trials)
 
-    yl = list(self.axdipole.get_ylim())
+    yl = [0,0]
     yl[0] = min(yl[0],np.amin(ddat['dpl'][sidx:eidx,1]))
     yl[1] = max(yl[1],np.amax(ddat['dpl'][sidx:eidx,1]))
 
@@ -560,10 +565,11 @@ class SIMCanvas (FigureCanvas):
           yl[0] = min(yl[0],optdpl[sidx:eidx,1].min())
           yl[1] = max(yl[1],optdpl[sidx:eidx,1].max())
 
-      # show initial dipole in dotted black line
-      self.axdipole.plot(initial_ddat['dpl'][:,0],initial_ddat['dpl'][:,1],'--',color='black',linewidth=self.gui.linewidth)
-      yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
-      yl[1] = max(yl[1],initial_ddat['dpl'][sidx:eidx,1].max())
+      if self.hasinitoptdata():
+        # show initial dipole in dotted black line
+        self.axdipole.plot(initial_ddat['dpl'][:,0],initial_ddat['dpl'][:,1],'--',color='black',linewidth=self.gui.linewidth)
+        yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
+        yl[1] = max(yl[1],initial_ddat['dpl'][sidx:eidx,1].max())
 
     scalefctr = getscalefctr(self.paramf)
     NEstPyr = int(self.getNPyr() * scalefctr)
@@ -577,7 +583,7 @@ class SIMCanvas (FigureCanvas):
     bottom = 0.0
     left = 0.08
     w,h=getscreengeom()
-    if w < 2800: left = 0.1
+    if w < 2800: left = 0.13
 
     if DrawSpec: #
       if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
