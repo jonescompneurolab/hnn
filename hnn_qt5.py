@@ -1490,48 +1490,53 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
         tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(True)
         if label.startswith('t'):
+          # mean start time
           timing_bound = timing_sigma * range_multiplier
           range_min = max(0, value - timing_bound)
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
           self.opt_params[tab_name]['start'] = range_min
           self.opt_params[tab_name]['end'] = range_max
-          if range_min == range_max:
-            # use the exact value
-            tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f" % (value))
-            tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(False)
-            # uncheck because invalid range
-            tab.layout.itemAtPosition(row_index, 1).widget().setChecked(False)
-          else:
-            tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f - %.3f" % (range_min, range_max))
         else:
+          # std dev. or synaptic weights
           if value < 1e-6:
             # don't let values fall below precision threshold
             value = 0.0
             tab.layout.itemAtPosition(row_index, 2).widget().setText(str(value))
 
-          range_min = max(0,value - (value * range_multiplier/100.0))
-          range_max = value + (value * range_multiplier/100.0)
-          if range_min == range_max:
-            if range_min == 0.0:
-              # weight has been set to 0, change to range from 0 to 1
+          if value == 0.0:
+            range_min = value
+
+            range_type = tab.layout.itemAtPosition(row_index, 3).widget().text()
+            if range_type == "max":
+              # range already specified by min/max value. take user input
+              try:
+                range_max = float(tab.layout.itemAtPosition(row_index, 4).widget().text())
+              except ValueError:
+                range_max = 1.0
+            else:
+              # change to range from 0 to 1
               tab.layout.itemAtPosition(row_index, 3).widget().setText("max")
               range_max = 1.0
               tab.layout.itemAtPosition(row_index, 4).widget().setText(str(range_max))
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f - %.3f" % (range_min, range_max))
-            else:
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("%f" % range_min)
-              # grey out the range
-              tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(False)
-              # uncheck because invalid range
-              tab.layout.itemAtPosition(row_index, 1).widget().setChecked(False)
           else:
             # do we need to convert from using max to define range to a percentage?
             if tab.layout.itemAtPosition(row_index, 3).widget().text() == "max":
+              tab.layout.itemAtPosition(row_index, 3).widget().setText("range (%)")
               range_multiplier = 500.0
               tab.layout.itemAtPosition(row_index, 4).widget().setText(str(range_multiplier))
-            tab.layout.itemAtPosition(row_index, 3).widget().setText("range (%)")
-            tab.layout.itemAtPosition(row_index, 5).widget().setText("%f - %f" % (range_min, range_max))
+
+            range_min = max(0,value - (value * range_multiplier/100.0))
+            range_max = value + (value * range_multiplier/100.0)
+
+        if range_min == range_max:
+          # use the exact value
+          tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f" % (value))
+          tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(False)
+          # uncheck because invalid range
+          tab.layout.itemAtPosition(row_index, 1).widget().setChecked(False)
+        else:
+          tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f - %.3f" % (range_min, range_max))
 
         if tab.layout.itemAtPosition(row_index, 1).widget().isChecked():
           # add param to list for optimization
