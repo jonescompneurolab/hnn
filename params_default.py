@@ -169,6 +169,7 @@ def get_params_default (nprox = 2, ndist = 1):
         # prng seed cores are the base integer seed for the specific
         # prng object for a specific random number stream
         # 'prng_state': None,
+        'prng_seedcore_opt': 1,
         'prng_seedcore_input_prox': 0,
         'prng_seedcore_input_dist': 0,
         'prng_seedcore_extpois': 0,

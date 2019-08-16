@@ -415,6 +415,10 @@ class RunSimThread (QThread):
 
     print('Optimizing from [%3.3f-%3.3f] ms' % (self.opt_params['opt_start'], self.opt_params['opt_end']))
     num_params = self.opt_params['num_params']
+
+    # initialize RNG with seed from config
+    seed = int(find_param(paramf,'prng_seedcore_opt'))
+    nlopt.srand(seed)
     algorithm = nlopt.LN_COBYLA
     opt = nlopt.opt(algorithm, num_params)
     opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
@@ -1611,7 +1615,8 @@ class RunParamDialog (DictDialog):
                                   ('dipole_smooth_win',15.0),
                                   ('save_vsoma',0)])
 
-    self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
+    self.drand = OrderedDict([('prng_seedcore_opt', 0),
+                              ('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
                               ('prng_seedcore_extpois', 0),
                               ('prng_seedcore_extgauss', 0),
@@ -1635,6 +1640,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
+    self.addtransvar('prng_seedcore_opt','Parameter Optimization')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
