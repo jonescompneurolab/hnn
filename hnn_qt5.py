@@ -249,6 +249,11 @@ class RunSimThread (QThread):
       # self.opt_params gets reset for each step
       self.opt_params = dconf['opt_info'][step]
 
+      if self.opt_params['num_sims'] == 0:
+        txt = "Skipping optimization step %d (0 simulations)"%(step+1)
+        self.updatewaitsimwin(txt)
+        continue
+
       self.cur_step = step
       if self.cur_step == len(dconf['opt_info']) - 1:
         self.last_step = True
@@ -269,7 +274,8 @@ class RunSimThread (QThread):
         # steps was changed by updateoptparams()
         self.opt_params = dconf['opt_info'][len(dconf['opt_info']) - 1]
 
-      print("Starting optimization step %d"%(step+1))
+      txt = "Starting optimization step %d"%(step+1)
+      self.updatewaitsimwin(txt)
       self.runOptStep()
 
       if not self.best_ddat is None:
@@ -308,6 +314,8 @@ class RunSimThread (QThread):
     self.best_ddat = None
 
     def optrun (new_params, grad=0):
+      self.updatewaitsimwin("Optimization step %d, iteration %d"%(self.cur_step, self.optiter))
+
       dtest = OrderedDict() # parameter values to test      
       for param_name, test_value in zip(self.opt_params['ranges'].keys(), new_params): # set parameters
         if test_value >= self.opt_params['ranges'][param_name]['minval'] and test_value <= self.opt_params['ranges'][param_name]['maxval']:
@@ -344,16 +352,16 @@ class RunSimThread (QThread):
         # weighted RMSE with weights of all 1's is the same as
         # regular RMSE
         simdat.ddat['errtot'] = simdat.ddat['werrtot']
-        print("regular RMSE = %f"%err)
+        txt = "regular RMSE = %f"%err
       else:
         # calculate regular RMSE for displaying on plot
         simdat.calcerr(simdat.ddat,
                       self.opt_params['opt_end'],
                       tstart=self.opt_params['opt_start'])
 
-        print("weighted RMSE = %f, regular RMSE = %f"% (err,simdat.ddat['errtot']))
+        txt = "weighted RMSE = %f, regular RMSE = %f"% (err,simdat.ddat['errtot'])
 
-      self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
+      self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
 
       # Be ready in case the user changes the simulation name in the middle of an optimization
       fnoptinf = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt')
@@ -373,7 +381,8 @@ class RunSimThread (QThread):
       shutil.copyfile(prmloc0,prmloc1)
 
       if err < self.stepminopterr:
-        print("new best with RMSE %f"%err)
+        self.updatewaitsimwin("new best with RMSE %f"%err)
+
         self.stepminopterr = err
         # save best param file
         shutil.copyfile(prmloc0,os.path.join(outdir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
@@ -413,7 +422,9 @@ class RunSimThread (QThread):
 
         return opt_results
 
-    print('Optimizing from [%3.3f-%3.3f] ms' % (self.opt_params['opt_start'], self.opt_params['opt_end']))
+    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_params['opt_start'], self.opt_params['opt_end'])
+    self.updatewaitsimwin(txt)
+
     num_params = self.opt_params['num_params']
 
     # initialize RNG with seed from config
