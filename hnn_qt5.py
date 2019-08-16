@@ -235,6 +235,10 @@ class RunSimThread (QThread):
   def optmodel (self):
     import simdat
 
+    # initialize RNG with seed from config
+    seed = int(find_param(paramf,'prng_seedcore_opt'))
+    nlopt.srand(seed)
+
     simdat.initial_ddat = simdat.ddat.copy()
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
@@ -427,9 +431,6 @@ class RunSimThread (QThread):
 
     num_params = self.opt_params['num_params']
 
-    # initialize RNG with seed from config
-    seed = int(find_param(paramf,'prng_seedcore_opt'))
-    nlopt.srand(seed)
     algorithm = nlopt.LN_COBYLA
     opt = nlopt.opt(algorithm, num_params)
     opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
