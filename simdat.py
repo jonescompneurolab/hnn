@@ -14,6 +14,7 @@ from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, u
 from scipy import signal
 from gutils import getscreengeom
 
+# dconf has settings from hnn.cfg
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
@@ -241,10 +242,11 @@ class SIMCanvas (FigureCanvas):
         xl = x axis limits
         dinty = dict of input types used, determines how many/which axes created/displayed
     """
-    xlim_new = (ddat['dpl'][0,0],ddat['dpl'][-1,0])
-    # print('xlim_new:',xlim_new)
+    if not self.hassimdata():
+      return
+
     # set number of bins (150 bins per 1000ms)
-    bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int
+    bins = ceil(150. * (xl[1] - xl[0]) / 1000.) # bins needs to be an int
     if debug: print('bins:',bins)
     extinputs = None
 
@@ -290,19 +292,19 @@ class SIMCanvas (FigureCanvas):
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
       if hasPois: # any Poisson inputs?
-        hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xlim_new,color='k',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_pois'] = extinputs.plot_hist(axpois,'pois',ddat['dpl'][:,0],bins,xl,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xlim_new,color='g',lw=self.gui.linewidth+1)
+        hist['feed_dist'] = extinputs.plot_hist(axdist,'dist',ddat['dpl'][:,0],bins,xl,color='g',lw=self.gui.linewidth+1)
 
       if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xlim_new,color='r',lw=self.gui.linewidth+1)
+        hist['feed_prox'] = extinputs.plot_hist(axprox,'prox',ddat['dpl'][:,0],bins,xl,color='r',lw=self.gui.linewidth+1)
 
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xlim_new,color='g',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_evdist'] = extinputs.plot_hist(axdist,'evdist',ddat['dpl'][:,0],bins,xl,color='g',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xlim_new,color='r',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_evprox'] = extinputs.plot_hist(axprox,'evprox',ddat['dpl'][:,0],bins,xl,color='r',hty='step',lw=self.gui.linewidth+1)
 
       if hist['feed_dist'] is None and hist['feed_prox'] is None and \
          hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
@@ -314,7 +316,7 @@ class SIMCanvas (FigureCanvas):
           axdist.invert_yaxis()
         for ax in [axpois,axdist,axprox]:
           if ax:
-            ax.set_xlim(xlim_new)
+            ax.set_xlim(xl)
             ax.legend(loc=1)  # legend in upper right
         return True,gRow
 
@@ -368,19 +370,22 @@ class SIMCanvas (FigureCanvas):
     """ get a dictionary of input types used in simulation
         with distal/proximal specificity for evoked,ongoing inputs
     """
+
     dinty = {'Evoked':False,'Ongoing':False,'Poisson':False,'Tonic':False,'EvokedDist':False,\
              'EvokedProx':False,'OngoingDist':False,'OngoingProx':False}
+
     try:
-      dinty['Evoked'] = usingEvokedInputs(dfile['outparam'])
-      dinty['EvokedDist'] = usingEvokedInputs(dfile['outparam'], lsuffty = ['_evdist_'])
-      dinty['EvokedProx'] = usingEvokedInputs(dfile['outparam'], lsuffty = ['_evprox_'])
-      dinty['Ongoing'] = usingOngoingInputs(dfile['outparam'])
-      dinty['OngoingDist'] = usingOngoingInputs(dfile['outparam'], lty = ['_dist'])
-      dinty['OngoingProx'] = usingOngoingInputs(dfile['outparam'], lty = ['_prox'])
-      dinty['Poisson'] = usingPoissonInputs(dfile['outparam'])
-      dinty['Tonic'] = usingTonicInputs(dfile['outparam'])
-    except:
+      dinty['Evoked'] = usingEvokedInputs(self.paramf)
+      dinty['EvokedDist'] = usingEvokedInputs(self.paramf, lsuffty = ['_evdist_'])
+      dinty['EvokedProx'] = usingEvokedInputs(self.paramf, lsuffty = ['_evprox_'])
+      dinty['Ongoing'] = usingOngoingInputs(self.paramf)
+      dinty['OngoingDist'] = usingOngoingInputs(self.paramf, lty = ['_dist'])
+      dinty['OngoingProx'] = usingOngoingInputs(self.paramf, lty = ['_prox'])
+      dinty['Poisson'] = usingPoissonInputs(self.paramf)
+      dinty['Tonic'] = usingTonicInputs(self.paramf)
+    except FileNotFoundError:
       pass
+
     return dinty
 
   def getnextcolor (self):
@@ -390,11 +395,14 @@ class SIMCanvas (FigureCanvas):
     return self.clridx
 
   def plotextdat (self, recalcErr=True):
+    if not 'dextdata' in ddat or len(ddat['dextdata']) == 0:
+      return
+
     # plot 'external' data (e.g. from experiment/other simulation)
     hassimdata = self.hassimdata() # has the simulation been run yet?
     if hassimdata:
       if recalcErr:
-        calcerr(ddat, find_param(dfile['outparam'],'tstop')) # recalculate/save the error?
+        calcerr(ddat, ddat['dpl'][-1,0]) # recalculate/save the error?
       lerr, errtot = ddat['lerr'], ddat['errtot']
 
       if self.optMode:
@@ -406,6 +414,7 @@ class SIMCanvas (FigureCanvas):
 
     if self.axdipole is None:
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
+      xl = (0.0, quickgetprm(self.paramf,'tstop',float))
       yl = (-0.001,0.001)
     else:
       yl = self.axdipole.get_ylim()
@@ -505,8 +514,8 @@ class SIMCanvas (FigureCanvas):
     DrawSpec = find_param(dfile['outparam'],'save_spec_data') or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic'] and 'spec' in ddat
 
     ds = None
-    xl = (0,find_param(dfile['outparam'],'tstop'))
-    dt = find_param(dfile['outparam'],'dt')
+    xl = (0,ddat['dpl'][-1,0])
+    dt = ddat['dpl'][1,0] - ddat['dpl'][0,0]
 
     # get spectrogram if it exists, then adjust axis limits but only if drawing spectrogram
     if DrawSpec:
@@ -606,10 +615,24 @@ class SIMCanvas (FigureCanvas):
 
   def plotinputs (self):
     if self.axdipole is None:
-      return
+      self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
+      yl = (-0.001,0.001)
+      self.axdipole.set_ylim(yl)
 
-    yl = list(self.axdipole.get_ylim())
-    xl = list(self.axdipole.get_xlim())
+      bottom = 0.0
+      left = 0.08
+      w,h=getscreengeom()
+      if w < 2800: left = 0.1
+      self.figure.subplots_adjust(left=left,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
+
+      try:
+        xl = (0.0, quickgetprm(self.paramf,'tstop',float))
+      except FileNotFoundError:
+        return
+      self.axdipole.set_xlim(xl)
+    else:
+      yl = self.axdipole.get_ylim()
+      xl = self.axdipole.get_xlim()
 
     dinty = self.getInputs() # get dict of input types used (influences which/how plots drawn)
 
@@ -628,7 +651,6 @@ class SIMCanvas (FigureCanvas):
     self.axdipole = None
 
     self.plotsimdat()
-    if 'dextdata' in ddat:
-      self.plotextdat(recalcErr)
+    self.plotextdat(recalcErr)
     self.plotinputs()
     self.draw()
