@@ -411,10 +411,8 @@ class SIMCanvas (FigureCanvas):
       lerr = None
       errtot = None
 
-
     if self.axdipole is None:
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
-      xl = (0.0, quickgetprm(self.paramf,'tstop',float))
       yl = (-0.001,0.001)
     else:
       yl = self.axdipole.get_ylim()
@@ -615,6 +613,7 @@ class SIMCanvas (FigureCanvas):
 
   def plotinputs (self):
     if self.axdipole is None:
+      # handle when data is not loaded and sim has not been run
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
       yl = (-0.001,0.001)
       self.axdipole.set_ylim(yl)
@@ -626,6 +625,7 @@ class SIMCanvas (FigureCanvas):
       self.figure.subplots_adjust(left=left,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
       try:
+        # maybe a param file has been loaded so that we can draw arrows
         xl = (0.0, quickgetprm(self.paramf,'tstop',float))
       except FileNotFoundError:
         return
