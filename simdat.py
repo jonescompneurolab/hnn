@@ -426,7 +426,7 @@ class SIMCanvas (FigureCanvas):
       fx = int(shp[0] * float(c) / shp[1])
       if lerr:
         tx,ty=dat[fx,0],dat[fx,c]
-        txt='RMSE:' + str(round(lerr[ddx],2))
+        txt='RMSE: %.2f' % round(lerr[ddx],2)
         if not self.optMode:
           self.lextdatobj.append(self.axdipole.annotate(txt,xy=(dat[0,0],dat[0,c]),xytext=(tx,ty),color=clr,fontweight='bold'))
       self.lpatch.append(mpatches.Patch(color=clr, label=fn.split(os.path.sep)[-1].split('.txt')[0]))
@@ -441,14 +441,14 @@ class SIMCanvas (FigureCanvas):
       tx,ty=0,0
       if self.optMode:
         clr = 'black'
-        txt='RMSE:' + str(round(initial_err,2))
+        txt='RMSE: %.2f' % round(initial_err,2)
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
         clr = 'gray'
-        txt='RMSE:' + str(round(errtot,2))
+        txt='RMSE: %.2f' % round(errtot,2)
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.86,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
       else:
         clr = 'black'
-        txt='Avg. RMSE:' + str(round(errtot,2))
+        txt='Avg. RMSE: %.2f' % round(errtot,2)
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
 
     if not hassimdata: # need axis labels
