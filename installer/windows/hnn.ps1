@@ -423,7 +423,7 @@ if ($null -ne $script:VIRTUALENV) {
   $script:PYTHON = "$HOME\venv\hnn\Scripts\python.exe"
   if (Test-Python-3($script:PYTHON)) {
     # use pip3 for good measure
-    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install PyOpenGL pyqtgraph matplotlib scipy PyQt5" -Wait
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install PyOpenGL pyqtgraph matplotlib scipy PyQt5 psutil nlopt" -Wait
   }
   else {
     Write-Warning "Virtualenv failed to create a valid python3 environment"
@@ -448,7 +448,8 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda
+    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda psutil
+    pip3 install nlopt
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null

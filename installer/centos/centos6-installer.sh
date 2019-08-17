@@ -29,17 +29,11 @@ startdir=$(pwd)
 echo $startdir
 
 git clone https://github.com/neuronsimulator/nrn
-git clone https://github.com/neuronsimulator/iv
-cd iv
-git checkout d4bb059
-./build.sh
-./configure
-make -j4
-sudo make install -j4
-cd ../nrn
+cd nrn
 #git checkout be2997e
 ./build.sh
-./configure --with-nrnpython=python3 --with-paranrn
+./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
+    --without-iv --without-nrnoc-x11 --with-mpi
 make -j4
 sudo PATH=$PATH:/usr/lib64/openmpi/bin make install -j4
 cd src/nrnpython
@@ -49,7 +43,6 @@ sudo python3 setup.py install
 cd $startdir
 
 # cleanup the nrn and iv folders, since NEURON Has been installed
-sudo rm -rf iv
 sudo rm -rf nrn
 
 # setup HNN itself
@@ -108,3 +101,6 @@ sudo pip3 install pyqtgraph
 
 # needed for matplotlib
 sudo yum -y install python34-tkinter
+
+sudo pip3 install --upgrade nlopt scipy
+sudo pip3 install psutil

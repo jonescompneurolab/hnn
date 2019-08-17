@@ -12,21 +12,12 @@ git clone https://github.com/jonescompneurolab/hnn
 
 # Build HNN prerequisites
 
-# Build interviews (required for NEURON)
-
-cd $HOME/HNN/iv && \
-  git checkout d4bb059 && \
-  ./build.sh && \
-  ./configure --prefix=$(pwd)/build && \
-  make -j2 && \
-  make install -j2
-
 # Build NEURON
 
 cd $HOME/HNN/nrn && \
    ./build.sh && \
    ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-     --with-iv=$(pwd)/../iv/build --prefix=$(pwd)/build && \
+     --without-iv --with-mpi --prefix=$(pwd)/build && \
    make -j2 && \
    make install -j2 && \
    cd src/nrnpython && \
@@ -34,13 +25,11 @@ cd $HOME/HNN/nrn && \
 
 # Cleanup compiled prerequisites
 
-cd $HOME/HNN/iv && \
-  make clean
 cd $HOME/HNN/nrn && \
   make clean
 
 # Install python modules. Ignore the errors
-pip3 install --user PyOpenGL pyqtgraph  >/dev/null 2>&1
+pip3 install --user PyOpenGL pyqtgraph psutil nlopt >/dev/null 2>&1
 
 # Build HNN
 cd $HOME/HNN/hnn && \

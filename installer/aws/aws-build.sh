@@ -4,29 +4,19 @@ sudo apt-get update && \
      sudo apt-get upgrade -y
 sudo apt-get install -y openmpi-bin openmpi-common openmpi-doc mpi-default-dev
 
-# for IV
-sudo apt-get install -y m4 automake g++ x11-common libx11-dev libxext-dev make
-
 # for NEURON
+sudo apt-get install -y m4 automake g++ x11-common libx11-dev libxext-dev make
 sudo apt-get install -y python-minimal libpython-dev libpython-all-dev libzip-dev libncurses5-dev bison flex
 
 # for python
-sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 
-
-cd $HOME && \
-  git clone https://github.com/neuronsimulator/iv.git && \
-  cd iv && \
-  ./build.sh && \
-  ./configure && \
-  make && \
-  sudo make install
+sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy python3-psutil
 
 cd $HOME && \
   git clone https://github.com/neuronsimulator/nrn.git && \
   cd nrn && \
   ./build.sh && \
   ./configure --with-nrnpython=python3 \
-      --with-paranrn --disable-rx3d && \
+      --with-paranrn --without-iv --disable-rx3d && \
   make && \
   sudo make install
 

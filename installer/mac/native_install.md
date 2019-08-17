@@ -117,6 +117,11 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     ```
     source activate hnn
     ```
+5. Install some prerequisites with pip
+
+    ```
+    pip install nlopt psutil
+    ```
 
 ## Clone and compile HNN source code
 1. The following commands will clone the source code repository, enter the hnn directory, and compile HNN's mod files for NEURON. This is where Xcode Command Line Tools are needed.:

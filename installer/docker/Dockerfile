@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM caldweba/opengl-docker
 
 # avoid questions from debconf
 ENV DEBIAN_FRONTEND noninteractive
@@ -15,27 +15,18 @@ RUN apt-get update && \
                        python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy \
                        python3-pyqt4.qtopengl libxaw7 libxmu6 libxpm4 \
                        git vim iputils-ping net-tools iproute2 nano sudo \
-                       telnet language-pack-en-base && \
-    apt-get remove -y python3-matplotlib
+                       telnet language-pack-en-base python3-psutil \
+                       python3-matplotlib && \
+    apt autoremove -y --purge && apt clean
 
-RUN dpkg-reconfigure locales && \
-    locale -a
-
-# use pip for matplotlib to get latest version (2.x) since apt-get was using older
-# version (1.5) which does not have set_facecolor
-# make sure matplotlib version 2 is used -- is this strictly needed?
-RUN pip3 install PyOpenGL matplotlib && \
-    pip3 install --upgrade PyOpenGL matplotlib
-
-# this was needed to get a newer version of nlopt
+# get updated versions for compatibility with nlopt
 RUN pip3 install pip --upgrade && \
-    pip install --upgrade nlopt scipy
+    pip install scipy numpy nlopt
 
 # create the group hnn_group and user hnn_user
-RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user
-
 # add hnn_user to the sudo group
-RUN adduser hnn_user sudo && \
+RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
+    adduser hnn_user sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # copy the start script into the container
@@ -51,7 +42,7 @@ RUN cd /home/hnn_user && \
 RUN cd /home/hnn_user/nrn && \
     ./build.sh && \
     ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-      --without-iv  --without-nrnoc-x11 --with-mpi \
+      --without-iv --without-nrnoc-x11 --with-mpi \
       --prefix=/home/hnn_user/nrn/build && \
     make -j4 && \
     make install -j4 && \

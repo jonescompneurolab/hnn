@@ -10,7 +10,6 @@ sudo updatedb
 sudo rm -rf /usr/local/hnn
 
 # delete hnn's dependencies
-sudo rm -rf /usr/local/iv
 sudo rm -rf /usr/local/nrn
 
 # clean up the bashrc (sed looks like it uses regex, but I don't
