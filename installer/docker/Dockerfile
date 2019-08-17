@@ -15,8 +15,11 @@ RUN apt-get update && \
                        python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy \
                        python3-pyqt4.qtopengl libxaw7 libxmu6 libxpm4 \
                        git vim iputils-ping net-tools iproute2 nano sudo \
-                       telnet && \
+                       telnet language-pack-en-base && \
     apt-get remove -y python3-matplotlib
+
+RUN dpkg-reconfigure locales && \
+    locale -a
 
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
 # version (1.5) which does not have set_facecolor
@@ -58,7 +61,11 @@ RUN cd /home/hnn_user/nrn && \
 # create the global session variables
 RUN echo '# these lines define global session variables for HNN' >> ~/.bashrc && \
     echo 'export CPU=$(uname -m)' >> ~/.bashrc && \
-    echo 'export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin' >> ~/.bashrc
+    echo 'export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin' >> ~/.bashrc && \
+    echo 'export PYTHONPATH=/home/hnn_user/nrn/build/lib/python' >> ~/.bashrc && \
+    echo 'export OMPI_MCA_mpi_warn_on_fork=0' >> ~/.bashrc && \
+    echo 'export OMPI_MCA_btl_openib_allow_ib=1' >> ~/.bashrc && \
+    echo 'export XDG_RUNTIME_DIR=/tmp/runtime-hnn_user' >> ~/.bashrc
 
 # allow user to specify architecture if different than x86_64
 ARG CPU=x86_64
