@@ -318,7 +318,9 @@ class RunSimThread (QThread):
     self.best_ddat = None
 
     def optrun (new_params, grad=0):
-      self.updatewaitsimwin("Optimization step %d, iteration %d"%(self.cur_step, self.optiter))
+      txt = "Optimization step %d, iteration %d"%(self.cur_step, self.optiter)
+      self.updatewaitsimwin(txt)
+      print(txt)
 
       dtest = OrderedDict() # parameter values to test      
       for param_name, test_value in zip(self.opt_params['ranges'].keys(), new_params): # set parameters
@@ -356,15 +358,16 @@ class RunSimThread (QThread):
         # weighted RMSE with weights of all 1's is the same as
         # regular RMSE
         simdat.ddat['errtot'] = simdat.ddat['werrtot']
-        txt = "regular RMSE = %f"%err
+        txt = "RMSE = %f"%err
       else:
         # calculate regular RMSE for displaying on plot
         simdat.calcerr(simdat.ddat,
                       self.opt_params['opt_end'],
                       tstart=self.opt_params['opt_start'])
 
-        txt = "weighted RMSE = %f, regular RMSE = %f"% (err,simdat.ddat['errtot'])
+        txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
 
+      print(txt)
       self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
 
       # Be ready in case the user changes the simulation name in the middle of an optimization
