@@ -499,7 +499,7 @@ elseif ($null -ne $script:VIRTUALENV) {
   Write-Host "$HOME\venv\hnn\Scripts\activate"
 }
 Write-Host "cd $HNN_PATH"
-Write-Host "python hnn.py hnn.cfg"
+Write-Host "python hnn.py"
 Write-Host ""
 
 return

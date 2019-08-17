@@ -19,7 +19,7 @@
    singularity shell hnn.simg
    export PYTHONPATH=/home/hnn_user/nrn/build/lib/python/
    cd /home/hnn_user/hnn_repo/
-   python3 hnn.py hnn.cfg
+   python3 hnn.py
    ```
 
 6. When the HNN GUI starts up, make sure to change limit the number of cores the amount when requesting the VNC session (e.g. 4 cores)

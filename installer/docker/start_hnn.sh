@@ -17,7 +17,7 @@ if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
 fi
 
 # try once with default DISPLAY
-python3 hnn.py hnn.cfg
+python3 hnn.py
 
 done=
 XHOST=${DISPLAY%:0}
@@ -26,7 +26,7 @@ for XHOST in "" $XHOST 192.168.99.1 192.168.65.2 ""; do
   for PORT in 0 1 2 3 4; do
     export DISPLAY=$XHOST:$PORT
     echo "Trying to start HNN with DISPLAY=$DISPLAY"
-    python3 hnn.py hnn.cfg
+    python3 hnn.py
     if [[ "$?" -ne "0" ]]; then
       echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
     else

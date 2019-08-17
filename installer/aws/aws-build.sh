@@ -38,7 +38,7 @@ cd $HOME && \
 
 echo '#!/bin/bash' | sudo tee /usr/local/bin/hnn
 echo 'cd $HOME/hnn' | sudo tee -a /usr/local/bin/hnn
-echo 'python3 hnn.py hnn.cfg' | sudo tee -a /usr/local/bin/hnn
+echo 'python3 hnn.py' | sudo tee -a /usr/local/bin/hnn
 sudo chmod 755 /usr/local/bin/hnn
 
 # prepare image

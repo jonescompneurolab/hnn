@@ -10,11 +10,6 @@ See the scripts in this directory:
   chmod +x ./centos7-installer.sh
   ./centos7-installer.sh
   ```
-* [uninstall.sh](uninstall.sh)
-  ```
-  chmod +x ./uninstall.sh
-  ./uninstall.sh
-  ```
 
 # Troubleshooting
 

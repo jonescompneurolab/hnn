@@ -58,4 +58,4 @@ EOF
 # Start HNN
 module load mpi/openmpi_4.0.0_gcc python/3.6.6
 cd $HOME/HNN/hnn
-python3 hnn.py hnn.cfg
+python3 hnn.py

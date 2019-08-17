@@ -9,16 +9,6 @@ See the scripts in this directory:
   chmod +x ./installer.sh
   ./installer.sh
   ```
-* [uninstaller.sh](uninstaller.sh)
-  ```
-  chmod +x ./uninstaller.sh
-  ./uninstaller.sh
-  ```
-* [updater.sh](updater.sh)
-  ```
-  chmod +x ./updater.sh
-  ./updater.sh
-  ```
 
 # Troubleshooting
 

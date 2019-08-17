@@ -51,7 +51,7 @@ ulimit -l unlimited
 This may not be allowed for a non-privileged user, such as on a batch or HPC environment. Check with the system administrator if you get an error message running this command.
 
 ## Simulation log says "X total processes failed to start"
-Check the command line output where "`python hnn.py hnn.cfg`" was run. If you get a message like the following, then your PATH environment variable needs to be updated to include the NEURON binaries, like `nrniv`
+Check the command line output where "`python hnn.py`" was run. If you get a message like the following, then your PATH environment variable needs to be updated to include the NEURON binaries, like `nrniv`
 ```
 Starting simulation. . .
 --------------------------------------------------------------------------

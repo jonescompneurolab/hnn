@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=0.1
-Name=Human Neocortical Neurosolver (HNN)
-Comment=Simulates Neocortical Models
-Exec=/usr/local/bin/hnn
-Icon=/usr/share/pixmaps/hnn.png
-Terminal=true
-Type=Application
-StartupNotify=true
