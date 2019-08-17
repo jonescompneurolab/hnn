@@ -11,6 +11,7 @@ f_max_spec: 140.0
 dipole_scalefctr: 30000.0
 dipole_smooth_win: 0.0
 save_vsoma: 0
+prng_seedcore_opt: 0
 prng_seedcore_input_prox: 0
 prng_seedcore_input_dist: 0
 prng_seedcore_extpois: 0
