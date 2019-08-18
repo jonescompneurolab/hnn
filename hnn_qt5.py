@@ -2419,7 +2419,8 @@ class HNNGUI (QMainWindow):
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
     global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'param')) # uses forward slash, even on Windows OS
+    fn = QFileDialog.getOpenFileName(self, 'Open file',
+                                     os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
       try:
@@ -2467,7 +2468,8 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'data'))
+    fn = QFileDialog.getOpenFileName(self, 'Open file',
+                                     os.path.join(hnn_root_dir,'data'))
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
