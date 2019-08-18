@@ -359,7 +359,7 @@ def runtrials (ntrial, inc_evinput=0.0):
   global doutf
   if pcID==0: print('Running', ntrial, 'trials.')
   for i in range(ntrial):
-    if pcID==0: print('Running trial',i+1,'...')
+    if pcID==0: print(os.linesep+'Running trial',i+1,'...')
     doutf = setoutfiles(ddir,i,ntrial)
     # initrands(ntrial+(i+1)**ntrial) # reinit for each trial
     net.state_init() # initialize voltages
