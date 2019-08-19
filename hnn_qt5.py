@@ -406,7 +406,7 @@ class RunSimThread (QThread):
     self.best_ddat = None
 
     def optrun (new_params, grad=0):
-      txt = "Optimization step %d, iteration %d"%(self.cur_step, self.optiter)
+      txt = "Optimization step %d, iteration %d"%(self.cur_step+1, self.optiter+1)
       self.updatewaitsimwin(txt)
       print(txt)
 
