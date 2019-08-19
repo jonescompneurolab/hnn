@@ -9,5 +9,5 @@ services:
     volumes:
       - "$HOME/.Xauthority:/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "./hnn:/home/hnn_user/hnn"
+      - "./docker_hnn_out:/home/hnn_user/hnn_out"
     command: /home/hnn_user/start_hnn.sh
