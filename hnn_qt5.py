@@ -346,7 +346,8 @@ class RunSimThread (QThread):
         continue
 
       self.cur_step = step
-      if self.cur_step == len(dconf['opt_info']) - 1:
+      total_steps = len(dconf['opt_info'])
+      if self.cur_step == total_steps - 1:
         self.last_step = True
         # For the last step (all inputs), recalculate ranges and update
         # dconf['opt_info']. If previous optimization steps increased
@@ -363,9 +364,9 @@ class RunSimThread (QThread):
 
         # reload opt_params for the last step in case the number of
         # steps was changed by updateoptparams()
-        self.opt_params = dconf['opt_info'][len(dconf['opt_info']) - 1]
+        self.opt_params = dconf['opt_info'][total_steps - 1]
 
-      txt = "Starting optimization step %d"%(step+1)
+      txt = "Starting optimization step %d/%d"%(step+1,total_steps)
       self.updatewaitsimwin(txt)
       self.runOptStep()
 
@@ -2419,7 +2420,8 @@ class HNNGUI (QMainWindow):
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
     global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'param')) # uses forward slash, even on Windows OS
+    fn = QFileDialog.getOpenFileName(self, 'Open file',
+                                     os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
       try:
@@ -2467,7 +2469,8 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'data'))
+    fn = QFileDialog.getOpenFileName(self, 'Open file',
+                                     os.path.join(hnn_root_dir,'data'))
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
