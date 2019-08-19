@@ -289,7 +289,7 @@ class RunSimThread (QThread):
           break
         elif status == 1 and not retried:
           self.get_proc_stream(self.proc.stderr, print_to_console=True)
-          txt = "Failed staring mpiexec, retrying with '--use-hwthread-cpus'"
+          txt = "Failed starting mpiexec, retrying with '--use-hwthread-cpus'"
           print(txt)
           self.updatewaitsimwin(txt)
           self.spawn_sim(simlength, banner=banner, hwthreads=True)
@@ -2390,6 +2390,12 @@ class HNNGUI (QMainWindow):
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     self.waitsimwin = WaitSimDialog(self)
+    default_param = os.path.join(dconf['dbase'],'data','default')
+    first_load = not (os.path.exists(default_param))
+    if first_load:
+      QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. Press 'Run Simulation' to display simulation output")
+    else:
+      self.statusBar().showMessage("Loaded %s"%default_param)
 
   def redraw (self):
     # redraw simulation & external data
