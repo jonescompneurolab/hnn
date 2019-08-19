@@ -289,7 +289,7 @@ class RunSimThread (QThread):
           break
         elif status == 1 and not retried:
           self.get_proc_stream(self.proc.stderr, print_to_console=True)
-          txt = "Failed staring mpiexec, retrying with '--use-hwthread-cpus'"
+          txt = "Failed starting mpiexec, retrying with '--use-hwthread-cpus'"
           print(txt)
           self.updatewaitsimwin(txt)
           self.spawn_sim(simlength, banner=banner, hwthreads=True)
@@ -2390,6 +2390,12 @@ class HNNGUI (QMainWindow):
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     self.waitsimwin = WaitSimDialog(self)
+    default_param = os.path.join(dconf['dbase'],'data','default')
+    first_load = not (os.path.exists(default_param))
+    if first_load:
+      QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. Press 'Run Simulation' to display simulation output")
+    else:
+      self.statusBar().showMessage("Loaded %s"%default_param)
 
   def redraw (self):
     # redraw simulation & external data
@@ -2420,7 +2426,9 @@ class HNNGUI (QMainWindow):
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
     global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file',
+    qfd = QFileDialog()
+    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    fn = qfd.getOpenFileName(self, 'Open param file',
                                      os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
@@ -2469,7 +2477,9 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    fn = QFileDialog.getOpenFileName(self, 'Open file',
+    qfd = QFileDialog()
+    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    fn = qfd.getOpenFileName(self, 'Open data file',
                                      os.path.join(hnn_root_dir,'data'))
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
