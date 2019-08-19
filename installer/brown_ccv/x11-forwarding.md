@@ -39,7 +39,7 @@
 
 3. Log in using your CCV account password
 
-4. Start an interactive job with the `interact` command. Choose the number of cores for your allocations. If you have an exploratory account, you are limited to 16 cores. Anything larger will remain in the queue forever.
+4. Start an interactive job with the `interact` command. Choose the number of cores for your allocations. If you have an exploratory account, you are limited to 16 cores. You can also use a condo account to use larger allocations.
 
    ```bash
    interact -n 16
@@ -54,12 +54,9 @@
    singularity run hnn.simg
    ```
 
-6. When the HNN GUI starts up, make sure to change limit the number of cores the amount when requesting the interactive session (e.g. 16 cores)
-    * Click 'Set Parameters' -> 'Run' and change 'NumCores'
-7. You can now proceed to the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
+6. You can now proceed to the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
 
-   * The files within the container are visible at `/`. This allows you to access both the container filesystem and Oscar's filesystem seamlessly. If you are loading sample files for the tutorials, look in `/home/hnn_user/hnn_source_code`
-   * The "Model Visualization" feature will not work and you will receive an error in the terminal window: `ImportError: libreadline.so.6: cannot open shared object file: No such file or directory`.
+   * The files within the container are visible are integrated within Oscar's view of your director. For example, your user directory might be `/users/myuser` and the hnn_user within the container has a user directory `/home/hnn_user`. If you are loading sample files for the tutorials, look in `/home/hnn_user/hnn_source_code`. Your output from simulations will be stored in `/users/myuser/hnn_out`
 
 ## Running HNN a second time
 

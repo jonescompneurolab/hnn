@@ -8,22 +8,26 @@ This directory contains files for building the HNN container and using docker-co
 
 ## Pulling the prebuilt Docker container from Docker Hub
 The newest version of HNN is available as a prebuilt container posted on Docker Hub, which can be used instead of building the container and all of its prerequisites (NEURON) from scratch.
-```
+```bash
 docker pull jonescompneurolab/hnn
 ```
 
 ## Building HNN container from this directory
-```
+
+The CACHEBUST argument reuses the docker cache up to the point where new HNN source code is included (container will always include latest source code).
+
+```bash
 cd hnn/installer/docker
-docker build --tag jonescompneurolab/hnn .
+docker build --tag jonescompneurolab/hnn --build-arg CACHEBUST=$(date +%s) .
 ```
 
 ## Running HNN container without docker-compose
 Using docker-compose is the preferred way to run HNN containers, because it sets needed environment variables and defines volumes automatically. However, if docker-compose is not available or the user wants to modify docker run arguments, the following command Replicates behavior by docker-compose:
-```
+
+```bash
 # Set DISPLAY for Mac and Windows
 export DOCKER_DISPLAY=host.docker.internal:0
-# For docker toolbox only 
+# For docker toolbox only
 export DOCKER_DISPLAY=192.168.99.1:0
 # For Linux
 export DOCKER_DISPLAY=:0

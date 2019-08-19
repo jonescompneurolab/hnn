@@ -49,45 +49,62 @@
      1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
      2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
      3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
-        ```
+
+        ```bash
         $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn/installer/mac
         ```
 
-3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
-    ```
-    $ docker-compose up -d
-    Starting mac_hnn_1 ... done
-    ```
-    * You can see that the HNN container is running
-      ```
-      $ docker ps -a
-      CONTAINER ID  IMAGE                 COMMAND                 CREATED        STATUS       PORTS  NAMES
-      1fa235c2f831  jonescompneurolab/hnn "/home/hnn_user/star…"  6 seconds ago  Up 5 seconds        mac_hnn_1
-      ```
+3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The `docker-compose` command can be used to manage Docker containers described in the specification file docker-compose.yml.
 
-    * If starting the GUI doesn't work the first time, the first thing to check is XQuartz settings (see screnshot above). Then restart XQuartz and try starting the HNN container again with
-      ```
-      $ docker-compose restart
-      ```
+    ```bash
+    $ docker-compose run hnn
+    Pulling hnn (jonescompneurolab/hnn:)...
+    latest: Pulling from jonescompneurolab/hnn
+    34dce65423d3: Already exists
+    796769e96d24: Already exists
+    2a0eada9611d: Already exists
+    d6830a7cd972: Already exists
+    ddf2bf28e180: Already exists
+    77bf1279b29f: Pull complete
+    6c8ddf82616f: Pull complete
+    a991616934ba: Pull complete
+    2cece6240c19: Pull complete
+    df826e7d26b9: Pull complete
+    824d51cbc89d: Pull complete
+    0d16f27c744b: Pull complete
+    Digest: sha256:0c27e2027828d2510a8867773562bbc966c509f45c9921cc2d1973c575d327b3
+    Status: Downloaded newer image for jonescompneurolab/hnn:latest
+    ```
+
 4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screnshot above). Then restart XQuartz and try starting the HNN container again.
 5. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
-   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
+   * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
-   * Clicking on 'Model Visualization' may only display a blank screen. This feature will not work with Docker Desktop on Mac because the 3D visualization requires access the the GPU device. Docker is not capable of passing through access to the Mac's hardware GPU. 
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
+## Updgrading to a new version of HNN
 
-## Launching HNN again
-1. Verify that XQuartz and Docker are running. XQuartz will not start automatically after a reboot by default.
-2. Open a terminal window
+1. Verify that XQuartz and Docker are running. XQuartz will not start automatically after a reboot by default. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
+
+    ```bash
+    $ docker info
     ```
+
+2. Open a terminal window
+
+    ```bash
     $ cd hnn/installer/mac
-    $ docker-compose restart
+    $ docker-compose up --no-start
+    Recreating mac_hnn_1 ... done
+    $ docker-compose run hnn
     ```
 
 ## Editing files within HNN container
-You may want run commands or edit files within the container. To access a command shell in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
-```
+
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+
+```bash
 $ docker exec -ti mac_hnn_1 bash
 hnn_user@054ba0c64625:/home/hnn_user$
 ```
@@ -97,7 +114,8 @@ If you'd like to be able to copy files from the host OS without using the shared
 ## Uninstalling HNN
 
 If you want to remove the container and 1.5 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
-```
+
+```bash
 $ docker rm -f mac_hnn_1
 $ docker rmi jonescompneurolab/hnn
 ```
