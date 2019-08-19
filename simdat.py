@@ -675,8 +675,6 @@ class SIMCanvas (FigureCanvas):
       self.axspec.set_ylim(ds['freq'][-1],ds['freq'][0])
       cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
       cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
-      for single_ax in self.figure.get_axes():
-        if single_ax: single_ax.set_xlim(xl)
     else:
       self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
 
