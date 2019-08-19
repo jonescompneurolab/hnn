@@ -25,11 +25,6 @@ RUN echo '# these lines define global session variables for HNN' >> ~/.bashrc &&
     echo 'export OMPI_MCA_mpi_warn_on_fork=0' >> ~/.bashrc && \
     echo 'export OMPI_MCA_btl_openib_allow_ib=1' >> ~/.bashrc
 
-# get rid of warning about XDG_RUNTIME_DIR
-RUN mkdir /tmp/runtime-hnn_user && \
-    chmod 700 /tmp/runtime-hnn_user && \
-    echo 'export XDG_RUNTIME_DIR=/tmp/runtime-hnn_user' >> ~/.bashrc
-
 # run sudo to get rid of message on first login about using sudo
 RUN sudo -l
 
