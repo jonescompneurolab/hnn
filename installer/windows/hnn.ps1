@@ -448,13 +448,14 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda psutil
-    pip3 install nlopt
+    # python 3.7 doesn't work with NEURON (tried 7.7) as of 8/19/19
+    conda create -y -n hnn python=3.6 PyOpenGL pyqtgraph matplotlib scipy conda psutil
+    Start-Process "$CONDA_ENV\Scripts\pip3" "install nlopt" -Wait
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null
 
-    "set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
+    #"set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
     "set PYTHONHOME=$CONDA_ENV" | Add-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
   }
   else {

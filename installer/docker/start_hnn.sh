@@ -15,7 +15,7 @@ function retry_hnn {
     return 1
   else
     echo "HNN GUI stopped by user. Restart container to open again"
-    return 0
+    exit 0
   fi
 }
 
@@ -33,7 +33,7 @@ python3 hnn.py
 if [[ "$?" -eq "0" ]]; then
   # HNN quit gracefully
   echo "HNN GUI stopped by user. Restart container to open again"
-  sleep infinity
+  exit 0
 fi
 
 done=
@@ -42,10 +42,6 @@ XHOST=${DISPLAY%:0}
 for PORT in 0 1 2 3 4; do
   for XHOST in $XHOST 192.168.99.1 192.168.65.2 ""; do
     retry_hnn $XHOST $PORT
-    if [[ "$?" -eq "0" ]]; then
-      # HNN quit gracefully
-      sleep infinity
-    fi
   done
 done
 

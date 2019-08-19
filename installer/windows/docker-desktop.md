@@ -1,7 +1,9 @@
 # Installing HNN on Windows 10 Pro (Docker Desktop)
 
 ## Prerequisite: Virtualization support
+
 There are two related requirements needed for Docker to be able to run HNN in a virtual machine on your Windows system
+
 1. Hardware virtualization features (manual setting)
 
     If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. Only old systems do not support this feature. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manger. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
@@ -24,6 +26,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
    3. **If you enabled Hyper-V, please reboot your computer before continuing below to install docker.**
 
 ## Prerequisite: VcXsrv
+
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download) (click [here](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133) for the direct download link for version 64.1.20.1.4)
 2. Run the installer, choosing any installation folder.
 3. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
@@ -54,12 +57,14 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
 8. Reboot your computer after installing Docker
 
-
 ## Start HNN
+
 1. Verify that VcXsrv (XLaunch application) and Docker are running. VcXsrv will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing the following in a new cmd.exe window.
+
+    ```powershell
+    C:\Users\myuser> docker info
     ```
-    docker info
-    ```
+
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
 
    * Option 1: Cloning (requires Git for Windows)
@@ -67,74 +72,88 @@ There are two related requirements needed for Docker to be able to run HNN in a 
      1. First install [Git for Windows](https://gitforwindows.org/)
      2. Type the following in a cmd.exe window. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
-        ```
+        ```powershell
         C:\Users\myuser> git clone https://github.com/jonescompneurolab/hnn.git
         C:\Users\myuser> cd hnn\installer\windows
+        C:\Users\myuser\hnn\installer\windows>
         ```
-   
+
    * Option 2: Downloading a HNN release
 
      1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
      2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
      3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
-        ```
+
+        ```powershell
         C:\Users\myuser> cd REPLACE-WITH-FOLDER-EXTRACTED-TO\hnn\installer\windows
+        C:\Users\myuser\hnn\installer\windows>
         ```
 
-3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 1.5 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml. The parameter "up" starts the containers (just one in our case) in that file and "-d" starts the docker container in the background.
-    ```
-    C:\Users\myuser\hnn\installer\windows> docker-compose up -d
-    Starting windows_hnn_1 ... done
-    ```
-    * You can see that the HNN container is running
-      ```
-      C:\Users\myuser> docker ps -a
-      CONTAINER ID  IMAGE                 COMMAND                 CREATED        STATUS       PORTS  NAMES
-      1fa235c2f831  jonescompneurolab/hnn "/home/hnn_user/star…"  6 seconds ago  Up 5 seconds        windows_hnn_1
-      ```
+3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
 
-    * If starting the GUI doesn't work the first time, the first thing to check is VcXsrv settings have "Disable access control" (see above). Then restart VcXsrv and try starting the HNN container again with
-      ```
-      C:\Users\myuser\hnn\installer\windows> docker-compose restart
-      ```
+    ```powershell
+    C:\Users\myuser\hnn\installer\windows> docker-compose run hnn
+    Pulling hnn (jonescompneurolab/hnn:)...
+    latest: Pulling from jonescompneurolab/hnn
+    34dce65423d3: Already exists
+    796769e96d24: Already exists
+    2a0eada9611d: Already exists
+    d6830a7cd972: Already exists
+    ddf2bf28e180: Already exists
+    77bf1279b29f: Pull complete
+    6c8ddf82616f: Pull complete
+    a991616934ba: Pull complete
+    2cece6240c19: Pull complete
+    df826e7d26b9: Pull complete
+    824d51cbc89d: Pull complete
+    0d16f27c744b: Pull complete
+    Digest: sha256:0c27e2027828d2510a8867773562bbc966c509f45c9921cc2d1973c575d327b3
+    Status: Downloaded newer image for jonescompneurolab/hnn:latest
+    ```
+
 4. If a prompt appears from the lower-right and ask you to share the drive, click 'Share'.
+    * If starting the GUI doesn't work the first time, the first thing to check is VcXsrv settings have "Disable access control" (see above). Then restart VcXsrv and try starting the HNN container again.
 5. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
    <img src="install_pngs/access_filesystem.png" width="300" />
 
 6. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 7. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
-   * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
+   * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
+## Updgrading to a new version of HNN
 
-## Launching HNN again
 1. Verify that VcXsrv and Docker are running. VcXsrv will not start automatically after a reboot by default.
 2. Open a Command Prompt (cmd.exe)
-    ```
+
+    ```powershell
     C:\Users\myuser> cd hnn\installer\windows
-    C:\Users\myuser> docker-compose restart
+    C:\Users\myuser\hnn\installer\windows> docker-compose up --no-start
+    Recreating mac_hnn_1 ... done
+    C:\Users\myuse\rhnn\installer\windows> docker-compose run hnn
     ```
 
 ## Editing files within HNN container
-You may want run commands or edit files within the container. To access a command shell in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
-```
+
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one Command Prompt window and open another Command Prompt window to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+
+```powershell
 C:\Users\myuser> docker exec -ti windows_hnn_1 bash
 hnn_user@054ba0c64625:/home/hnn_user$
 ```
 
 If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
-
 ## Uninstalling HNN
 
 If you want to remove the container and 1.5 GB HNN image, run the following commands from a cmd.exe window. You can then remove Docker Desktop using "Add/Remove Programs"
-```
+
+```powershell
 C:\Users\myuser> docker rm -f windows_hnn_1
 C:\Users\myuser> docker rmi jonescompneurolab/hnn
 ```
-
 
 # Troubleshooting
 
