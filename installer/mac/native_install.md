@@ -117,6 +117,11 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     ```
     source activate hnn
     ```
+5. Install some prerequisites with pip
+
+    ```
+    pip install nlopt psutil
+    ```
 
 ## Clone and compile HNN source code
 1. The following commands will clone the source code repository, enter the hnn directory, and compile HNN's mod files for NEURON. This is where Xcode Command Line Tools are needed.:
@@ -136,7 +141,7 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 1. Start the HNN GUI from a terminal window:
     ```
     source activate hnn
-    python hnn.py hnn.cfg
+    python hnn.py
     ```
 2. The HNN GUI should appear and you should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
 3. When you run simulations for the first time, the following dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.

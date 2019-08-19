@@ -10,43 +10,34 @@ sudo apt install -y git
 git clone https://github.com/jonescompneurolab/hnn.git
 
 # packages neded for NEURON and graphics
-sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy 
+sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy python3-psutil
 
 # fixes the issue where importing OpenGL in python throws an error
 # (I assume that this works by installing the OpenGL for qt4 and then updating? it's not clear...)
 # I think that this is an error in the repos, not our fault.
 sudo apt install python3-pyqt4.qtopengl
-sudo pip3 install PyOpenGL
-sudo pip3 install --upgrade PyOpenGL
+pip3 install PyOpenGL --user
+pip3 install --upgrade PyOpenGL --user
 
 # first, we make sure that another older version isn't installed 
 sudo apt remove python3-matplotlib
 # use pip for matplotlib to get latest version (2.x) since apt-get was using older
 # version (1.5) which does not have set_facecolor
-sudo pip3 install matplotlib
-# make sure matplotlib version 2 is used -- is this strictly needed?
-sudo pip3 install --upgrade matplotlib
+pip3 install --upgrade matplotlib nlopt --user
 
 # save dir installing hnn to
 startdir=$(pwd)
 echo $startdir
 
 git clone https://github.com/neuronsimulator/nrn
-git clone https://github.com/neuronsimulator/iv
-cd iv
-git checkout d4bb059
+cd nrn
 ./build.sh
-./configure
+./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
+      --without-iv --without-nrnoc-x11 --with-mpi --prefix=$startdir/nrn/build
 make -j4
-sudo make install -j4
-cd ../nrn
-#git checkout be2997e
-./build.sh
-./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d
-make -j4
-sudo make install -j4
+make install -j4
 cd src/nrnpython
-sudo python3 setup.py install
+python3 setup.py install --user
 
 # move outside of nrn directories
 cd $startdir
@@ -55,29 +46,11 @@ cd $startdir
 cd hnn
 # make compiles the mod files
 export CPU=$(uname -m)
-export PATH=$PATH:/usr/local/nrn/$CPU/bin
+export PATH=$PATH:$startdir/nrn/build/$CPU/bin
 make
 cd ..
-
-# cleanup these folders (we've already installed them: they're in /usr/local)
-sudo rm -rf iv
-sudo rm -rf nrn
-
-# delete the installed hnn folder in the event that it already exists
-sudo rm -rf /usr/local/hnn
-
-# move the hnn folder to the programs directory
-sudo mv hnn /usr/local
-
-# setup the icon and register the program with the system
-sudo ln -fs /usr/local/hnn/hnn.png /usr/share/pixmaps
-sudo ln -fs /usr/local/hnn/hnn.desktop /usr/share/applications/hnn.desktop
-
-# make the program accessable via the terminal command 'hnn'
-sudo ln -fs /usr/local/hnn/hnn /usr/local/bin/hnn
-sudo updatedb
 
 # create the global session variables
 echo '# these lines define global session variables for HNN'
 echo 'export CPU=$(uname -m)' >> ~/.bashrc
-echo 'export PATH=$PATH:/usr/local/nrn/$CPU/bin' >> ~/.bashrc
+echo "export PATH=\$PATH:$startdir/nrn/build/\$CPU/bin" >> ~/.bashrc

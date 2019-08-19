@@ -1,6 +1,6 @@
 #!/bin/bash
 export CPU=$(uname -m)
-export PATH=$PATH:/usr/lib64/openmpi/bin:/usr/local/nrn/$CPU/bin
+export PATH=$PATH:/usr/lib64/openmpi/bin:$HOME/nrn/$CPU/bin
 
 paramf=
 dataf=
@@ -29,11 +29,11 @@ while [ "$1" != "" ]; do
 done
 
 if [ -f "$paramf" ] && [ -f "$dataf" ]
-then python3 hnn.py hnn.cfg -paramf $paramf -dataf $dataf
+then python3 hnn.py -paramf $paramf -dataf $dataf
 elif [ -f "$paramf" ]
-then python3 hnn.py hnn.cfg -paramf $paramf
+then python3 hnn.py -paramf $paramf
 elif [ -f "$dataf" ]
-then python3 hnn.py hnn.cfg -dataf $dataf
-else python3 hnn.py hnn.cfg
+then python3 hnn.py -dataf $dataf
+else python3 hnn.py
 fi
 

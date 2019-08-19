@@ -38,7 +38,7 @@ open up. There will be a prompt for pressing ENTER after nrnmech.dll has been bu
     ```
     activate hnn
     cd hnn
-    python hnn.py hnn.cfg
+    python hnn.py
     ```
 4. That will launch the HNN GUI. You should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
 

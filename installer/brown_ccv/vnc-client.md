@@ -16,17 +16,14 @@
 
    ```bash
    singularity pull docker://jonescompneurolab/hnn
-   singularity shell hnn.simg
-   export PYTHONPATH=/home/hnn_user/nrn/build/lib/python/
-   cd /home/hnn_user/hnn_repo/
-   python3 hnn.py hnn.cfg
+   singularity run hnn.simg
    ```
 
 6. When the HNN GUI starts up, make sure to change limit the number of cores the amount when requesting the VNC session (e.g. 4 cores)
     * Click 'Set Parameters' -> 'Run' and change 'NumCores'
 7. You can now proceed to the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
 
-   * The files within the container are visible at `/`. This allows you to access both the container filesystem and Oscar's filesystem seamlessly. If you are loading sample files for the tutorials, look in `/home/hnn_user/hnn_repo`
+   * The files within the container are visible at `/`. This allows you to access both the container filesystem and Oscar's filesystem seamlessly. If you are loading sample files for the tutorials, look in `/home/hnn_user/hnn_source_code`
    * The "Model Visualization" feature will not work and you will receive an error in the terminal window: `ImportError: libreadline.so.6: cannot open shared object file: No such file or directory`.
 
 ## Running HNN a second time

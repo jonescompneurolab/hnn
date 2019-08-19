@@ -79,8 +79,7 @@ Common problems that one might encounter running the HNN docker container are li
    ```
    Try starting HNN manually:
    ```
-   cd hnn_repo
-   python3 hnn.py hnn.cfg
+   python3 hnn.py
    ```
    If you see something other than messages similar to above, please [open an issue](https://github.com/jonescompneurolab/hnn/issues) on GitHub, including the output from the commands above.
 

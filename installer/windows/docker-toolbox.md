@@ -95,7 +95,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 5. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
    * A directory called "hnn" exists both inside the container (at /home/hnn_user/hnn) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
-   * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_repo. You will probably want to browse to this directory when using "Set Parameters from File" in the GUI
+   * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
 
