@@ -91,13 +91,14 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 1. Create a conda environment with the Python prerequisites for HNN.
 
     ```bash
-    conda create -y -n hnn python=3.7 mpi4py openmpi pyqtgraph pyopengl matplotlib scipy nlopt psutil
+    conda create -y -n hnn python=3.7 openmpi pyqtgraph pyopengl matplotlib scipy psutil
     ```
 
-2. Activate the HNN conda environment
+2. Activate the HNN conda environment and install nlopt
 
     ```bash
     source activate hnn
+    pip install nlopt
     ```
 
 3. Set the LD_LIBRARY_PATH for openmpi on conda activation. This environnment variable must be set before HNN can run simulations with openmpi. The variable is only useful inside the 'hnn' conda environment, so we will set the variable when conda is activated with `source activate hnn`. Run the following commands to make this automatic.
