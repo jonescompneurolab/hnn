@@ -88,7 +88,30 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 
 ## Prepare the Python environment
 
-1. Set the bash (or other shell) environment variables. Note that depending on your shell (bash or c shell you will use the 4 export commands below or the 4 set commands below, respectively)
+1. Create a conda environment with the Python prerequisites for HNN.
+
+    ```bash
+    conda create -y -n hnn python=3.7 mpi4py openmpi pyqtgraph pyopengl matplotlib scipy nlopt psutil
+    ```
+
+2. Activate the HNN conda environment
+
+    ```bash
+    source activate hnn
+    ```
+
+3. Set the LD_LIBRARY_PATH for openmpi on conda activation. This environnment variable must be set before HNN can run simulations with openmpi. The variable is only useful inside the 'hnn' conda environment, so we will set the variable when conda is activated with `source activate hnn`. Run the following commands to make this automatic.
+
+    ```bash
+    cd ${CONDA_PREFIX}
+    mkdir -p etc/conda/activate.d etc/conda/deactivate.d
+    echo "export OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
+    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
+    echo "export LD_LIBRARY_PATH=\$OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    echo "unset OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    ```
+
+4. Set the bash (or other shell) environment variables. Note that depending on your shell (bash or c shell you will use the 4 export commands below or the 4 set commands below, respectively)
 
   - bash
 
@@ -98,9 +121,6 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     export PYTHONPATH=/Applications/NEURON-7.6/nrn/lib/python:$PYTHONPATH
     export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
     export PATH=$PATH:$HOME/miniconda3/bin/
-    if [[ -n ${CONDA_PREFIX} ]]; then
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CONDA_PREFIX}/lib
-    fi
     ```
 
   - tcsh
@@ -111,20 +131,9 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     set PYTHONPATH=($PYTHONPATH /Applications/NEURON-7.6/nrn/lib/python)
     set path = ($path /Applications/NEURON-7.6/nrn/x86_64/bin)
     set path = ($path $HOME/miniconda3/bin/)
-    if ( $?CONDA_PREFIX &&  "$CONDA_PREFIX" != "" ) then
-      set LD_LIBRARY_PATH = $CONDA_PREFIX/lib
-    endif
     ```
 
-2. Open a new terminal window for the settings in the previous step to take effect
-
-3. Create a conda environment with the Python prerequisites for HNN.
-
-    ```bash
-    conda create -y -n hnn python=3.7 mpi4py openmpi pyqtgraph pyopengl matplotlib scipy nlopt psutil
-    ```
-
-4. Activate the HNN conda environment
+5. Open a new terminal window for the settings in the previous step to take effect and activate the HNN conda environment
 
     ```bash
     source activate hnn
