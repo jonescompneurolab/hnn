@@ -59,31 +59,37 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
     $ git clone https://github.com/jonescompneurolab/hnn.git
     $ cd hnn/installer/docker
     ```
+3. Create the shared directory for HNN output between your host system and the Docker container
 
-3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
+    ```bash
+    $ mkdir docker_hnn_out
+    ```
+
+4. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
 
     ```bash
     $ docker-compose run hnn
+    Creating network "docker_default" with the default driver
     Pulling hnn (jonescompneurolab/hnn:)...
     latest: Pulling from jonescompneurolab/hnn
-    34dce65423d3: Already exists
-    796769e96d24: Already exists
-    2a0eada9611d: Already exists
-    d6830a7cd972: Already exists
-    ddf2bf28e180: Already exists
-    77bf1279b29f: Pull complete
-    6c8ddf82616f: Pull complete
-    a991616934ba: Pull complete
-    2cece6240c19: Pull complete
-    df826e7d26b9: Pull complete
-    824d51cbc89d: Pull complete
-    0d16f27c744b: Pull complete
-    Digest: sha256:0c27e2027828d2510a8867773562bbc966c509f45c9921cc2d1973c575d327b3
+    34dce65423d3: Pull complete
+    796769e96d24: Pull complete
+    2a0eada9611d: Pull complete
+    d6830a7cd972: Pull complete
+    ddf2bf28e180: Pull complete
+    1b92ede96ea9: Pull complete
+    d40cff005cd9: Pull complete
+    8c2b6fabd4cd: Pull complete
+    739b6844c557: Pull complete
+    93e57038c24c: Pull complete
+    8a0c9da0fc98: Pull complete
+    87b245fb518f: Pull complete
+    Digest: sha256:c561d0880aa8c69995dfc84e2c456b7dea688f829bfbadedfed94425c1f2044c
     Status: Downloaded newer image for jonescompneurolab/hnn:latest
     ```
 
-4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-5. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
+5. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
    - A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    - The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
    - If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
