@@ -317,8 +317,13 @@ class RunSimThread (QThread):
       # cend = time(); rtime = cend - cstart
     if debug: print('sim finished')
 
+    if not is_opt:
+      # load data from sucessful sim
+      simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
+      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+
     print(''); self.updatewaitsimwin('')
-  
+
   def optmodel (self):
     import simdat
 
