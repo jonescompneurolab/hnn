@@ -1,56 +1,60 @@
+#!/bin/bash
+
 # make sure the package lists are current
 sudo apt-get update
 
-sudo apt install -y git
-
-# HNN repo from bitbucket
-#git clone https://bitbucket.org/samnemo/hnn.git# old repo location
-
-# HNN repo from github - moved to github on April 8, 2018
-git clone https://github.com/jonescompneurolab/hnn.git
-
 # packages neded for NEURON and graphics
-sudo apt install -y python3-pyqt5 python3-pip python3-pyqtgraph python3-opengl zlib1g-dev zlib1g zlibc libx11-dev mercurial bison flex automake libtool libxext-dev libncurses-dev python3-dev xfonts-100dpi cython libopenmpi-dev python3-scipy python3-psutil
+sudo apt install -y zlib1g-dev bison flex automake libtool libncurses-dev \
+                    python3-dev libopenmpi-dev python3-psutil python3-pip \
+                    git
 
-# fixes the issue where importing OpenGL in python throws an error
-# (I assume that this works by installing the OpenGL for qt4 and then updating? it's not clear...)
-# I think that this is an error in the repos, not our fault.
-sudo apt install python3-pyqt4.qtopengl
-pip3 install PyOpenGL --user
-pip3 install --upgrade PyOpenGL --user
-
-# first, we make sure that another older version isn't installed 
-sudo apt remove python3-matplotlib
-# use pip for matplotlib to get latest version (2.x) since apt-get was using older
-# version (1.5) which does not have set_facecolor
-pip3 install --upgrade matplotlib nlopt --user
+sudo pip3 install pip --upgrade
+sudo pip install PyOpenGL matplotlib pyqt5 pyqtgraph scipy numpy nlopt
 
 # save dir installing hnn to
 startdir=$(pwd)
 echo $startdir
 
-git clone https://github.com/neuronsimulator/nrn
-cd nrn
-./build.sh
-./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-      --without-iv --without-nrnoc-x11 --with-mpi --prefix=$startdir/nrn/build
-make -j4
-make install -j4
-cd src/nrnpython
-python3 setup.py install --user
-
-# move outside of nrn directories
-cd $startdir
-
-# setup HNN itself
-cd hnn
-# make compiles the mod files
-export CPU=$(uname -m)
-export PATH=$PATH:$startdir/nrn/build/$CPU/bin
-make
-cd ..
+# Install NEURON
+cd $startdir && \
+    mkdir nrn && \
+    cd nrn && \
+    git clone https://github.com/neuronsimulator/nrn src && \
+    cd /home/hnn_user/nrn/src && \
+    ./build.sh && \
+    ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
+      --without-iv --without-nrnoc-x11 --with-mpi \
+      --prefix=/home/hnn_user/nrn/build && \
+    make -j4 && \
+    make install -j4 && \
+    cd src/nrnpython && \
+    python3 setup.py install --user && \
+    cd /home/hnn_user/nrn/ && \
+    rm -rf src && \
+    sudo apt-get -y remove --purge bison flex python3-dev zlib1g-dev python && \
+    sudo apt-get autoremove -y --purge && \
+    sudo apt-get clean
 
 # create the global session variables
-echo '# these lines define global session variables for HNN'
+echo '# these lines define global session variables for HNN' >> ~/.bashrc
 echo 'export CPU=$(uname -m)' >> ~/.bashrc
-echo "export PATH=\$PATH:$startdir/nrn/build/\$CPU/bin" >> ~/.bashrc
+echo "export PATH=\$PATH:$startdir/nrn/build/\$CPU/bin:$startdir/hnn_source_code" >> ~/.bashrc
+echo "export PYTHONPATH=$startdir/nrn/build/lib/python" >> ~/.bashrc
+
+export CPU=$(uname -m)
+export PATH=${PATH}:$startdir/nrn/build/$CPU/bin:$startdir/hnn_source_code
+export PYTHONPATH=$startdir/nrn/build/lib/python
+
+# setup HNN itself
+cd $startdir && \
+    git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code && \
+    cd hnn_source_code && \
+    make
+
+if [[ -d "$HOME/Desktop" ]]; then
+    mkdir -p $HOME/.local/share/icons && \
+    cp -f hnn.png $HOME/.local/share/icons/ && \
+    cp -f hnn.desktop $HOME/Desktop && \
+    sed -i "s~/home/hnn_user~$startdir~g" $HOME/Desktop/hnn.desktop && \
+    chmod +x $HOME/Desktop/hnn.desktop
+fi

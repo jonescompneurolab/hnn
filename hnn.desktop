@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Human Neocortical Neurosolver (HNN)
+Comment=Simulates Neocortical Models
+Exec=/home/hnn_user/hnn_source_code/hnn
+Icon=/home/hnn_user/.local/share/icons/hnn.png
+Path=/home/hnn_user/hnn_source_code
+Terminal=false
+Type=Application
+StartupNotify=true
