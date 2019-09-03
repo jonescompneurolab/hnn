@@ -81,7 +81,6 @@
 5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
-   * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
 ## Updgrading to a new version of HNN
 
@@ -100,7 +99,7 @@ Attaching to hnn_container
 
 You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose up -d` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
-```bash
+```none
 $ docker exec -ti hnn_container bash
 hnn_user@hnn-container:/home/hnn_user/hnn_source_code$
 ```
@@ -116,7 +115,9 @@ $ docker rm -f hnn_container
 $ docker rmi jonescompneurolab/hnn
 ```
 
-# Troubleshooting
+## Troubleshooting
+
+For errors related to Docker, please see the [Docker troubleshooting section](../docker/troubleshooting.md)
 
 For Mac OS specific issues: please see the [Mac OS troubleshooting page](troubleshooting.md)
 
