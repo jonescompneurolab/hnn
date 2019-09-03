@@ -80,7 +80,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
 
     ```bash
-    $ docker-compose run -e "DISPLAY=192.168.99.1:0" hnn
+    $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
     Pulling hnn (jonescompneurolab/hnn:)...
     latest: Pulling from jonescompneurolab/hnn
     34dce65423d3: Already exists
@@ -105,7 +105,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 
 5. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
     * If starting the GUI doesn't work the first time, the first thing to check is VcXsrv settings have "Disable access control" (see above). Then restart VcXsrv and try starting the HNN container again.
-6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
+6. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
    * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
@@ -126,17 +126,16 @@ The Docker Toolbox VM will remain running the background using some resources. I
     ```bash
     $ cd hnn/installer/windows
     $ docker-compose up --no-start
-    Recreating mac_hnn_1 ... done
-    $ docker-compose run hnn
+    Recreating hnn_container ... done
     ```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
 ```bash
-$ docker exec -ti windows_hnn_1 bash
-hnn_user@054ba0c64625:/home/hnn_user$
+$ docker exec -ti hnn_container bash
+hnn_user@hnn-container:/home/hnn_user/hnn_source_code$
 ```
 
 If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
