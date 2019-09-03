@@ -108,15 +108,14 @@ If you run into problems enabling hardware virtualization support, we recommend 
 6. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
-   * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
 ## Stopping Docker Toolbox VM
 
 The Docker Toolbox VM will remain running the background using some resources. If you are not using HNN, you can shut down the VM by the following command:
 
-   ```bash
-   $ docker-machine stop
-   ```
+```bash
+$ docker-machine stop
+```
 
 ## Updgrading to a new version of HNN
 
@@ -125,15 +124,18 @@ The Docker Toolbox VM will remain running the background using some resources. I
 
     ```bash
     $ cd hnn/installer/windows
-    $ docker-compose up --no-start
+    $ docker-compose pull
+    Pulling hnn ... done
+    $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
     Recreating hnn_container ... done
+    Attaching to hnn_container
     ```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container with `docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
-```bash
+```none
 $ docker exec -ti hnn_container bash
 hnn_user@hnn-container:/home/hnn_user/hnn_source_code$
 ```
@@ -149,7 +151,9 @@ $ docker rm -f windows_hnn_1
 $ docker rmi jonescompneurolab/hnn
 ```
 
-# Troubleshooting
+## Troubleshooting
+
+For errors related to Docker, please see the [Docker troubleshooting section](../docker/troubleshooting.md)
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
 

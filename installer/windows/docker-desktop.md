@@ -121,15 +121,18 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 7. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
-   * If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
 ## Updgrading to a new version of HNN
 
-Whenever the `docker-compose up` command is run, docker will check for a new version of the hnn container image and download it if necessary. You can perform the download step explicitly as well from a Command Prompt (cmd.exe)
+You can download the latest version of the hnn container with `docker-compose pull` from a Command Prompt (cmd.exe)
 
 ```powershell
 C:\Users\myuser> cd hnn\installer\windows
-C:\Users\myuser\hnn\installer\windows> docker-compose up --no-start
+C:\Users\myuser\hnn\installer\windows> docker-compose pull
+Pulling hnn ... done
+C:\Users\myuser\hnn\installer\windows> docker-compose up
+Recreating hnn_container ... done
+Attaching to hnn_container
 ```
 
 ## Editing files within HNN container
@@ -152,7 +155,9 @@ C:\Users\myuser> docker rm -f hnn_container
 C:\Users\myuser> docker rmi jonescompneurolab/hnn
 ```
 
-# Troubleshooting
+## Troubleshooting
+
+For errors related to Docker, please see the [Docker troubleshooting section](../docker/troubleshooting.md)
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
 

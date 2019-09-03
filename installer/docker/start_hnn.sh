@@ -7,7 +7,11 @@ if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
 fi
 
 function retry_hnn {
-  export DISPLAY=$1:$2
+  if [ -z "$2" ]; then
+    export DISPLAY=:$1
+  else
+    export DISPLAY=$1:$2
+  fi
   echo "Trying to start HNN with DISPLAY=$DISPLAY"
   python3 hnn.py
   if [[ "$?" -ne "0" ]]; then
@@ -39,13 +43,11 @@ fi
 done=
 XHOST=${DISPLAY%:0}
 # try some common hosts
-for PORT in 0 1 2 3 4; do
-  for XHOST in $XHOST 192.168.99.1 192.168.65.2 ""; do
-    retry_hnn $XHOST $PORT
-  done
+for PORT in 1 2 3 4; do
+  retry_hnn $XHOST $PORT
 done
 
-echo "Failed to start HNN on any X port at host"
+echo "Failed to start HNN on any X port"
 
 # fallback to sleep infinity so that container won't stop if hnn is closed
 sleep infinity

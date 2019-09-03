@@ -1,8 +1,5 @@
 # Troubleshooting on Mac OS
 
-## Docker
-For errors related to installing docker, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
-
 ## Error message: `There are not enough slots available in the system`
 
 The message on the console from mpiexec looks something like:
