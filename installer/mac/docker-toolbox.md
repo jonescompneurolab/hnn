@@ -98,13 +98,16 @@ The Docker Toolbox VM will remain running the background using some resources. I
 
     ```bash
     $ cd hnn/installer/mac
-    $ docker-compose up --no-start
+    $ docker-compose pull
+    Pulling hnn ... done
+    $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
     Recreating hnn_container ... done
+    Attaching to hnn_container
     ```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container with `docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
 ```bash
 $ docker exec -ti hnn_container bash

@@ -85,12 +85,15 @@
 
 ## Updgrading to a new version of HNN
 
-Whenever the `docker-compose up` command is run, docker will check for a new version of the hnn container image and download it if necessary. You can perform the download step explicitly as well:
+You can download the latest version of the hnn container with `docker-compose pull`:
 
 ```bash
 $ cd hnn/installer/mac
-$ docker-compose up --no-start
+$ docker-compose pull
+Pulling hnn ... done
+$ docker-compose up
 Recreating hnn_container ... done
+Attaching to hnn_container
 ```
 
 ## Editing files within HNN container
