@@ -288,8 +288,7 @@ class RunSimThread (QThread):
           # success
           break
         elif status == 1 and not retried:
-          self.get_proc_stream(self.proc.stderr, print_to_console=True)
-          txt = "Failed starting mpiexec, retrying with '--use-hwthread-cpus'"
+          txt = "INFO: Failed starting mpiexec, retrying with '--use-hwthread-cpus'"
           print(txt)
           self.updatewaitsimwin(txt)
           self.spawn_sim(simlength, banner=banner, hwthreads=True)
@@ -321,8 +320,6 @@ class RunSimThread (QThread):
       # load data from sucessful sim
       simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
       simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
-
-    print(''); self.updatewaitsimwin('')
 
   def optmodel (self):
     import simdat
