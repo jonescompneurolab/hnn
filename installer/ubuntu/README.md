@@ -99,7 +99,7 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
 You can download the latest version of the hnn container with `docker-compose pull`:
 
 ```bash
-$ cd hnn/installer/mac
+$ cd hnn/installer/docker
 $ docker-compose pull
 Pulling hnn ... done
 $ docker-compose up
