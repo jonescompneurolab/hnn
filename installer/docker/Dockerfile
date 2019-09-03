@@ -66,6 +66,8 @@ COPY start_hnn.sh /home/hnn_user/
 RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
     sudo chmod +x /home/hnn_user/start_hnn.sh
 
+RUN mkdir /home/hnn_user/hnn_out
+
 ARG CACHEBUST=1
 
 RUN cd /home/hnn_user && \

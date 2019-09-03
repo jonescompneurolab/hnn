@@ -25,7 +25,7 @@ export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin
 
 # get rid of warning about XDG_RUNTIME_DIR
 export XDG_RUNTIME_DIR=/tmp/runtime-hnn_user
-mkdir /tmp/runtime-hnn_user
+mkdir /tmp/runtime-hnn_user &> /dev/null
 chmod 700 /tmp/runtime-hnn_user
 
 # try once with current DISPLAY

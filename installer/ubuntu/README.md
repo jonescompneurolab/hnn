@@ -70,8 +70,7 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
 4. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
 
     ```bash
-    $ docker-compose run hnn
-    Creating network "docker_default" with the default driver
+    $ docker-compose up
     Pulling hnn (jonescompneurolab/hnn:)...
     latest: Pulling from jonescompneurolab/hnn
     34dce65423d3: Pull complete
@@ -79,57 +78,49 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
     2a0eada9611d: Pull complete
     d6830a7cd972: Pull complete
     ddf2bf28e180: Pull complete
-    1b92ede96ea9: Pull complete
-    d40cff005cd9: Pull complete
-    8c2b6fabd4cd: Pull complete
-    739b6844c557: Pull complete
-    93e57038c24c: Pull complete
-    8a0c9da0fc98: Pull complete
-    87b245fb518f: Pull complete
-    Digest: sha256:c561d0880aa8c69995dfc84e2c456b7dea688f829bfbadedfed94425c1f2044c
-    Status: Downloaded newer image for jonescompneurolab/hnn:latest
+    3cc50322f9e6: Pull complete
+    413f53de8db6: Pull complete
+    17dc3d1b2db0: Pull complete
+    630b5e60ea64: Pull complete
+    78e9a198ddb9: Pull complete
+    45d8623e986c: Pull complete
+    e32873c7bf4d: Pull complete
+    Creating hnn_container ... done
+    Attaching to hnn_container
     ```
 
 5. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-6. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
+6. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    - A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    - The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
    - If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
 ## Updgrading to a new version of HNN
 
-1. Verify Docker is still running. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
+Whenever the `docker-compose up` command is run, docker will check for a new version of the hnn container image and download it if necessary. You can perform the download step explicitly as well:
 
-    ```bash
-    $ docker info
-    ```
-
-2. Open a terminal window
-
-    ```bash
-    $ cd hnn/installer/docker
-    $ docker-compose up --no-start
-    Recreating docker_hnn_1 ... done
-    $ docker-compose run hnn
-    ```
+```bash
+$ cd hnn/installer/docker
+$ docker-compose up --no-start
+```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose run hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose up -d` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
-    ```bash
-    $ docker exec -ti docker_hnn_1 bash
-    hnn_user@054ba0c64625:/home/hnn_user$
-    ```
+```bash
+$ docker exec -ti hnn_container bash
+hnn_user@hnn-container:/home/hnn_user/hnn_source_code$
+```
 
-    If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
+If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
 ## Uninstalling HNN
 
 1. If you want to just remove the container and 2 GB HNN image, run these commands from a terminal window:
 
     ```bash
-    $ docker rm -f docker_hnn_1
+    $ docker rm -f hnn_container
     $ docker rmi jonescompneurolab/hnn
     ```
 
