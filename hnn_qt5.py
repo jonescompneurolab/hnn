@@ -325,10 +325,22 @@ class RunSimThread (QThread):
     #rtime = cend - cstart
     #if debug: print('sim finished in %.3f s'%rtime)
 
-    if not is_opt:
+    try:
       # load data from sucessful sim
       simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
+      if os.path.isfile(simdat.dfile['spec']):
+        simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
+      else:
+        simdat.ddat['spec'] = None
+      simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
+      simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
+      if debug: print("Read simulation outputs:",simdat.dfile.values())
+
+      if not is_opt:
+        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    except OSError:
+      print('WARN: could not read simulation outputs:',simdat.dfile.values())
 
   def optmodel (self):
     import simdat
