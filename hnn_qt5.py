@@ -325,10 +325,22 @@ class RunSimThread (QThread):
     #rtime = cend - cstart
     #if debug: print('sim finished in %.3f s'%rtime)
 
-    if not is_opt:
+    try:
       # load data from sucessful sim
       simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
+      if os.path.isfile(simdat.dfile['spec']):
+        simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
+      else:
+        simdat.ddat['spec'] = None
+      simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
+      simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
+      if debug: print("Read simulation outputs:",simdat.dfile.values())
+
+      if not is_opt:
+        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    except OSError:
+      print('WARN: could not read simulation outputs:',simdat.dfile.values())
 
   def optmodel (self):
     import simdat
@@ -1777,7 +1789,6 @@ class RunParamDialog (DictDialog):
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
-    self.core_row = self.ltabs[0].layout.rowCount()
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
@@ -1789,7 +1800,6 @@ class RunParamDialog (DictDialog):
 
     # number of cores may have changed if the configured number failed
     self.dqextra['NumCores'].setText(str(defncore))
-    self.ltabs[0].layout.itemAt(self.core_row).widget().setText(str(defncore))
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())

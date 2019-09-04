@@ -438,18 +438,23 @@ class SIMCanvas (FigureCanvas):
     if not 'dextdata' in ddat or len(ddat['dextdata']) == 0:
       return
 
+    lerr = None
+    errtot = None
+    initial_err = None
     # plot 'external' data (e.g. from experiment/other simulation)
     hassimdata = self.hassimdata() # has the simulation been run yet?
     if hassimdata:
       if recalcErr:
         calcerr(ddat, ddat['dpl'][-1,0]) # recalculate/save the error?
-      lerr, errtot = ddat['lerr'], ddat['errtot']
 
-      if self.optMode:
-        initial_err = initial_ddat['errtot']
-    else:
-      lerr = None
-      errtot = None
+      try:
+        lerr, errtot = ddat['lerr'], ddat['errtot']
+
+        if self.optMode:
+          initial_err = initial_ddat['errtot']
+      except KeyError:
+        pass
+
 
     if self.axdipole is None:
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
@@ -490,7 +495,7 @@ class SIMCanvas (FigureCanvas):
 
     if errtot:
       tx,ty=0,0
-      if self.optMode:
+      if self.optMode and initial_err:
         clr = 'black'
         txt='RMSE: %.2f' % round(initial_err,2)
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
