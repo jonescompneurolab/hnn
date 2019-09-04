@@ -1789,7 +1789,6 @@ class RunParamDialog (DictDialog):
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
-    self.core_row = self.ltabs[0].layout.rowCount()
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
@@ -1801,7 +1800,6 @@ class RunParamDialog (DictDialog):
 
     # number of cores may have changed if the configured number failed
     self.dqextra['NumCores'].setText(str(defncore))
-    self.ltabs[0].layout.itemAt(self.core_row).widget().setText(str(defncore))
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
