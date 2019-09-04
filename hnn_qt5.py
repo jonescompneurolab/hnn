@@ -80,6 +80,7 @@ hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
 
 # for signaling
 class Communicate (QObject):
+  commsig = pyqtSignal()
   updateRanges = pyqtSignal()
 
 class DoneSignal (QObject):
@@ -179,6 +180,9 @@ class RunSimThread (QThread):
   def updatebaseparamwin (self, d):
     self.prmComm.psig.emit(d)
 
+  def updatedispparam (self):
+    self.c.commsig.emit()
+
   def updatedrawerr (self):
     self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
 
@@ -200,6 +204,7 @@ class RunSimThread (QThread):
     else:
       try:
         self.runsim() # run simulation
+        self.updatedispparam() # update params in all windows (optimization)
       except RuntimeError:
         failed = True
 
@@ -1697,10 +1702,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.updateDispRanges()
 
   def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items():
-      s += k + ': ' + v.text().strip() + os.linesep
-    return s
+    # don't write any values to param file
+    return ''
 
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
@@ -3023,6 +3026,7 @@ class HNNGUI (QMainWindow):
 
     self.c = Communicate()
     self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateRanges)
+    self.c.commsig.connect(self.baseparamwin.updateDispParam)
 
     self.d = DoneSignal()
     self.d.finishSim.connect(self.done)
