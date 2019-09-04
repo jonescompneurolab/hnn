@@ -1482,28 +1482,33 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
   def cleanOptGrid(self):
     # This is the top part of the Configure Optimization dialog.
 
-    row_count = self.sublayout.rowCount()
     column_count = self.sublayout.columnCount()
-    self.old_numsims = [None] * row_count
-    for row in range(1, row_count + 1):
+    self.old_numsims = []
+
+    # get number of sims from GUI
+    row = 0
+    while True:
       try:
-        # get number of sims from GUI
-        num_sims = int(self.sublayout.itemAtPosition(row_count - row,4).widget().text())
-        self.old_numsims[row_count - row] = num_sims
-      except (AttributeError, ValueError):
+        num_sims = int(self.sublayout.itemAtPosition(row,4).widget().text())
+        self.old_numsims.append(num_sims)
+      except AttributeError:
+        # no more rows
+        break
+      except ValueError:
         # couldn't get value for some reason (invalid), so set to the default
         if row == 1:
-          self.old_numsims[row_count - row] = self.default_num_total_sims
+          self.old_numsims.append(self.default_num_total_sims)
         else:
-          self.old_numsims[row_count - row] = self.default_num_step_sims
+          self.old_numsims.append(self.default_num_step_sims)
 
       for column in range(column_count-1):  # last column is a spacer item
         try:
           # Use deleteLater() to avoid memory leaks.
-          self.sublayout.itemAtPosition(row_count - row, column).widget().deleteLater()
+          self.sublayout.itemAtPosition(row, column).widget().deleteLater()
         except AttributeError:
           # if item wasn't found
           pass
+      row += 1
 
   def updateOptInfo(self):
     dconf['opt_info'] = {}  # holds info by opt. step
