@@ -80,6 +80,7 @@ hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
 
 # for signaling
 class Communicate (QObject):
+  commsig = pyqtSignal()
   updateRanges = pyqtSignal()
 
 class DoneSignal (QObject):
@@ -179,6 +180,9 @@ class RunSimThread (QThread):
   def updatebaseparamwin (self, d):
     self.prmComm.psig.emit(d)
 
+  def updatedispparam (self):
+    self.c.commsig.emit()
+
   def updatedrawerr (self):
     self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
 
@@ -200,6 +204,7 @@ class RunSimThread (QThread):
     else:
       try:
         self.runsim() # run simulation
+        self.updatedispparam() # update params in all windows (optimization)
       except RuntimeError:
         failed = True
 
@@ -1477,28 +1482,33 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
   def cleanOptGrid(self):
     # This is the top part of the Configure Optimization dialog.
 
-    row_count = self.sublayout.rowCount()
     column_count = self.sublayout.columnCount()
-    self.old_numsims = [None] * row_count
-    for row in range(1, row_count + 1):
+    self.old_numsims = []
+
+    # get number of sims from GUI
+    row = 0
+    while True:
       try:
-        # get number of sims from GUI
-        num_sims = int(self.sublayout.itemAtPosition(row_count - row,4).widget().text())
-        self.old_numsims[row_count - row] = num_sims
-      except (AttributeError, ValueError):
+        num_sims = int(self.sublayout.itemAtPosition(row,4).widget().text())
+        self.old_numsims.append(num_sims)
+      except AttributeError:
+        # no more rows
+        break
+      except ValueError:
         # couldn't get value for some reason (invalid), so set to the default
         if row == 1:
-          self.old_numsims[row_count - row] = self.default_num_total_sims
+          self.old_numsims.append(self.default_num_total_sims)
         else:
-          self.old_numsims[row_count - row] = self.default_num_step_sims
+          self.old_numsims.append(self.default_num_step_sims)
 
       for column in range(column_count-1):  # last column is a spacer item
         try:
           # Use deleteLater() to avoid memory leaks.
-          self.sublayout.itemAtPosition(row_count - row, column).widget().deleteLater()
+          self.sublayout.itemAtPosition(row, column).widget().deleteLater()
         except AttributeError:
           # if item wasn't found
           pass
+      row += 1
 
   def updateOptInfo(self):
     dconf['opt_info'] = {}  # holds info by opt. step
@@ -1697,10 +1707,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.updateDispRanges()
 
   def __str__ (self):
-    s = ''
-    for k,v in self.dqline.items():
-      s += k + ': ' + v.text().strip() + os.linesep
-    return s
+    # don't write any values to param file
+    return ''
 
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
@@ -3023,6 +3031,7 @@ class HNNGUI (QMainWindow):
 
     self.c = Communicate()
     self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateRanges)
+    self.c.commsig.connect(self.baseparamwin.updateDispParam)
 
     self.d = DoneSignal()
     self.d.finishSim.connect(self.done)
