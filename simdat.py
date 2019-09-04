@@ -308,21 +308,19 @@ class SIMCanvas (FigureCanvas):
         hist['feed_evprox'] = extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],bins,xl,color='r',hty='step',lw=self.gui.linewidth+1)
     elif plot_distribs:
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        for index, prox in enumerate(dinput['evprox']):
-          if index == 0:
-            plot = self.axprox.plot(prox[0],prox[1],color='r',lw=self.gui.linewidth,label='evprox distribution')
-          else:
-            plot = self.axprox.plot(prox[0],prox[1],color='r',lw=self.gui.linewidth)
-          self.axprox.set_xlim(prox[0][0],prox[0][-1])
-          hist['feed_evprox'] = plot
+        prox_tot = np.zeros(len(dinput['evprox'][0][0]))
+        for prox in dinput['evprox']:
+          prox_tot += prox[1]
+        plot = self.axprox.plot(dinput['evprox'][0][0],prox_tot,color='r',lw=self.gui.linewidth,label='evprox distribution')
+        self.axprox.set_xlim(dinput['evprox'][0][0][0],dinput['evprox'][0][0][-1])
+        hist['feed_evprox'] = plot
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        for index, dist in enumerate(dinput['evdist']):
-          if index == 0:
-            plot = self.axdist.plot(dist[0],dist[1],color='g',lw=self.gui.linewidth,label='evdist distribution')
-          else:
-            plot = self.axdist.plot(dist[0],dist[1],color='g',lw=self.gui.linewidth)
-          self.axdist.set_xlim(dist[0][0],dist[0][-1])
-          hist['feed_evdist'] = plot
+        dist_tot = np.zeros(len(dinput['evdist'][0][0]))
+        for dist in dinput['evdist']:
+          dist_tot += dist[1]
+        plot = self.axdist.plot(dinput['evdist'][0][0],dist_tot,color='g',lw=self.gui.linewidth,label='evdist distribution')
+        self.axprox.set_xlim(dinput['evdist'][0][0][0],dinput['evdist'][0][0][-1])
+        hist['feed_evdist'] = plot
 
     if hist['feed_dist'] is None and hist['feed_prox'] is None and \
         hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
