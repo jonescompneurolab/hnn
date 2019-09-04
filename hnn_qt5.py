@@ -7,26 +7,23 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridL
 from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
-from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
-from subprocess import Popen, PIPE, call
+from subprocess import Popen, PIPE
 import shlex, shutil
 from collections import OrderedDict
-from time import time, clock, sleep
-import pickle, tempfile
+from time import time, sleep
 from conf import dconf
 import conf
 import numpy as np
-import random
 from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
+from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
 import psutil
 from threading import Lock
