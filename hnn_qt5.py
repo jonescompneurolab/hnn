@@ -7,28 +7,25 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridL
 from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
-from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
-from subprocess import Popen, PIPE, call
+from subprocess import Popen, PIPE
 import shlex, shutil
 from collections import OrderedDict
-from time import time, clock, sleep
-import pickle, tempfile
+from time import time, sleep
 from conf import dconf
 import conf
 import numpy as np
-import random
 from math import ceil
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
+from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
-import psutil
+from psutil import cpu_count, wait_procs, process_iter
 from threading import Lock
 
 prtime = False
@@ -66,9 +63,14 @@ debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 
 # get default number of cores
+defncore = 0
 try:
   defncore = len(os.sched_getaffinity(0))
 except AttributeError:
+  defncore = cpu_count(logical=False)
+
+if defncore is None or defncore == 0:
+  # in case psutil is not supported (e.g. BSD)
   defncore = multiprocessing.cpu_count()
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
@@ -105,14 +107,14 @@ def bringwintobot (win):
 def kill_list_of_procs(procs):
   for p in procs:
     p.terminate()
-  gone, alive = psutil.wait_procs(procs, timeout=3)
+  gone, alive = wait_procs(procs, timeout=3)
   for p in alive:
     p.kill()
 
 def get_nrniv_procs_running():
   ls = []
   name = 'nrniv'
-  for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
+  for p in process_iter(attrs=["name", "exe", "cmdline"]):
       if name == p.info['name'] or \
               p.info['exe'] and os.path.basename(p.info['exe']) == name or \
               p.info['cmdline'] and p.info['cmdline'][0] == name:
@@ -236,14 +238,10 @@ class RunSimThread (QThread):
     self.killed = True
     self.lock.release()
 
-  def spawn_sim (self, simlength, banner=False, hwthreads=False):
+  def spawn_sim (self, simlength, banner=False):
     import simdat
 
-    mpicmd = 'mpiexec '
-    if hwthreads:
-      mpicmd += '--use-hwthread-cpus -np '
-    else:
-      mpicmd += '-np '
+    mpicmd = 'mpiexec -np '
 
     if banner:
       nrniv_cmd = ' nrniv -python -mpi '
@@ -278,25 +276,29 @@ class RunSimThread (QThread):
   # run sim command via mpi, then delete the temp file.
   def runsim (self, is_opt=False, banner=True, simlength=None):
     import simdat
+
+    global defncore
     self.lock.acquire()
     self.killed = False
     self.lock.release()
 
-    self.spawn_sim(simlength, banner=banner, hwthreads=False)
+    self.spawn_sim(simlength, banner=banner)
     retried = False
 
-    #cstart = time();
+    #cstart = time()
     while True:
       status = self.proc.poll()
       if not status is None:
         if status == 0:
-          # success
+          # success, use same number of cores next time
+          defncore = self.ncore
           break
         elif status == 1 and not retried:
-          txt = "INFO: Failed starting mpiexec, retrying with '--use-hwthread-cpus'"
+          self.ncore = ceil(self.ncore/2)
+          txt = "INFO: Failed starting mpiexec, retrying with %d cores" % self.ncore
           print(txt)
           self.updatewaitsimwin(txt)
-          self.spawn_sim(simlength, banner=banner, hwthreads=True)
+          self.spawn_sim(simlength, banner=banner)
           retried = True
         else:
           txt = "Simulation exited with return code %d. Stderr from console:"%status
@@ -318,8 +320,10 @@ class RunSimThread (QThread):
         self.lock.release()
 
       sleep(1)
-      # cend = time(); rtime = cend - cstart
-    if debug: print('sim finished')
+
+    #cend = time()
+    #rtime = cend - cstart
+    #if debug: print('sim finished in %.3f s'%rtime)
 
     if not is_opt:
       # load data from sucessful sim
@@ -1773,11 +1777,22 @@ class RunParamDialog (DictDialog):
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
-    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores']) 
+    self.core_row = self.ltabs[0].layout.rowCount()
+    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
 
   def getncore (self): return int(self.dqextra['NumCores'].text().strip())
+
+  def setfromdin (self,din):
+    if not din: return
+
+    # number of cores may have changed if the configured number failed
+    self.dqextra['NumCores'].setText(str(defncore))
+    self.ltabs[0].layout.itemAt(self.core_row).widget().setText(str(defncore))
+    for k,v in din.items():
+      if k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
 
 # widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
 class CellParamDialog (DictDialog):
@@ -3171,7 +3186,7 @@ class HNNGUI (QMainWindow):
 
     self.setcursors(Qt.WaitCursor)
 
-    print('Starting simulation. . .')
+    print('Starting simulation (%d cores). . .'%ncore)
     self.runningsim = True
 
     if onNSG:
