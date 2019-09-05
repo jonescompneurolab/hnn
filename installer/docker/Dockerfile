@@ -75,6 +75,7 @@ RUN mkdir /home/hnn_user/hnn_out
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_TAG
+ARG SOURCE_BRANCH
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/jonescompneurolab/hnn.git" \
