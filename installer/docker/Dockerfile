@@ -8,7 +8,11 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
     adduser hnn_user sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    sudo chown -R hnn_user:hnn_group /home/hnn_user
+    chown -R hnn_user:hnn_group /home/hnn_user
+
+COPY date_base_install.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/date_base_install.sh && \
+    /usr/local/bin/date_base_install.sh
 
 USER hnn_user
 
@@ -68,10 +72,18 @@ RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
 
 RUN mkdir /home/hnn_user/hnn_out
 
-ARG CACHEBUST=1
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_FULLREF
+
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/jonescompneurolab/hnn.git" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.schema-version="1.0.1"
 
 RUN cd /home/hnn_user && \
-    git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code && \
+    git clone https://github.com/jonescompneurolab/hnn.git \
+      --single-branch --branch $VCS_FULLREF hnn_source_code && \
     cd hnn_source_code && \
     make
 
