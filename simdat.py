@@ -242,9 +242,6 @@ class SIMCanvas (FigureCanvas):
         dinty = dict of input types used, determines how many/which axes created/displayed
     """
 
-    # set number of bins (150 bins per 1000ms)
-    bins = ceil(150. * (xl[1] - xl[0]) / 1000.) # bins needs to be an int
-    if debug: print('bins:',bins)
     extinputs = None
     plot_distribs = False
 
@@ -293,19 +290,19 @@ class SIMCanvas (FigureCanvas):
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
       if hasPois: # any Poisson inputs?
-        hist['feed_pois'] = extinputs.plot_hist(self.axpois,'pois',ddat['dpl'][:,0],bins,xl,color='k',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_pois'] = extinputs.plot_hist(self.axpois,'pois',ddat['dpl'][:,0],'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_dist'] = extinputs.plot_hist(self.axdist,'dist',ddat['dpl'][:,0],bins,xl,color='g',lw=self.gui.linewidth+1)
+        hist['feed_dist'] = extinputs.plot_hist(self.axdist,'dist',ddat['dpl'][:,0],'auto',xl,color='g',lw=self.gui.linewidth+1)
 
       if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_prox'] = extinputs.plot_hist(self.axprox,'prox',ddat['dpl'][:,0],bins,xl,color='r',lw=self.gui.linewidth+1)
+        hist['feed_prox'] = extinputs.plot_hist(self.axprox,'prox',ddat['dpl'][:,0],'auto',xl,color='r',lw=self.gui.linewidth+1)
 
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evdist'] = extinputs.plot_hist(self.axdist,'evdist',ddat['dpl'][:,0],bins,xl,color='g',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_evdist'] = extinputs.plot_hist(self.axdist,'evdist',ddat['dpl'][:,0],'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evprox'] = extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],bins,xl,color='r',hty='step',lw=self.gui.linewidth+1)
+        hist['feed_evprox'] = extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
     elif plot_distribs:
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
         prox_tot = np.zeros(len(dinput['evprox'][0][0]))
