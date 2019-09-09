@@ -126,6 +126,14 @@ def calcerr (ddat, tstop, tstart=0.0):
     exp_times = dat[:,0]
     sim_times = ddat['dpl'][:,0]
 
+    # do tstart and tstop fall within both datasets?
+    # if not, use the closest data point as the new tstop/tstart
+    for tseries in [exp_times, sim_times]:
+      if tstart <  tseries[0]:
+        tstart = tseries[0]
+      if tstop >  tseries[-1]:
+        tstop = tseries[-1]
+
     # make sure start and end times are valid for both dipoles
     exp_start_index = (np.abs(exp_times - tstart)).argmin()
     exp_end_index = (np.abs(exp_times - tstop)).argmin()
@@ -168,6 +176,14 @@ def weighted_rmse(ddat, tstop, weights, tstart=0.0):
     shp = dat.shape
     exp_times = dat[:,0]
     sim_times = ddat['dpl'][:,0]
+
+    # do tstart and tstop fall within both datasets?
+    # if not, use the closest data point as the new tstop/tstart
+    for tseries in [exp_times, sim_times]:
+      if tstart <  tseries[0]:
+        tstart = tseries[0]
+      if tstop >  tseries[-1]:
+        tstop = tseries[-1]
 
     # make sure start and end times are valid for both dipoles
     exp_start_index = (np.abs(exp_times - tstart)).argmin()
