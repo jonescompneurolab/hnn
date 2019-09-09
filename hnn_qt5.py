@@ -2523,8 +2523,9 @@ class HNNGUI (QMainWindow):
     import simdat
     self.m.clearlextdatobj()
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
-    self.m.draw()
     self.toggleEnableOptimization(False)
+    self.m.plot()  # recreate canvas
+    self.m.draw()
 
   def setparams (self):
     # show set parameters dialog window

@@ -474,11 +474,11 @@ class SIMCanvas (FigureCanvas):
 
     if self.axdipole is None:
       self.axdipole = self.figure.add_subplot(self.G[0:-1,0]) # dipole
+      xl = (0.0,1.0)
       yl = (-0.001,0.001)
     else:
+      xl = self.axdipole.get_xlim()
       yl = self.axdipole.get_ylim()
-
-    xl = (0.0,1.0)
 
     cmap=plt.get_cmap('nipy_spectral')
     csm = plt.cm.ScalarMappable(cmap=cmap);
@@ -543,27 +543,24 @@ class SIMCanvas (FigureCanvas):
 
   def clearlextdatobj (self):
     # clear list of external data objects
-    try:
-      for o in self.lextdatobj:
-        try:
-          o.set_visible(False)
-        except:
-          o[0].set_visible(False)
-      del self.lextdatobj
-      self.lextdatobj = [] # reset list of external data objects
-      self.lpatch = [] # reset legend
-      self.clridx = 5 # reset index for next color for drawing external data
+    for o in self.lextdatobj:
+      try:
+        o.set_visible(False)
+      except:
+        o[0].set_visible(False)
+    del self.lextdatobj
+    self.lextdatobj = [] # reset list of external data objects
+    self.lpatch = [] # reset legend
+    self.clridx = 5 # reset index for next color for drawing external data
 
-      if self.optMode:
-        self.lpatch.append(mpatches.Patch(color='grey', label='Optimization'))
-        self.lpatch.append(mpatches.Patch(color='black', label='Initial'))
-      elif self.hassimdata():
-        self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
-      if hasattr(self,'annot_avg'):
-        self.annot_avg.set_visible(False)
-        del self.annot_avg
-    except:
-      if debug: print('ERR: exception in clearlextdatobj')
+    if self.optMode:
+      self.lpatch.append(mpatches.Patch(color='grey', label='Optimization'))
+      self.lpatch.append(mpatches.Patch(color='black', label='Initial'))
+    elif self.hassimdata():
+      self.lpatch.append(mpatches.Patch(color='black', label='Simulation'))
+    if hasattr(self,'annot_avg'):
+      self.annot_avg.set_visible(False)
+      del self.annot_avg
 
   def plotsimdat (self):
     # plot the simulation data
