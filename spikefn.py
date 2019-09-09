@@ -225,6 +225,8 @@ class ExtInputs (Spikes):
     if len(self.inputs[extinput]):
       #print("plot_hist bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput, histtype=hty,linewidth=lw)
+      ax.set_xticklabels([])
+      ax.tick_params(bottom=False, left=False)
     else:
       hist = None
     return hist

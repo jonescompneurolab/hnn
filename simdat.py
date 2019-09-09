@@ -290,19 +290,19 @@ class SIMCanvas (FigureCanvas):
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
       if hasPois: # any Poisson inputs?
-        hist['feed_pois'] = extinputs.plot_hist(self.axpois,'pois',ddat['dpl'][:,0],'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axpois,'pois',ddat['dpl'][:,0],'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_dist'] = extinputs.plot_hist(self.axdist,'dist',ddat['dpl'][:,0],'auto',xl,color='g',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axdist,'dist',ddat['dpl'][:,0],'auto',xl,color='g',lw=self.gui.linewidth+1)
 
       if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_prox'] = extinputs.plot_hist(self.axprox,'prox',ddat['dpl'][:,0],'auto',xl,color='r',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axprox,'prox',ddat['dpl'][:,0],'auto',xl,color='r',lw=self.gui.linewidth+1)
 
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evdist'] = extinputs.plot_hist(self.axdist,'evdist',ddat['dpl'][:,0],'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axdist,'evdist',ddat['dpl'][:,0],'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        hist['feed_evprox'] = extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
     elif plot_distribs:
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
         prox_tot = np.zeros(len(dinput['evprox'][0][0]))
@@ -310,21 +310,26 @@ class SIMCanvas (FigureCanvas):
           prox_tot += prox[1]
         plot = self.axprox.plot(dinput['evprox'][0][0],prox_tot,color='r',lw=self.gui.linewidth,label='evprox distribution')
         self.axprox.set_xlim(dinput['evprox'][0][0][0],dinput['evprox'][0][0][-1])
-        hist['feed_evprox'] = plot
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
         dist_tot = np.zeros(len(dinput['evdist'][0][0]))
         for dist in dinput['evdist']:
           dist_tot += dist[1]
         plot = self.axdist.plot(dinput['evdist'][0][0],dist_tot,color='g',lw=self.gui.linewidth,label='evdist distribution')
         self.axprox.set_xlim(dinput['evdist'][0][0][0],dinput['evdist'][0][0][-1])
-        hist['feed_evdist'] = plot
 
-    if hist['feed_dist'] is None and hist['feed_prox'] is None and \
-        hist['feed_evdist'] is None and hist['feed_evprox'] is None and \
-        hist['feed_pois'] is None:
+    ymax = 0
+    for ax in [self.axpois, self.axdist, self.axprox]:
+      if not ax is None:
+        if ax.get_ylim()[1] > ymax:
+          ymax = ax.get_ylim()[1]
+
+    if ymax == 0:
       if debug: print('all hists None!')
       return False
     else:
+      for ax in [self.axpois, self.axdist, self.axprox]:
+        if not ax is None:
+          ax.set_ylim(0,ymax)
       if self.axdist:
         self.axdist.invert_yaxis()
       for ax in [self.axpois,self.axdist,self.axprox]:
@@ -505,14 +510,10 @@ class SIMCanvas (FigureCanvas):
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
 
     if not hassimdata: # need axis labels
-      left = 0.08
-      w,h=getscreengeom()
-      if w < 2800: left = 0.1
       self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
       self.axdipole.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
       myxl = self.axdipole.get_xlim()
       if myxl[0] < 0.0: self.axdipole.set_xlim((0.0,myxl[1]+myxl[0]))
-      self.figure.subplots_adjust(left=left,right=0.99,bottom=0.0,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
   def hassimdata (self):
     # check if any simulation data available in ddat dictionary
