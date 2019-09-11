@@ -25,7 +25,7 @@ from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
-from psutil import cpu_count, wait_procs, process_iter
+from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
 from threading import Lock
 
 prtime = False
@@ -106,7 +106,10 @@ def bringwintobot (win):
 
 def kill_list_of_procs(procs):
   for p in procs:
-    p.terminate()
+    try:
+      p.terminate()
+    except NoSuchProcess:
+      pass
   gone, alive = wait_procs(procs, timeout=3)
   for p in alive:
     p.kill()
