@@ -420,6 +420,7 @@ class RunSimThread (QThread):
     # one final sim with the best parameters to update display
     self.runsim(is_opt=True, banner=False)
     simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
 
   def runOptStep (self):
     import simdat
