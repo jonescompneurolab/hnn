@@ -4,7 +4,7 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem
+from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -13,6 +13,7 @@ import multiprocessing
 from subprocess import Popen, PIPE
 import shlex, shutil
 from collections import OrderedDict
+from copy import deepcopy
 from time import time, sleep
 from conf import dconf
 import conf
@@ -348,11 +349,14 @@ class RunSimThread (QThread):
   def optmodel (self):
     import simdat
 
+    # for saving the initial parameters (used to calculate diffs)
+    self.baseparamwin.optparamwin.initial_opt_info = []
+
     # initialize RNG with seed from config
     seed = int(find_param(paramf,'prng_seedcore_opt'))
     nlopt.srand(seed)
 
-    simdat.initial_ddat = simdat.ddat.copy()
+    simdat.initial_ddat = deepcopy(simdat.ddat)
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
 
@@ -366,6 +370,8 @@ class RunSimThread (QThread):
       # self.opt_params gets reset for each step
       self.opt_params = dconf['opt_info'][step]
 
+      # deepcopy is necessary for nested dicts
+      self.baseparamwin.optparamwin.initial_opt_info.append(deepcopy(self.opt_params['ranges']))
       if self.opt_params['num_sims'] == 0:
         txt = "Skipping optimization step %d (0 simulations)"%(step+1)
         self.updatewaitsimwin(txt)
@@ -414,6 +420,7 @@ class RunSimThread (QThread):
     # one final sim with the best parameters to update display
     self.runsim(is_opt=True, banner=False)
     simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
 
   def runOptStep (self):
     import simdat
@@ -1306,7 +1313,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dtab_idx = {} # for translating input names to tab indices
     self.dtab_names = {} # for translating tab indices to input names
-    self.dqline = OrderedDict()
+
+    # these store values used in grid
+    self.dqchkbox = OrderedDict()  # optimize
+    self.dqparam_name = OrderedDict()  # parameter name
+    self.dqinitial_label = OrderedDict()  # initial
+    self.dqline = OrderedDict()  # optimized (named dqline for using super's members)
+    self.dqdiff_label = OrderedDict() # delta
+
+    self.initial_opt_info = None
     self.dtabdata = []
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
@@ -1323,13 +1338,9 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.din = {}
 
     self.grid = QGridLayout()
-    self.grid.setSpacing(10)
 
     row = 0
     self.sublayout = QGridLayout()
-    self.sublayout.setSpacing(5)
-    #self.sublayout.setFormAlignment(Qt.AlignLeft)
-    self.sublayout.setColumnStretch(5,2)
     self.old_numsims = []
     self.grid.addLayout(self.sublayout, row, 0)
 
@@ -1361,12 +1372,17 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     self.setWindowTitle("Configure Optimization")
 
+    # the largest horizontal component will be column 0 (headings)
+    self.resize(self.minimumSizeHint())
+
   def toggle_field(self, current_tab, row):
-    if self.ltabs[current_tab].layout.itemAtPosition(row, 1).widget().isChecked():
-      for column in range(2,6):
+    if self.ltabs[current_tab].layout.itemAtPosition(row, 0).widget().isChecked():
+      # set all other fields in the row to enabled
+      for column in range(1,8):
         self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(True)
     else:
-      for column in range(2,6):
+      # disable all other fields in the row
+      for column in range(1,8):
         self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(False)
 
   def addTab (self,id_str):
@@ -1383,6 +1399,20 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     return tab
 
+  def cleanLabels(self):
+    """
+    To avoid memory leaks we need to delete all widgets when we recreate grid.
+    Go through all tabs and check for each var name (k)
+    """
+    for idx in range(len(self.ltabs)):
+      for k in self.ld[idx].keys():
+        if k in self.dqinitial_label:
+          del self.dqinitial_label[k]
+        if k in self.dqdiff_label:
+          del self.dqdiff_label[k]
+        if k in self.dqparam_name:
+          del self.dqparam_name[k]
+
   def addGridToTab (self, d, tab):
     from functools import partial
     import re
@@ -1393,14 +1423,34 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     self.ltabkeys.append([])
 
+    # The first row has column headings
     row = 0
+    self.ltabkeys[current_tab].append("")
+    for column_index, column_name in enumerate(["Optimize", "Parameter name",
+      "Initial", "Optimized", "Delta", "Range mode", "Range specifier",
+      "Defined range"]):
+      widget = QLabel(column_name)
+      widget.resize(widget.sizeHint())
+      tab.layout.addWidget(widget, row, column_index)
+
+    # The second row is a horizontal line
+    row = 1
+    self.ltabkeys[current_tab].append("")
+    qthline = QFrame()
+    qthline.setFrameShape(QFrame.HLine)
+    qthline.setFrameShadow(QFrame.Sunken)
+    tab.layout.addWidget(qthline, row, 0, 1, 8)
+
+    # The rest are the parameters
+    row = 2
     for k,v in d.items():
       self.ltabkeys[current_tab].append(k)
-      self.dqline[k] = QLineEdit(self)
-      self.dqline[k].setText(str(v))
-      chkbox = QCheckBox(self.transvar(k),self)
-      chkbox.resize(chkbox.sizeHint())
-      chkbox.setStyleSheet("""
+
+      # create and format widgets
+      self.dqline[k] = QLabel(self)
+      self.dqline[k].setText("%6f"%v)
+      self.dqchkbox[k] = QCheckBox()
+      self.dqchkbox[k].setStyleSheet("""
       .QCheckBox {
             spacing: 20px;
           }
@@ -1411,27 +1461,44 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             color: black;
           }
       """)
-      chkbox.setChecked(True)
+      self.dqchkbox[k].setChecked(True)
       # use partial instead of lamda (so args won't be evaluated ahead of time?)
-      chkbox.clicked.connect(partial(self.toggle_field,
+      self.dqchkbox[k].clicked.connect(partial(self.toggle_field,
                                                     current_tab, row))
-      tab.layout.addWidget(chkbox, row, 1)
-      tab.layout.addWidget(self.dqline[k], row, 2)
+      self.dqparam_name[k] = QLabel(self)
+      self.dqparam_name[k].setText(self.transvar(k))
+      self.dqinitial_label[k] = QLabel()
+      self.dqdiff_label[k] = QLabel()
+
+      # add widgets to grid
+      tab.layout.addWidget(self.dqchkbox[k], row, 0, alignment = Qt.AlignBaseline | Qt.AlignCenter)
+      tab.layout.addWidget(self.dqparam_name[k], row, 1)
+      tab.layout.addWidget(self.dqinitial_label[k], row, 2)  # initial value
+      tab.layout.addWidget(self.dqline[k], row, 3)  # current value
+      tab.layout.addWidget(self.dqdiff_label[k], row, 4)  # delta
 
       if k.startswith('t'):
-        tab.layout.addWidget(QLabel("range (sd)"), row, 3)
-        tab.layout.addWidget(QLineEdit("3.0"), row, 4)
-        tab.layout.addWidget(QLabel(), row, 5)
+        range_mode = "range (sd)"
+        range_multiplier = "3.0"
       elif k.startswith('sigma'):
-        tab.layout.addWidget(QLabel("range (%)"), row, 3)
-        tab.layout.addWidget(QLineEdit("50.0"), row, 4)
-        tab.layout.addWidget(QLabel(), row, 5)
+        range_mode = "range (%)"
+        range_multiplier = "50.0"
       else:
-        tab.layout.addWidget(QLabel("range (%)"), row, 3)
-        tab.layout.addWidget(QLineEdit("500.0"), row, 4)
-        tab.layout.addWidget(QLabel(), row, 5)
+        range_mode = "range (%)"
+        range_multiplier = "500.0"
+      tab.layout.addWidget(QLabel(range_mode), row, 5)  # range mode
+      qtline = QLineEdit(range_multiplier)
+      qtline.resize(qtline.minimumSizeHint())
+      tab.layout.addWidget(qtline, row, 6)  # range specifier
+      tab.layout.addWidget(QLabel(), row, 7)  # calculated range
+
       row += 1
 
+    # A spacer in the last row stretches to fill remaining space.
+    # For inputs with fewer parameters than the rest, this pushes parameters
+    # to the top with the same spacing as the other inputs.
+    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 8)
+    tab.layout.setRowStretch(row,1)
     tab.setLayout(tab.layout)
 
   def addProx (self):
@@ -1508,7 +1575,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     row = 0
     while True:
       try:
-        num_sims = int(self.sublayout.itemAtPosition(row,4).widget().text())
+        num_sims = int(self.sublayout.itemAtPosition(row,5).widget().text())
         self.old_numsims.append(num_sims)
       except AttributeError:
         # no more rows
@@ -1520,7 +1587,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         else:
           self.old_numsims.append(self.default_num_step_sims)
 
-      for column in range(column_count-1):  # last column is a spacer item
+      for column in range(column_count):
         try:
           # Use deleteLater() to avoid memory leaks.
           self.sublayout.itemAtPosition(row, column).widget().deleteLater()
@@ -1566,20 +1633,23 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 1)
 
-      qlabel = QLabel("Num params: %d"%dconf['opt_info'][chunk_index]['num_params'])
-      qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
-      qlabel.resize(qlabel.minimumSizeHint())
-      self.sublayout.addWidget(qlabel,chunk_index, 2)
+      # spacer here for readability of input names and reduce size
+      # of "Num simulations:"
+      self.sublayout.addItem(QSpacerItem(0, 0, hPolicy = QSizePolicy.MinimumExpanding), chunk_index, 2)
 
-      qlabel = QLabel("Num simulations:")
+      qlabel = QLabel("Num params: %d"%dconf['opt_info'][chunk_index]['num_params'])
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 3)
 
+      qlabel = QLabel("Num simulations:")
+      qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+      qlabel.resize(qlabel.minimumSizeHint())
+      self.sublayout.addWidget(qlabel,chunk_index, 4)
+
       numsim_qline = QLineEdit(str(num_sims))
       numsim_qline.resize(numsim_qline.minimumSizeHint())
-      self.sublayout.addWidget(numsim_qline,chunk_index,4)
-      self.sublayout.addItem(QSpacerItem(5, numsim_qline.minimumSizeHint().height()), chunk_index, 5)
+      self.sublayout.addWidget(numsim_qline,chunk_index,5)
 
   def updateRanges(self):
     self.updateDispRanges()
@@ -1592,9 +1662,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     for tab_index, tab in enumerate(self.ltabs):
       # get timing sigma before calculating timing range
       timing_sigma = None
-      for i in range(tab.layout.rowCount()):
-        if tab.layout.itemAtPosition(i, 1).widget().text().startswith("Start time stdev"):
-          timing_sigma = float(tab.layout.itemAtPosition(i, 2).widget().text())
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        if self.dqparam_name[label].text().startswith("Start time stdev"):
+          timing_sigma = float(self.dqline[label].text())
           if timing_sigma == 0.0:
             # sigma of 0 will not produce a CDF
             timing_sigma = 0.01
@@ -1609,20 +1680,20 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
                                   'num_params': 0,
                                   'decay_multiplier': dconf['decay_multiplier']}
       # now update the ranges
-      for row_index in range(tab.layout.rowCount()):
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
-        value = float(tab.layout.itemAtPosition(row_index, 2).widget().text())
+        value = float(self.dqline[label].text())
 
-        if tab.layout.itemAtPosition(row_index, 1).widget().isChecked():
+        if self.dqchkbox[label].isChecked():
           try:
-            range_multiplier = float(tab.layout.itemAtPosition(row_index, 4).widget().text())
+            range_multiplier = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
           except ValueError:
             range_multiplier = 0.0
-          tab.layout.itemAtPosition(row_index, 4).widget().setText(str(range_multiplier))
+          tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
         else:
           range_multiplier = 0.0
 
-        tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(True)
+        tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(True)
         if label.startswith('t'):
           # mean start time
           timing_bound = timing_sigma * range_multiplier
@@ -1636,49 +1707,84 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           if value < 1e-6:
             # don't let values fall below precision threshold
             value = 0.0
-            tab.layout.itemAtPosition(row_index, 2).widget().setText(str(value))
+            self.dqline[label].setText(str(value))
 
           if value == 0.0:
             range_min = value
 
-            range_type = tab.layout.itemAtPosition(row_index, 3).widget().text()
+            range_type = tab.layout.itemAtPosition(row_index, 5).widget().text()
             if range_type == "max":
               # range already specified by min/max value. take user input
               try:
-                range_max = float(tab.layout.itemAtPosition(row_index, 4).widget().text())
+                range_max = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
               except ValueError:
                 range_max = 1.0
             else:
               # change to range from 0 to 1
-              tab.layout.itemAtPosition(row_index, 3).widget().setText("max")
+              tab.layout.itemAtPosition(row_index, 5).widget().setText("max")
               range_max = 1.0
-              tab.layout.itemAtPosition(row_index, 4).widget().setText(str(range_max))
+              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_max))
           else:
             # do we need to convert from using max to define range to a percentage?
-            if tab.layout.itemAtPosition(row_index, 3).widget().text() == "max":
-              tab.layout.itemAtPosition(row_index, 3).widget().setText("range (%)")
+            if tab.layout.itemAtPosition(row_index, 5).widget().text() == "max":
+              tab.layout.itemAtPosition(row_index, 5).widget().setText("range (%)")
               range_multiplier = 500.0
-              tab.layout.itemAtPosition(row_index, 4).widget().setText(str(range_multiplier))
+              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
 
             range_min = max(0,value - (value * range_multiplier/100.0))
             range_max = value + (value * range_multiplier/100.0)
 
         if range_min == range_max:
           # use the exact value
-          tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f" % (value))
-          tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(False)
+          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f" % (value))
+          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
           # uncheck because invalid range
-          tab.layout.itemAtPosition(row_index, 1).widget().setChecked(False)
+          self.dqchkbox[label].setChecked(False)
         else:
-          tab.layout.itemAtPosition(row_index, 5).widget().setText("%.3f - %.3f" % (range_min, range_max))
+          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f - %.3f" % (range_min, range_max))
 
-        if tab.layout.itemAtPosition(row_index, 1).widget().isChecked():
+        if self.dqchkbox[label].isChecked():
           # add param to list for optimization
           self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
           self.opt_params[tab_name]['num_params'] += 1
         else:
           # grey out the range
-          tab.layout.itemAtPosition(row_index, 5).widget().setEnabled(False)
+          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
+
+        # Calculate value to put in "Delta" column. When possible, use
+        # percentages, but when initial value is 0, use absolute changes
+        if (not self.initial_opt_info is None) \
+          and (tab_index < len(self.initial_opt_info)):
+          initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
+          self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
+          if not initial_value == 0:
+            diff = 100 * (value - initial_value)/initial_value
+            if diff < 0:
+              text = ("%2.2f %%"%diff)
+              color_fmt = "QLabel { color : red; }"
+            elif diff > 0:
+              text = ("+%2.2f %%"%diff)
+              color_fmt = "QLabel { color : green; }"
+            else:
+              text = "0.0 %"
+              color_fmt = "QLabel { color : black; }"
+          else:
+            diff = value - initial_value
+            if diff < 0:
+              text = ("%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : red; }"
+            elif diff > 0:
+              text = ("+%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : green; }"
+            else:
+              text = "0.0"
+              color_fmt = "QLabel { color : black; }"
+        else:
+          text = "0.0"
+          color_fmt = "QLabel { color : black; }"
+          self.dqinitial_label[label].setText(self.dqline[label].text())
+        self.dqdiff_label[label].setText(text)
+        self.dqdiff_label[label].setStyleSheet(color_fmt)
 
     if not 'opt_info' in dconf:
       # initialize opt_info if it doesn't exist
@@ -1694,6 +1800,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.simlength = float(din['tstop'])
       self.sim_dt = float(din['dt'])
 
+      self.cleanLabels()
       self.removeAllInputs() # turn off any previously set inputs
       self.ltabkeys = []
       self.dtab_idx = {}
@@ -1707,7 +1814,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     for k,v in din.items():
       if k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
+        # Enforce no sci. not. + limit field len + remove trailing 0's
+        self.dqline[k].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
       elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
@@ -1716,12 +1824,12 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
 
     self.updateDispRanges()
 
