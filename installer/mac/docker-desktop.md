@@ -82,7 +82,7 @@
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
 
-## Updgrading to a new version of HNN
+## Upgrading to a new version of HNN
 
 You can download the latest version of the hnn container with `docker-compose pull`:
 

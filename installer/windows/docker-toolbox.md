@@ -117,7 +117,7 @@ The Docker Toolbox VM will remain running the background using some resources. I
 $ docker-machine stop
 ```
 
-## Updgrading to a new version of HNN
+## Upgrading to a new version of HNN
 
 1. Verify that XLaunch and Docker are running. Both will not start automatically after a reboot by default.
 2. Open a "Docker Quickstart Terminal" and type
