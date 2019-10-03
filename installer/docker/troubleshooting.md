@@ -20,7 +20,7 @@ hnn_container | HNN failed to start GUI using DISPLAY=host.docker.internal:4
 hnn_container | Failed to start HNN on any X port
 ```
 
-The docker container is trying to reach an IP address and port defined in the $DISPLAY environment variable, but is failing. The start scipt first tries port 5000 for the IP address in $DISPLAY, then 5001 through 5004 before giving up. Troubleshooting steps diverge for each operating system.
+The docker container is trying to reach an IP address and port defined in the $DISPLAY environment variable, but is failing. The start script first tries port 5000 for the IP address in $DISPLAY, then 5001 through 5004 before giving up. Troubleshooting steps diverge for each operating system.
 
 * Mac/Windows
 
@@ -29,7 +29,7 @@ The docker container is trying to reach an IP address and port defined in the $D
     3. Try setting DISPLAY in the docker-compose.yml file for your operating system (e.g. installer/mac/docker-compose.yml) to these different IP addresses and try `docker-compose restart` to rerun the start script.
         * `192.168.99.1:0`
         * `192.168.65.2:0`
-    4. As a last step try changing DISPLAY to the IP address of the external interface (e.g. wireless) followed by a ":0". The drawback of this approach is that loosing your wifi connection will cause HNN to close.
+    4. As a last step try changing DISPLAY to the IP address of the external interface (e.g. wireless) followed by a ":0". The drawback of this approach is that loosing your WiFi connection will cause HNN to close.
 
 * Linux
 

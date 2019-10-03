@@ -101,7 +101,7 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
     pip install nlopt
     ```
 
-3. Set the LD_LIBRARY_PATH for openmpi on conda activation. This environnment variable must be set before HNN can run simulations with openmpi. The variable is only useful inside the 'hnn' conda environment, so we will set the variable when conda is activated with `source activate hnn`. Run the following commands to make this automatic.
+3. Set the LD_LIBRARY_PATH for openmpi on conda activation. This environnement variable must be set before HNN can run simulations with openmpi. The variable is only useful inside the 'hnn' conda environment, so we will set the variable when conda is activated with `source activate hnn`. Run the following commands to make this automatic.
 
     ```bash
     cd ${CONDA_PREFIX}

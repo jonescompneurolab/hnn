@@ -17,11 +17,11 @@ docker pull jonescompneurolab/hnn
 
 ## Building HNN container from this directory
 
-The CACHEBUST argument reuses the docker cache up to the point where new HNN source code is included (container will always include latest source code).
+The BUILD_DATE argument is important to build the container with the latest HNN source code. Without it, the build will reuse the docker build cache, which may have been with an old code version.
 
 ```bash
 cd hnn/installer/docker
-docker build --tag jonescompneurolab/hnn --build-arg CACHEBUST=$(date +%s) .
+docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master BUILD_DATE=$(date +%s) .
 ```
 
 ## Running HNN container without docker-compose
