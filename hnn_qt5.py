@@ -62,6 +62,7 @@ simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
+basedir = None
 
 # get default number of cores
 defncore = 0
@@ -349,6 +350,8 @@ class RunSimThread (QThread):
   def optmodel (self):
     import simdat
 
+    global basedir
+
     # for saving the initial parameters (used to calculate diffs)
     self.baseparamwin.optparamwin.initial_opt_info = []
 
@@ -356,9 +359,13 @@ class RunSimThread (QThread):
     seed = int(find_param(paramf,'prng_seedcore_opt'))
     nlopt.srand(seed)
 
-    simdat.initial_ddat = deepcopy(simdat.ddat)
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
+    simdat.initial_ddat = deepcopy(simdat.ddat)
+
+    # save initial parameters file
+    param_out = os.path.join(basedir,'before_opt.param')
+    shutil.copyfile(paramf, param_out)
 
     self.updatewaitsimwin('Optimizing model. . .')
 
@@ -407,12 +414,12 @@ class RunSimThread (QThread):
 
       simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with best from this step
 
-      # put best opt results into GUI
+      # put best opt results into GUI and save to param file
       push_values = OrderedDict()
       for param_name in self.opt_params['ranges'].keys():
         push_values[param_name] = self.opt_params['ranges'][param_name]['initial']
-
       self.updatebaseparamwin(push_values)
+
       sleep(1)
 
       self.first_step = False
@@ -424,16 +431,9 @@ class RunSimThread (QThread):
 
   def runOptStep (self):
     import simdat
+    global basedir, paramf
 
-    self.optiter = 0 # optimization iteration
-    fnoptinf = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt')
-    optinf_dir = os.path.dirname(fnoptinf)
-
-    # Make sure directory exists (in case optimization is run before simulation)
-    os.makedirs(optinf_dir, exist_ok=True)
-    
-    fpopt = open(fnoptinf,'w')
-    fpopt.close()
+    self.optiter = 0
     self.minopterr = 1e9
     self.stepminopterr = self.minopterr
     self.best_ddat = None
@@ -462,7 +462,8 @@ class RunSimThread (QThread):
                   self.opt_params['ranges'][param_name]['maxval'])
           return 1e9 # invalid param value -> large error
 
-      self.updatebaseparamwin(dtest) # put new param values into GUI
+      # put new param values into GUI and save params to file
+      self.updatebaseparamwin(dtest)
       sleep(1)
 
       # run the simulation, but stop early if possible
@@ -491,29 +492,24 @@ class RunSimThread (QThread):
       print(txt)
       self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
 
-      # Be ready in case the user changes the simulation name in the middle of an optimization
-      fnoptinf = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt')
-      optinf_dir = os.path.dirname(fnoptinf)
-      os.makedirs(optinf_dir, exist_ok=True)
-      
+      fnoptinf = os.path.join(basedir,'optinf.txt')
       with open(fnoptinf,'a') as fpopt:
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
-      # backup the current param file
-      outdir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      # last param file
-      prmloc0 = os.path.join(outdir,paramf.split(os.path.sep)[-1])
+      # save copy param file
+      param_fname = os.path.basename(paramf)
+      curr_paramf = os.path.join(basedir, param_fname)
 
-      # save numbered by optiter
-      prmloc1 = os.path.join(outdir,'step_%d_iter_%d.param'%(self.cur_step,self.optiter))
-      shutil.copyfile(prmloc0,prmloc1)
+      # save params numbered by optiter
+      param_out = os.path.join(basedir,'step_%d_iter_%d.param'%(self.cur_step,self.optiter))
+      shutil.copyfile(curr_paramf, param_out)
 
       if err < self.stepminopterr:
         self.updatewaitsimwin("new best with RMSE %f"%err)
 
         self.stepminopterr = err
         # save best param file
-        shutil.copyfile(prmloc0,os.path.join(outdir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
+        shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
         self.best_ddat = simdat.ddat.copy()
 
       if self.optiter == 0 and not self.first_step:
@@ -2432,15 +2428,17 @@ class BaseParamDialog (QDialog):
       msg.setText(tmpf + ' already exists. Over-write?')
       msg.setWindowTitle('Over-write file(s)?')
       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
-      if msg.exec_() == QMessageBox.Ok: oktosave = True
+      if msg.exec_() == QMessageBox.Ok:
+          oktosave = True
+
     if oktosave:
-      if debug: print('Saving params to ',  tmpf)
-      try:
-        with open(tmpf,'w') as fp: fp.write(str(self))
-        paramf = dconf['paramf'] = tmpf # success? update paramf
-        basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      except:
-        print('Exception in saving param file!',tmpf)
+      with open(tmpf,'w') as fp:
+        fp.write(str(self))
+
+      paramf = dconf['paramf'] = tmpf # update paramf
+      basedir = os.path.join(dconf['datdir'], self.qle.text())
+      os.makedirs(basedir, exist_ok=True)
+
     return oktosave
 
   def updatesaveparams (self, dtest):
@@ -2571,13 +2569,15 @@ class HNNGUI (QMainWindow):
     
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
-    global paramf,dfile
+    global paramf,basedir,dfile
     qfd = QFileDialog()
     qfd.setHistory([os.path.join(dconf['dbase'],'data')])
     fn = qfd.getOpenFileName(self, 'Open param file',
                                      os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       try:
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
@@ -2715,7 +2715,6 @@ class HNNGUI (QMainWindow):
   def showRasterPlot (self):
     # start the raster plot visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
@@ -2724,7 +2723,6 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     # start the dipole visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
@@ -2778,7 +2776,7 @@ class HNNGUI (QMainWindow):
 
   def removeSim (self):
     # remove the currently selected simulation
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('removeSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
@@ -2792,6 +2790,8 @@ class HNNGUI (QMainWindow):
       simdat.lsimidx = max(0,len(simdat.lsimdat) - 1)
       if len(simdat.lsimdat) > 0:
         paramf = simdat.lsimdat[simdat.lsimidx][0]
+        param_fname = os.path.splitext(os.path.basename(paramf))
+        basedir = os.path.join(dconf['datdir'], param_fname[0])
         if debug: print('new paramf:',paramf,simdat.lsimidx)
         self.updateDatCanv(paramf)
         self.cbsim.setCurrentIndex(simdat.lsimidx)
@@ -2806,18 +2806,22 @@ class HNNGUI (QMainWindow):
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
       simdat.lsimidx -= 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
       self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def nextSim (self):
     # go to next simulation
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('nextSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
       simdat.lsimidx += 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
       self.cbsim.setCurrentIndex(simdat.lsimidx)
@@ -2827,6 +2831,7 @@ class HNNGUI (QMainWindow):
     global paramf
     import simdat
     paramf = '' # set paramf to empty so no data gets loaded
+    basedir = None
     simdat.ddat = {} # clear data in simdat.ddat
     simdat.lsimdat = []
     simdat.lsimidx = 0
@@ -3186,12 +3191,14 @@ class HNNGUI (QMainWindow):
 
   def onActivateSimCB (self, s):
     # load simulation when activating simulation combobox
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('onActivateSimCB',s,paramf,self.cbsim.currentIndex(),simdat.lsimidx)
     if self.cbsim.currentIndex() != simdat.lsimidx:
       if debug: print('Loading',s)
       paramf = s
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       simdat.lsimidx = self.cbsim.currentIndex()
       self.updateDatCanv(paramf)
 
@@ -3281,6 +3288,10 @@ class HNNGUI (QMainWindow):
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
+    # make sure params saved and ok to run
+    if not self.baseparamwin.saveparams():
+      return
+
     # optimize the model
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
@@ -3341,7 +3352,6 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     self.setcursors(Qt.ArrowCursor)
     if failed:
       msg = "Failed "
