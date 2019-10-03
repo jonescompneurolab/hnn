@@ -68,7 +68,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 
    * Option 2: Cloning (requires Git for Windows)
 
-     1. If you didn't install Git for Windows aboe (not reuired), download the installer at [Git for Windows](https://gitforwindows.org/)
+     1. If you didn't install Git for Windows above (not required), download the installer at [Git for Windows](https://gitforwindows.org/)
      2. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
         ```bash
