@@ -77,7 +77,7 @@
     ```
 
 4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screnshot above). Then restart XQuartz and try starting the HNN container again.
+    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screenshot above). Then restart XQuartz and try starting the HNN container again.
 5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
