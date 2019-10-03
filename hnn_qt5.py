@@ -403,7 +403,8 @@ class RunSimThread (QThread):
 
         # reload opt_params for the last step in case the number of
         # steps was changed by updateoptparams()
-        self.opt_params = dconf['opt_info'][total_steps - 1]
+        final_step = len(dconf['opt_info']) - 1
+        self.opt_params = dconf['opt_info'][final_step]
 
       txt = "Starting optimization step %d/%d"%(step+1,total_steps)
       self.updatewaitsimwin(txt)
