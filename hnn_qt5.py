@@ -1310,12 +1310,13 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dtab_idx = {} # for translating input names to tab indices
     self.dtab_names = {} # for translating tab indices to input names
+    self.dparams = OrderedDict()  # actual values
 
     # these store values used in grid
     self.dqchkbox = OrderedDict()  # optimize
     self.dqparam_name = OrderedDict()  # parameter name
     self.dqinitial_label = OrderedDict()  # initial
-    self.dqline = OrderedDict()  # optimized (named dqline for using super's members)
+    self.dqopt_label = OrderedDict()  # optimtized
     self.dqdiff_label = OrderedDict() # delta
 
     self.initial_opt_info = None
@@ -1405,6 +1406,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       for k in self.ld[idx].keys():
         if k in self.dqinitial_label:
           del self.dqinitial_label[k]
+        if k in self.dqopt_label:
+          del self.dqopt_label[k]
         if k in self.dqdiff_label:
           del self.dqdiff_label[k]
         if k in self.dqparam_name:
@@ -1444,8 +1447,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.ltabkeys[current_tab].append(k)
 
       # create and format widgets
-      self.dqline[k] = QLabel(self)
-      self.dqline[k].setText("%6f"%v)
+      self.dparams[k] = float(v)
       self.dqchkbox[k] = QCheckBox()
       self.dqchkbox[k].setStyleSheet("""
       .QCheckBox {
@@ -1465,13 +1467,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.dqparam_name[k] = QLabel(self)
       self.dqparam_name[k].setText(self.transvar(k))
       self.dqinitial_label[k] = QLabel()
+      self.dqopt_label[k] = QLabel()
       self.dqdiff_label[k] = QLabel()
 
       # add widgets to grid
       tab.layout.addWidget(self.dqchkbox[k], row, 0, alignment = Qt.AlignBaseline | Qt.AlignCenter)
       tab.layout.addWidget(self.dqparam_name[k], row, 1)
       tab.layout.addWidget(self.dqinitial_label[k], row, 2)  # initial value
-      tab.layout.addWidget(self.dqline[k], row, 3)  # current value
+      tab.layout.addWidget(self.dqopt_label[k], row, 3)  # optimized value
       tab.layout.addWidget(self.dqdiff_label[k], row, 4)  # delta
 
       if k.startswith('t'):
@@ -1516,7 +1519,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.addtransvarfromdict(dprox)
     tab = self.addTab('evprox_' + str(self.nprox))
     self.addGridToTab(dprox, tab)
-    self.addtips()
 
   def addDist (self):
     self.ndist += 1
@@ -1534,11 +1536,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.addtransvarfromdict(ddist)
     tab = self.addTab('evdist_' + str(self.ndist))
     self.addGridToTab(ddist, tab)
-    self.addtips()
 
   def runOptimization(self):
     # update the opt info dict to capture num_sims from GUI
-    self.updateOptInfo()
+    self.updateRanges()
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
@@ -1662,7 +1663,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
         if self.dqparam_name[label].text().startswith("Start time stdev"):
-          timing_sigma = float(self.dqline[label].text())
+          timing_sigma = self.dparams[label]
           if timing_sigma == 0.0:
             # sigma of 0 will not produce a CDF
             timing_sigma = 0.01
@@ -1679,7 +1680,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       # now update the ranges
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
-        value = float(self.dqline[label].text())
+        value = self.dparams[label]
 
         if self.dqchkbox[label].isChecked():
           try:
@@ -1704,7 +1705,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           if value < 1e-6:
             # don't let values fall below precision threshold
             value = 0.0
-            self.dqline[label].setText(str(value))
+            self.dparams[label] = value
 
           if value == 0.0:
             range_min = value
@@ -1750,10 +1751,17 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
         # Calculate value to put in "Delta" column. When possible, use
         # percentages, but when initial value is 0, use absolute changes
-        if (not self.initial_opt_info is None) \
-          and (tab_index < len(self.initial_opt_info)):
+        if self.initial_opt_info is None or \
+           tab_index >= len(self.initial_opt_info) or \
+           not self.dqchkbox[label].isChecked():
+          #self.dqdiff_label[label].setEnabled(False)
+          self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
+          self.dqopt_label[label].setText('')
+          self.dqdiff_label[label].setText('')
+        else:
           initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
           self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
+          self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
           if not initial_value == 0:
             diff = 100 * (value - initial_value)/initial_value
             if diff < 0:
@@ -1776,16 +1784,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             else:
               text = "0.0"
               color_fmt = "QLabel { color : black; }"
-        else:
-          text = "0.0"
-          color_fmt = "QLabel { color : black; }"
-          self.dqinitial_label[label].setText(self.dqline[label].text())
-        self.dqdiff_label[label].setText(text)
-        self.dqdiff_label[label].setStyleSheet(color_fmt)
-
-    if not 'opt_info' in dconf:
-      # initialize opt_info if it doesn't exist
-      self.updateOptInfo()
+          self.dqdiff_label[label].setText(text)
+          self.dqdiff_label[label].setStyleSheet(color_fmt)
 
   def setfromdin (self,din):
     if not din:
@@ -1810,9 +1810,9 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           self.addDist()
 
     for k,v in din.items():
-      if k in self.dqline:
+      if k in self.dparams:
         # Enforce no sci. not. + limit field len + remove trailing 0's
-        self.dqline[k].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
+        self.dparams[k] = float(v)
       elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
@@ -1821,14 +1821,17 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
+            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(("%6f"%float(v)).rstrip('0').rstrip('.'))
+            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
+            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'] = float(v)
 
     self.updateDispRanges()
+    if not 'opt_info' in dconf:
+      # initialize opt_info if it doesn't exist
+      self.updateOptInfo()
 
   def __str__ (self):
     # don't write any values to param file
