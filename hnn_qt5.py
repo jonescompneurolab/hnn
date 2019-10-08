@@ -1311,6 +1311,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dtab_idx = {} # for translating input names to tab indices
     self.dtab_names = {} # for translating tab indices to input names
     self.dparams = OrderedDict()  # actual values
+    self.dqline = OrderedDict() # not used, prevents failure in removeInput
 
     # these store values used in grid
     self.dqchkbox = OrderedDict()  # optimize
