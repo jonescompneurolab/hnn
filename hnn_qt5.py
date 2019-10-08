@@ -1702,7 +1702,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           self.opt_params[tab_name]['end'] = range_max
         else:
           # std dev. or synaptic weights
-          if value < 1e-6:
+          if value < 1e-5:
             # don't let values fall below precision threshold
             value = 0.0
             self.dparams[label] = value
