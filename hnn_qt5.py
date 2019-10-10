@@ -4,9 +4,10 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame
-from PyQt5.QtGui import QIcon, QFont, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
+from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
+from PyQt5.QtCore import QMetaObject
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -18,7 +19,7 @@ from time import time, sleep
 from conf import dconf
 import conf
 import numpy as np
-from math import ceil
+from math import ceil, isclose
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
@@ -81,6 +82,310 @@ else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 if debug: print('getPyComm:',getPyComm())
 
 hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+
+DEFAULT_CSS = """
+QRangeSlider * {
+    border: 0px;
+    padding: 0px;
+}
+QRangeSlider #Head {
+    background: #a7adba;
+}
+QRangeSlider #Span {
+    background: #343d46;
+}
+QRangeSlider #Span:active {
+    background: #343d46;
+}
+QRangeSlider #Tail {
+    background: #a7adba;
+}
+QRangeSlider > QSplitter::handle {
+    background: #4f5b66;
+}
+QRangeSlider > QSplitter::handle:vertical {
+    height: 4px;
+}
+QRangeSlider > QSplitter::handle:pressed {
+    background: #ca5;
+}
+"""
+
+def scale(val, src, dst):
+    try:
+      return ((val - src[0]) / float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0])
+    except ZeroDivisionError:
+      return 0 
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        Form.setObjectName("QRangeSlider")
+        Form.resize(300, 30)
+        Form.setStyleSheet(DEFAULT_CSS)
+        self.gridLayout = QGridLayout(Form)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
+        self._splitter = QSplitter(Form)
+        self._splitter.setMinimumSize(QSize(0, 0))
+        self._splitter.setMaximumSize(QSize(16777215, 16777215))
+        self._splitter.setOrientation(Qt.Horizontal)
+        self._splitter.setObjectName("splitter")
+        self._head = QGroupBox(self._splitter)
+        self._head.setTitle("")
+        self._head.setObjectName("Head")
+        self._handle = QGroupBox(self._splitter)
+        self._handle.setTitle("")
+        self._handle.setObjectName("Span")
+        self._tail = QGroupBox(self._splitter)
+        self._tail.setTitle("")
+        self._tail.setObjectName("Tail")
+        self.gridLayout.addWidget(self._splitter, 0, 0, 1, 1)
+        self.retranslateUi(Form)
+        QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QCoreApplication.translate
+        Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
+
+
+class Element(QGroupBox):
+    def __init__(self, parent, main):
+        super(Element, self).__init__(parent)
+        self.main = main
+
+    def setStyleSheet(self, style):
+        self.parent().setStyleSheet(style)
+
+    def textColor(self):
+        return getattr(self, '__textColor', QColor(125, 125, 125))
+
+    def setTextColor(self, color):
+        if type(color) == tuple and len(color) == 3:
+            color = QColor(color[0], color[1], color[2])
+        elif type(color) == int:
+            color = QColor(color, color, color)
+        setattr(self, '__textColor', color)
+
+    def paintEvent(self, event):
+        qp = QPainter()
+        qp.begin(self)
+        if self.main.drawValues():
+            self.drawText(event, qp)
+        qp.end()
+
+
+class Head(Element):
+    def __init__(self, parent, main):
+        super(Head, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignLeft, ("%.3f"%self.main.min()))
+
+
+class Tail(Element):
+    def __init__(self, parent, main):
+        super(Tail, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignRight, ("%.3f"%self.main.max()))
+
+
+class Handle(Element):
+    def __init__(self, parent, main):
+        super(Handle, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        pass
+        # qp.setPen(self.textColor())
+        # qp.setFont(QFont('Arial', 10))
+        # qp.drawText(event.rect(), Qt.AlignLeft, str(self.main.start()))
+        # qp.drawText(event.rect(), Qt.AlignRight, str(self.main.end()))
+
+    def mouseMoveEvent(self, event):
+        event.accept()
+        mx = event.globalX()
+        _mx = getattr(self, '__mx', None)
+        if not _mx:
+            setattr(self, '__mx', mx)
+            dx = 0
+        else:
+            dx = mx - _mx
+        setattr(self, '__mx', mx)
+        if dx == 0:
+            event.ignore()
+            return
+        elif dx > 0:
+            dx = 1
+        elif dx < 0:
+            dx = -1
+        s = self.main.start() + dx
+        e = self.main.end() + dx
+        if s >= self.main.min() and e <= self.main.max():
+            self.main.setRange(s, e)
+
+
+class QRangeSlider(QWidget, Ui_Form):
+    endValueChanged = pyqtSignal(int)
+    maxValueChanged = pyqtSignal(int)
+    minValueChanged = pyqtSignal(int)
+    startValueChanged = pyqtSignal(int)
+    rangeValuesChanged = pyqtSignal(str, float, float)
+
+    _SPLIT_START = 1
+    _SPLIT_END = 2
+
+    def __init__(self, label, parent):
+        super(QRangeSlider, self).__init__(parent)
+        self.label = label
+        self.rangeValuesChanged.connect(parent.updateRangeFromSlider)
+        self.setupUi(self)
+        self.setMouseTracking(False)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._head_layout = QHBoxLayout()
+        self._head_layout.setSpacing(0)
+        self._head_layout.setContentsMargins(0, 0, 0, 0)
+        self._head.setLayout(self._head_layout)
+        self.head = Head(self._head, main=self)
+        self._head_layout.addWidget(self.head)
+        self._handle_layout = QHBoxLayout()
+        self._handle_layout.setSpacing(0)
+        self._handle_layout.setContentsMargins(0, 0, 0, 0)
+        self._handle.setLayout(self._handle_layout)
+        self.handle = Handle(self._handle, main=self)
+        self.handle.setTextColor((150, 255, 150))
+        self._handle_layout.addWidget(self.handle)
+        self._tail_layout = QHBoxLayout()
+        self._tail_layout.setSpacing(0)
+        self._tail_layout.setContentsMargins(0, 0, 0, 0)
+        self._tail.setLayout(self._tail_layout)
+        self.tail = Tail(self._tail, main=self)
+        self._tail_layout.addWidget(self.tail)
+        self.setMin(0)
+        self.setMax(99)
+        self.setStart(0)
+        self.setEnd(99)
+        self.setDrawValues(True)
+
+    def min(self):
+        return getattr(self, '__min', None)
+
+    def max(self):
+        return getattr(self, '__max', None)
+
+    def setMin(self, value):
+        setattr(self, '__min', value)
+        self.minValueChanged.emit(value)
+
+    def setMax(self, value):
+        setattr(self, '__max', value)
+        self.maxValueChanged.emit(value)
+
+    def start(self):
+        return getattr(self, '__start', None)
+
+    def end(self):
+        return getattr(self, '__end', None)
+
+    def _setStart(self, value):
+        setattr(self, '__start', value)
+        self.startValueChanged.emit(value)
+
+    def setStart(self, value):
+        v = self._valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_START)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setStart(value)
+
+    def _setEnd(self, value):
+        setattr(self, '__end', value)
+        self.endValueChanged.emit(value)
+
+    def setEnd(self, value):
+        v = self._valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_END)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setEnd(value)
+
+    def drawValues(self):
+        return getattr(self, '__drawValues', None)
+
+    def setDrawValues(self, draw):
+        setattr(self, '__drawValues', draw)
+
+    def getRange(self):
+        return (self.start(), self.end())
+
+    def setRange(self, start, end):
+        self.setStart(start)
+        self.setEnd(end)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left:
+            s = self.start()-1
+            e = self.end()-1
+        elif key == Qt.Key_Right:
+            s = self.start()+1
+            e = self.end()+1
+        else:
+            event.ignore()
+            return
+        event.accept()
+        if s >= self.min() and e <= self.max():
+            self.setRange(s, e)
+
+    def setBackgroundStyle(self, style):
+        self._tail.setStyleSheet(style)
+        self._head.setStyleSheet(style)
+
+    def setSpanStyle(self, style):
+        self._handle.setStyleSheet(style)
+
+    def _valueToPos(self, value):
+        return int(scale(value, (self.min(), self.max()), (0, self.width())))
+
+    def _posToValue(self, xpos):
+        return scale(xpos, (0, self.width()), (self.min(), self.max()))
+
+    def _handleMoveSplitter(self, xpos, index):
+        hw = self._splitter.handleWidth()
+        def _lockWidth(widget):
+            width = widget.size().width()
+            widget.setMinimumWidth(width)
+            widget.setMaximumWidth(width)
+        def _unlockWidth(widget):
+            widget.setMinimumWidth(0)
+            widget.setMaximumWidth(16777215)
+        if index == self._SPLIT_START:
+            v = self._posToValue(xpos)
+            _lockWidth(self._tail)
+            if v >= self.end():
+                return
+            offset = -20
+            w = xpos + offset
+            self._setStart(v)
+            self.rangeValuesChanged.emit(self.label, v, self.end())
+        elif index == self._SPLIT_END:
+            # account for width of head
+            xpos += 4
+            v = self._posToValue(xpos)
+            _lockWidth(self._head)
+            if v <= self.start():
+                return
+            offset = -40
+            w = self.width() - xpos + offset
+            self._setEnd(v)
+            self.rangeValuesChanged.emit(self.label, self.start(), v)
+        _unlockWidth(self._tail)
+        _unlockWidth(self._head)
+        _unlockWidth(self._handle)
 
 # for signaling
 class Communicate (QObject):
@@ -578,6 +883,16 @@ def lookupresource (fn):
     return os.path.join('res',fn+'2.png')
   else:
     return os.path.join('res',fn+'.png')
+
+def format_range_str(value):
+  if value == 0:
+    value_str = "0.000"
+  elif value < 0.1 :
+    value_str = ("%6f" % value)
+  else:
+    value_str = ("%.3f" % value)
+
+  return value_str
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
 # specifiable via cfg file format - then can customize gui without changing py code
@@ -1330,6 +1645,11 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dqinitial_label = OrderedDict()  # initial
     self.dqopt_label = OrderedDict()  # optimtized
     self.dqdiff_label = OrderedDict() # delta
+    self.dqrange_multiplier = OrderedDict() # user-defined multiplier
+    self.dqrange_mode = OrderedDict() # range mode (stdev, %, absolute)
+    self.dqrange_slider = OrderedDict() # slider
+    self.dqrange_label = OrderedDict() # defined range
+
 
     self.initial_opt_info = None
     self.dtabdata = []
@@ -1360,7 +1680,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     row += 1
     btnrecalc = QPushButton('Recalculate Ranges',self)
     btnrecalc.resize(btnrecalc.sizeHint())
-    btnrecalc.clicked.connect(self.updateRanges)
+    btnrecalc.clicked.connect(self.updateOptDialog)
     btnrecalc.setToolTip('Recalculate Ranges')
     self.grid.addWidget(btnrecalc, row, 0)
 
@@ -1424,6 +1744,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           del self.dqdiff_label[k]
         if k in self.dqparam_name:
           del self.dqparam_name[k]
+        if k in self.dqrange_mode:
+          del self.dqrange_mode[k]
+        if k in self.dqrange_multiplier:
+          del self.dqrange_multiplier[k]
 
   def addGridToTab (self, d, tab):
     from functools import partial
@@ -1439,11 +1763,24 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     row = 0
     self.ltabkeys[current_tab].append("")
     for column_index, column_name in enumerate(["Optimize", "Parameter name",
-      "Initial", "Optimized", "Delta", "Range mode", "Range specifier",
-      "Defined range"]):
+      "Initial", "Optimized", "Delta"]):
       widget = QLabel(column_name)
       widget.resize(widget.sizeHint())
       tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Range specifier")
+    widget.setMinimumWidth(100)
+    tab.layout.addWidget(widget, row, column_index, 1, 2)
+
+    column_index += 2
+    widget = QLabel("Range slider")
+    # widget.setMinimumWidth(160)
+    tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Defined range")
+    tab.layout.addWidget(widget, row, column_index)
 
     # The second row is a horizontal line
     row = 1
@@ -1451,7 +1788,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     qthline = QFrame()
     qthline.setFrameShape(QFrame.HLine)
     qthline.setFrameShadow(QFrame.Sunken)
-    tab.layout.addWidget(qthline, row, 0, 1, 8)
+    tab.layout.addWidget(qthline, row, 0, 1, 9)
 
     # The rest are the parameters
     row = 2
@@ -1481,6 +1818,9 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.dqinitial_label[k] = QLabel()
       self.dqopt_label[k] = QLabel()
       self.dqdiff_label[k] = QLabel()
+      self.dqrange_slider[k] = QRangeSlider(k,self)
+      self.dqrange_slider[k].setMinimumWidth(140)
+      self.dqrange_label[k] = QLabel()
 
       # add widgets to grid
       tab.layout.addWidget(self.dqchkbox[k], row, 0, alignment = Qt.AlignBaseline | Qt.AlignCenter)
@@ -1490,26 +1830,31 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       tab.layout.addWidget(self.dqdiff_label[k], row, 4)  # delta
 
       if k.startswith('t'):
-        range_mode = "range (sd)"
+        range_mode = "(stdev)"
         range_multiplier = "3.0"
       elif k.startswith('sigma'):
-        range_mode = "range (%)"
+        range_mode = "(%)"
         range_multiplier = "50.0"
       else:
-        range_mode = "range (%)"
+        range_mode = "(%)"
         range_multiplier = "500.0"
-      tab.layout.addWidget(QLabel(range_mode), row, 5)  # range mode
-      qtline = QLineEdit(range_multiplier)
-      qtline.resize(qtline.minimumSizeHint())
-      tab.layout.addWidget(qtline, row, 6)  # range specifier
-      tab.layout.addWidget(QLabel(), row, 7)  # calculated range
+
+      self.dqrange_multiplier[k] = QLineEdit(range_multiplier)
+      self.dqrange_multiplier[k].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+      self.dqrange_multiplier[k].setMinimumWidth(50)
+      self.dqrange_multiplier[k].setMaximumWidth(50)
+      self.dqrange_mode[k] = QLabel(range_mode)
+      tab.layout.addWidget(self.dqrange_multiplier[k], row, 5)  # range specifier
+      tab.layout.addWidget(self.dqrange_mode[k], row, 6)  # range mode
+      tab.layout.addWidget(self.dqrange_slider[k], row, 7)  # range slider
+      tab.layout.addWidget(self.dqrange_label[k], row, 8)  # calculated range
 
       row += 1
 
     # A spacer in the last row stretches to fill remaining space.
     # For inputs with fewer parameters than the rest, this pushes parameters
     # to the top with the same spacing as the other inputs.
-    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 8)
+    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 9)
     tab.layout.setRowStretch(row,1)
     tab.setLayout(tab.layout)
 
@@ -1551,7 +1896,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
   def runOptimization(self):
     # update the opt info dict to capture num_sims from GUI
-    self.updateRanges()
+    self.updateOptDialog()
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
@@ -1606,7 +1951,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           pass
       row += 1
 
-  def updateOptInfo(self):
+  def updateOptStepInfo(self):
     dconf['opt_info'] = {}  # holds info by opt. step
 
     # clean up the old grid sublayout
@@ -1661,11 +2006,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       numsim_qline.resize(numsim_qline.minimumSizeHint())
       self.sublayout.addWidget(numsim_qline,chunk_index,5)
 
-  def updateRanges(self):
-    self.updateDispRanges()
-    self.updateOptInfo()
-
-  def updateDispRanges(self):
+  def updateOptParams(self):
     self.opt_params = {}  # holds info by tab name
 
     # iterate through tabs. data is contained in grid layout
@@ -1689,24 +2030,112 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
                                   'sigma': timing_sigma,
                                   'num_params': 0,
                                   'decay_multiplier': dconf['decay_multiplier']}
-      # now update the ranges
+
+  def updateOptDeltas(self):
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+
+      # update the initial value
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
         value = self.dparams[label]
 
+        # Calculate value to put in "Delta" column. When possible, use
+        # percentages, but when initial value is 0, use absolute changes
+        if self.initial_opt_info is None or \
+           tab_index >= len(self.initial_opt_info) or \
+           not self.dqchkbox[label].isChecked():
+          self.dqdiff_label[label].setEnabled(False)
+          self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
+          text = '--'
+          color_fmt = "QLabel { color : black; }"
+          self.dqopt_label[label].setText(text)
+          self.dqopt_label[label].setStyleSheet(color_fmt)
+          self.dqopt_label[label].setAlignment(Qt.AlignHCenter)
+          self.dqdiff_label[label].setAlignment(Qt.AlignHCenter)
+        else:
+          initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
+          self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
+
+          self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
+          self.dqopt_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+          self.dqdiff_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+
+          if isclose(value, initial_value, abs_tol=1e-7):
+            diff = 0
+            text = "0.0"
+            color_fmt = "QLabel { color : black; }"
+          else:
+            diff = value - initial_value
+
+          if initial_value == 0:
+            # can't calculate %
+            if diff < 0:
+              text = ("%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : red; }"
+            elif diff > 0:
+              text = ("+%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : green; }"
+          else:
+            # calculate percent difference
+            percent_diff = 100 * diff/initial_value
+            if percent_diff < 0:
+              text = ("%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : red; }"
+            elif percent_diff > 0:
+              text = ("+%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : green; }"
+
+        self.dqdiff_label[label].setStyleSheet(color_fmt)
+        self.dqdiff_label[label].setText(text)
+
+  def updateRangeFromSlider(self, label, range_min, range_max):
+    import re
+
+    label_match = re.search('(evprox|evdist)_([0-9]+)', label)
+    if label_match:
+      tab_name = label_match.group(1) + '_' + label_match.group(2)
+    else:
+      print("ERR: can't determine input name from parameter: %s" % label)
+      return
+
+    self.dqrange_label[label].setText(format_range_str(range_min) + " - " +
+                                      format_range_str(range_max))
+    self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
+    self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
+
+  def updateOptRanges(self):
+    max_width = 0
+
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      tab_name = self.dtab_names[tab_index]
+
+      # reset num_params for this step
+      self.opt_params[tab_name]['num_params'] = 0
+
+      # now update the ranges
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        if self.initial_opt_info is None or \
+           tab_index >= len(self.initial_opt_info):
+          value = self.dparams[label]
+        else:
+          value = float(self.initial_opt_info[tab_index][label]['initial'])
+
         if self.dqchkbox[label].isChecked():
           try:
-            range_multiplier = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
+            range_multiplier = float(tab.layout.itemAtPosition(row_index, 5).widget().text())
           except ValueError:
             range_multiplier = 0.0
-          tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
+          tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_multiplier))
         else:
           range_multiplier = 0.0
 
-        tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(True)
+        tab.layout.itemAtPosition(row_index, 8).widget().setEnabled(True)
         if label.startswith('t'):
           # mean start time
-          timing_bound = timing_sigma * range_multiplier
+          timing_bound = self.opt_params[tab_name]['sigma'] * range_multiplier
           range_min = max(0, value - timing_bound)
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
@@ -1722,8 +2151,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           if value == 0.0:
             range_min = value
 
-            range_type = tab.layout.itemAtPosition(row_index, 5).widget().text()
-            if range_type == "max":
+            range_type = tab.layout.itemAtPosition(row_index, 6).widget().text()
+            if range_type == "(max)":
               # range already specified by min/max value. take user input
               try:
                 range_max = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
@@ -1731,27 +2160,41 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
                 range_max = 1.0
             else:
               # change to range from 0 to 1
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("max")
+              tab.layout.itemAtPosition(row_index, 6).widget().setText("(max)")
               range_max = 1.0
-              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_max))
+              tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_max))
           else:
             # do we need to convert from using max to define range to a percentage?
-            if tab.layout.itemAtPosition(row_index, 5).widget().text() == "max":
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("range (%)")
+            if tab.layout.itemAtPosition(row_index, 6).widget().text() == "(max)":
+              tab.layout.itemAtPosition(row_index, 6).widget().setText("(%)")
               range_multiplier = 500.0
-              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
+              tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_multiplier))
 
             range_min = max(0,value - (value * range_multiplier/100.0))
             range_max = value + (value * range_multiplier/100.0)
 
+        tab.layout.itemAtPosition(row_index, 7).widget().setMin(range_min)
+        tab.layout.itemAtPosition(row_index, 7).widget().setMax(range_max)
+
+        tab.layout.itemAtPosition(row_index, 7).widget().setRange(range_min, range_max)
         if range_min == range_max:
-          # use the exact value
-          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f" % (value))
-          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
+          self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
+          self.dqrange_label[label].setEnabled(False)
           # uncheck because invalid range
           self.dqchkbox[label].setChecked(False)
+          # disable slider
+          self.dqrange_slider[label].setEnabled(False)
         else:
-          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f - %.3f" % (range_min, range_max))
+          self.dqrange_label[label].setText(format_range_str(range_min) +
+                                            " - " +
+                                            format_range_str(range_max))
+
+        if self.dqrange_label[label].sizeHint().width() > max_width:
+          max_width = self.dqrange_label[label].sizeHint().width() + 10
+        # fix the size for the defined range so that changing the slider doesn't change
+        # the dialog's width
+        self.dqrange_label[label].setMinimumWidth(max_width)
+        self.dqrange_label[label].setMaximumWidth(max_width)
 
         if self.dqchkbox[label].isChecked():
           # add param to list for optimization
@@ -1759,45 +2202,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           self.opt_params[tab_name]['num_params'] += 1
         else:
           # grey out the range
-          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
+          tab.layout.itemAtPosition(row_index, 8).widget().setEnabled(False)
 
-        # Calculate value to put in "Delta" column. When possible, use
-        # percentages, but when initial value is 0, use absolute changes
-        if self.initial_opt_info is None or \
-           tab_index >= len(self.initial_opt_info) or \
-           not self.dqchkbox[label].isChecked():
-          #self.dqdiff_label[label].setEnabled(False)
-          self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
-          self.dqopt_label[label].setText('')
-          self.dqdiff_label[label].setText('')
-        else:
-          initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
-          self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
-          self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
-          if not initial_value == 0:
-            diff = 100 * (value - initial_value)/initial_value
-            if diff < 0:
-              text = ("%2.2f %%"%diff)
-              color_fmt = "QLabel { color : red; }"
-            elif diff > 0:
-              text = ("+%2.2f %%"%diff)
-              color_fmt = "QLabel { color : green; }"
-            else:
-              text = "0.0 %"
-              color_fmt = "QLabel { color : black; }"
-          else:
-            diff = value - initial_value
-            if diff < 0:
-              text = ("%6f"%diff).rstrip('0').rstrip('.')
-              color_fmt = "QLabel { color : red; }"
-            elif diff > 0:
-              text = ("+%6f"%diff).rstrip('0').rstrip('.')
-              color_fmt = "QLabel { color : green; }"
-            else:
-              text = "0.0"
-              color_fmt = "QLabel { color : black; }"
-          self.dqdiff_label[label].setText(text)
-          self.dqdiff_label[label].setStyleSheet(color_fmt)
+      if 'mean' not in self.opt_params[tab_name]:
+        print("ERR: could not find start time parameter for %s" % tab_name)
+
+  def updateOptDialog(self):
+    self.updateOptRanges()
+    self.updateOptStepInfo()
+    self.updateOptDeltas()
 
   def setfromdin (self,din):
     if not din:
@@ -1840,10 +2253,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
             self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'] = float(v)
 
-    self.updateDispRanges()
-    if not 'opt_info' in dconf:
-      # initialize opt_info if it doesn't exist
-      self.updateOptInfo()
+    self.updateOptParams()
+    self.updateOptDialog()
 
   def __str__ (self):
     # don't write any values to param file
@@ -3188,7 +3599,7 @@ class HNNGUI (QMainWindow):
     self.setCentralWidget(widget)
 
     self.c = Communicate()
-    self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateRanges)
+    self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateOptDialog)
     self.c.commsig.connect(self.baseparamwin.updateDispParam)
 
     self.d = DoneSignal()
