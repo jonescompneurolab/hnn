@@ -873,8 +873,12 @@ class RunSimThread (QThread):
     opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
 
     # update opt params for the next round
-    for var_name, value in zip(self.opt_params['ranges'], opt_results):
-        self.opt_params['ranges'][var_name]['initial'] = value
+    for var_name, new_value in zip(self.opt_params['ranges'], opt_results):
+        old_value = self.opt_params['ranges'][var_name]['initial']
+
+        # only change the parameter value if it changed significantly
+        if not isclose(old_value, new_value, abs_tol=1e-9):
+          self.opt_params['ranges'][var_name]['initial'] = new_value
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -1322,6 +1326,17 @@ class EvokedInputParamDialog (QDialog):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
 
+  def set_qline_float (self, key_str, value):
+    try:
+      new_value = float(value)
+    except ValueError:
+      print("WARN: bad value for param %s: %s. Unable to convert"
+            " to a floating point number" % (key_str, value))
+      return
+
+    # Enforce no sci. not. + limit field len + remove trailing 0's
+    self.dqline[key_str].setText(("%7f" % new_value).rstrip('0').rstrip('.'))
+
   def setfromdin (self,din):
     if not din: return
 
@@ -1347,28 +1362,56 @@ class EvokedInputParamDialog (QDialog):
 
     for k,v in din.items():
       if k == 'sync_evinput':
-        if float(v)==0.0:
-          self.chksync.setChecked(False)
-        elif float(v)==1.0:
+        try:
+          new_value = bool(int(v))
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a boolean value" % (k,v))
+          continue
+        if new_value:
           self.chksync.setChecked(True)
+        else:
+          self.chksync.setChecked(False)
       elif k == 'inc_evinput':
-        self.incedit.setText(str(v).strip())
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.incedit.setText(str(new_value).strip())
       elif k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
+        if k.startswith('numspikes'):
+          try:
+            new_value = int(v)
+          except ValueError:
+            print("WARN: bad value for param %s: %s. Unable to convert"
+                  " to a integer" % (k, v))
+            continue
+          self.dqline[k].setText(str(new_value))
+        else:
+          self.set_qline_float(k, v)
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
         eloc = lks[1]
         enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
         if eloc == 'evprox':
-          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
         elif eloc == 'evdist':
-          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
+            key_str = base_key_str + ct + '_nmda'
+            self.set_qline_float(key_str, v)
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -1960,7 +2003,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # split chunks from paramter file
     input_chunks = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
 
-    qlabel = []
     # create a new grid sublayout with a row for each optimization step
     for chunk_index, evinput in enumerate(input_chunks):
 
@@ -2143,12 +2185,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           self.opt_params[tab_name]['end'] = range_max
         else:
           # std dev. or synaptic weights
-          if value < 1e-5:
-            # don't let values fall below precision threshold
-            value = 0.0
-            self.dparams[label] = value
-
           if value == 0.0:
+            # can't calculate a percentage, use min/max range
             range_min = value
 
             range_type = tab.layout.itemAtPosition(row_index, 6).widget().text()
@@ -2236,22 +2274,40 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     for k,v in din.items():
       if k in self.dparams:
-        # Enforce no sci. not. + limit field len + remove trailing 0's
-        self.dparams[k] = float(v)
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.dparams[k] = new_value
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
         lks = k.split('_')
         eloc = lks[1]
         enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'] = float(v)
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
+            key_str = base_key_str + ct + '_nmda'
+            self.dparams[key_str] = new_value
 
     self.updateOptParams()
     self.updateOptDialog()
