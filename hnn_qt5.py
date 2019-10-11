@@ -1721,18 +1721,18 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.grid.addWidget(self.tabs, row, 0)
 
     row += 1
-    btnrecalc = QPushButton('Recalculate Ranges',self)
-    btnrecalc.resize(btnrecalc.sizeHint())
-    btnrecalc.clicked.connect(self.updateOptDialog)
-    btnrecalc.setToolTip('Recalculate Ranges')
-    self.grid.addWidget(btnrecalc, row, 0)
+    self.btnrecalc = QPushButton('Recalculate Ranges',self)
+    self.btnrecalc.resize(self.btnrecalc.sizeHint())
+    self.btnrecalc.clicked.connect(self.updateOptDialog)
+    self.btnrecalc.setToolTip('Recalculate Ranges')
+    self.grid.addWidget(self.btnrecalc, row, 0)
 
     row += 1
-    btnrunop = QPushButton('Run Optimization', self)
-    btnrunop.resize(btnrunop.sizeHint())
-    btnrunop.setToolTip('Run Optimization')
-    btnrunop.clicked.connect(self.runOptimization)
-    self.grid.addWidget(btnrunop, row, 0)
+    self.btnrunop = QPushButton('Run Optimization', self)
+    self.btnrunop.resize(self.btnrunop.sizeHint())
+    self.btnrunop.setToolTip('Run Optimization')
+    self.btnrunop.clicked.connect(self.runOptimization)
+    self.grid.addWidget(self.btnrunop, row, 0)
 
     row += 1
     btnhide = QPushButton('Hide Window',self)
@@ -1972,12 +1972,19 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # get number of sims from GUI
     row = 0
     while True:
+
+      try:
+        self.sublayout.itemAtPosition(row,0).widget()
+      except AttributeError:
+        # no more rows
+        break
+
       try:
         num_sims = int(self.sublayout.itemAtPosition(row,5).widget().text())
         self.old_numsims.append(num_sims)
       except AttributeError:
-        # no more rows
-        break
+        # this widget doesn't exist
+        pass
       except ValueError:
         # couldn't get value for some reason (invalid), so set to the default
         if row == 1:
@@ -2002,6 +2009,17 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     # split chunks from paramter file
     input_chunks = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
+
+    if len(input_chunks) == 0:
+      qlabel = QLabel("No valid evoked inputs to optimize!")
+      qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+      qlabel.resize(qlabel.minimumSizeHint())
+      self.sublayout.addWidget(qlabel, 0, 0)
+      self.btnrunop.setEnabled(False)
+      self.btnrecalc.setEnabled(False)
+    else:
+      self.btnrunop.setEnabled(True)
+      self.btnrecalc.setEnabled(True)
 
     # create a new grid sublayout with a row for each optimization step
     for chunk_index, evinput in enumerate(input_chunks):

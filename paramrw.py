@@ -778,6 +778,9 @@ def consolidate_chunks(inputs):
 
     consolidated_chunks = []
     for one_input in sorted_inputs:
+        if not 'opt_start' in one_input[1]:
+            continue
+
         # extract info from sorted list
         input_dict = {'inputs': [one_input[0]],
                       'start': one_input[1]['start'],
@@ -829,12 +832,19 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
     times = np.linspace(0, sim_tstop, num_step)
 
     for input_name in opt_params.keys():
+        if opt_params[input_name]['start'] >= sim_tstop:
+            # can't optimize over this input
+            continue
+
         # calculate cdf using start time (minival of optimization range)
         cdf = stats.norm.cdf(times, opt_params[input_name]['start'],
                              opt_params[input_name]['sigma'])
         opt_params[input_name]['cdf'] = cdf.copy()
 
     for input_name in opt_params.keys():
+        if opt_params[input_name]['start'] >= sim_tstop:
+            # can't optimize over this input
+            continue
         opt_params[input_name]['weights'] = opt_params[input_name]['cdf'].copy()
 
         for other_input in opt_params:
