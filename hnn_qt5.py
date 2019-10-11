@@ -839,15 +839,19 @@ class RunSimThread (QThread):
       return err # return error
 
     def optimize(params_input, evals, algorithm):
-        num_params = len(params_input)
-        opt_params = np.zeros(num_params)
-        lb = np.zeros(num_params)
-        ub = np.zeros(num_params)
+        opt_params = []
+        lb = []
+        ub = []
 
-        for idx, param_name in enumerate(params_input.keys()):
-            ub[idx] = params_input[param_name]['maxval']
-            lb[idx] = params_input[param_name]['minval']
-            opt_params[idx] = params_input[param_name]['initial']
+        for param_name in params_input.keys():
+            upper = params_input[param_name]['maxval']
+            lower = params_input[param_name]['minval']
+            if upper == lower:
+              continue
+
+            ub.append(upper)
+            lb.append(lower)
+            opt_params.append(params_input[param_name]['initial'])
 
         if algorithm == nlopt.G_MLSL_LDS or algorithm == nlopt.G_MLSL:
             # In case these mixed mode (global + local) algorithms are used in the future
@@ -867,7 +871,6 @@ class RunSimThread (QThread):
     self.updatewaitsimwin(txt)
 
     num_params = self.opt_params['num_params']
-
     algorithm = nlopt.LN_COBYLA
     opt = nlopt.opt(algorithm, num_params)
     opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
@@ -1751,11 +1754,11 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
   def toggle_field(self, current_tab, row):
     if self.ltabs[current_tab].layout.itemAtPosition(row, 0).widget().isChecked():
       # set all other fields in the row to enabled
-      for column in range(1,8):
+      for column in range(1,9):
         self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(True)
     else:
       # disable all other fields in the row
-      for column in range(1,8):
+      for column in range(1,9):
         self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(False)
 
   def addTab (self,id_str):
@@ -2232,6 +2235,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         tab.layout.itemAtPosition(row_index, 7).widget().setMin(range_min)
         tab.layout.itemAtPosition(row_index, 7).widget().setMax(range_max)
 
+        if self.dqchkbox[label].isChecked():
+          # add param to list for optimization
+          self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
+          self.opt_params[tab_name]['num_params'] += 1
+        else:
+          range_min = range_max = value
+          self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
+
+        # set up the slider
         tab.layout.itemAtPosition(row_index, 7).widget().setRange(range_min, range_max)
         if range_min == range_max:
           self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
@@ -2251,14 +2263,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         # the dialog's width
         self.dqrange_label[label].setMinimumWidth(max_width)
         self.dqrange_label[label].setMaximumWidth(max_width)
-
-        if self.dqchkbox[label].isChecked():
-          # add param to list for optimization
-          self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
-          self.opt_params[tab_name]['num_params'] += 1
-        else:
-          # grey out the range
-          tab.layout.itemAtPosition(row_index, 8).widget().setEnabled(False)
 
       if 'mean' not in self.opt_params[tab_name]:
         print("ERR: could not find start time parameter for %s" % tab_name)
