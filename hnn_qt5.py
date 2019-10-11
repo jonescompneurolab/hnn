@@ -687,7 +687,9 @@ class RunSimThread (QThread):
 
     self.last_step = False
     self.first_step = True
+    total_steps = len(dconf['opt_info'])
     for step in dconf['opt_info'].keys():
+      self.cur_step = step
 
       # dconf['opt_info'] is the "global" optimization information (for all steps).
       # self.opt_params gets reset for each step
@@ -700,9 +702,11 @@ class RunSimThread (QThread):
         self.updatewaitsimwin(txt)
         continue
 
-      self.cur_step = step
+      # disable range sliders for each step once that step has begun
+      self.baseparamwin.optparamwin.toggleEnableUserFields(step, enabled=False)
+
       total_steps = len(dconf['opt_info'])
-      if self.cur_step == total_steps - 1:
+      if step == total_steps - 1:
         self.last_step = True
         # For the last step (all inputs), recalculate ranges and update
         # dconf['opt_info']. If previous optimization steps increased
@@ -719,8 +723,12 @@ class RunSimThread (QThread):
 
         # reload opt_params for the last step in case the number of
         # steps was changed by updateoptparams()
-        final_step = len(dconf['opt_info']) - 1
-        self.opt_params = dconf['opt_info'][final_step]
+        step = len(dconf['opt_info']) - 1
+      elif not self.first_step:
+        # not the last step, so just copy ranges in case they were updated
+        self.baseparamwin.optparamwin.updateOptDictRanges(step)
+
+      self.opt_params = dconf['opt_info'][step]
 
       txt = "Starting optimization step %d/%d"%(step+1,total_steps)
       self.updatewaitsimwin(txt)
@@ -746,17 +754,23 @@ class RunSimThread (QThread):
     simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
     simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
 
+    # re-enable all the range sliders
+    self.baseparamwin.optparamwin.toggleEnableUserFields(step, enabled=True)
+
+    self.baseparamwin.optparamwin.optimization_running = False
+
+
   def runOptStep (self):
     import simdat
     global basedir, paramf
 
-    self.optiter = 0
+    self.optsim = 0
     self.minopterr = 1e9
     self.stepminopterr = self.minopterr
     self.best_ddat = None
 
     def optrun (new_params, grad=0):
-      txt = "Optimization step %d, iteration %d"%(self.cur_step+1, self.optiter+1)
+      txt = "Optimization step %d, simulation %d"%(self.cur_step+1, self.optsim+1)
       self.updatewaitsimwin(txt)
       print(txt)
 
@@ -772,11 +786,10 @@ class RunSimThread (QThread):
         else:
           # This test is not strictly necessary with COBYLA, but in case the algorithm
           # is changed at some point in the future
-          if debug:
-            print('optrun:', test_value, 'out of bounds for ' ,
-                  self.opt_params['ranges'][param_name]['initial'],
-                  self.opt_params['ranges'][param_name]['minval'],
-                  self.opt_params['ranges'][param_name]['maxval'])
+          print('INFO: optimization chose %.3f for %s outside of [%.3f-%.3f].'
+                % (test_value, param_name,
+                   self.opt_params['ranges'][param_name]['minval'],
+                   self.opt_params['ranges'][param_name]['maxval']))
           return 1e9 # invalid param value -> large error
 
       # put new param values into GUI and save params to file
@@ -817,8 +830,8 @@ class RunSimThread (QThread):
       param_fname = os.path.basename(paramf)
       curr_paramf = os.path.join(basedir, param_fname)
 
-      # save params numbered by optiter
-      param_out = os.path.join(basedir,'step_%d_iter_%d.param'%(self.cur_step,self.optiter))
+      # save params numbered by optsim
+      param_out = os.path.join(basedir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
       shutil.copyfile(curr_paramf, param_out)
 
       if err < self.stepminopterr:
@@ -829,12 +842,12 @@ class RunSimThread (QThread):
         shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
         self.best_ddat = simdat.ddat.copy()
 
-      if self.optiter == 0 and not self.first_step:
-        # Update plots for the first iteration only of this step (best results from last round)
+      if self.optsim == 0 and not self.first_step:
+        # Update plots for the first simulation only of this step (best results from last round)
         # Skip the first step because there are no optimization results to show yet.
         self.updatedrawerr() # send event to draw updated error (asynchronously)
 
-      self.optiter += 1
+      self.optsim += 1
 
       return err # return error
 
@@ -1697,7 +1710,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dqrange_label = OrderedDict() # defined range
 
 
-    self.initial_opt_info = None
+    self.initial_opt_info = []
     self.dtabdata = []
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
@@ -1705,6 +1718,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.default_num_step_sims = 30
     self.default_num_total_sims = 50
     self.optrun_func = optrun_func
+    self.optimization_running = False
     self.initUI()
 
   def initUI (self):
@@ -1751,15 +1765,20 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # the largest horizontal component will be column 0 (headings)
     self.resize(self.minimumSizeHint())
 
-  def toggle_field(self, current_tab, row):
-    if self.ltabs[current_tab].layout.itemAtPosition(row, 0).widget().isChecked():
+  def toggle_field(self, label):
+    widget_dict_list = [self.dqinitial_label, self.dqopt_label,
+                          self.dqdiff_label, self.dqparam_name,
+                          self.dqrange_mode, self.dqrange_multiplier,
+                          self.dqrange_label]
+
+    if self.dqchkbox[label].isChecked():
       # set all other fields in the row to enabled
-      for column in range(1,9):
-        self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(True)
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(True)
     else:
       # disable all other fields in the row
-      for column in range(1,9):
-        self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(False)
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(False)
 
   def addTab (self,id_str):
     tab = QWidget()
@@ -1794,6 +1813,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           del self.dqrange_mode[k]
         if k in self.dqrange_multiplier:
           del self.dqrange_multiplier[k]
+        if k in self.dqrange_label:
+          del self.dqrange_label[k]
 
   def addGridToTab (self, d, tab):
     from functools import partial
@@ -1857,8 +1878,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       """)
       self.dqchkbox[k].setChecked(True)
       # use partial instead of lamda (so args won't be evaluated ahead of time?)
-      self.dqchkbox[k].clicked.connect(partial(self.toggle_field,
-                                                    current_tab, row))
+      self.dqchkbox[k].clicked.connect(partial(self.toggle_field, k))
       self.dqparam_name[k] = QLabel(self)
       self.dqparam_name[k].setText(self.transvar(k))
       self.dqinitial_label[k] = QLabel()
@@ -1946,7 +1966,18 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
+    self.optimization_running = True
     self.optrun_func()
+
+  def updateOptDictRanges(self, chunk_index):
+    dconf['opt_info'][chunk_index]['num_params'] = 0
+    if 'ranges' in dconf['opt_info'][chunk_index]:
+      del dconf['opt_info'][chunk_index]['ranges']
+      dconf['opt_info'][chunk_index]['ranges'] = {}
+
+    for input_name in dconf['opt_info'][chunk_index]['inputs']:
+      dconf['opt_info'][chunk_index]['ranges'].update(self.opt_params[input_name]['ranges'])
+      dconf['opt_info'][chunk_index]['num_params'] += self.opt_params[input_name]['num_params']
 
   def updateOptDict(self, chunk_index, evinput, num_sims):
 
@@ -2005,7 +2036,12 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       row += 1
 
   def updateOptStepInfo(self):
-    dconf['opt_info'] = {}  # holds info by opt. step
+    if 'opt_info' in dconf and len(dconf['opt_info']) > 0 and self.optimization_running:
+      # don't change the number of chunks if 'opt_info' is valid and a
+      # current optimization is running
+      return
+    else:
+      dconf['opt_info'] = {}  # holds info by opt. step
 
     # clean up the old grid sublayout
     self.cleanOptGrid()
@@ -2038,7 +2074,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
       self.updateOptDict(chunk_index, evinput, num_sims)
 
-      qlabel = QLabel("Optimization pass %d:"%(chunk_index+1))
+      qlabel = QLabel("Optimization step %d:"%(chunk_index+1))
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 0)
@@ -2068,6 +2104,17 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       numsim_qline = QLineEdit(str(num_sims))
       numsim_qline.resize(numsim_qline.minimumSizeHint())
       self.sublayout.addWidget(numsim_qline,chunk_index,5)
+
+  def toggleEnableUserFields(self, step, enabled=True):
+
+    for input_name in dconf['opt_info'][step]['inputs']:
+      tab_index = self.dtab_idx[input_name]
+      tab = self.ltabs[tab_index]
+
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        self.dqrange_slider[label].setEnabled(enabled)
+        self.dqrange_multiplier[label].setEnabled(enabled)
 
   def updateOptParams(self):
     self.opt_params = {}  # holds info by tab name
@@ -2105,8 +2152,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
         # Calculate value to put in "Delta" column. When possible, use
         # percentages, but when initial value is 0, use absolute changes
-        if self.initial_opt_info is None or \
-           tab_index >= len(self.initial_opt_info) or \
+        if tab_index >= len(self.initial_opt_info) or \
            not self.dqchkbox[label].isChecked():
           self.dqdiff_label[label].setEnabled(False)
           self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
@@ -2180,22 +2226,22 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       # now update the ranges
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
-        if self.initial_opt_info is None or \
-           tab_index >= len(self.initial_opt_info):
+        if tab_index >= len(self.initial_opt_info):
           value = self.dparams[label]
         else:
           value = float(self.initial_opt_info[tab_index][label]['initial'])
 
         if self.dqchkbox[label].isChecked():
           try:
-            range_multiplier = float(tab.layout.itemAtPosition(row_index, 5).widget().text())
+            range_multiplier = float(self.dqrange_multiplier[label].text())
           except ValueError:
             range_multiplier = 0.0
-          tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_multiplier))
+            range_min = range_max = value
+          self.dqrange_multiplier[label].setText(str(range_multiplier))
         else:
           range_multiplier = 0.0
+          range_min = range_max = value
 
-        tab.layout.itemAtPosition(row_index, 8).widget().setEnabled(True)
         if label.startswith('t'):
           # mean start time
           timing_bound = self.opt_params[tab_name]['sigma'] * range_multiplier
@@ -2210,41 +2256,45 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             # can't calculate a percentage, use min/max range
             range_min = value
 
-            range_type = tab.layout.itemAtPosition(row_index, 6).widget().text()
+            range_type = self.dqrange_mode[label].text()
             if range_type == "(max)":
               # range already specified by min/max value. take user input
               try:
-                range_max = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
+                range_max = float(self.dqrange_mode[label].text())
               except ValueError:
                 range_max = 1.0
             else:
               # change to range from 0 to 1
-              tab.layout.itemAtPosition(row_index, 6).widget().setText("(max)")
+              self.dqrange_mode[label].setText("(max)")
               range_max = 1.0
-              tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_max))
+              self.dqrange_multiplier[label].setText(str(range_max))
           else:
             # do we need to convert from using max to define range to a percentage?
-            if tab.layout.itemAtPosition(row_index, 6).widget().text() == "(max)":
-              tab.layout.itemAtPosition(row_index, 6).widget().setText("(%)")
+            if self.dqrange_mode[label].text() == "(max)":
+              self.dqrange_mode[label].setText("(%)")
               range_multiplier = 500.0
-              tab.layout.itemAtPosition(row_index, 5).widget().setText(str(range_multiplier))
+              self.dqrange_multiplier[label].setText(str(range_multiplier))
 
             range_min = max(0,value - (value * range_multiplier/100.0))
             range_max = value + (value * range_multiplier/100.0)
 
-        tab.layout.itemAtPosition(row_index, 7).widget().setMin(range_min)
-        tab.layout.itemAtPosition(row_index, 7).widget().setMax(range_max)
-
-        if self.dqchkbox[label].isChecked():
+        if self.dqchkbox[label].isChecked() and range_multiplier > 0.0:
+          self.dqrange_label[label].setEnabled(True)
           # add param to list for optimization
-          self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
           self.opt_params[tab_name]['num_params'] += 1
-        else:
-          range_min = range_max = value
           self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
+        else:
+          self.dqrange_label[label].setEnabled(False)
+          range_min = range_max = value
+          # remove this param from the dictionary used during opt.
+          if label in self.opt_params[tab_name]['ranges']:
+            del self.opt_params[tab_name]['ranges'][label]
 
         # set up the slider
-        tab.layout.itemAtPosition(row_index, 7).widget().setRange(range_min, range_max)
+        self.dqrange_slider[label].setMin(range_min)
+        self.dqrange_slider[label].setMax(range_max)
+
+        self.dqrange_slider[label].setRange(range_min, range_max)
         if range_min == range_max:
           self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
           self.dqrange_label[label].setEnabled(False)
