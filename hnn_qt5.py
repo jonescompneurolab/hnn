@@ -666,9 +666,7 @@ class RunSimThread (QThread):
     import simdat
 
     global basedir
-
-    # for saving the initial parameters (used to calculate diffs)
-    self.baseparamwin.optparamwin.initial_opt_info = []
+    need_initial_ddat = False
 
     # initialize RNG with seed from config
     seed = int(find_param(paramf,'prng_seedcore_opt'))
@@ -676,8 +674,11 @@ class RunSimThread (QThread):
 
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
-    simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
-    simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    if len(simdat.ddat) > 0:
+      simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
+      simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    else:
+      need_initial_ddat = True
 
     # save initial parameters file
     param_out = os.path.join(basedir,'before_opt.param')
@@ -687,17 +688,15 @@ class RunSimThread (QThread):
 
     self.last_step = False
     self.first_step = True
-    total_steps = len(dconf['opt_info'])
-    for step in dconf['opt_info'].keys():
+    num_steps = self.baseparamwin.optparamwin.get_num_chunks()
+    for step in range(num_steps):
       self.cur_step = step
 
-      # dconf['opt_info'] is the "global" optimization information (for all steps).
-      # self.opt_params gets reset for each step
-      self.opt_params = dconf['opt_info'][step]
+      self.step_ranges = self.baseparamwin.optparamwin.get_chunk_ranges(step)
+      self.step_sims = self.baseparamwin.optparamwin.get_sims_for_chunk(step)
+      self.baseparamwin.optparamwin.set_initial_opt_ranges(step)
 
-      # deepcopy is necessary for nested dicts
-      self.baseparamwin.optparamwin.initial_opt_info.append(deepcopy(self.opt_params['ranges']))
-      if self.opt_params['num_sims'] == 0:
+      if self.step_sims == 0:
         txt = "Skipping optimization step %d (0 simulations)"%(step+1)
         self.updatewaitsimwin(txt)
         continue
@@ -705,44 +704,31 @@ class RunSimThread (QThread):
       # disable range sliders for each step once that step has begun
       self.baseparamwin.optparamwin.toggleEnableUserFields(step, enabled=False)
 
-      total_steps = len(dconf['opt_info'])
-      if step == total_steps - 1:
+      if step == num_steps - 1:
         self.last_step = True
         # For the last step (all inputs), recalculate ranges and update
-        # dconf['opt_info']. If previous optimization steps increased
-        # std. dev. this could result in fewer optimization steps as 
-        # inputs may be deemed too close together and be grouped in a
-        # single optimization step.
-
-        # The purpose of the last step (with regular RMSE) is to clean up
-        # biases introduced by local weighted RMSE optimization.
-
-        # update ranges and recalculate weights
+        # weights. The purpose of the last step (with regular
+        # RMSE) is to clean up biases introduced by local weighted RMSE
+        # optimization.
         self.updateoptparams()
         sleep(1)
 
-        # reload opt_params for the last step in case the number of
-        # steps was changed by updateoptparams()
-        step = len(dconf['opt_info']) - 1
-      elif not self.first_step:
-        # not the last step, so just copy ranges in case they were updated
-        self.baseparamwin.optparamwin.updateOptDictRanges(step)
-
-      self.opt_params = dconf['opt_info'][step]
-
-      txt = "Starting optimization step %d/%d"%(step+1,total_steps)
+      txt = "Starting optimization step %d/%d" % (step + 1, num_steps)
       self.updatewaitsimwin(txt)
       self.runOptStep()
 
-      if not self.best_ddat is None:
-        simdat.ddat = self.best_ddat.copy()
+      if self.best_ddat is not None:
+        simdat.ddat = deepcopy(self.best_ddat)
+
+      if need_initial_ddat:
+        simdat.initial_ddat = deepcopy(simdat.ddat)
 
       simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with best from this step
 
       # put best opt results into GUI and save to param file
       push_values = OrderedDict()
-      for param_name in self.opt_params['ranges'].keys():
-        push_values[param_name] = self.opt_params['ranges'][param_name]['initial']
+      for param_name in self.step_ranges.keys():
+        push_values[param_name] = self.step_ranges[param_name]['final']
       self.updatebaseparamwin(push_values)
 
       sleep(1)
@@ -768,19 +754,23 @@ class RunSimThread (QThread):
     self.minopterr = 1e9
     self.stepminopterr = self.minopterr
     self.best_ddat = None
-
+    self.opt_start = self.baseparamwin.optparamwin.get_chunk_start(step)
+    self.opt_end = self.baseparamwin.optparamwin.get_chunk_end(step)
+    self.opt_weights = self.baseparamwin.optparamwin.get_chunk_weights(step)
     def optrun (new_params, grad=0):
-      txt = "Optimization step %d, simulation %d"%(self.cur_step+1, self.optsim+1)
+      txt = "Optimization step %d, simulation %d" % (self.cur_step + 1,
+                                                     self.optsim + 1)
       self.updatewaitsimwin(txt)
       print(txt)
 
       dtest = OrderedDict() # parameter values to test      
-      for param_name, test_value in zip(self.opt_params['ranges'].keys(), new_params): # set parameters
-        if test_value >= self.opt_params['ranges'][param_name]['minval'] and test_value <= self.opt_params['ranges'][param_name]['maxval']:
+      for param_name, test_value in zip(self.step_ranges.keys(), new_params): # set parameters
+        if test_value >= self.step_ranges[param_name]['minval'] and \
+           test_value <= self.step_ranges[param_name]['maxval']:
           if debug:
-            print('optrun prm:', self.opt_params['ranges'][param_name]['initial'],
-                                 self.opt_params['ranges'][param_name]['minval'],
-                                 self.opt_params['ranges'][param_name]['maxval'],
+            print('optrun prm:', self.step_ranges[param_name]['initial'],
+                                 self.step_ranges[param_name]['minval'],
+                                 self.step_ranges[param_name]['maxval'],
                                  test_value)
           dtest[param_name] = test_value
         else:
@@ -788,8 +778,8 @@ class RunSimThread (QThread):
           # is changed at some point in the future
           print('INFO: optimization chose %.3f for %s outside of [%.3f-%.3f].'
                 % (test_value, param_name,
-                   self.opt_params['ranges'][param_name]['minval'],
-                   self.opt_params['ranges'][param_name]['maxval']))
+                   self.step_ranges[param_name]['minval'],
+                   self.step_ranges[param_name]['maxval']))
           return 1e9 # invalid param value -> large error
 
       # put new param values into GUI and save params to file
@@ -797,13 +787,13 @@ class RunSimThread (QThread):
       sleep(1)
 
       # run the simulation, but stop early if possible
-      self.runsim(is_opt=True, banner=False, simlength=self.opt_params['opt_end'])
+      self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
 
       # calculate wRMSE for all steps
       simdat.weighted_rmse(simdat.ddat,
-                            self.opt_params['opt_end'],
-                            self.opt_params['weights'],
-                            tstart=self.opt_params['opt_start'])
+                           self.opt_end,
+                           self.opt_weights,
+                           tstart=self.opt_start)
       err = simdat.ddat['werrtot']
 
       if self.last_step:
@@ -814,8 +804,8 @@ class RunSimThread (QThread):
       else:
         # calculate regular RMSE for displaying on plot
         simdat.calcerr(simdat.ddat,
-                      self.opt_params['opt_end'],
-                      tstart=self.opt_params['opt_start'])
+                      self.opt_end,
+                      tstart=self.opt_start)
 
         txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
 
@@ -855,6 +845,7 @@ class RunSimThread (QThread):
         opt_params = []
         lb = []
         ub = []
+        print("params_input: %s" % params_input)
 
         for param_name in params_input.keys():
             upper = params_input[param_name]['maxval']
@@ -876,25 +867,31 @@ class RunSimThread (QThread):
         opt.set_min_objective(optrun)
         opt.set_xtol_rel(1e-4)
         opt.set_maxeval(evals)
+        print("opt_params: %s" % opt_params)
         opt_results = opt.optimize(opt_params)
 
         return opt_results
 
-    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_params['opt_start'], self.opt_params['opt_end'])
+    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
+                                                self.opt_end)
     self.updatewaitsimwin(txt)
 
-    num_params = self.opt_params['num_params']
+    num_params = len(self.step_ranges)
+    print("num_params: %d" % num_params)
     algorithm = nlopt.LN_COBYLA
     opt = nlopt.opt(algorithm, num_params)
-    opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
+    opt_results = optimize(self.step_ranges, self.step_sims, algorithm)
 
     # update opt params for the next round
-    for var_name, new_value in zip(self.opt_params['ranges'], opt_results):
-        old_value = self.opt_params['ranges'][var_name]['initial']
+    for var_name, new_value in zip(self.step_ranges, opt_results):
+        old_value = self.step_ranges[var_name]['initial']
 
         # only change the parameter value if it changed significantly
         if not isclose(old_value, new_value, abs_tol=1e-9):
-          self.opt_params['ranges'][var_name]['initial'] = new_value
+          self.step_ranges[var_name]['final'] = new_value
+        else:
+          self.step_ranges[var_name]['final'] = \
+            self.step_ranges[var_name]['initial']
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -1709,8 +1706,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dqrange_slider = OrderedDict() # slider
     self.dqrange_label = OrderedDict() # defined range
 
-
-    self.initial_opt_info = []
+    self.chunk_list = []
+    self.lqnumsim = []
+    self.opt_params = {}
+    self.initial_opt_ranges = []
     self.dtabdata = []
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
@@ -1769,7 +1768,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     widget_dict_list = [self.dqinitial_label, self.dqopt_label,
                           self.dqdiff_label, self.dqparam_name,
                           self.dqrange_mode, self.dqrange_multiplier,
-                          self.dqrange_label]
+                          self.dqrange_label, self.dqrange_slider]
 
     if self.dqchkbox[label].isChecked():
       # set all other fields in the row to enabled
@@ -1809,12 +1808,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           del self.dqdiff_label[k]
         if k in self.dqparam_name:
           del self.dqparam_name[k]
-        if k in self.dqrange_mode:
-          del self.dqrange_mode[k]
-        if k in self.dqrange_multiplier:
-          del self.dqrange_multiplier[k]
-        if k in self.dqrange_label:
-          del self.dqrange_label[k]
+        if not self.optimization_running:
+          if k in self.dqrange_mode:
+            del self.dqrange_mode[k]
+          if k in self.dqrange_multiplier:
+            del self.dqrange_multiplier[k]
+          if k in self.dqrange_label:
+            del self.dqrange_label[k]
+          if k in self.dqrange_slider:
+            del self.dqrange_slider[k]
 
   def addGridToTab (self, d, tab):
     from functools import partial
@@ -1884,9 +1886,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.dqinitial_label[k] = QLabel()
       self.dqopt_label[k] = QLabel()
       self.dqdiff_label[k] = QLabel()
-      self.dqrange_slider[k] = QRangeSlider(k,self)
-      self.dqrange_slider[k].setMinimumWidth(140)
-      self.dqrange_label[k] = QLabel()
 
       # add widgets to grid
       tab.layout.addWidget(self.dqchkbox[k], row, 0, alignment = Qt.AlignBaseline | Qt.AlignCenter)
@@ -1905,15 +1904,19 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         range_mode = "(%)"
         range_multiplier = "500.0"
 
-      self.dqrange_multiplier[k] = QLineEdit(range_multiplier)
-      self.dqrange_multiplier[k].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
-      self.dqrange_multiplier[k].setMinimumWidth(50)
-      self.dqrange_multiplier[k].setMaximumWidth(50)
-      self.dqrange_mode[k] = QLabel(range_mode)
-      tab.layout.addWidget(self.dqrange_multiplier[k], row, 5)  # range specifier
-      tab.layout.addWidget(self.dqrange_mode[k], row, 6)  # range mode
-      tab.layout.addWidget(self.dqrange_slider[k], row, 7)  # range slider
-      tab.layout.addWidget(self.dqrange_label[k], row, 8)  # calculated range
+      if not self.optimization_running:
+        self.dqrange_slider[k] = QRangeSlider(k,self)
+        self.dqrange_slider[k].setMinimumWidth(140)
+        self.dqrange_label[k] = QLabel()
+        self.dqrange_multiplier[k] = QLineEdit(range_multiplier)
+        self.dqrange_multiplier[k].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.dqrange_multiplier[k].setMinimumWidth(50)
+        self.dqrange_multiplier[k].setMaximumWidth(50)
+        self.dqrange_mode[k] = QLabel(range_mode)
+        tab.layout.addWidget(self.dqrange_multiplier[k], row, 5)  # range specifier
+        tab.layout.addWidget(self.dqrange_mode[k], row, 6)  # range mode
+        tab.layout.addWidget(self.dqrange_slider[k], row, 7)  # range slider
+        tab.layout.addWidget(self.dqrange_label[k], row, 8)  # calculated range
 
       row += 1
 
@@ -1961,41 +1964,36 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.addGridToTab(ddist, tab)
 
   def runOptimization(self):
+    self.optimization_running = True
     # update the opt info dict to capture num_sims from GUI
     self.updateOptDialog()
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
-    self.optimization_running = True
     self.optrun_func()
 
-  def updateOptDictRanges(self, chunk_index):
-    dconf['opt_info'][chunk_index]['num_params'] = 0
-    if 'ranges' in dconf['opt_info'][chunk_index]:
-      del dconf['opt_info'][chunk_index]['ranges']
-      dconf['opt_info'][chunk_index]['ranges'] = {}
 
-    for input_name in dconf['opt_info'][chunk_index]['inputs']:
-      dconf['opt_info'][chunk_index]['ranges'].update(self.opt_params[input_name]['ranges'])
-      dconf['opt_info'][chunk_index]['num_params'] += self.opt_params[input_name]['num_params']
+  def get_chunk_start(self):
+    return self.chunk_list[chunk_index]['opt_start']
 
-  def updateOptDict(self, chunk_index, evinput, num_sims):
+  def get_chunk_end(self):
+    return self.chunk_list[chunk_index]['opt_end']
 
-    # update opt_info dict
-    dconf['opt_info'][chunk_index] = {'inputs': [],
-                                      'ranges': {},
-                                      'weights': evinput['weights'],
-                                      'num_params': 0,
-                                      'num_sims': num_sims,
-                                      'opt_start': evinput['opt_start'],
-                                      'opt_end': evinput['opt_end']
-                                      }
-    for input_name in evinput['inputs']:
-      if self.opt_params[input_name]['num_params'] > 0:
-        dconf['opt_info'][chunk_index]['inputs'].append(input_name)
-        dconf['opt_info'][chunk_index]['num_params'] += self.opt_params[input_name]['num_params']
+  def get_chunk_weights(self):
+    return self.chunk_list[chunk_index]['weights']
 
-      dconf['opt_info'][chunk_index]['ranges'].update(self.opt_params[input_name]['ranges'])
+  def get_num_chunks(self):
+    return len(self.chunk_list)
+
+  def get_sims_for_chunk(self, chunk_index):
+    return self.chunk_list[chunk_index]['num_sims']
+
+  def get_chunk_ranges(self, chunk_index):
+    ranges = {}
+    for input_name in self.chunk_list[chunk_index]['inputs']:
+      ranges.update(self.opt_params[input_name]['ranges'])
+
+    return ranges
 
   def cleanOptGrid(self):
     # This is the top part of the Configure Optimization dialog.
@@ -2035,21 +2033,22 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           pass
       row += 1
 
-  def updateOptStepInfo(self):
-    if 'opt_info' in dconf and len(dconf['opt_info']) > 0 and self.optimization_running:
-      # don't change the number of chunks if 'opt_info' is valid and a
-      # current optimization is running
+  def rebuildOptStepInfo(self):
+    if len(self.lqnumsim) > 0 and self.optimization_running:
+      # don't change the number of chunks if already calculated number
+      # of sims and a current optimization is running
       return
     else:
-      dconf['opt_info'] = {}  # holds info by opt. step
+      # reset data for number of sims per chunk (step)
+      self.lqnumsim = []
 
     # clean up the old grid sublayout
     self.cleanOptGrid()
 
     # split chunks from paramter file
-    input_chunks = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
+    self.chunk_list = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
 
-    if len(input_chunks) == 0:
+    if len(self.chunk_list) == 0:
       qlabel = QLabel("No valid evoked inputs to optimize!")
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
@@ -2061,18 +2060,21 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.btnrecalc.setEnabled(True)
 
     # create a new grid sublayout with a row for each optimization step
-    for chunk_index, evinput in enumerate(input_chunks):
-
-      if len(input_chunks) == len(self.old_numsims):
+    for chunk_index, chunk in enumerate(self.chunk_list):
+      if len(self.chunk_list) == len(self.old_numsims):
         # can we reuse the previous number of sims for each step?
-        num_sims = self.old_numsims[chunk_index]
+        chunk['num_sims'] = self.old_numsims[chunk_index]
       else:
-        if chunk_index == len(input_chunks) - 1:
-          num_sims = self.default_num_total_sims
+        if chunk_index == len(self.chunk_list) - 1:
+          chunk['num_sims'] = self.default_num_total_sims
         else:
-          num_sims = self.default_num_step_sims
+          chunk['num_sims'] = self.default_num_step_sims
 
-      self.updateOptDict(chunk_index, evinput, num_sims)
+      chunk['num_params'] = 0
+
+      for input_name in chunk['inputs']:
+        if self.opt_params[input_name]['num_params'] > 0:
+          chunk['num_params'] += self.opt_params[input_name]['num_params']
 
       qlabel = QLabel("Optimization step %d:"%(chunk_index+1))
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
@@ -2080,7 +2082,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.sublayout.addWidget(qlabel,chunk_index, 0)
 
       inputs = []
-      for input_name in evinput['inputs']:
+      for input_name in chunk['inputs']:
         inputs.append(trans_input(input_name))
       qlabel = QLabel("Inputs: %s"%', '.join(inputs))
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
@@ -2091,7 +2093,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       # of "Num simulations:"
       self.sublayout.addItem(QSpacerItem(0, 0, hPolicy = QSizePolicy.MinimumExpanding), chunk_index, 2)
 
-      qlabel = QLabel("Num params: %d"%dconf['opt_info'][chunk_index]['num_params'])
+      qlabel = QLabel("Num params: %d"%chunk['num_params'])
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 3)
@@ -2101,13 +2103,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 4)
 
-      numsim_qline = QLineEdit(str(num_sims))
-      numsim_qline.resize(numsim_qline.minimumSizeHint())
-      self.sublayout.addWidget(numsim_qline,chunk_index,5)
+      self.lqnumsim[chunk_index] = QLineEdit(str(chunk['num_sims']))
+      self.lqnumsim[chunk_index].resize(
+        self.lqnumsim[chunk_index].minimumSizeHint())
+      self.sublayout.addWidget(self.lqnumsim[chunk_index],
+                               chunk_index, 5)
 
   def toggleEnableUserFields(self, step, enabled=True):
 
-    for input_name in dconf['opt_info'][step]['inputs']:
+    for input_name in self.chunk_list[step]['inputs']:
       tab_index = self.dtab_idx[input_name]
       tab = self.ltabs[tab_index]
 
@@ -2116,30 +2120,53 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.dqrange_slider[label].setEnabled(enabled)
         self.dqrange_multiplier[label].setEnabled(enabled)
 
+  def getInputTimingSigma(self, tab_index):
+    tab = self.ltabs[tab_index]
+    for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+      label = self.ltabkeys[tab_index][row_index]
+      if self.dqparam_name[label].text().startswith("Start time stdev"):
+        timing_sigma = self.dparams[label]
+        if timing_sigma == 0.0:
+          # sigma of 0 will not produce a CDF
+          timing_sigma = 0.01
+        break
+    if timing_sigma is None:
+      timing_sigma = 3.0
+      print("Couldn't fing timing_sigma. Using default %f"%timing_sigma)
+
+    return timing_sigma
+
   def updateOptParams(self):
-    self.opt_params = {}  # holds info by tab name
+    """ get timing_sigma """
+
+    if not self.optimization_running:
+      # do not preserve opt_params if not optimizing
+      self.opt_params = {}
 
     # iterate through tabs. data is contained in grid layout
-    for tab_index, tab in enumerate(self.ltabs):
+    for tab_index in range(len(self.ltabs)):
       # get timing sigma before calculating timing range
-      timing_sigma = None
-      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
-        label = self.ltabkeys[tab_index][row_index]
-        if self.dqparam_name[label].text().startswith("Start time stdev"):
-          timing_sigma = self.dparams[label]
-          if timing_sigma == 0.0:
-            # sigma of 0 will not produce a CDF
-            timing_sigma = 0.01
-          break
-      if timing_sigma is None:
-        timing_sigma = 3.0
-        print("Couldn't fing timing_sigma. Using default %f"%timing_sigma)
+      timing_sigma = self.getInputTimingSigma(tab_index)
 
       tab_name = self.dtab_names[tab_index]
-      self.opt_params[tab_name] = {'ranges': {},
-                                  'sigma': timing_sigma,
-                                  'num_params': 0,
-                                  'decay_multiplier': dconf['decay_multiplier']}
+      if self.optimization_running:
+        if timing_sigma == self.opt_params[tab_name]['sigma']:
+          return
+        else:
+          self.opt_params[tab_name]['sigma'] = timing_sigma
+      else:
+        self.opt_params[tab_name] = {'ranges': {},
+                                    'sigma': timing_sigma,
+                                    'num_params': 0,
+                                    'decay_multiplier': 1.6}
+
+  def set_initial_opt_ranges(self, step):
+    if step == 0:
+      self.initial_opt_ranges = []
+
+    self.initial_opt_ranges[step] = {}
+    for input_name in self.chunk_list[step]['inputs']:
+      self.initial_opt_ranges[step].update(self.opt_params[input_name]['ranges'])
 
   def updateOptDeltas(self):
     # iterate through tabs. data is contained in grid layout
@@ -2152,7 +2179,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
         # Calculate value to put in "Delta" column. When possible, use
         # percentages, but when initial value is 0, use absolute changes
-        if tab_index >= len(self.initial_opt_info) or \
+        if tab_index >= len(self.initial_opt_ranges) or \
            not self.dqchkbox[label].isChecked():
           self.dqdiff_label[label].setEnabled(False)
           self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
@@ -2163,7 +2190,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           self.dqopt_label[label].setAlignment(Qt.AlignHCenter)
           self.dqdiff_label[label].setAlignment(Qt.AlignHCenter)
         else:
-          initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
+          initial_value = float(self.initial_opt_ranges[tab_index][label]['initial'])
           self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
 
           self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
@@ -2226,10 +2253,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       # now update the ranges
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
-        if tab_index >= len(self.initial_opt_info):
+        if tab_index >= len(self.initial_opt_ranges):
           value = self.dparams[label]
         else:
-          value = float(self.initial_opt_info[tab_index][label]['initial'])
+          value = float(self.initial_opt_ranges[tab_index][label]['initial'])
 
         if self.dqchkbox[label].isChecked():
           try:
@@ -2248,8 +2275,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           range_min = max(0, value - timing_bound)
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
-          self.opt_params[tab_name]['start'] = range_min
-          self.opt_params[tab_name]['end'] = range_max
+          self.opt_params[tab_name]['user_start'] = range_min
+          self.opt_params[tab_name]['user_end'] = range_max
         else:
           # std dev. or synaptic weights
           if value == 0.0:
@@ -2289,6 +2316,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           # remove this param from the dictionary used during opt.
           if label in self.opt_params[tab_name]['ranges']:
             del self.opt_params[tab_name]['ranges'][label]
+          print("number of params for %s: %d" % (label, len(self.opt_params[tab_name]['ranges'])))
+
+        try:
+          if not self.opt_params[tab_name]['ranges'][label]['minval'] == range_min or \
+             not self.opt_params[tab_name]['ranges'][label]['maxval'] == range_max:
+             # skip updating ranges
+             continue
+        except KeyError:
+          pass
 
         # set up the slider
         self.dqrange_slider[label].setMin(range_min)
@@ -2319,7 +2355,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
   def updateOptDialog(self):
     self.updateOptRanges()
-    self.updateOptStepInfo()
+    self.rebuildOptStepInfo()
     self.updateOptDeltas()
 
   def setfromdin (self,din):
