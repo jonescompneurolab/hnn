@@ -774,7 +774,7 @@ def diffdict (d1, d2, verbose=True):
 
 def consolidate_chunks(input_dict):
     # get a list of sorted chunks
-    sorted_inputs = sorted(input_dict.items(), key=lambda x: x[1]['start'])
+    sorted_inputs = sorted(input_dict.items(), key=lambda x: x[1]['user_start'])
 
     consolidated_chunks = []
     for one_input in sorted_inputs:
