@@ -517,6 +517,7 @@ class RunSimThread (QThread):
       except RuntimeError:
         failed = True
         self.baseparamwin.optparamwin.toggleEnableUserFields(self.cur_step, enable=True)
+        self.baseparamwin.optparamwin.clear_initial_opt_ranges()
         self.baseparamwin.optparamwin.optimization_running = False
     else:
       try:
@@ -736,6 +737,7 @@ class RunSimThread (QThread):
     # re-enable all the range sliders
     self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
 
+    self.baseparamwin.optparamwin.clear_initial_opt_ranges()
     self.baseparamwin.optparamwin.optimization_running = False
 
 
@@ -1984,6 +1986,18 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
   def get_chunk_ranges(self, step):
     ranges = {}
     for input_name in self.chunk_list[step]['inputs']:
+      # make sure initial value is between minval or maxval before returning
+      # ranges to the optimization
+      for label in self.opt_params[input_name]['ranges'].keys():
+        range_min = self.opt_params[input_name]['ranges'][label]['minval']
+        range_max = self.opt_params[input_name]['ranges'][label]['maxval']
+        if range_min > self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_min
+        if range_max < self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_max
+
+      # copy the values to the ranges dict to be returned
+      # to optimization
       ranges.update(self.opt_params[input_name]['ranges'])
 
     return ranges
@@ -2158,11 +2172,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
                                   'sigma': timing_sigma,
                                   'decay_multiplier': decay_multiplier}
 
+  def clear_initial_opt_ranges(self):
+    self.initial_opt_ranges = {}
+
   def populate_initial_opt_ranges(self):
     self.initial_opt_ranges = {}
 
     for input_name in self.opt_params.keys():
-      self.initial_opt_ranges[input_name] = self.opt_params[input_name]['ranges'].copy()
+      self.initial_opt_ranges[input_name] = deepcopy(self.opt_params[input_name]['ranges'])
 
   def updateOptDeltas(self):
     # iterate through tabs. data is contained in grid layout
@@ -2189,7 +2206,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         else:
           initial_value = float(self.initial_opt_ranges[tab_name][label]['initial'])
           self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
-
           self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
           self.dqopt_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
           self.dqdiff_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
@@ -2231,11 +2247,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     else:
       print("ERR: can't determine input name from parameter: %s" % label)
       return
-
-    if range_min > self.opt_params[tab_name]['ranges'][label]['initial']:
-      self.opt_params[tab_name]['ranges'][label]['initial'] = range_min
-    if range_max < self.opt_params[tab_name]['ranges'][label]['initial']:
-      self.opt_params[tab_name]['ranges'][label]['initial'] = range_max
 
     self.dqrange_label[label].setText(format_range_str(range_min) + " - " +
                                       format_range_str(range_max))
@@ -2286,7 +2297,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             # changes
             continue
 
-        if tab_name not in self.initial_opt_ranges:
+        if tab_name not in self.initial_opt_ranges or \
+           label not in self.initial_opt_ranges[tab_name]:
           value = self.dparams[label]
         else:
           value = float(self.initial_opt_ranges[tab_name][label]['initial'])
