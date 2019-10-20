@@ -26,12 +26,13 @@ class Spikes():
   # Each list corresponds to a cell, counted by range
   def filter (self, s_all):
     spike_list = []
-    if len(s_all):
+    if len(s_all) > 0:
       for ri in self.r:
         srange = s_all[s_all[:, 1] == ri][:, 0]
         srange[srange.argsort()]
         spike_list.append(srange)
-      return spike_list
+
+    return spike_list
 
   # simple return of all spikes *or* each spike indexed i in every list
   def collapse_all (self, i=None):
