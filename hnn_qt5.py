@@ -107,14 +107,21 @@ def bringwintobot (win):
   win.hide()
 
 def kill_list_of_procs(procs):
+  # try terminate first
   for p in procs:
     try:
       p.terminate()
     except NoSuchProcess:
       pass
   gone, alive = wait_procs(procs, timeout=3)
+
+  # now try kill
   for p in alive:
     p.kill()
+  gone, alive = wait_procs(procs, timeout=3)
+
+  return alive
+
 
 def get_nrniv_procs_running():
   ls = []
@@ -129,11 +136,10 @@ def get_nrniv_procs_running():
 def kill_and_check_nrniv_procs():
   procs = get_nrniv_procs_running()
   if len(procs) > 0:
-    kill_list_of_procs(procs)
-    procs = get_nrniv_procs_running()
-    if len(procs) > 0:
-      pids = [ proc.pid for proc in procs ]
-      print("ERROR: failed to kill nrniv process(es) %s"%pids.join(','))
+    running = kill_list_of_procs(procs)
+    if len(running) > 0:
+      pids = [ proc.pid for proc in running ]
+      print("ERROR: failed to kill nrniv process(es) %s" % ','.join(pids))
 
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
