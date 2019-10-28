@@ -12,19 +12,78 @@
 
 ## Prerequisite: Docker Toolbox
 
-1. Download the installer image: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
+1. Download the latest installer image (.pkg): https://github.com/docker/toolbox/releases/tag/v19.03.1
 2. Run the installer, selecting any directory for installation.
 3. Choose "Docker Quickstart Terminal" tool
-4. You may get an error such as the one below. You need to grant Docker Quickstart Terminal permission to control you computer in System Preferences -> Security -> Privacy -> Privacy -> Accessibility. If it's already checked, uncheck it and check it again.
-5. After a couple of minutes the "Waiting for an IP" task should complete.
+4. You may need to allow "Docker Quickstart Terminal" to use accessibility features. Do this in
+
+    ```none
+    System Preferences -> Security -> Privacy -> Privacy -> Accessibility.
+    ```
+
+    If it's already checked, uncheck it and check it again.
+5. Click on "Docker Quickstart Terminal" again. The output will be similar to below:
+
+    ```none
+    Creating CA: /Users/user/.docker/machine/certs/ca.pem
+    Creating client certificate: /Users/user/.docker/machine/certs/cert.pem
+    Running pre-create checks...
+    (default) Default Boot2Docker ISO is out-of-date, downloading the latest release...
+    (default) Latest release for github.com/boot2docker/boot2docker is v19.03.4
+    (default) Downloading /Users/user/.docker/machine/cache/boot2docker.iso from https://github.com/boot2docker/boot2docker/releases/download/v19.03.4/boot2docker.iso...
+    (default) 0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%
+    Creating machine...
+    (default) Copying /Users/user/.docker/machine/cache/boot2docker.iso to /Users/user/.docker/machine/machines/default/boot2docker.iso...
+    (default) Creating VirtualBox VM...
+    (default) Creating SSH key...
+    (default) Starting the VM...
+    (default) Check network to re-create if needed...
+    (default) Found a new host-only adapter: "vboxnet0"
+    (default) Waiting for an IP...
+    Waiting for machine to be running, this may take a few minutes...
+    Detecting operating system of created instance...
+    Waiting for SSH to be available...
+    Detecting the provisioner...
+    Provisioning with boot2docker...
+    Copying certs to the local machine directory...
+    Copying certs to the remote machine...
+    Setting Docker configuration on the remote daemon...
+    Checking connection to Docker...
+    Docker is up and running!
+    To see how to connect your Docker Client to the Docker Engine running on this virtual machine, run: /usr/local/bin/docker-machine env default
+
+
+
+                            ##         .
+                    ## ## ##        ==
+                ## ## ## ## ##    ===
+            /"""""""""""""""""\___/ ===
+        ~~~ {~~ ~~~~ ~~~ ~~~~ ~~~ ~ /  ===- ~~~
+            \______ o           __/
+                \    \         __/
+                \____\_______/
+
+
+    docker is configured to use the default machine with IP 192.168.99.100
+    For help getting started, check out the docs at https://docs.docker.com
+
+
+    The default interactive shell is now zsh.
+    To update your account to use zsh, please run `chsh -s /bin/zsh`.
+    For more details, please visit https://support.apple.com/kb/HT208050.
+    ```
+
 6. Run the commands below in the same terminal window or by relaunching "Docker Quickstart Terminal".
+
+If you run into problems, check the official Docker documentation: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
 
 ## Start HNN
 
-1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. To confirm that Docker is running properly, typing `docker info` should return a bunch of output, but no errors.
+1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following. It should produce output similar to below and not return an error message.
 
     ```bash
-    $ docker info
+    $ docker ps
+    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
     ```
 
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
@@ -78,7 +137,7 @@
 
 4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
     * If starting the GUI doesn't work the first time, the first thing to check is XQuartz settings (see screenshot above). Then restart XQuartz and try starting the HNN container again.
-5. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
+5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
 
@@ -92,13 +151,24 @@ The Docker Toolbox VM will remain running the background using some resources. I
 
 ## Upgrading to a new version of HNN
 
-1. Verify that XQuartz and Docker are running. XQuartz will not start automatically after a reboot by default.
-2. Open a terminal window
+1. You will first need to remove the existing hnn container
 
     ```bash
     $ cd hnn/installer/mac
+    $ docker rm -f hnn_container
+    hnn_container
+    ```
+
+2. Then download the latest version of the hnn container image with `docker-compose pull`:
+
+    ```bash
     $ docker-compose pull
     Pulling hnn ... done
+    ```
+
+3. Start the hnn container:
+
+    ```bash
     $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
     Recreating hnn_container ... done
     Attaching to hnn_container
@@ -106,7 +176,7 @@ The Docker Toolbox VM will remain running the background using some resources. I
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container with `docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container with `docker-compose run -d -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
 ```none
 $ docker exec -ti hnn_container bash

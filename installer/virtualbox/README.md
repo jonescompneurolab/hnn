@@ -27,7 +27,7 @@ You can download our Ubuntu image with HNN pre-installed by clicking [here](http
 Additional Notes:
 
 1. After the HNN GUI shows up, make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-2. You can now proceed to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
+2. You can now proceed to run the tutorials at [https://hnn.brown.edu/index.php/tutorials](https://hnn.brown.edu/index.php/tutorials)
 3. If you need the login information, use the following:
 
     * username: hnn_user
