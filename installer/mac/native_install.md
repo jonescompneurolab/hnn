@@ -45,7 +45,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
      - If you get the following error, you can skip this step.
       `xcode-select: error: command line tools are already installed, use "Software Update" to install updates`
 
-2. Then select `Install` at the prompt
+2. Then press `Install` in the pop-up dialog
 
   <img src="install_pngs/xcode_tools.png" width="400" />
 
@@ -71,8 +71,8 @@ Note: for users wishing to use the command line, the above steps can be accompli
 
 ```bash
 cd /tmp/
-curl -O https://neuron.yale.edu/ftp/neuron/versions/v7.6/nrn-7.6.x86_64-osx.pkg
-sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
+curl -O https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-osx.pkg
+sudo installer -pkg /tmp/nrn-7.7.x86_64-osx.pkg -allowUntrusted -target /
 ```
 
 ## Prerequisite 4: Miniconda (Python 3)
@@ -114,13 +114,13 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
 
 4. Set the bash (or other shell) environment variables. Note that depending on your shell (bash or c shell you will use the 4 export commands below or the 4 set commands below, respectively)
 
-    - bash
+    - bash and zsh
 
       Add the following to the end your ~/.bash_profile (e.g. type "open ~/.bash_profile" in the terminal without the quotes to edit it):
 
       ```bash
-      export PYTHONPATH=/Applications/NEURON-7.6/nrn/lib/python:$PYTHONPATH
-      export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
+      export PYTHONPATH=/Applications/NEURON-7.7/nrn/lib/python:$PYTHONPATH
+      export PATH=/Applications/NEURON-7.7/nrn/x86_64/bin:$PATH
       ```
 
     - tcsh
@@ -128,8 +128,8 @@ sudo installer -pkg /tmp/nrn-7.6.x86_64-osx.pkg -allowUntrusted -target /
       Add the following in your ~/.cshrc and/or ~/.tcshrc (e.g. type "open ~/.cshrc" or as appropriate in the terminal without the quotes to edit the file):
 
       ```csh
-      set PYTHONPATH=($PYTHONPATH /Applications/NEURON-7.6/nrn/lib/python)
-      set path = ($path /Applications/NEURON-7.6/nrn/x86_64/bin)
+      set PYTHONPATH=($PYTHONPATH /Applications/NEURON-7.7/nrn/lib/python)
+      set path = ($path /Applications/NEURON-7.7/nrn/x86_64/bin)
       ```
 
 5. Open a new terminal window for the settings in the previous step to take effect and activate the HNN conda environment

@@ -1,6 +1,7 @@
 # Installing HNN on Mac OS (Docker Desktop)
 
 ## Prerequisite: XQuartz
+
 1. Download the installer image (version 2.7.11 tested): https://www.xquartz.org/
 2. Run the XQuartz.pkg installer within the image, granting privileges when requested.
 3. Start the XQuartz application. An "X" icon will appear in the taskbar along with a terminal, signaling that XQuartz is waiting for connections. You can minimize the terminal, but do not close it.
@@ -17,33 +18,34 @@
 4. Start the Docker application, acknowledging that it was downloaded from the Internet and you still want to open it.
 5. Log into your Docker Hub account if prompted by the Docker Desktop application.
 6. The Docker Desktop icon will appear in the taskbar with the message "Docker Desktop is starting", Followed by "Docker Desktop is now up and running!".
-7. Increase the number of cores that Docker can use (we recommend all cores) by clicking on the Docker Desktop icon in the taskbar and then clicking "Preferences". Choose the "Advanced" tab, and adjust with the slider.
-
-   <img src="install_pngs/docker_cores.png" height="300" />
 
 ## Start HNN
-1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window.
+
+1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following in a new terminal window. It should produce output similar to below and not return an error message.
+
+    ```bash
+    $ docker ps
+    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
     ```
-    $ docker info
-    ```
 
+2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Choose one of the following methods:**
 
-2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
-
-   * Option 1: Cloning (requires Xcode Command Line Tools)
+   * Option 1: Cloning (requires <a href="native_install#prerequisite-2-xcode-command-line-tools">Xcode Command Line Tools</a>)
 
      1. Check that you have Git installed from a terminal window
-        ```
+
+        ```bash
         $ git version
-        git version 2.17.2 (Apple Git-113)
+        git version 2.21.0 (Apple Git-122)
         ```
+
      2. Type the following to clone the repo. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
-        ```
+        ```bash
         $ git clone https://github.com/jonescompneurolab/hnn.git
         $ cd hnn/installer/mac
         ```
-   
+
    * Option 2: Downloading a HNN release
 
      1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
@@ -84,16 +86,28 @@
 
 ## Upgrading to a new version of HNN
 
-You can download the latest version of the hnn container with `docker-compose pull`:
+1. You will first need to remove the existing hnn container
 
-```bash
-$ cd hnn/installer/mac
-$ docker-compose pull
-Pulling hnn ... done
-$ docker-compose up
-Recreating hnn_container ... done
-Attaching to hnn_container
-```
+    ```bash
+    $ cd hnn/installer/mac
+    $ docker rm -f hnn_container
+    hnn_container
+    ```
+
+2. Then download the latest version of the hnn container image with `docker-compose pull`:
+
+    ```bash
+    $ docker-compose pull
+    Pulling hnn ... done
+    ```
+
+3. Start the hnn container:
+
+    ```bash
+    $ docker-compose up
+    Recreating hnn_container ... done
+    Attaching to hnn_container
+    ```
 
 ## Editing files within HNN container
 
