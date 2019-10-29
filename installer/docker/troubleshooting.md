@@ -11,7 +11,7 @@ Common problems that one might encounter running the HNN docker container are li
 
 ## Failed to start HNN on any X port
 
-Output from `docker-compose run`:
+Output from `docker-compose up`:
 
 ```none
 ...
@@ -25,11 +25,12 @@ The docker container is trying to reach an IP address and port defined in the $D
 * Mac/Windows
 
     1. Check that the X server is started (VcXsrv for Windows and XQuartz for Mac).
-    2. Check for connectivity from within the container to the address given. This may be because of firewalls or an incorrect IP address.
-    3. Try setting DISPLAY in the docker-compose.yml file for your operating system (e.g. installer/mac/docker-compose.yml) to these different IP addresses and try `docker-compose restart` to rerun the start script.
+    2. Instead of `docker-compose up`, try running `docker-compose restart`. If this command succeeds, it will only be needed once and all future `docker-compose up` commands will work. Alternatively to the restart command, you can try `docker-compose up -d`.
+    3. Check for connectivity from within the container to the address given. This may be because of firewalls or an incorrect IP address.
+    4. Try setting DISPLAY in the docker-compose.yml file for your operating system (e.g. installer/mac/docker-compose.yml) to these different IP addresses and try `docker-compose restart` to rerun the start script.
         * `192.168.99.1:0`
         * `192.168.65.2:0`
-    4. As a last step try changing DISPLAY to the IP address of the external interface (e.g. wireless) followed by a ":0". The drawback of this approach is that loosing your WiFi connection will cause HNN to close.
+    5. As a last step try changing DISPLAY to the IP address of the external interface (e.g. wireless) followed by a ":0". The drawback of this approach is that loosing your WiFi connection will cause HNN to close.
 
 * Linux
 

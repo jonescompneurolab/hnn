@@ -16,7 +16,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
 2. Hyper-V support (will be enabled during Docker Desktop install below)
 
-   While it is necessary to turn on Hyper-V for using HNN with Docker, you should be aware that it will not allow you to also run virtual machines through applications such as VirtualBox. We recommend that you let Docker automatically attempt to turn this feature on during installation. Alternatively, the procedure below allows you to verify that it is turned on and enable it if necessary.
+   While it is necessary to turn on Hyper-V for using HNN with Docker Desktop, you should be aware that it will not allow you to also run virtual machines through applications such as VirtualBox. We recommend that you let Docker automatically attempt to turn this feature on during installation. Alternatively, the procedure below allows you to verify that it is turned on and enable it if necessary.
 
    1. Start typing "Turn Windows features on or off" in the search bar next to start menu and click on it to launch the control panel dialog window shown below.
    2. Make sure that "Hyper-V" and "Hyper-V Platform" is turned on as shown in the image below
@@ -30,9 +30,9 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download) (click [here](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133) for the direct download link for version 64.1.20.1.4)
 2. Run the installer, choosing any installation folder.
 3. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
-4. Choose "Multiple windows" and change "Display number" at '0'. Click 'Next'.
+4. Choose "Multiple windows" and click 'Next'.
 5. Select "Start no client" and click 'Next'.
-6. Under "Extra settings" make sure that "Disable access control" is checked.
+6. **Make sure that "Disable access control" is checked under "Extra settings".** Click 'Next'.
 7. Click "Save configuration" to create a shortcut with the settings we just chose. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that VcXsrv has started.
 8. A message from Windows firewall to allow connections may pop up. If it does, choose options allowing connections to the VcXsrv when connected to both public and private networks.
 
@@ -59,10 +59,11 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
 ## Start HNN
 
-1. Verify that VcXsrv (XLaunch application) and Docker are running. VcXsrv will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing the following in a new cmd.exe window.
+1. Verify that VcXsrv (XLaunch application) and Docker are running. VcXsrv will not start automatically after a reboot. The Docker Desktop icon should be present in the lower-right dock. To confirm that Docker is running properly, typing the following in a new cmd.exe window. It should produce output similar to below and not return an error message.
 
     ```powershell
-    C:\Users\myuser> docker info
+    C:\Users\myuser> docker ps
+    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
     ```
 
 2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
@@ -118,22 +119,37 @@ There are two related requirements needed for Docker to be able to run HNN in a 
    <img src="install_pngs/access_filesystem.png" width="300" />
 
 6. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+    * If starting the GUI doesn't work, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 7. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
 
 ## Upgrading to a new version of HNN
 
-You can download the latest version of the hnn container with `docker-compose pull` from a Command Prompt (cmd.exe)
+1. Verify that XLaunch and Docker are running. Both will not start automatically after a reboot by default.
 
-```powershell
-C:\Users\myuser> cd hnn\installer\windows
-C:\Users\myuser\hnn\installer\windows> docker-compose pull
-Pulling hnn ... done
-C:\Users\myuser\hnn\installer\windows> docker-compose up
-Recreating hnn_container ... done
-Attaching to hnn_container
-```
+2. You will then need to remove the existing hnn container
+
+    ```powershell
+    C:\Users\myuser> cd hnn\installer\windows
+    C:\Users\myuser\hnn\installer\windows> docker rm -f hnn_container
+    hnn_container
+    ```
+
+3. Then download the latest version of the hnn container image with `docker-compose pull`:
+
+    ```powershell
+    C:\Users\myuser\hnn\installer\windows> docker-compose pull
+    Pulling hnn ... done
+    ```
+
+4. Start the hnn container:
+
+    ```powershell
+    C:\Users\myuser\hnn\installer\windows> docker-compose up
+    Recreating hnn_container ... done
+    Attaching to hnn_container
+    ```
 
 ## Editing files within HNN container
 
@@ -148,7 +164,7 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-If you want to remove the container and 1.5 GB HNN image, run the following commands from a cmd.exe window. You can then remove Docker Desktop using "Add/Remove Programs"
+If you want to remove the container and 1.6 GB HNN image, run the following commands from a cmd.exe window. You can then remove Docker Desktop using "Add/Remove Programs"
 
 ```powershell
 C:\Users\myuser> docker rm -f hnn_container

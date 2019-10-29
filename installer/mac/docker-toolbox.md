@@ -12,7 +12,7 @@
 
 ## Prerequisite: Docker Toolbox
 
-1. Download the latest installer image (.pkg): https://github.com/docker/toolbox/releases/tag/v19.03.1
+1. Download the latest installer image (.pkg): [https://github.com/docker/toolbox/releases/](https://github.com/docker/toolbox/releases/)
 2. Run the installer, selecting any directory for installation.
 3. Choose "Docker Quickstart Terminal" tool
 4. You may need to allow "Docker Quickstart Terminal" to use accessibility features. Do this in
@@ -75,7 +75,7 @@
 
 6. Run the commands below in the same terminal window or by relaunching "Docker Quickstart Terminal".
 
-If you run into problems, check the official Docker documentation: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
+If you run into problems, check the official Docker Toolbox documentation: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
 
 ## Start HNN
 
@@ -187,7 +187,7 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-If you want to remove the container and 1.5 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
+If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
 
 ```bash
 $ docker rm -f hnn_container
