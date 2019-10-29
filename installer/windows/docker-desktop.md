@@ -113,13 +113,13 @@ There are two related requirements needed for Docker to be able to run HNN in a 
     ```
 
 4. If a prompt appears from the lower-right and ask you to share the drive, click 'Share'.
-    * If starting the GUI doesn't work the first time, the first thing to check is VcXsrv settings have "Disable access control" (see above). Then restart VcXsrv and try starting the HNN container again.
 5. A window will pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
    <img src="install_pngs/access_filesystem.png" width="300" />
 
 6. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If starting the GUI doesn't work, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+    * If starting the GUI doesn't work the first time, the first thing to check is VcXsrv settings have "Disable access control" (see above). Then restart VcXsrv and try starting the HNN container again.
+    * Then check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 7. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
