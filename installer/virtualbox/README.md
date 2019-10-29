@@ -4,6 +4,17 @@ We have created a VirtualBox VM image that allows users to run HNN using virtual
 
 You will need an additional ~20 GB of storage space on your machine to set up the VirtualBox image. Of note, any virtualization software can be used to the same effect.
 
+## Windows-only prerequisite: disable Hyper-V
+
+For Windows operating systems, it is necessary to turn off Hyper-V for running Virtualbox. You may find that this feature is already turned off, but use the following steps to confirm. This feature is required by Docker Desktop, so if you followed instructions for that method previously, you will now need to disable it.
+
+1. Start typing "Turn Windows features on or off" in the search bar next to start menu and click on it to launch the control panel dialog window shown below.
+2. Make sure that the "Hyper-V" component is unchecked as shown in the image below and click "Ok".
+
+    <img src="../windows/install_pngs/disable-hyperv.png" width="400" />
+
+3. **If you disabled Hyper-V, please reboot your computer before continuing below to install docker.**
+
 ## Installing VirtualBox
 
 You will first need to download VirtualBox if you do not already have the application on your machine. You can download VirtualBox by clicking [here](https://www.virtualbox.org/wiki/Downloads).

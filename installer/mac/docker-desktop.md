@@ -79,7 +79,8 @@
     ```
 
 4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screenshot above). Then restart XQuartz and try starting the HNN container again.
+    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screenshot above). Then restart your computer and try starting the HNN container again.
+    * Then check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
@@ -122,7 +123,7 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-If you want to remove the container and 1.5 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
+If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
 
 ```bash
 $ docker rm -f hnn_container
@@ -132,8 +133,6 @@ $ docker rmi jonescompneurolab/hnn
 ## Troubleshooting
 
 For errors related to Docker, please see the [Docker troubleshooting section](../docker/troubleshooting.md)
-
-For Mac OS specific issues: please see the [Mac OS troubleshooting page](troubleshooting.md)
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
 
