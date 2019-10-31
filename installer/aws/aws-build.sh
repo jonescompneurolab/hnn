@@ -114,16 +114,16 @@ echo 'cd $HOME/hnn' | sudo tee -a /usr/local/bin/hnn
 echo 'python3 hnn.py' | sudo tee -a /usr/local/bin/hnn
 sudo chmod 755 /usr/local/bin/hnn
 
-# prepare image
-sudo apt-get install -y ec2-ami-tools
-echo "PermitRootLogin without-password" | sudo tee -a /etc/ssh/sshd_config  
-sudo passwd -l root
-sudo rm -rf /tmp/*
-sudo shred -u $HOME/.*history
-rm -f ~/.sudo_as_admin_successful
-rm -f ~/.viminfo
-rm -f ~/.Xauthority
-sudo rm -rf $HOME/.cache/
-rm -rf ~/.gnupg/
-rm -rf ~/.config/
-rm -rf ~/.ssh/
+# prepare image - only use if creating an AMI
+# sudo apt-get install -y ec2-ami-tools
+# echo "PermitRootLogin without-password" | sudo tee -a /etc/ssh/sshd_config  
+# sudo passwd -l root
+# sudo rm -rf /tmp/*
+# sudo shred -u $HOME/.*history
+# rm -f ~/.sudo_as_admin_successful
+# rm -f ~/.viminfo
+# rm -f ~/.Xauthority
+# sudo rm -rf $HOME/.cache/
+# rm -rf ~/.gnupg/
+# rm -rf ~/.config/
+# rm -rf ~/.ssh/
