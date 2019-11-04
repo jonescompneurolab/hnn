@@ -2,11 +2,11 @@
 
 **(Brown students, staff, faculty only)**
 
-Brown's Oscar supercomputer operated by the CCV group is able to run HNN as a Docker container using [Singularity](https://www.sylabs.io/guides/3.0/user-guide/). This method greatly simplifies installing HNN and its prerequisites. Instead, HNN is pre-installed in a vetted environment inside a Docker container that is pulled from Docker Hub before starting on Oscar.
+Brown's [Oscar supercomputer](https://ccv.brown.edu/services/infrastructure/oscar/) operated by the Center for Computation and Visualization (CCV) group is able to run HNN as a Docker container using [Singularity](https://www.sylabs.io/guides/3.0/user-guide/). This method greatly simplifies installing HNN and its prerequisites. Instead, HNN is pre-installed in a vetted environment inside a Docker container that is pulled from Docker Hub before starting on Oscar.
 
 ## Getting an account on Oscar
 
-Please see  [Create an Account](https://web1.ccv.brown.edu/start/account) on Brown's CCV (Center for Computation and Visualization) site and fill out a new user account form. If you are a member of a lab that has priority or condo access on Oscar, make sure to list the PI and request those accesses. Otherwise choose an exploratory account for access to 16 cores, which is adequate for most HNN simulations.
+Please fill out a [new user account form](https://brown.edu/cis/forms/CCV/newuseraccount.php). If you are a member of a lab that has priority or condo access on Oscar, make sure to list the PI and request those accesses. Otherwise choose an exploratory account for access to 16 cores, which is adequate for most HNN simulations.
 
 ## Choose a method for displaying GUI
 
