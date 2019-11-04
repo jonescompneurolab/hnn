@@ -21,14 +21,14 @@ You will first need to download VirtualBox if you do not already have the applic
 
 ## Downloading VirtualBox VM
 
-You can download our Ubuntu image with HNN pre-installed by clicking [here](https://www.dropbox.com/s/h1carbyc4lcq74c/hnn_vb_osx_updated_10222019.ova?dl=0) (updated 10/22/19).
+You can download our Ubuntu image with HNN pre-installed by clicking [here](https://www.dropbox.com/s/vwlel40sbu7o41o/hnn_vb_osx_updated_11042019.ova?dl=0) (updated 11/04/19).
 
 * **CRITICAL NOTES**:
 
-  1. The image we provide requires a significant amount of storage space to download. You will also need an additional ~20 GB of storage space on your machine to set up the VirtualBox image.
-  2. You will need to [adjust the system settings](https://lifehacker.com/the-power-users-guide-to-better-virtual-machines-in-vir-1569943402) of the virtual machine to match the specifications of your hardware. This entails adjusting the number of cores and the amount of RAM dedicated to running the virtual machine. The virtual machines we supply above are set to use 2 cores and 4 GB of RAM.
-  3. To load our HNN image into VirtualBox, in the VirtualBox menu, select File -> Import Appliance. In the pop-up window, navigate to the location where the image is stored, then press continue to import the appliance.
-  4. For advanced users: adjust the number of CPUs available on your HNN VirtualBox to match the number of cores available on your computer, so that HNN will run optimally. See here for more information: [http://smallbusiness.chron.com/make-cpu-available-virtualbox-30729.html](http://smallbusiness.chron.com/make-cpu-available-virtualbox-30729.html)
+  1. The image we provide requires a significant amount of storage space to download. You will also need an additional ~10 GB of storage space on your machine to set up the VirtualBox image.
+  2. To load our HNN image into VirtualBox, in the VirtualBox menu, select File -> Import Appliance. In the pop-up window, navigate to the location where the image is stored, then press continue to import the appliance.
+  3. Adjust the number of CPUs available on your HNN VirtualBox to match the number of cores available on your computer, so that HNN will run optimally. The virtual machine we supply above is set to use 1 core and 2 GB of RAM. See here for more information: [http://smallbusiness.chron.com/make-cpu-available-virtualbox-30729.html](http://smallbusiness.chron.com/make-cpu-available-virtualbox-30729.html)
+  4. For advanced users: you may benefit from [adjusting the system settings](https://lifehacker.com/the-power-users-guide-to-better-virtual-machines-in-vir-1569943402) of the virtual machine to match the specifications of your hardware (hardware virtualization support and acceleration features).
 
 ## Running HNN on VirtualBox
 
