@@ -2,6 +2,8 @@
 
 cd /home/hnn_user/hnn_source_code
 
+echo "Starting HNN GUI..."
+
 if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
   ulimit -l unlimited > /dev/null 2>&1
 fi
@@ -15,10 +17,13 @@ function retry_hnn {
   echo "Trying to start HNN with DISPLAY=$DISPLAY"
   python3 hnn.py
   if [[ "$?" -ne "0" ]]; then
+    echo "***************************************************"
     echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
+    echo "***************************************************"
+    echo
     return 1
   else
-    echo "HNN GUI stopped by user. Restart container to open again"
+    echo "HNN GUI stopped by user."
     exit 0
   fi
 }
@@ -36,18 +41,15 @@ chmod 700 /tmp/runtime-hnn_user
 python3 hnn.py
 if [[ "$?" -eq "0" ]]; then
   # HNN quit gracefully
-  echo "HNN GUI stopped by user. Restart container to open again"
+  echo "HNN GUI stopped by user."
   exit 0
 fi
 
 done=
 XHOST=${DISPLAY%:0}
-# try some common hosts
-for PORT in 1 2 3 4; do
+for PORT in 1 2; do
   retry_hnn $XHOST $PORT
 done
 
 echo "Failed to start HNN on any X port"
-
-# fallback to sleep infinity so that container won't stop if hnn is closed
-sleep infinity
+exit 1
