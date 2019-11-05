@@ -9,28 +9,54 @@ Common problems that one might encounter running the HNN docker container are li
 
 <a name="xdisplay"/>
 
-## Failed to start HNN on any X port
+## Failed to start HNN
 
-Output from `docker-compose up`:
+Output from `./docker_hnn.sh start`:
 
 ```none
-...
-hnn_container | Trying to start HNN with DISPLAY=host.docker.internal:4
-hnn_container | HNN failed to start GUI using DISPLAY=host.docker.internal:4
-hnn_container | Failed to start HNN on any X port
+Starting HNN... failed to start HNN. Please see hnn_docker.log for more details
 ```
 
-The docker container is trying to reach an IP address and port defined in the $DISPLAY environment variable, but is failing. The start script first tries port 5000 for the IP address in $DISPLAY, then 5001 through 5004 before giving up. Troubleshooting steps diverge for each operating system.
+In `hnn_docker.log`:
+```none
+Starting HNN GUI...
+No protocol specified
+qt.qpa.xcb: could not connect to display localhost:0
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
+Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-egl, wayland-xcomposite-glx, webgl, xcb.
+
+/home/hnn_user/start_hnn.sh: line 41:   147 Aborted                 python3 hnn.py
+
+...[more output]...
+
+Failed to start HNN on any X port
+Connection to localhost closed.
+```
+
+macOS only: try forcing a restart of the container:
+
+```bash
+./hnn_docker.sh -r start
+```
+
+Then try to start HNN manually: 
+```bash
+docker exec -ti hnn_container bash
+```
+
+Try starting HNN manually:
+
+```bash
+python3 hnn.py
+```
+
+If that doesn't work, troubleshooting steps diverge for each operating system.
 
 * Mac/Windows
 
     1. Check that the X server is started (VcXsrv for Windows and XQuartz for Mac).
-    2. Instead of `docker-compose up`, try running `docker-compose restart`. If this command succeeds, it will only be needed once and all future `docker-compose up` commands will work. Alternatively to the restart command, you can try `docker-compose up -d`.
-    3. Check for connectivity from within the container to the address given. This may be because of firewalls or an incorrect IP address.
-    4. Try setting DISPLAY in the docker-compose.yml file for your operating system (e.g. installer/mac/docker-compose.yml) to these different IP addresses and try `docker-compose restart` to rerun the start script.
-        * `192.168.99.1:0`
-        * `192.168.65.2:0`
-    5. As a last step try changing DISPLAY to the IP address of the external interface (e.g. wireless) followed by a ":0". The drawback of this approach is that loosing your WiFi connection will cause HNN to close.
 
 * Linux
 
@@ -41,18 +67,6 @@ The docker container is trying to reach an IP address and port defined in the $D
         cd hnn/installer/docker
         docker-compose restart
         ```
-
-If HNN still fails to start, sometimes more verbose error messages can be seen by open another shell by starting HNN manually.
-
-```bash
-docker exec -ti hnn_container bash
-```
-
-Try starting HNN manually:
-
-```bash
-python3 hnn.py
-```
 
 If issues persist, please include output from the above commands in a new [GitHub issue](https://github.com/jonescompneurolab/hnn/issues)
 

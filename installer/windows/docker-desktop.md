@@ -160,7 +160,7 @@ C:\Users\myuser> docker exec -ti hnn_container bash
 hnn_user@hnn-container:/home/hnn_user/hnn_source_code$
 ```
 
-If you'd like to be able to copy files from the host OS without using the shared directory, you do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
+If you'd like to be able to copy files from the host OS without using the shared directory, you can do so directly with [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp/).
 
 ## Uninstalling HNN
 

@@ -8,13 +8,25 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
     adduser hnn_user sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    chown -R hnn_user:hnn_group /home/hnn_user
+    chown -R hnn_user:hnn_group /home/hnn_user && \
+    chsh -s /bin/bash hnn_user
 
 COPY date_base_install.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/date_base_install.sh && \
     /usr/local/bin/date_base_install.sh
 
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+EXPOSE 22
+
 USER hnn_user
+
+RUN mkdir /home/hnn_user/hnn_out && \
+    mkdir /home/hnn_user/.ssh
 
 # allow user to specify architecture if different than x86_64
 ARG CPU=x86_64
@@ -65,13 +77,6 @@ RUN sudo apt-get update && \
     sudo apt-get autoremove -y --purge && \
     sudo apt-get clean
 
-# copy the start script into the container
-COPY start_hnn.sh /home/hnn_user/
-RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
-    sudo chmod +x /home/hnn_user/start_hnn.sh
-
-RUN mkdir /home/hnn_user/hnn_out
-
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_TAG
@@ -87,6 +92,18 @@ RUN cd /home/hnn_user && \
       --single-branch --branch $SOURCE_BRANCH hnn_source_code && \
     cd hnn_source_code && \
     make
+
+# copy the start script into the container
+COPY start_hnn.sh /home/hnn_user/
+COPY start_ssh.sh /
+RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
+    sudo chmod +x /home/hnn_user/start_hnn.sh && \
+    sudo chown root:root /start_ssh.sh && \
+    sudo chmod +x /start_ssh.sh
+
+RUN sudo sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
+
+CMD sleep infinity
 
 # if users open up a shell, they should go to the hnn repo checkout
 WORKDIR /home/hnn_user/hnn_source_code
