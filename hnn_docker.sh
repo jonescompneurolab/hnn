@@ -184,10 +184,26 @@ elif [[ "$OS" =~ "mac" ]]; then
     fi
   done <<< "$XQUARTZ_OUTPUT"
 
-  if [[ "$XQUARTZ_NOLISTEN" -ne "0" ]]; then
-    echo -n "Setting XQuartz security preferences... " | tee -a hnn_docker.log
+  STATUS=0
+  echo -n "Setting XQuartz security preferences... " | tee -a hnn_docker.log
+  if [[ "$XQUARTZ_NOLISTEN" =~ "0" ]]; then
     defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0 | tee -a hnn_docker.log 2>&1
+    if [[ $? -ne "0" ]]; then
+      STATUS=1
+    fi
+  fi
+  if [[ "$XQUARTZ_NOAUTH" =~ "1" ]]; then
+
+    defaults write org.macosforge.xquartz.X11.plist no_auth 0 | tee -a hnn_docker.log 2>&1
+    if [[ $? -ne "0" ]]; then
+      STATUS=1
+    fi
+  fi
+  if [[ "$STATUS" -eq "0" ]]; then
     echo "ok" | tee -a hnn_docker.log
+  else
+    echo "failed" | tee -a hnn_docker.log
+    exit 1
   fi
 
   echo -n "Checking XQuartz authorization... " | tee -a hnn_docker.log
