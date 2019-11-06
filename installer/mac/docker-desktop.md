@@ -31,7 +31,7 @@
 
         ```bash
         $ git clone https://github.com/jonescompneurolab/hnn.git
-        $ cd hnn/installer/mac
+        $ cd hnn
         ```
 
    * Option 2: Downloading a HNN release
@@ -41,39 +41,17 @@
      3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
 
         ```bash
-        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn/installer/mac
+        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn
         ```
 
-2. Start the Docker container using the `hnn_docker.sh` script. The output should look something like below.
+2. Start the Docker container using the `hnn_docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
 
     ```bash
-    $ ./hnn_docker.sh start
-    Starting HNN container requested
-
-    Performing pre-checks before starting HNN
-    --------------------------------------
-    Checking if Docker is working... ok
-    Checking if docker-compose is found... ok
-    Checking if XQuartz is installed... ok
-    Checking XQuartz authorization... needs updating
-    Restarting XQuartz... done
-    Starting XQuartz... ok
-    Locating HNN source code... /Users/me/hnn
-
-    Starting HNN
-    --------------------------------------
-    Updating Xauthority file... done
-    Setting up SSH authentication files... done
-    Checking for running HNN container... not found
-    Starting HNN container... done
-    Copying authentication files into container... done
-    Looking up port to connect to HNN container... done
-    Starting HNN...
+    ./hnn_docker.sh -u start
     ```
 
 3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If starting the GUI doesn't work, the first thing to check is XQuartz settings (see screenshot above). Then restart your computer and try starting the HNN container again.
-    * Then check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
@@ -100,7 +78,7 @@ To pull the latest docker image from Docker Hub, run the `./hnn_docker.sh` scrip
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh -u start` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
 ```none
 $ docker exec -ti hnn_container bash
@@ -111,7 +89,7 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window. 
+If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window.
 
 ```bash
 ./hnn_docker.sh uninstall
