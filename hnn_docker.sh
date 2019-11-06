@@ -335,7 +335,7 @@ fi
 
 if [[ "$ALREADY_RUNNING" -eq "0" ]]; then
   echo "Starting HNN container..." | tee -a hnn_docker.log
-  docker-compose -f "$COMPOSE_FILE" up -d | tee -a hnn_docker.log 2>&1
+  docker-compose -f "$COMPOSE_FILE" up -d >> hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
     # try removing container
     echo "failed starting with docker-compose." | tee -a hnn_docker.log

@@ -4,11 +4,6 @@
 
 1. Download the installer image (version 2.7.11 tested): https://www.xquartz.org/
 2. Run the XQuartz.pkg installer within the image, granting privileges when requested.
-3. Start the XQuartz application. An "X" icon will appear in the taskbar along with a terminal, signaling that XQuartz is waiting for connections. You can minimize the terminal, but do not close it.
-4. **Important** - Open the XQuartz preferences and navigate to the "security" tab. Make sure "Authenticate connections" is unchecked and "Allow connections from network clients" is checked.
-
-   <img src="install_pngs/xquartz_preferences.png" height="250" />
-5. Quit X11 and the restart the application. This is needed for the setting above to take effect.
 
 ## Prerequisite: Docker Toolbox
 
@@ -73,110 +68,65 @@
     For more details, please visit https://support.apple.com/kb/HT208050.
     ```
 
-6. Run the commands below in the same terminal window or by relaunching "Docker Quickstart Terminal".
+6. We want HNN to use all of the CPU cores available on your system when it runs a simulation, and Docker only uses half by default. To change this setting we need to first stop the Docker VM that was started above in step 5. Run the command below in a "Docker Quickstart Terminal" window.
+
+    ```bash
+    $ docker-machine stop
+    ```
+
+7. Type 'VirtualBox' into the start menu search bar and launch "Oracle VM VirtualBox"
+8. Click on the VM "default" in the left pane and then click "Settings"
+9. Navigate to "System", then the "Processor" tab and move the slider all the way to the right.
+10. Click 'Ok', then reopen "Docker Quickstart Terminal". When you get the prompt after "Start interactive shell", you can continue on. Run the commands below in the same terminal window or by relaunching "Docker Quickstart Terminal".
 
 If you run into problems, check the official Docker Toolbox documentation: [Docker Toolbox for Mac](https://docs.docker.com/toolbox/toolbox_install_mac/)
 
 ## Start HNN
 
-1. Verify that XQuartz and Docker are running. These will not start automatically after a reboot. Check that Docker is running properly by typing the following. It should produce output similar to below and not return an error message.
+1. From a "Docker Quickstart Terminal", clone the [HNN repo](https://github.com/jonescompneurolab/hnn). If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
     ```bash
-    $ docker ps
-    CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+    cd ~
+    git clone https://github.com/jonescompneurolab/hnn.git
+    cd hnn
     ```
 
-2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Chose one of the following methods:**
-   * Option 1: Downloading a HNN release
-
-     1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
-     2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
-     3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
-
-        ```bash
-        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn/installer/mac
-        ```
-
-   * Option 2: Cloning (requires Xcode Command Line Tools)
-
-     1. Check that you have Git installed from a terminal window
-
-        ```bash
-        $ git version
-        git version 2.17.2 (Apple Git-113)
-        ```
-
-     2. Type the following to clone the repo. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
-
-        ```bash
-        $ git clone https://github.com/jonescompneurolab/hnn.git
-        $ cd hnn/installer/mac
-        ```
-
-3. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The `docker-compose` command can be used to manage Docker containers described in the specification file docker-compose.yml.
+2. Start the Docker container using the `hnn_docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
 
     ```bash
-    $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
-    Pulling hnn (jonescompneurolab/hnn:)...
-    latest: Pulling from jonescompneurolab/hnn
-    34dce65423d3: Already exists
-    796769e96d24: Already exists
-    2a0eada9611d: Already exists
-    d6830a7cd972: Already exists
-    ddf2bf28e180: Already exists
-    77bf1279b29f: Pull complete
-    6c8ddf82616f: Pull complete
-    a991616934ba: Pull complete
-    2cece6240c19: Pull complete
-    df826e7d26b9: Pull complete
-    824d51cbc89d: Pull complete
-    0d16f27c744b: Pull complete
-    Digest: sha256:0c27e2027828d2510a8867773562bbc966c509f45c9921cc2d1973c575d327b3
-    Status: Downloaded newer image for jonescompneurolab/hnn:latest
+    ./hnn_docker.sh -u start
     ```
 
-4. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If starting the GUI doesn't work the first time, the first thing to check is XQuartz settings (see screenshot above). Then restart XQuartz and try starting the HNN container again.
-5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
+3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
    * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
    * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
+5. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
+
+    ```bash
+    ./hnn_docker.sh stop
+    ```
 
 ## Stopping Docker Toolbox VM
 
 The Docker Toolbox VM will remain running the background using some resources. If you are not using HNN, you can shut down the VM by the following command:
 
-   ```bash
-   $ docker-machine stop
-   ```
+```bash
+docker-machine stop
+```
 
 ## Upgrading to a new version of HNN
 
-1. You will first need to remove the existing hnn container
+To pull the latest docker image from Docker Hub, run the `./hnn_docker.sh` script. After the image has been downloaded, the GUI will be the latest version.
 
-    ```bash
-    $ cd hnn/installer/mac
-    $ docker rm -f hnn_container
-    hnn_container
-    ```
-
-2. Then download the latest version of the hnn container image with `docker-compose pull`:
-
-    ```bash
-    $ docker-compose pull
-    Pulling hnn ... done
-    ```
-
-3. Start the hnn container:
-
-    ```bash
-    $ docker-compose run -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn
-    Recreating hnn_container ... done
-    Attaching to hnn_container
-    ```
+```bash
+./hnn_docker.sh -u start
+```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container with `docker-compose run -d -e "DISPLAY=192.168.99.1:0" --name hnn_container hnn` in one terminal window and open another terminal to use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
 
 ```none
 $ docker exec -ti hnn_container bash
@@ -187,12 +137,15 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window. You can then remove Docker Desktop by removing it from your Applications folder.
+1. If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window.
 
-```bash
-$ docker rm -f hnn_container
-$ docker rmi jonescompneurolab/hnn
-```
+    ```bash
+    ./hnn_docker.sh uninstall
+    ```
+
+2. You can then remove Docker Toolbox from Applications.
+
+3. You can remove Virtualbox as well if you no longer need it to run virtual machines
 
 ## Troubleshooting
 
