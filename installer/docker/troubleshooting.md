@@ -2,14 +2,14 @@
 
 Common problems that one might encounter running the HNN docker container are listed below. Some of the links below go to an external site (e.g. MetaCell). If you encounter an issue not listed below, please [open an issue](https://github.com/jonescompneurolab/hnn/issues) on GitHub, including the output with the failed command and any other error messages.
 
-* [Could not connect to any X display](#xdisplay)
-* [Could not create /home//hnn_user/hnn_out/data](#dir)
+Make sure to check the log hnn_docker.log for more verbose error messages that will hint at which of the sections to go to below.
+
+* [Failed to start HNN on any X port](#xdisplay)
+* [Starting HNN fails with 'Drive has not been shared'](#shared)
 * [This computer doesn't have VT-x/AMD-v enabled](#vtx)
 * [Image operating system linux cannot be used on this platform](#image)
 
-<a name="xdisplay"/>
-
-## Failed to start HNN
+# Failed to start HNN
 
 Output from `./docker_hnn.sh start`:
 
@@ -17,7 +17,13 @@ Output from `./docker_hnn.sh start`:
 Starting HNN... failed to start HNN. Please see hnn_docker.log for more details
 ```
 
-In `hnn_docker.log`:
+Check the contents of `hnn_docker.log` to determine which of the following issue applies
+
+<a name="xdisplay"/>
+
+## Failed to start HNN on any X port
+
+`hnn_docker.log` contents:
 ```none
 Starting HNN GUI...
 No protocol specified
@@ -70,35 +76,29 @@ If that doesn't work, troubleshooting steps diverge for each operating system.
 
 If issues persist, please include output from the above commands in a new [GitHub issue](https://github.com/jonescompneurolab/hnn/issues)
 
-<a name="dir"/>
+<a name="shared"/>
 
-## Could not create /home//hnn_user/hnn_out/data
+## Starting HNN fails with 'Drive has not been shared' in hnn_docker.log
 
-```bash
-hnn_container | Trying to start HNN with DISPLAY=host.docker.internal:4
-hnn_container | ERR: could not create /home//hnn_user/hnn_out/data
-hnn_container | HNN failed to start GUI using DISPLAY=host.docker.internal:4
-hnn_container | Failed to start HNN on any X port
+In `hnn_docker.log`:
+
+```node
+Creating hnn_container ... error
+
+ERROR: for hnn_container  Cannot create container for service hnn: b'Drive has not been shared'
+
+ERROR: for hnn  Cannot create container for service hnn: b'Drive has not been shared'
 ```
-
-This can be the result of the shared directory (docker_hnn_out on the host, hnn_out in the container) being owned by root rather than hnn_user. From the host, run the following:
-
-```none
-$ docker-compose up -d
-$ docker exec -ti hnn_container bash
-hnn_user@hnn-container:/home/hnn_user/hnn_source_code$ sudo chown -R hnn_user:hnn_group /home/hnn_user/hnn_out
-hnn_user@hnn-container:/home/hnn_user/hnn_source_code$ exit
-$ docker-compose restart
-```
+This will happen when starting the HNN container for the first time on Windows. When it is starting, there will be a prompt in the lower-right asking you to share the drive C:. Rerun the script to see the prompt again
 
 <a name="vtx"/>
 
-## This computer doesn't have VT-x/AMD-v enabled
+# This computer doesn't have VT-x/AMD-v enabled
 
 [MetaCell documentation link](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-this-computer-doesnt-have-vt-xamd-v-enabled)
 
 <a name="image"/>
 
-## Image operating system linux cannot be used on this platform
+# Image operating system linux cannot be used on this platform
 
 [MetaCell documentation link](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-image-operating-system-linux-cannot-be-used-on-this-platform)

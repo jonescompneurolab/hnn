@@ -8,6 +8,8 @@ RESTART_NEEDED=0
 STOP=0
 START=0
 UNINSTALL=0
+OS=
+VCXSRV_PID=
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -22,6 +24,12 @@ while [ -n "$1" ]; do
     shift
 done
 
+function cleanup {
+  if [[ "$OS"  =~ "windows" ]] && [ ! -z "${VCXSRV_PID}" ]; then
+    kill -9 ${VCXSRV_PID} &> /dev/null
+  fi
+}
+
 if [[ $START -eq "0" ]] && [[ $STOP -eq "0" ]] && [[ $UNINSTALL -eq "0" ]]; then
   echo "No valid action provided. Available actions are start, stop, and uninstall"
   exit 1
@@ -30,17 +38,33 @@ fi
 echo "Performing pre-checks before starting HNN" | tee -a hnn_docker.log
 echo "--------------------------------------" | tee -a hnn_docker.log
 
+echo -n "Checking OS version... " | tee -a hnn_docker.log
+OS_OUTPUT=$(uname -a)
+if [[ $OS_OUTPUT =~ "MINGW" ]]; then
+  OS="windows"
+elif [[ $OS_OUTPUT =~ "Darwin" ]]; then
+  OS="mac"
+else
+  OS="linux"
+fi
+echo "$OS" | tee -a hnn_docker.log
+
 echo -n "Checking if Docker is working... " | tee -a hnn_docker.log
 DOCKER_OUTPUT=$(docker version 2> /dev/null)
 DOCKER_STATUS=$?
 DOCKER_VERSION=
+DOCKER_TOOLBOX=0
 
 while IFS= read -r line; do
-  if [[ $line =~ "Version" ]]; then
+  if [[ $line =~ " Version" ]]; then
     DOCKER_VERSION=$(echo $line | cut -d':' -f 2| sed 's/^[ \t]*//')
     break
   fi
 done <<< "$DOCKER_OUTPUT"
+
+if  [[ -n "${DOCKER_MACHINE_NAME}" ]]; then
+  DOCKER_TOOLBOX=1
+fi
 
 if [[ "$DOCKER_STATUS" -eq "0" ]]; then
   echo "ok" | tee -a hnn_docker.log
@@ -104,70 +128,108 @@ else
   exit 1
 fi
 
-echo -n "Checking if XQuartz is installed... " | tee -a hnn_docker.log
-XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist 2> /dev/null)
-XQUARTZ_STATUS=$?
-XQUARTZ_VERSION=
-
-if [[ "$XQUARTZ_STATUS" -eq "0" ]]; then
-  echo "ok" | tee -a hnn_docker.log
-else
-  echo "failed. Please install XQuartz" | tee -a hnn_docker.log
-  exit 1
+XAUTH=~/.Xauthority
+if [ -d "$XAUTH" ]; then
+  echo -n "Removing misplaced directory $XAUTH... " | tee -a hnn_docker.log
+  rmdir $XAUTH
+  echo "done" | tee -a hnn_docker.log
 fi
 
-while IFS= read -r line; do
-  if [[ $line =~ "no_auth" ]]; then
-    XQUARTZ_NOAUTH=$(echo $line | cut -d'=' -f 2| sed 's/^[ \t]*\(.*\);/i\1/')
-  elif [[ $line =~ "nolisten_tcp" ]]; then
-    XQUARTZ_NOLISTEN=$(echo $line | cut -d'=' -f 2| sed 's/^[ \t]*\(.*\);/i\1/')
+if [[ "$OS" =~ "windows" ]]; then
+  echo -n "Checking if VcXsrv is installed... " | tee -a hnn_docker.log
+  VCXSRV_DIR="/c/Program Files/VcXsrv"
+  if [ -f "${VCXSRV_DIR}/vcxsrv.exe" ]; then
+    XAUTH_BIN="${VCXSRV_DIR}/xauth.exe"
+    echo "done" | tee -a hnn_docker.log
+  else
+    unset XAUTH_BIN
+    echo "failed. Could not find 'C:\Program Files\VcXsrv'. Please run XLaunch manually" | tee -a hnn_docker.log
   fi
-done <<< "$XQUARTZ_OUTPUT"
 
-if [[ "$XQUARTZ_NOLISTEN" -ne "0" ]]; then
-  echo -n "Setting XQuartz security preferences... " | tee -a hnn_docker.log
-  defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0 | tee -a hnn_docker.log 2>&1
-  echo "ok" | tee -a hnn_docker.log
-fi
+  if [ -n "${XAUTH_BIN}" ]; then
+    echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
+    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow >> hnn_docker.log 2>&1 &
+    VCXSRV_PID=$!
+    echo done | tee -a hnn_docker.log
 
-echo -n "Checking XQuartz authorization... " | tee -a hnn_docker.log
-OUTPUT=$(xauth nlist :0 2>> hnn_docker.log)
-if [[ -z $OUTPUT ]]; then
-  echo "needs updating" | tee -a hnn_docker.log
-  echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
-  killall Xquartz >> hnn_docker.log 2>&1
-  sleep 1
-  open -a XQuartz | tee -a hnn_docker.log 2>&1
-  sleep 5
-  OUTPUT=$(xauth nlist :0 2>> hnn_docker.log)
-  if [[ -z $OUTPUT ]]; then
-    echo "failed. Still an error with xauth" | tee -a hnn_docker.log
+    echo -n "Checking VcXsrv authorization... " | tee -a hnn_docker.log
+    OUTPUT=$("${XAUTH_BIN}" nlist :0 2>> hnn_docker.log)
+    if [[ -z $OUTPUT ]]; then
+      echo "failed. Still an error with xauth" | tee -a hnn_docker.log
+      cleanup
+      exit 1
+    fi
+    echo "done" | tee -a hnn_docker.log
+  fi
+elif [[ "$OS" =~ "mac" ]]; then
+  echo -n "Checking if XQuartz is installed... " | tee -a hnn_docker.log
+  XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist 2> /dev/null)
+  XQUARTZ_STATUS=$?
+  XQUARTZ_VERSION=
+
+  if [[ "$XQUARTZ_STATUS" -eq "0" ]]; then
+    echo "ok" | tee -a hnn_docker.log
+  else
+    echo "failed. Please install XQuartz" | tee -a hnn_docker.log
     exit 1
   fi
-  killall Xquartz >> hnn_docker.log 2>&1
-  sleep 1
-fi
-echo "done" | tee -a hnn_docker.log
 
-echo -n "Starting XQuartz... " | tee -a hnn_docker.log
-open -a XQuartz
-if [[ $? -eq "0" ]]; then
-  echo "ok" | tee -a hnn_docker.log
-else
-  echo "failed" | tee -a hnn_docker.log
-  exit 1
+  XAUTH_BIN="$(which xauth)"
+
+  while IFS= read -r line; do
+    if [[ $line =~ "no_auth" ]]; then
+      XQUARTZ_NOAUTH=$(echo $line | cut -d'=' -f 2| sed 's/^[ \t]*\(.*\);/i\1/')
+    elif [[ $line =~ "nolisten_tcp" ]]; then
+      XQUARTZ_NOLISTEN=$(echo $line | cut -d'=' -f 2| sed 's/^[ \t]*\(.*\);/i\1/')
+    fi
+  done <<< "$XQUARTZ_OUTPUT"
+
+  if [[ "$XQUARTZ_NOLISTEN" -ne "0" ]]; then
+    echo -n "Setting XQuartz security preferences... " | tee -a hnn_docker.log
+    defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0 | tee -a hnn_docker.log 2>&1
+    echo "ok" | tee -a hnn_docker.log
+  fi
+
+  echo -n "Checking XQuartz authorization... " | tee -a hnn_docker.log
+  OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
+  if [[ -z $OUTPUT ]]; then
+    echo "needs updating" | tee -a hnn_docker.log
+    echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
+    killall Xquartz >> hnn_docker.log 2>&1
+    sleep 1
+    open -a XQuartz | tee -a hnn_docker.log 2>&1
+    sleep 5
+    OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
+    if [[ -z $OUTPUT ]]; then
+      echo "failed. Still an error with xauth" | tee -a hnn_docker.log
+      exit 1
+    fi
+    killall Xquartz >> hnn_docker.log 2>&1
+    sleep 1
+  fi
+  echo "done" | tee -a hnn_docker.log
+
+  echo -n "Starting XQuartz... " | tee -a hnn_docker.log
+  open -a XQuartz
+  if [[ $? -eq "0" ]]; then
+    echo "ok" | tee -a hnn_docker.log
+  else
+    echo "failed" | tee -a hnn_docker.log
+    exit 1
+  fi
 fi
 
 echo -n "Locating HNN source code... " | tee -a hnn_docker.log
 # find the source code directory
 CWD=$(pwd)
 
-COMPOSE_FILE="$CWD/installer/mac/docker-compose.yml"
+COMPOSE_FILE="$CWD/installer/$OS/docker-compose.yml"
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo "failed"
   echo "Could not find source code files for starting docker container."
   echo "Please run this script from the source code directory. e.g.:"
   echo "./hnn_docker.sh"
+  cleanup
   exit 1
 fi
 echo $CWD | tee -a hnn_docker.log
@@ -191,18 +253,20 @@ fi
 
 # we can assume ~/.Xauthority exists because xauth nlist was successful
 
-AUTH_KEYS=$(xauth nlist :0 |grep -v '^ffff')
-if [[ -n $AUTH_KEYS ]]; then
-  XAUTH=~/.Xauthority
-  echo -n "Updating Xauthority file... " | tee -a hnn_docker.log
-  xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f "$XAUTH" -b -i nmerge - >> hnn_docker.log 2>&1
-  if [[ "$?" -ne "0" ]] || [[ -f "${XAUTH}-n" ]]; then
-    echo "failed"
-    rm -f "${XAUTH}-n"
-    exit 1
+if [ -n "${XAUTH_BIN}" ]; then
+  AUTH_KEYS=$("${XAUTH_BIN}" nlist :0 |grep -v '^ffff')
+  if [[ -n $AUTH_KEYS ]]; then
+    echo -n "Updating Xauthority file... " | tee -a hnn_docker.log
+    "${XAUTH_BIN}" nlist :0 | sed -e 's/^..../ffff/' | "${XAUTH_BIN}" -f "$XAUTH" -b -i nmerge - >> hnn_docker.log 2>&1
+    if [[ "$?" -ne "0" ]] || [[ -f "${XAUTH}-n" ]]; then
+      echo "failed"
+      rm -f "${XAUTH}-n"
+      cleanup
+      exit 1
+    fi
+    echo "done" | tee -a hnn_docker.log
+    RESTART_NEEDED=1
   fi
-  echo "done" | tee -a hnn_docker.log
-  RESTART_NEEDED=1
 fi
 
 echo -n "Setting up SSH authentication files... " | tee -a hnn_docker.log
@@ -212,9 +276,15 @@ SSH_PUBKEY="$CWD/installer/docker/id_rsa_hnn.pub"
 SSH_AUTHKEYS="$CWD/installer/docker/authorized_keys"
 if [[ ! -f "$SSH_PRIVKEY" ]] || [[ ! -f "$SSH_PUBKEY" ]] || [[ ! -f "$SSH_AUTHKEYS" ]]; then
   rm -f "$SSH_PRIVKEY"
-  ssh-keygen -f $SSH_PRIVKEY -t rsa -N '' >> hnn_docker.log 2>&1
+  if [[ "$OS" =~ "windows" ]]; then
+    ssh-keygen -f $SSH_PRIVKEY -t rsa -N '' >> hnn_docker.log 2>&1
+  else
+    ssh-keygen -f $SSH_PRIVKEY -t rsa -N '' >> hnn_docker.log 2>&1
+  fi
+
   if [[ $? -ne "0" ]]; then
     echo "failed running ssh-keygen. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+    cleanup
     exit 1
   fi
 
@@ -249,6 +319,7 @@ if [[ "$RESTART_NEEDED" -eq "1" ]]; then
                   docker stop hnn_container &> /dev/null
                   if [[ $? -ne "0" ]]; then
                     echo "Failed to stop container" | tee -a hnn_docker.log
+                    cleanup
                     exit 1
                   else
                     ALREADY_RUNNING=0
@@ -263,13 +334,50 @@ if [[ "$RESTART_NEEDED" -eq "1" ]]; then
 fi
 
 if [[ "$ALREADY_RUNNING" -eq "0" ]]; then
-  echo -n "Starting HNN container... " | tee -a hnn_docker.log
-  docker-compose -f "$COMPOSE_FILE" up -d >> hnn_docker.log 2>&1
+  echo "Starting HNN container..." | tee -a hnn_docker.log
+  docker-compose -f "$COMPOSE_FILE" up -d | tee -a hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
-    echo "failed starting with docker-compose. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-    exit 1
+    # try removing container
+    echo "failed starting with docker-compose." | tee -a hnn_docker.log
+    docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+    if [[ $? -eq "0" ]]; then
+      echo "Found an old container that could have cause this failure" | tee -a hnn_docker.log
+    else
+      echo "Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+      cleanup
+      exit 1
+    fi
+
+    while true; do
+      echo
+      read -p "Please confirm that you want to remove the old HNN container? (y/n)" yn
+      case $yn in
+        [Yy]* ) echo -n "Removing old container... " | tee -a hnn_docker.log
+                docker rm -f hnn_container &> /dev/null
+                if [[ $? -eq "0" ]]; then
+                  echo "done" | tee -a hnn_docker.log
+                else 
+                  echo "failed" | tee -a hnn_docker.log
+                  cleanup
+                  exit 1
+                fi
+                break;;
+        [Nn]* ) echo "Cannot continue" | tee -a hnn_docker.log
+                cleanup
+                exit 1
+                break;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+
+    echo -n "Starting HNN container again... " | tee -a hnn_docker.log
+    docker-compose -f "$COMPOSE_FILE" up -d >> hnn_docker.log 2>&1
+    if [[ $? -ne "0" ]]; then
+      echo "failed starting with docker-compose." | tee -a hnn_docker.log
+      cleanup
+      exit 1
+    fi
   fi
-  echo "done" | tee -a hnn_docker.log
 fi
 
 echo -n "Copying authentication files into container... " | tee -a hnn_docker.log
@@ -278,6 +386,7 @@ echo -n "Copying authorized_keys..." >> hnn_docker.log
 docker cp "$SSH_AUTHKEYS" hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
 if [[ $? -ne "0" ]]; then
   echo "failed running docker cp. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+  cleanup
   exit 1
 fi
 echo "done" >> hnn_docker.log
@@ -286,13 +395,14 @@ echo -n "Copying known_hosts..." >> hnn_docker.log
 docker cp "$SSH_PUBKEY" hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
 if [[ $? -ne "0" ]]; then
   echo "failed running docker cp. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+  cleanup
   exit 1
 fi
 echo "done" >> hnn_docker.log
 
 echo -n "Changing ssh file permissions..." >> hnn_docker.log
-docker exec hnn_container sudo chown hnn_user:hnn_group /home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
-docker exec hnn_container sudo chown hnn_user:hnn_group /home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
+docker exec hnn_container bash -c 'sudo chown hnn_user:hnn_group /home/hnn_user/.ssh/authorized_keys' >> hnn_docker.log 2>&1
+docker exec hnn_container bash -c 'sudo chown hnn_user:hnn_group /home/hnn_user/.ssh/known_hosts' >> hnn_docker.log 2>&1
 
 echo "done" | tee -a hnn_docker.log
 
@@ -301,16 +411,24 @@ SSH_PORT=$(docker port hnn_container 22 | cut -d':' -f 2 2> /dev/null)
 re='^[0-9]+$'
 if ! [[ $SSH_PORT =~ $re ]] ; then
   echo "failed" | tee -a hnn_docker.log
+  cleanup
   exit 1
 fi
 echo "done" | tee -a hnn_docker.log
 
 echo -n "Starting HNN... " | tee -a hnn_docker.log
-DISPLAY=localhost:0 ssh -o "SendEnv DISPLAY" -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -t -i "$SSH_PRIVKEY" -R 6000:localhost:6000 hnn_user@localhost -p $SSH_PORT >> hnn_docker.log 2>&1
+if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
+  DOCKER_HOST=192.168.99.100
+else
+  DOCKER_HOST=localhost
+fi
+DISPLAY=localhost:0 ssh -o "SendEnv DISPLAY" -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -t -i "$SSH_PRIVKEY" -R 6000:localhost:6000 hnn_user@$DOCKER_HOST -p $SSH_PORT >> hnn_docker.log 2>&1
 if [[ $? -ne "0" ]]; then
   echo "failed to start HNN. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+  cleanup
   exit 1
 else
   echo "User exited HNN" | tee -a hnn_docker.log
 fi
 
+cleanup
