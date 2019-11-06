@@ -107,15 +107,16 @@ else
 fi
 
 if [[ $UPGRADE -eq "1" ]]; then
-  echo "Downloading new HNN image from Docker Hub (may require login)... " | tee -a hnn_docker.log
-  docker pull jonescompneurolab/hnn | tee -a hnn_docker.log
+  echo -n "Downloading new HNN image from Docker Hub (may require login)... " | tee -a hnn_docker.log
+  docker pull jonescompneurolab/hnn >> hnn_docker.log 2>&1
   if [[ $? -eq "0" ]]; then
     echo "ok" | tee -a hnn_docker.log
     remove_container
     RESTART_NEEDED=1
     RETURN_STATUS=0
   else
-    echo "failed. Continuing with existing image." | tee -a hnn_docker.log
+    echo "failed" | tee -a hnn_docker.log
+    echo "WARNING: continuing with old image" | tee -a hnn_docker.log
     RETURN_STATUS=1
   fi
   if [[ $START -eq "0" ]]; then
@@ -225,14 +226,14 @@ elif [[ "$OS" =~ "mac" ]]; then
   STATUS=0
   echo -n "Setting XQuartz security preferences... " | tee -a hnn_docker.log
   if [[ "$XQUARTZ_NOLISTEN" =~ "0" ]]; then
-    defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0 | tee -a hnn_docker.log 2>&1
+    defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0 >> hnn_docker.log 2>&1
     if [[ $? -ne "0" ]]; then
       STATUS=1
     fi
   fi
   if [[ "$XQUARTZ_NOAUTH" =~ "1" ]]; then
 
-    defaults write org.macosforge.xquartz.X11.plist no_auth 0 | tee -a hnn_docker.log 2>&1
+    defaults write org.macosforge.xquartz.X11.plist no_auth 0 >> hnn_docker.log 2>&1
     if [[ $? -ne "0" ]]; then
       STATUS=1
     fi
