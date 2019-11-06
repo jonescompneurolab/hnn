@@ -49,67 +49,47 @@ Open a bash terminal and run these commands (from [Docker Compose installation](
 
 ## Start HNN
 
-1. Check that Docker is running properly by typing the following in a new terminal window.
-    ```bash
-    $ docker info
-    ```
-
-2. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
+1. Clone the [HNN repo](https://github.com/jonescompneurolab/hnn) using `git` from a terminal window. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
 
     ```bash
-    $ git clone https://github.com/jonescompneurolab/hnn.git
-    $ cd hnn/installer/docker
+    git clone https://github.com/jonescompneurolab/hnn.git
+    cd hnn
     ```
 
-3. Create the shared directory for HNN output between your host system and the Docker container
+2. Start the Docker container using the `hnn_docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
 
     ```bash
-    $ mkdir docker_hnn_out
+    ./hnn_docker.sh -u start
     ```
 
-4. Start the Docker container. Note: the jonescompneurolab/hnn Docker image will be downloaded from Docker Hub (about 2 GB). The docker-compose command can be used to manage Docker containers described in the specification file docker-compose.yml.
+3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
+   * A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
+   * The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
+5. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
 
     ```bash
-    $ docker-compose up
-    Pulling hnn (jonescompneurolab/hnn:)...
-    latest: Pulling from jonescompneurolab/hnn
-    34dce65423d3: Pull complete
-    796769e96d24: Pull complete
-    2a0eada9611d: Pull complete
-    d6830a7cd972: Pull complete
-    ddf2bf28e180: Pull complete
-    3cc50322f9e6: Pull complete
-    413f53de8db6: Pull complete
-    17dc3d1b2db0: Pull complete
-    630b5e60ea64: Pull complete
-    78e9a198ddb9: Pull complete
-    45d8623e986c: Pull complete
-    e32873c7bf4d: Pull complete
-    Creating hnn_container ... done
-    Attaching to hnn_container
+    ./hnn_docker.sh stop
     ```
-
-5. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-6. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
-   - A directory called "hnn_out" exists both inside the container (at /home/hnn_user/hnn_out) and outside (in the directory set by step 2) that can be used to share files between the container and your host OS.
-   - The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code.
 
 ## Upgrading to a new version of HNN
 
-You can download the latest version of the hnn container with `docker-compose pull`:
+To just pull the latest docker image from Docker Hub:
 
 ```bash
-$ cd hnn/installer/docker
-$ docker-compose pull
-Pulling hnn ... done
-$ docker-compose up
-Recreating hnn_container ... done
-Attaching to hnn_container
+./hnn_docker.sh upgrade
+```
+
+Instead to upgrade and start the newest GUI:
+
+```bash
+./hnn_docker.sh -u start
 ```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `docker-compose up -d` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` in one terminal window to start hnn in the background and then run [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) in another terminal window:
 
 ```none
 $ docker exec -ti hnn_container bash
@@ -120,19 +100,23 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Uninstalling HNN
 
-1. If you want to just remove the container and 2 GB HNN image, run these commands from a terminal window:
+If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window.
 
-    ```bash
-    $ docker rm -f hnn_container
-    $ docker rmi jonescompneurolab/hnn
-    ```
+```bash
+./hnn_docker.sh uninstall
+```
 
-2. To continue and remove Docker, follow these instructions from [Uninstall Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#uninstall-docker-ce)
+You can then remove Docker CE
 
-    ```bash
-    sudo apt-get purge docker-ce
-    sudo rm -rf /var/lib/docker
-    ```
+```bash
+sudo apt-get purge docker-ce
+```
+
+To remove all containers and images (should take minimal space after the uninstall command above):
+
+```bash
+sudo rm -rf /var/lib/docker
+```
 
 ## Troubleshooting
 

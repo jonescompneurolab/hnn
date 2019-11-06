@@ -70,7 +70,13 @@
 
 ## Upgrading to a new version of HNN
 
-To pull the latest docker image from Docker Hub, run the `./hnn_docker.sh` script. After the image has been downloaded, the GUI will be the latest version.
+To just pull the latest docker image from Docker Hub:
+
+```bash
+./hnn_docker.sh upgrade
+```
+
+Instead to upgrade and start the newest GUI:
 
 ```bash
 ./hnn_docker.sh -u start
@@ -78,7 +84,7 @@ To pull the latest docker image from Docker Hub, run the `./hnn_docker.sh` scrip
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` to start hnn in the background and use [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) as shown below:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` in one terminal window to start hnn in the background and then run [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) in another terminal window:
 
 ```none
 $ docker exec -ti hnn_container bash
