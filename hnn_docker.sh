@@ -107,10 +107,10 @@ else
 fi
 
 if [[ $UPGRADE -eq "1" ]]; then
-  echo -n "Downloading new HNN image from Docker Hub (may require login)... " | tee -a hnn_docker.log
-  docker pull jonescompneurolab/hnn >> hnn_docker.log 2>&1
+  echo "Downloading new HNN image from Docker Hub (may require login)." | tee -a hnn_docker.log
+  docker pull jonescompneurolab/hnn 2>&1
   if [[ $? -eq "0" ]]; then
-    echo "ok" | tee -a hnn_docker.log
+    echo "Done" | tee -a hnn_docker.log
     docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
     if [[ $? -eq "0" ]]; then
       remove_container
@@ -118,7 +118,7 @@ if [[ $UPGRADE -eq "1" ]]; then
     RESTART_NEEDED=1
     RETURN_STATUS=0
   else
-    echo "failed" | tee -a hnn_docker.log
+    echo "Failed" | tee -a hnn_docker.log
     echo "WARNING: continuing with old image" | tee -a hnn_docker.log
     RETURN_STATUS=1
   fi
