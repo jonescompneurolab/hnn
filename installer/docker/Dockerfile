@@ -39,7 +39,8 @@ RUN echo '# these lines define global session variables for HNN' >> ~/.bashrc &&
     echo 'export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin' >> ~/.bashrc && \
     echo 'export PYTHONPATH=/home/hnn_user/nrn/build/lib/python' >> ~/.bashrc && \
     echo 'export OMPI_MCA_mpi_warn_on_fork=0' >> ~/.bashrc && \
-    echo 'export OMPI_MCA_btl_openib_allow_ib=1' >> ~/.bashrc
+    echo 'export OMPI_MCA_btl_openib_allow_ib=1' >> ~/.bashrc && \
+    echo 'export OMPI_MCA_btl_vader_single_copy_mechanism=none' >> ~/.bashrc
 
 # run sudo to get rid of message on first login about using sudo
 RUN sudo -l
@@ -62,6 +63,7 @@ RUN sudo apt-get update && \
     mkdir nrn && \
     cd nrn && \
     git clone https://github.com/neuronsimulator/nrn src && \
+    git checkout 7.7 && \
     cd /home/hnn_user/nrn/src && \
     ./build.sh && \
     ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
@@ -102,8 +104,6 @@ RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
     sudo chmod +x /start_ssh.sh
 
 RUN sudo sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
-
-CMD sleep infinity
 
 # if users open up a shell, they should go to the hnn repo checkout
 WORKDIR /home/hnn_user/hnn_source_code
