@@ -111,7 +111,10 @@ if [[ $UPGRADE -eq "1" ]]; then
   docker pull jonescompneurolab/hnn >> hnn_docker.log 2>&1
   if [[ $? -eq "0" ]]; then
     echo "ok" | tee -a hnn_docker.log
-    remove_container
+    docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+    if [[ $? -eq "0" ]]; then
+      remove_container
+    fi
     RESTART_NEEDED=1
     RETURN_STATUS=0
   else
@@ -136,7 +139,10 @@ if [[ "$STOP" -eq "1" ]]; then
 fi
 
 if [[ "$UNINSTALL" -eq "1" ]]; then
-  remove_container
+  docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+  if [[ $? -eq "0" ]]; then
+    remove_container
+  fi
   while true; do
     echo
     read -p "Are you sure that you want to remove the HNN image? (y/n)" yn
@@ -394,6 +400,7 @@ if [[ "$ALREADY_RUNNING" -eq "0" ]]; then
     docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
     if [[ $? -eq "0" ]]; then
       echo "Found an old container that could have cause this failure" | tee -a hnn_docker.log
+      remove_container
     else
       echo "Please see hnn_docker.log for more details" | tee -a hnn_docker.log
       cleanup
