@@ -57,8 +57,8 @@ RUN sudo apt-get update && \
     mkdir nrn && \
     cd nrn && \
     git clone https://github.com/neuronsimulator/nrn src && \
-    git checkout 7.7 && \
     cd /home/hnn_user/nrn/src && \
+    git checkout 7.7 && \
     ./build.sh && \
     ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
       --without-iv --without-nrnoc-x11 --with-mpi \
