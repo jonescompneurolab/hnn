@@ -274,14 +274,18 @@ class RunSimThread (QThread):
       self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd(),universal_newlines=True)
 
   def get_proc_stream (self, stream, print_to_console=False):
-    for line in iter(stream.readline, ""):
-      if print_to_console:
-        print(line.strip())
-      try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
-        self.updatewaitsimwin(line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
-      except:
-        if debug: print('RunSimThread updatewaitsimwin exception...')
-        pass # catch exception in case anything else goes wrong
+    try:
+      for line in iter(stream.readline, ""):
+        if print_to_console:
+          print(line.strip())
+        try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
+          self.updatewaitsimwin(line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
+        except:
+          if debug: print('RunSimThread updatewaitsimwin exception...')
+          pass # catch exception in case anything else goes wrong
+    except ValueError:
+      # if process is killed and stream.readline() gives I/O error
+      pass
     stream.close()
 
   # run sim command via mpi, then delete the temp file.
