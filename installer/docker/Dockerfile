@@ -33,14 +33,8 @@ ARG CPU=x86_64
 # supply the path NEURON binaries for building hnn
 ENV PATH=${PATH}:/home/hnn_user/nrn/build/$CPU/bin
 
-# create the global session variables
-RUN echo '# these lines define global session variables for HNN' >> ~/.bashrc && \
-    echo 'export CPU=$(uname -m)' >> ~/.bashrc && \
-    echo 'export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin' >> ~/.bashrc && \
-    echo 'export PYTHONPATH=/home/hnn_user/nrn/build/lib/python' >> ~/.bashrc && \
-    echo 'export OMPI_MCA_mpi_warn_on_fork=0' >> ~/.bashrc && \
-    echo 'export OMPI_MCA_btl_openib_allow_ib=1' >> ~/.bashrc && \
-    echo 'export OMPI_MCA_btl_vader_single_copy_mechanism=none' >> ~/.bashrc
+# use environment variables from hnn_envs
+RUN echo 'source /home/hnn_user/hnn_envs' >> ~/.bashrc
 
 # run sudo to get rid of message on first login about using sudo
 RUN sudo -l
@@ -97,11 +91,13 @@ RUN cd /home/hnn_user && \
 
 # copy the start script into the container
 COPY start_hnn.sh /home/hnn_user/
+COPY hnn_envs /home/hnn_user/
 COPY start_ssh.sh /
 RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
     sudo chmod +x /home/hnn_user/start_hnn.sh && \
     sudo chown root:root /start_ssh.sh && \
-    sudo chmod +x /start_ssh.sh
+    sudo chmod +x /start_ssh.sh && \
+    sudo chown hnn_user:hnn_group /home/hnn_user/hnn_envs
 
 RUN sudo sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
 

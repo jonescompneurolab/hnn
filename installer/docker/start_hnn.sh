@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
 
 echo "Starting HNN GUI..."
