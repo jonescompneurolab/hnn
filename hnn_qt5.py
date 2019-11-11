@@ -711,8 +711,10 @@ class RunSimThread (QThread):
       self.updatewaitsimwin(txt)
       self.runOptStep(step)
 
-      if self.best_ddat is not None:
-        simdat.ddat = deepcopy(self.best_ddat)
+      if 'dpl' in self.best_ddat:
+        simdat.ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
+      if 'errtot' in self.best_ddat:
+        simdat.ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
 
       if need_initial_ddat:
         simdat.initial_ddat = deepcopy(simdat.ddat)
@@ -748,7 +750,7 @@ class RunSimThread (QThread):
     self.optsim = 0
     self.minopterr = 1e9
     self.stepminopterr = self.minopterr
-    self.best_ddat = None
+    self.best_ddat = {}
     self.opt_start = self.baseparamwin.optparamwin.get_chunk_start(step)
     self.opt_end = self.baseparamwin.optparamwin.get_chunk_end(step)
     self.opt_weights = self.baseparamwin.optparamwin.get_chunk_weights(step)
@@ -825,7 +827,10 @@ class RunSimThread (QThread):
         self.stepminopterr = err
         # save best param file
         shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
-        self.best_ddat = simdat.ddat.copy()
+        if 'dpl' in simdat.ddat:
+          self.best_ddat['dpl'] = simdat.ddat['dpl']
+        if 'errtot' in simdat.ddat:
+          self.best_ddat['errtot'] = simdat.ddat['errtot']
 
       if self.optsim == 0 and not self.first_step:
         # Update plots for the first simulation only of this step (best results from last round)
