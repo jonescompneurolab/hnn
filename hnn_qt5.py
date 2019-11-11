@@ -371,7 +371,8 @@ class RunSimThread (QThread):
 
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
-    simdat.initial_ddat = deepcopy(simdat.ddat)
+    simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
+    simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
 
     # save initial parameters file
     param_out = os.path.join(basedir,'before_opt.param')
