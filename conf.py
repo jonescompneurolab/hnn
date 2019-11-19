@@ -164,8 +164,6 @@ def readconf (fn="hnn.cfg",nohomeout=False):
 
   readtips(d) # read tooltips for parameters
 
-  d['decay_multiplier'] = conffloat("opt", "decay_multiplier",1.6)
-
   return d
 
 # determine config file name

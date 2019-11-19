@@ -4,9 +4,10 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame
-from PyQt5.QtGui import QIcon, QFont, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
+from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont, QPen
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
+from PyQt5.QtCore import QMetaObject
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -18,7 +19,7 @@ from time import time, sleep
 from conf import dconf
 import conf
 import numpy as np
-from math import ceil
+from math import ceil, isclose
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
@@ -30,6 +31,7 @@ from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
 from threading import Lock
 
 prtime = False
+decay_multiplier = 1.6
 
 def isWindows ():
   # are we on windows? or linux/mac ?
@@ -82,10 +84,336 @@ if debug: print('getPyComm:',getPyComm())
 
 hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
 
+DEFAULT_CSS = """
+QRangeSlider * {
+    border: 0px;
+    padding: 0px;
+}
+QRangeSlider #Head {
+    background-color: rgba(157, 163, 176, 50);
+}
+QRangeSlider #Span {
+    background-color: rgba(22, 31, 50, 150);
+}
+QRangeSlider #Span:active {
+    background-color: rgba(22, 31, 50, 150);
+}
+QRangeSlider #Tail {
+    background-color: rgba(157, 163, 176, 50);
+}
+QRangeSlider #LineBox {
+    background-color: rgba(255, 255, 255, 0);
+}
+QRangeSlider > QSplitter::handle {
+    background-color: rgba(79, 91, 102, 100);
+}
+QRangeSlider > QSplitter::handle:vertical {
+    height: 4px;
+}
+QRangeSlider > QSplitter::handle:pressed {
+    background: #ca5;
+}
+"""
+
+def scale(val, src, dst):
+    try:
+      return ((val - src[0]) / float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0])
+    except ZeroDivisionError:
+      return 0 
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        Form.setObjectName("QRangeSlider")
+        Form.resize(300, 30)
+        Form.setStyleSheet(DEFAULT_CSS)
+        self._linebox = QWidget(Form)
+        self._linebox.setObjectName("LineBox")
+        self.gridLayout = QGridLayout(Form)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
+        self._splitter = QSplitter(Form)
+        self._splitter.setMinimumSize(QSize(0, 0))
+        self._splitter.setMaximumSize(QSize(16777215, 16777215))
+        self._splitter.setOrientation(Qt.Horizontal)
+        self._splitter.setObjectName("splitter")
+        self._head = QGroupBox(self._splitter)
+        self._head.setTitle("")
+        self._head.setObjectName("Head")
+        self._handle = QGroupBox(self._splitter)
+        self._handle.setTitle("")
+        self._handle.setObjectName("Span")
+        self._tail = QGroupBox(self._splitter)
+        self._tail.setTitle("")
+        self._tail.setObjectName("Tail")
+        self.gridLayout.addWidget(self._splitter, 0, 0, 1, 1)
+        self.retranslateUi(Form)
+        QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QCoreApplication.translate
+        Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
+
+
+class Element(QGroupBox):
+    def __init__(self, parent, main):
+        super(Element, self).__init__(parent)
+        self.main = main
+
+    def setStyleSheet(self, style):
+        self.parent().setStyleSheet(style)
+
+    def textColor(self):
+        return getattr(self, '__textColor', QColor(125, 125, 125))
+
+    def setTextColor(self, color):
+        if type(color) == tuple and len(color) == 3:
+            color = QColor(color[0], color[1], color[2])
+        elif type(color) == int:
+            color = QColor(color, color, color)
+        setattr(self, '__textColor', color)
+
+    def paintEvent(self, event):
+        qp = QPainter()
+        qp.begin(self)
+        if self.main.drawValues():
+            self.drawText(event, qp)
+        qp.end()
+
+
+class Head(Element):
+    def __init__(self, parent, main):
+        super(Head, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignLeft, ("%.3f"%self.main.min()))
+
+
+class Tail(Element):
+    def __init__(self, parent, main):
+        super(Tail, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignRight, ("%.3f"%self.main.max()))
+
+
+class LineBox(Element):
+    def __init__(self, parent, main):
+        super(LineBox, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(QPen(Qt.red, 2, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin))
+        pos = self.main.valueToPos(self.main.line_value)
+        if (pos == 0):
+          pos += 1
+        qp.drawLine(pos, 0, pos, 50)
+
+
+class Handle(Element):
+    def __init__(self, parent, main):
+        super(Handle, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        pass
+        # qp.setPen(self.textColor())
+        # qp.setFont(QFont('Arial', 10))
+        # qp.drawText(event.rect(), Qt.AlignLeft, str(self.main.start()))
+        # qp.drawText(event.rect(), Qt.AlignRight, str(self.main.end()))
+
+    def mouseMoveEvent(self, event):
+        event.accept()
+        mx = event.globalX()
+        _mx = getattr(self, '__mx', None)
+        if not _mx:
+            setattr(self, '__mx', mx)
+            dx = 0
+        else:
+            dx = mx - _mx
+        setattr(self, '__mx', mx)
+        if dx == 0:
+            event.ignore()
+            return
+        elif dx > 0:
+            dx = 1
+        elif dx < 0:
+            dx = -1
+        s = self.main.start() + dx
+        e = self.main.end() + dx
+        if s >= self.main.min() and e <= self.main.max():
+            self.main.setRange(s, e)
+
+
+class QRangeSlider(QWidget, Ui_Form):
+    endValueChanged = pyqtSignal(int)
+    maxValueChanged = pyqtSignal(int)
+    minValueChanged = pyqtSignal(int)
+    startValueChanged = pyqtSignal(int)
+    rangeValuesChanged = pyqtSignal(str, float, float)
+
+    _SPLIT_START = 1
+    _SPLIT_END = 2
+
+    def __init__(self, label, parent):
+        super(QRangeSlider, self).__init__(parent)
+        self.label = label
+        self.rangeValuesChanged.connect(parent.updateRangeFromSlider)
+        self.setupUi(self)
+        self.setMouseTracking(False)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+
+        self._linebox_layout = QHBoxLayout()
+        self._linebox_layout.setSpacing(0)
+        self._linebox_layout.setContentsMargins(0, 0, 0, 0)
+        self._linebox.setLayout(self._linebox_layout)
+        self.linebox = LineBox(self._linebox, main=self)
+        self._linebox_layout.addWidget(self.linebox)
+        self._head_layout = QHBoxLayout()
+        self._head_layout.setSpacing(0)
+        self._head_layout.setContentsMargins(0, 0, 0, 0)
+        self._head.setLayout(self._head_layout)
+        self.head = Head(self._head, main=self)
+        self._head_layout.addWidget(self.head)
+        self._handle_layout = QHBoxLayout()
+        self._handle_layout.setSpacing(0)
+        self._handle_layout.setContentsMargins(0, 0, 0, 0)
+        self._handle.setLayout(self._handle_layout)
+        self.handle = Handle(self._handle, main=self)
+        self.handle.setTextColor((150, 255, 150))
+        self._handle_layout.addWidget(self.handle)
+        self._tail_layout = QHBoxLayout()
+        self._tail_layout.setSpacing(0)
+        self._tail_layout.setContentsMargins(0, 0, 0, 0)
+        self._tail.setLayout(self._tail_layout)
+        self.tail = Tail(self._tail, main=self)
+        self._tail_layout.addWidget(self.tail)
+        self.setDrawValues(True)
+
+    def min(self):
+        return getattr(self, '__min', None)
+
+    def max(self):
+        return getattr(self, '__max', None)
+
+    def setMin(self, value):
+        setattr(self, '__min', value)
+        self.minValueChanged.emit(value)
+
+    def setMax(self, value):
+        setattr(self, '__max', value)
+        self.maxValueChanged.emit(value)
+
+    def start(self):
+        return getattr(self, '__start', None)
+
+    def end(self):
+        return getattr(self, '__end', None)
+
+    def _setStart(self, value):
+        setattr(self, '__start', value)
+        self.startValueChanged.emit(value)
+
+    def setStart(self, value):
+        v = self.valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_START)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setStart(value)
+
+    def _setEnd(self, value):
+        setattr(self, '__end', value)
+        self.endValueChanged.emit(value)
+
+    def setEnd(self, value):
+        v = self.valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_END)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setEnd(value)
+
+    def drawValues(self):
+        return getattr(self, '__drawValues', None)
+
+    def setLine(self, value):
+        self.line_value = value
+
+    def setDrawValues(self, draw):
+        setattr(self, '__drawValues', draw)
+
+    def getRange(self):
+        return (self.start(), self.end())
+
+    def setRange(self, start, end):
+        self.setStart(start)
+        self.setEnd(end)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left:
+            s = self.start()-1
+            e = self.end()-1
+        elif key == Qt.Key_Right:
+            s = self.start()+1
+            e = self.end()+1
+        else:
+            event.ignore()
+            return
+        event.accept()
+        if s >= self.min() and e <= self.max():
+            self.setRange(s, e)
+
+    def setBackgroundStyle(self, style):
+        self._tail.setStyleSheet(style)
+        self._head.setStyleSheet(style)
+
+    def setSpanStyle(self, style):
+        self._handle.setStyleSheet(style)
+
+    def valueToPos(self, value):
+        return int(scale(value, (self.min(), self.max()), (0, self.width())))
+
+    def _posToValue(self, xpos):
+        return scale(xpos, (0, self.width()), (self.min(), self.max()))
+
+    def _handleMoveSplitter(self, xpos, index):
+        hw = self._splitter.handleWidth()
+        def _lockWidth(widget):
+            width = widget.size().width()
+            widget.setMinimumWidth(width)
+            widget.setMaximumWidth(width)
+        def _unlockWidth(widget):
+            widget.setMinimumWidth(0)
+            widget.setMaximumWidth(16777215)
+        if index == self._SPLIT_START:
+            v = self._posToValue(xpos)
+            _lockWidth(self._tail)
+            if v >= self.end():
+                return
+            offset = -20
+            w = xpos + offset
+            self._setStart(v)
+            self.rangeValuesChanged.emit(self.label, v, self.end())
+        elif index == self._SPLIT_END:
+            # account for width of head
+            xpos += 4
+            v = self._posToValue(xpos)
+            _lockWidth(self._head)
+            if v <= self.start():
+                return
+            offset = -40
+            w = self.width() - xpos + offset
+            self._setEnd(v)
+            self.rangeValuesChanged.emit(self.label, self.start(), v)
+        _unlockWidth(self._tail)
+        _unlockWidth(self._head)
+        _unlockWidth(self._handle)
+
 # for signaling
 class Communicate (QObject):
   commsig = pyqtSignal()
-  updateRanges = pyqtSignal()
 
 class DoneSignal (QObject):
   finishSim = pyqtSignal(bool, bool)
@@ -183,9 +511,6 @@ class RunSimThread (QThread):
 
     self.lock = Lock()
 
-  def updateoptparams (self):
-    self.c.updateRanges.emit()
-
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
     self.txtComm.tsig.emit(txt)
@@ -214,6 +539,9 @@ class RunSimThread (QThread):
         self.optmodel() # run optimization
       except RuntimeError:
         failed = True
+        self.baseparamwin.optparamwin.toggleEnableUserFields(self.cur_step, enable=True)
+        self.baseparamwin.optparamwin.clear_initial_opt_ranges()
+        self.baseparamwin.optparamwin.optimization_running = False
     else:
       try:
         self.runsim() # run simulation
@@ -361,9 +689,7 @@ class RunSimThread (QThread):
     import simdat
 
     global basedir
-
-    # for saving the initial parameters (used to calculate diffs)
-    self.baseparamwin.optparamwin.initial_opt_info = []
+    need_initial_ddat = False
 
     # initialize RNG with seed from config
     seed = int(find_param(paramf,'prng_seedcore_opt'))
@@ -371,8 +697,13 @@ class RunSimThread (QThread):
 
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
-    simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
-    simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    if len(simdat.ddat) > 0:
+      simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
+      simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    else:
+      need_initial_ddat = True
+
+    self.baseparamwin.optparamwin.populate_initial_opt_ranges()
 
     # save initial parameters file
     param_out = os.path.join(basedir,'before_opt.param')
@@ -382,55 +713,43 @@ class RunSimThread (QThread):
 
     self.last_step = False
     self.first_step = True
-    for step in dconf['opt_info'].keys():
+    num_steps = self.baseparamwin.optparamwin.get_num_chunks()
+    for step in range(num_steps):
+      self.cur_step = step
+      if step == num_steps - 1:
+        self.last_step = True
 
-      # dconf['opt_info'] is the "global" optimization information (for all steps).
-      # self.opt_params gets reset for each step
-      self.opt_params = dconf['opt_info'][step]
+      # disable range sliders for each step once that step has begun
+      self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=False)
 
-      # deepcopy is necessary for nested dicts
-      self.baseparamwin.optparamwin.initial_opt_info.append(deepcopy(self.opt_params['ranges']))
-      if self.opt_params['num_sims'] == 0:
+      self.step_ranges = self.baseparamwin.optparamwin.get_chunk_ranges(step)
+      self.step_sims = self.baseparamwin.optparamwin.get_sims_for_chunk(step)
+
+      if self.step_sims == 0:
         txt = "Skipping optimization step %d (0 simulations)"%(step+1)
         self.updatewaitsimwin(txt)
         continue
 
-      self.cur_step = step
-      total_steps = len(dconf['opt_info'])
-      if self.cur_step == total_steps - 1:
-        self.last_step = True
-        # For the last step (all inputs), recalculate ranges and update
-        # dconf['opt_info']. If previous optimization steps increased
-        # std. dev. this could result in fewer optimization steps as 
-        # inputs may be deemed too close together and be grouped in a
-        # single optimization step.
-
-        # The purpose of the last step (with regular RMSE) is to clean up
-        # biases introduced by local weighted RMSE optimization.
-
-        # update ranges and recalculate weights
-        self.updateoptparams()
-        sleep(1)
-
-        # reload opt_params for the last step in case the number of
-        # steps was changed by updateoptparams()
-        final_step = len(dconf['opt_info']) - 1
-        self.opt_params = dconf['opt_info'][final_step]
-
-      txt = "Starting optimization step %d/%d"%(step+1,total_steps)
+      txt = "Starting optimization step %d/%d" % (step + 1, num_steps)
       self.updatewaitsimwin(txt)
-      self.runOptStep()
+      self.runOptStep(step)
 
-      if not self.best_ddat is None:
-        simdat.ddat = self.best_ddat.copy()
+      if 'dpl' in self.best_ddat:
+        simdat.ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
+      if 'errtot' in self.best_ddat:
+        simdat.ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
+
+      if need_initial_ddat:
+        simdat.initial_ddat = deepcopy(simdat.ddat)
 
       simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with best from this step
 
       # put best opt results into GUI and save to param file
       push_values = OrderedDict()
-      for param_name in self.opt_params['ranges'].keys():
-        push_values[param_name] = self.opt_params['ranges'][param_name]['initial']
+      for param_name in self.step_ranges.keys():
+        push_values[param_name] = self.step_ranges[param_name]['final']
       self.updatebaseparamwin(push_values)
+      self.baseparamwin.optparamwin.push_chunk_ranges(step,push_values)
 
       sleep(1)
 
@@ -441,37 +760,47 @@ class RunSimThread (QThread):
     simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
     simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
 
-  def runOptStep (self):
+    # re-enable all the range sliders
+    self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
+
+    self.baseparamwin.optparamwin.clear_initial_opt_ranges()
+    self.baseparamwin.optparamwin.optimization_running = False
+
+
+  def runOptStep (self, step):
     import simdat
     global basedir, paramf
 
-    self.optiter = 0
+    self.optsim = 0
     self.minopterr = 1e9
     self.stepminopterr = self.minopterr
-    self.best_ddat = None
-
+    self.best_ddat = {}
+    self.opt_start = self.baseparamwin.optparamwin.get_chunk_start(step)
+    self.opt_end = self.baseparamwin.optparamwin.get_chunk_end(step)
+    self.opt_weights = self.baseparamwin.optparamwin.get_chunk_weights(step)
     def optrun (new_params, grad=0):
-      txt = "Optimization step %d, iteration %d"%(self.cur_step+1, self.optiter+1)
+      txt = "Optimization step %d, simulation %d" % (step + 1,
+                                                     self.optsim + 1)
       self.updatewaitsimwin(txt)
       print(txt)
 
       dtest = OrderedDict() # parameter values to test      
-      for param_name, test_value in zip(self.opt_params['ranges'].keys(), new_params): # set parameters
-        if test_value >= self.opt_params['ranges'][param_name]['minval'] and test_value <= self.opt_params['ranges'][param_name]['maxval']:
+      for param_name, test_value in zip(self.step_ranges.keys(), new_params): # set parameters
+        if test_value >= self.step_ranges[param_name]['minval'] and \
+           test_value <= self.step_ranges[param_name]['maxval']:
           if debug:
-            print('optrun prm:', self.opt_params['ranges'][param_name]['initial'],
-                                 self.opt_params['ranges'][param_name]['minval'],
-                                 self.opt_params['ranges'][param_name]['maxval'],
+            print('optrun prm:', self.step_ranges[param_name]['initial'],
+                                 self.step_ranges[param_name]['minval'],
+                                 self.step_ranges[param_name]['maxval'],
                                  test_value)
           dtest[param_name] = test_value
         else:
           # This test is not strictly necessary with COBYLA, but in case the algorithm
           # is changed at some point in the future
-          if debug:
-            print('optrun:', test_value, 'out of bounds for ' ,
-                  self.opt_params['ranges'][param_name]['initial'],
-                  self.opt_params['ranges'][param_name]['minval'],
-                  self.opt_params['ranges'][param_name]['maxval'])
+          print('INFO: optimization chose %.3f for %s outside of [%.3f-%.3f].'
+                % (test_value, param_name,
+                   self.step_ranges[param_name]['minval'],
+                   self.step_ranges[param_name]['maxval']))
           return 1e9 # invalid param value -> large error
 
       # put new param values into GUI and save params to file
@@ -479,13 +808,13 @@ class RunSimThread (QThread):
       sleep(1)
 
       # run the simulation, but stop early if possible
-      self.runsim(is_opt=True, banner=False, simlength=self.opt_params['opt_end'])
+      self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
 
       # calculate wRMSE for all steps
       simdat.weighted_rmse(simdat.ddat,
-                            self.opt_params['opt_end'],
-                            self.opt_params['weights'],
-                            tstart=self.opt_params['opt_start'])
+                           self.opt_end,
+                           self.opt_weights,
+                           tstart=self.opt_start)
       err = simdat.ddat['werrtot']
 
       if self.last_step:
@@ -496,8 +825,8 @@ class RunSimThread (QThread):
       else:
         # calculate regular RMSE for displaying on plot
         simdat.calcerr(simdat.ddat,
-                      self.opt_params['opt_end'],
-                      tstart=self.opt_params['opt_start'])
+                      self.opt_end,
+                      tstart=self.opt_start)
 
         txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
 
@@ -512,8 +841,8 @@ class RunSimThread (QThread):
       param_fname = os.path.basename(paramf)
       curr_paramf = os.path.join(basedir, param_fname)
 
-      # save params numbered by optiter
-      param_out = os.path.join(basedir,'step_%d_iter_%d.param'%(self.cur_step,self.optiter))
+      # save params numbered by optsim
+      param_out = os.path.join(basedir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
       shutil.copyfile(curr_paramf, param_out)
 
       if err < self.stepminopterr:
@@ -522,27 +851,34 @@ class RunSimThread (QThread):
         self.stepminopterr = err
         # save best param file
         shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
-        self.best_ddat = simdat.ddat.copy()
+        if 'dpl' in simdat.ddat:
+          self.best_ddat['dpl'] = simdat.ddat['dpl']
+        if 'errtot' in simdat.ddat:
+          self.best_ddat['errtot'] = simdat.ddat['errtot']
 
-      if self.optiter == 0 and not self.first_step:
-        # Update plots for the first iteration only of this step (best results from last round)
+      if self.optsim == 0 and not self.first_step:
+        # Update plots for the first simulation only of this step (best results from last round)
         # Skip the first step because there are no optimization results to show yet.
         self.updatedrawerr() # send event to draw updated error (asynchronously)
 
-      self.optiter += 1
+      self.optsim += 1
 
       return err # return error
 
     def optimize(params_input, evals, algorithm):
-        num_params = len(params_input)
-        opt_params = np.zeros(num_params)
-        lb = np.zeros(num_params)
-        ub = np.zeros(num_params)
+        opt_params = []
+        lb = []
+        ub = []
 
-        for idx, param_name in enumerate(params_input.keys()):
-            ub[idx] = params_input[param_name]['maxval']
-            lb[idx] = params_input[param_name]['minval']
-            opt_params[idx] = params_input[param_name]['initial']
+        for param_name in params_input.keys():
+            upper = params_input[param_name]['maxval']
+            lower = params_input[param_name]['minval']
+            if upper == lower:
+              continue
+
+            ub.append(upper)
+            lb.append(lower)
+            opt_params.append(params_input[param_name]['initial'])
 
         if algorithm == nlopt.G_MLSL_LDS or algorithm == nlopt.G_MLSL:
             # In case these mixed mode (global + local) algorithms are used in the future
@@ -558,18 +894,25 @@ class RunSimThread (QThread):
 
         return opt_results
 
-    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_params['opt_start'], self.opt_params['opt_end'])
+    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
+                                                self.opt_end)
     self.updatewaitsimwin(txt)
 
-    num_params = self.opt_params['num_params']
-
+    num_params = len(self.step_ranges)
     algorithm = nlopt.LN_COBYLA
     opt = nlopt.opt(algorithm, num_params)
-    opt_results = optimize(self.opt_params['ranges'], self.opt_params['num_sims'], algorithm)
+    opt_results = optimize(self.step_ranges, self.step_sims, algorithm)
 
     # update opt params for the next round
-    for var_name, value in zip(self.opt_params['ranges'], opt_results):
-        self.opt_params['ranges'][var_name]['initial'] = value
+    for var_name, new_value in zip(self.step_ranges, opt_results):
+        old_value = self.step_ranges[var_name]['initial']
+
+        # only change the parameter value if it changed significantly
+        if not isclose(old_value, new_value, abs_tol=1e-9):
+          self.step_ranges[var_name]['final'] = new_value
+        else:
+          self.step_ranges[var_name]['final'] = \
+            self.step_ranges[var_name]['initial']
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -578,6 +921,16 @@ def lookupresource (fn):
     return os.path.join('res',fn+'2.png')
   else:
     return os.path.join('res',fn+'.png')
+
+def format_range_str(value):
+  if value == 0:
+    value_str = "0.000"
+  elif value < 0.1 :
+    value_str = ("%6f" % value)
+  else:
+    value_str = ("%.3f" % value)
+
+  return value_str
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
 # specifiable via cfg file format - then can customize gui without changing py code
@@ -1007,6 +1360,17 @@ class EvokedInputParamDialog (QDialog):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
 
+  def set_qline_float (self, key_str, value):
+    try:
+      new_value = float(value)
+    except ValueError:
+      print("WARN: bad value for param %s: %s. Unable to convert"
+            " to a floating point number" % (key_str, value))
+      return
+
+    # Enforce no sci. not. + limit field len + remove trailing 0's
+    self.dqline[key_str].setText(("%7f" % new_value).rstrip('0').rstrip('.'))
+
   def setfromdin (self,din):
     if not din: return
 
@@ -1032,28 +1396,56 @@ class EvokedInputParamDialog (QDialog):
 
     for k,v in din.items():
       if k == 'sync_evinput':
-        if float(v)==0.0:
-          self.chksync.setChecked(False)
-        elif float(v)==1.0:
+        try:
+          new_value = bool(int(v))
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a boolean value" % (k,v))
+          continue
+        if new_value:
           self.chksync.setChecked(True)
+        else:
+          self.chksync.setChecked(False)
       elif k == 'inc_evinput':
-        self.incedit.setText(str(v).strip())
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.incedit.setText(str(new_value).strip())
       elif k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
+        if k.startswith('numspikes'):
+          try:
+            new_value = int(v)
+          except ValueError:
+            print("WARN: bad value for param %s: %s. Unable to convert"
+                  " to a integer" % (k, v))
+            continue
+          self.dqline[k].setText(str(new_value))
+        else:
+          self.set_qline_float(k, v)
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
         eloc = lks[1]
         enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
         if eloc == 'evprox':
-          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
         elif eloc == 'evdist':
-          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
+            key_str = base_key_str + ct + '_nmda'
+            self.set_qline_float(key_str, v)
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -1330,8 +1722,16 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dqinitial_label = OrderedDict()  # initial
     self.dqopt_label = OrderedDict()  # optimtized
     self.dqdiff_label = OrderedDict() # delta
+    self.dqrange_multiplier = OrderedDict() # user-defined multiplier
+    self.dqrange_mode = OrderedDict() # range mode (stdev, %, absolute)
+    self.dqrange_slider = OrderedDict() # slider
+    self.dqrange_label = OrderedDict() # defined range
 
-    self.initial_opt_info = None
+    self.chunk_list = []
+    self.lqnumsim = []
+    self.lqnumparams = []
+    self.opt_params = {}
+    self.initial_opt_ranges = []
     self.dtabdata = []
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.simlength = 0.0
@@ -1339,6 +1739,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.default_num_step_sims = 30
     self.default_num_total_sims = 50
     self.optrun_func = optrun_func
+    self.optimization_running = False
     self.initUI()
 
   def initUI (self):
@@ -1358,18 +1759,18 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.grid.addWidget(self.tabs, row, 0)
 
     row += 1
-    btnrecalc = QPushButton('Recalculate Ranges',self)
-    btnrecalc.resize(btnrecalc.sizeHint())
-    btnrecalc.clicked.connect(self.updateRanges)
-    btnrecalc.setToolTip('Recalculate Ranges')
-    self.grid.addWidget(btnrecalc, row, 0)
+    self.btnrecalc = QPushButton('Recalculate Ranges',self)
+    self.btnrecalc.resize(self.btnrecalc.sizeHint())
+    self.btnrecalc.clicked.connect(self.updateOptDialog)
+    self.btnrecalc.setToolTip('Recalculate Ranges')
+    self.grid.addWidget(self.btnrecalc, row, 0)
 
     row += 1
-    btnrunop = QPushButton('Run Optimization', self)
-    btnrunop.resize(btnrunop.sizeHint())
-    btnrunop.setToolTip('Run Optimization')
-    btnrunop.clicked.connect(self.runOptimization)
-    self.grid.addWidget(btnrunop, row, 0)
+    self.btnrunop = QPushButton('Run Optimization', self)
+    self.btnrunop.resize(self.btnrunop.sizeHint())
+    self.btnrunop.setToolTip('Run Optimization')
+    self.btnrunop.clicked.connect(self.runOptimization)
+    self.grid.addWidget(self.btnrunop, row, 0)
 
     row += 1
     btnhide = QPushButton('Hide Window',self)
@@ -1385,15 +1786,20 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # the largest horizontal component will be column 0 (headings)
     self.resize(self.minimumSizeHint())
 
-  def toggle_field(self, current_tab, row):
-    if self.ltabs[current_tab].layout.itemAtPosition(row, 0).widget().isChecked():
+  def toggle_field(self, label):
+    widget_dict_list = [self.dqinitial_label, self.dqopt_label,
+                          self.dqdiff_label, self.dqparam_name,
+                          self.dqrange_mode, self.dqrange_multiplier,
+                          self.dqrange_label, self.dqrange_slider]
+
+    if self.dqchkbox[label].isChecked():
       # set all other fields in the row to enabled
-      for column in range(1,8):
-        self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(True)
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(True)
     else:
       # disable all other fields in the row
-      for column in range(1,8):
-        self.ltabs[current_tab].layout.itemAtPosition(row, column).widget().setEnabled(False)
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(False)
 
   def addTab (self,id_str):
     tab = QWidget()
@@ -1403,7 +1809,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.tabs.addTab(tab, name_str)
  
     tab_index = len(self.ltabs)-1
-    self.tabs.setCurrentIndex(tab_index)
     self.dtab_idx[id_str] = tab_index
     self.dtab_names[tab_index] = id_str
 
@@ -1424,12 +1829,21 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           del self.dqdiff_label[k]
         if k in self.dqparam_name:
           del self.dqparam_name[k]
+        if not self.optimization_running:
+          if k in self.dqrange_mode:
+            del self.dqrange_mode[k]
+          if k in self.dqrange_multiplier:
+            del self.dqrange_multiplier[k]
+          if k in self.dqrange_label:
+            del self.dqrange_label[k]
+          if k in self.dqrange_slider:
+            del self.dqrange_slider[k]
 
   def addGridToTab (self, d, tab):
     from functools import partial
     import re
 
-    current_tab = self.tabs.currentIndex()
+    current_tab = len(self.ltabs)-1
     tab.layout = QGridLayout()
     #tab.layout.setSpacing(10)
 
@@ -1439,11 +1853,24 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     row = 0
     self.ltabkeys[current_tab].append("")
     for column_index, column_name in enumerate(["Optimize", "Parameter name",
-      "Initial", "Optimized", "Delta", "Range mode", "Range specifier",
-      "Defined range"]):
+      "Initial", "Optimized", "Delta"]):
       widget = QLabel(column_name)
       widget.resize(widget.sizeHint())
       tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Range specifier")
+    widget.setMinimumWidth(100)
+    tab.layout.addWidget(widget, row, column_index, 1, 2)
+
+    column_index += 2
+    widget = QLabel("Range slider")
+    # widget.setMinimumWidth(160)
+    tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Defined range")
+    tab.layout.addWidget(widget, row, column_index)
 
     # The second row is a horizontal line
     row = 1
@@ -1451,7 +1878,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     qthline = QFrame()
     qthline.setFrameShape(QFrame.HLine)
     qthline.setFrameShadow(QFrame.Sunken)
-    tab.layout.addWidget(qthline, row, 0, 1, 8)
+    tab.layout.addWidget(qthline, row, 0, 1, 9)
 
     # The rest are the parameters
     row = 2
@@ -1474,8 +1901,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       """)
       self.dqchkbox[k].setChecked(True)
       # use partial instead of lamda (so args won't be evaluated ahead of time?)
-      self.dqchkbox[k].clicked.connect(partial(self.toggle_field,
-                                                    current_tab, row))
+      self.dqchkbox[k].clicked.connect(partial(self.toggle_field, k))
       self.dqparam_name[k] = QLabel(self)
       self.dqparam_name[k].setText(self.transvar(k))
       self.dqinitial_label[k] = QLabel()
@@ -1490,26 +1916,35 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       tab.layout.addWidget(self.dqdiff_label[k], row, 4)  # delta
 
       if k.startswith('t'):
-        range_mode = "range (sd)"
+        range_mode = "(stdev)"
         range_multiplier = "3.0"
       elif k.startswith('sigma'):
-        range_mode = "range (%)"
+        range_mode = "(%)"
         range_multiplier = "50.0"
       else:
-        range_mode = "range (%)"
+        range_mode = "(%)"
         range_multiplier = "500.0"
-      tab.layout.addWidget(QLabel(range_mode), row, 5)  # range mode
-      qtline = QLineEdit(range_multiplier)
-      qtline.resize(qtline.minimumSizeHint())
-      tab.layout.addWidget(qtline, row, 6)  # range specifier
-      tab.layout.addWidget(QLabel(), row, 7)  # calculated range
+
+      if not self.optimization_running:
+        self.dqrange_slider[k] = QRangeSlider(k,self)
+        self.dqrange_slider[k].setMinimumWidth(140)
+        self.dqrange_label[k] = QLabel()
+        self.dqrange_multiplier[k] = QLineEdit(range_multiplier)
+        self.dqrange_multiplier[k].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.dqrange_multiplier[k].setMinimumWidth(50)
+        self.dqrange_multiplier[k].setMaximumWidth(50)
+        self.dqrange_mode[k] = QLabel(range_mode)
+        tab.layout.addWidget(self.dqrange_multiplier[k], row, 5)  # range specifier
+        tab.layout.addWidget(self.dqrange_mode[k], row, 6)  # range mode
+        tab.layout.addWidget(self.dqrange_slider[k], row, 7)  # range slider
+        tab.layout.addWidget(self.dqrange_label[k], row, 8)  # calculated range
 
       row += 1
 
     # A spacer in the last row stretches to fill remaining space.
     # For inputs with fewer parameters than the rest, this pushes parameters
     # to the top with the same spacing as the other inputs.
-    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 8)
+    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 9)
     tab.layout.setRowStretch(row,1)
     tab.setLayout(tab.layout)
 
@@ -1550,52 +1985,85 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.addGridToTab(ddist, tab)
 
   def runOptimization(self):
+    self.optimization_running = True
+    self.current_opt_step = 0
+
     # update the opt info dict to capture num_sims from GUI
-    self.updateRanges()
+    self.updateOptDialog()
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
     self.optrun_func()
 
-  def updateOptDict(self, chunk_index, evinput, num_sims):
 
-    # update opt_info dict
-    dconf['opt_info'][chunk_index] = {'inputs': [],
-                                      'ranges': {},
-                                      'weights': evinput['weights'],
-                                      'num_params': 0,
-                                      'num_sims': num_sims,
-                                      'opt_start': evinput['opt_start'],
-                                      'opt_end': evinput['opt_end']
-                                      }
-    for input_name in evinput['inputs']:
-      if self.opt_params[input_name]['num_params'] > 0:
-        dconf['opt_info'][chunk_index]['inputs'].append(input_name)
-        dconf['opt_info'][chunk_index]['num_params'] += self.opt_params[input_name]['num_params']
+  def get_chunk_start(self, step):
+    return self.chunk_list[step]['opt_start']
 
-      dconf['opt_info'][chunk_index]['ranges'].update(self.opt_params[input_name]['ranges'])
+  def get_chunk_end(self, step):
+    return self.chunk_list[step]['opt_end']
 
-  def cleanOptGrid(self):
+  def get_chunk_weights(self, step):
+    return self.chunk_list[step]['weights']
+
+  def get_num_chunks(self):
+    return len(self.chunk_list)
+
+  def get_sims_for_chunk(self, step):
+    return self.chunk_list[step]['num_sims']
+
+  def get_chunk_ranges(self, step):
+    ranges = {}
+    for input_name in self.chunk_list[step]['inputs']:
+      # make sure initial value is between minval or maxval before returning
+      # ranges to the optimization
+      for label in self.opt_params[input_name]['ranges'].keys():
+        range_min = self.opt_params[input_name]['ranges'][label]['minval']
+        range_max = self.opt_params[input_name]['ranges'][label]['maxval']
+        if range_min > self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_min
+        if range_max < self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_max
+
+      # copy the values to the ranges dict to be returned
+      # to optimization
+      ranges.update(self.opt_params[input_name]['ranges'])
+
+    return ranges
+
+  def push_chunk_ranges(self, step, ranges):
+    import re
+
+    for label, value in ranges.items():
+      for tab_name in self.opt_params.keys():
+        if label in self.opt_params[tab_name]['ranges']:
+          self.opt_params[tab_name]['ranges'][label]['initial'] = float(value)
+
+  def save_opt_grid(self):
+    self.old_numsims = []
+
+    for chunk_index in range(len(self.chunk_list)):
+      try:
+        num_sims = int(self.lqnumsim[chunk_index].text())
+      except ValueError:
+        # couldn't get value for some reason (invalid), so set to the default
+        if chunk_index == len(self.chunk_list) - 1:
+          num_sims = self.default_num_total_sims
+        else:
+          num_sims = self.default_num_step_sims
+
+      self.old_numsims.append(num_sims)
+
+  def clean_opt_grid(self):
     # This is the top part of the Configure Optimization dialog.
 
     column_count = self.sublayout.columnCount()
-    self.old_numsims = []
-
-    # get number of sims from GUI
     row = 0
     while True:
       try:
-        num_sims = int(self.sublayout.itemAtPosition(row,5).widget().text())
-        self.old_numsims.append(num_sims)
+        self.sublayout.itemAtPosition(row,0).widget()
       except AttributeError:
         # no more rows
         break
-      except ValueError:
-        # couldn't get value for some reason (invalid), so set to the default
-        if row == 1:
-          self.old_numsims.append(self.default_num_total_sims)
-        else:
-          self.old_numsims.append(self.default_num_step_sims)
 
       for column in range(column_count):
         try:
@@ -1606,37 +2074,63 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           pass
       row += 1
 
-  def updateOptInfo(self):
-    dconf['opt_info'] = {}  # holds info by opt. step
+  def rebuildOptStepInfo(self):
+    # get number of sims from GUI
+    self.save_opt_grid()
 
-    # clean up the old grid sublayout
-    self.cleanOptGrid()
+    if not self.optimization_running:
+      # reset data for number of sims per chunk (step)
+      self.lqnumsim = []
+      self.lqnumparams = []
 
-    # split chunks from paramter file
-    input_chunks = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
+      # clean up the old grid sublayout
+      self.clean_opt_grid()
 
-    qlabel = []
-    # create a new grid sublayout with a row for each optimization step
-    for chunk_index, evinput in enumerate(input_chunks):
+      # split chunks from paramter file
+      self.chunk_list = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
 
-      if len(input_chunks) == len(self.old_numsims):
-        # can we reuse the previous number of sims for each step?
-        num_sims = self.old_numsims[chunk_index]
+      if len(self.chunk_list) == 0:
+        qlabel = QLabel("No valid evoked inputs to optimize!")
+        qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        qlabel.resize(qlabel.minimumSizeHint())
+        self.sublayout.addWidget(qlabel, 0, 0)
+        self.btnrunop.setEnabled(False)
+        self.btnrecalc.setEnabled(False)
       else:
-        if chunk_index == len(input_chunks) - 1:
-          num_sims = self.default_num_total_sims
+        self.btnrunop.setEnabled(True)
+        self.btnrecalc.setEnabled(True)
+
+    # create a new grid sublayout with a row for each optimization step
+    for chunk_index, chunk in enumerate(self.chunk_list):
+      if len(self.chunk_list) == len(self.old_numsims):
+        # can we reuse the previous number of sims for each step?
+        chunk['num_sims'] = self.old_numsims[chunk_index]
+      else:
+        if chunk_index == len(self.chunk_list) - 1:
+          chunk['num_sims'] = self.default_num_total_sims
         else:
-          num_sims = self.default_num_step_sims
+          chunk['num_sims'] = self.default_num_step_sims
 
-      self.updateOptDict(chunk_index, evinput, num_sims)
+      chunk['num_params'] = 0
 
-      qlabel = QLabel("Optimization pass %d:"%(chunk_index+1))
+      for input_name in chunk['inputs']:
+        num_params = len(self.opt_params[input_name]['ranges'])
+        if num_params > 0:
+          chunk['num_params'] += num_params
+
+      if self.optimization_running:
+        num_params = chunk['num_params']
+        self.lqnumparams[chunk_index].setText("Num params: %d" % num_params)
+        # don't make changes to the rest of the grid
+        continue
+
+      qlabel = QLabel("Optimization step %d:"%(chunk_index+1))
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 0)
 
       inputs = []
-      for input_name in evinput['inputs']:
+      for input_name in chunk['inputs']:
         inputs.append(trans_input(input_name))
       qlabel = QLabel("Inputs: %s"%', '.join(inputs))
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
@@ -1647,157 +2141,270 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       # of "Num simulations:"
       self.sublayout.addItem(QSpacerItem(0, 0, hPolicy = QSizePolicy.MinimumExpanding), chunk_index, 2)
 
-      qlabel = QLabel("Num params: %d"%dconf['opt_info'][chunk_index]['num_params'])
-      qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
-      qlabel.resize(qlabel.minimumSizeHint())
-      self.sublayout.addWidget(qlabel,chunk_index, 3)
+      self.lqnumparams.append(QLabel("Num params: %d"%chunk['num_params']))
+      self.lqnumparams[chunk_index].setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+      self.lqnumparams[chunk_index].resize(self.lqnumparams[chunk_index].minimumSizeHint())
+      self.sublayout.addWidget(self.lqnumparams[chunk_index],chunk_index, 3)
 
       qlabel = QLabel("Num simulations:")
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
       self.sublayout.addWidget(qlabel,chunk_index, 4)
 
-      numsim_qline = QLineEdit(str(num_sims))
-      numsim_qline.resize(numsim_qline.minimumSizeHint())
-      self.sublayout.addWidget(numsim_qline,chunk_index,5)
+      self.lqnumsim.append(QLineEdit(str(chunk['num_sims'])))
+      self.lqnumsim[chunk_index].resize(
+        self.lqnumsim[chunk_index].minimumSizeHint())
+      self.sublayout.addWidget(self.lqnumsim[chunk_index],
+                               chunk_index, 5)
 
-  def updateRanges(self):
-    self.updateDispRanges()
-    self.updateOptInfo()
+  def toggleEnableUserFields(self, step, enable=True):
+    if not enable:
+      # the optimization called this to disable parameters on
+      # for the step passed in to this function
+      self.current_opt_step = step
 
-  def updateDispRanges(self):
-    self.opt_params = {}  # holds info by tab name
+    for input_name in self.chunk_list[step]['inputs']:
+      tab_index = self.dtab_idx[input_name]
+      tab = self.ltabs[tab_index]
 
-    # iterate through tabs. data is contained in grid layout
-    for tab_index, tab in enumerate(self.ltabs):
-      # get timing sigma before calculating timing range
-      timing_sigma = None
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
-        if self.dqparam_name[label].text().startswith("Start time stdev"):
-          timing_sigma = self.dparams[label]
-          if timing_sigma == 0.0:
-            # sigma of 0 will not produce a CDF
-            timing_sigma = 0.01
-          break
-      if timing_sigma is None:
-        timing_sigma = 3.0
-        print("Couldn't fing timing_sigma. Using default %f"%timing_sigma)
+        self.dqchkbox[label].setEnabled(enable)
+        self.dqrange_slider[label].setEnabled(enable)
+        self.dqrange_multiplier[label].setEnabled(enable)
 
+  def get_input_timing_sigma(self, tab_name):
+    """ get timing_sigma from already loaded values """
+
+    label = 'sigma_t_' + tab_name
+    try:
+      timing_sigma = self.dparams[label]
+    except KeyError:
+      timing_sigma = 3.0
+      print("ERR: Couldn't fing %s. Using default %f" %
+            (label,timing_sigma))
+
+    if timing_sigma == 0.0:
+      # sigma of 0 will not produce a CDF
+      timing_sigma = 0.01
+
+    return timing_sigma
+
+  def createOptParams(self):
+    global decay_multiplier
+
+    if not self.optimization_running:
+      # do not preserve opt_params if not optimizing
+      self.opt_params = {}
+    else:
+      return
+
+    # iterate through tabs. data is contained in grid layout
+    for tab_index in range(len(self.ltabs)):
       tab_name = self.dtab_names[tab_index]
+
+      timing_sigma = self.get_input_timing_sigma(tab_name)
       self.opt_params[tab_name] = {'ranges': {},
                                   'sigma': timing_sigma,
-                                  'num_params': 0,
-                                  'decay_multiplier': dconf['decay_multiplier']}
-      # now update the ranges
+                                  'decay_multiplier': decay_multiplier}
+
+  def clear_initial_opt_ranges(self):
+    self.initial_opt_ranges = {}
+
+  def populate_initial_opt_ranges(self):
+    self.initial_opt_ranges = {}
+
+    for input_name in self.opt_params.keys():
+      self.initial_opt_ranges[input_name] = deepcopy(self.opt_params[input_name]['ranges'])
+
+  def updateOptDeltas(self):
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      tab_name = self.dtab_names[tab_index]
+
+      # update the initial value
       for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
         label = self.ltabkeys[tab_index][row_index]
         value = self.dparams[label]
 
-        if self.dqchkbox[label].isChecked():
-          try:
-            range_multiplier = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
-          except ValueError:
-            range_multiplier = 0.0
-          tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
-        else:
-          range_multiplier = 0.0
-
-        tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(True)
-        if label.startswith('t'):
-          # mean start time
-          timing_bound = timing_sigma * range_multiplier
-          range_min = max(0, value - timing_bound)
-          range_max = min(self.simlength, value + timing_bound)
-          self.opt_params[tab_name]['mean'] = value
-          self.opt_params[tab_name]['start'] = range_min
-          self.opt_params[tab_name]['end'] = range_max
-        else:
-          # std dev. or synaptic weights
-          if value < 1e-5:
-            # don't let values fall below precision threshold
-            value = 0.0
-            self.dparams[label] = value
-
-          if value == 0.0:
-            range_min = value
-
-            range_type = tab.layout.itemAtPosition(row_index, 5).widget().text()
-            if range_type == "max":
-              # range already specified by min/max value. take user input
-              try:
-                range_max = float(tab.layout.itemAtPosition(row_index, 6).widget().text())
-              except ValueError:
-                range_max = 1.0
-            else:
-              # change to range from 0 to 1
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("max")
-              range_max = 1.0
-              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_max))
-          else:
-            # do we need to convert from using max to define range to a percentage?
-            if tab.layout.itemAtPosition(row_index, 5).widget().text() == "max":
-              tab.layout.itemAtPosition(row_index, 5).widget().setText("range (%)")
-              range_multiplier = 500.0
-              tab.layout.itemAtPosition(row_index, 6).widget().setText(str(range_multiplier))
-
-            range_min = max(0,value - (value * range_multiplier/100.0))
-            range_max = value + (value * range_multiplier/100.0)
-
-        if range_min == range_max:
-          # use the exact value
-          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f" % (value))
-          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
-          # uncheck because invalid range
-          self.dqchkbox[label].setChecked(False)
-        else:
-          tab.layout.itemAtPosition(row_index, 7).widget().setText("%.3f - %.3f" % (range_min, range_max))
-
-        if self.dqchkbox[label].isChecked():
-          # add param to list for optimization
-          self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
-          self.opt_params[tab_name]['num_params'] += 1
-        else:
-          # grey out the range
-          tab.layout.itemAtPosition(row_index, 7).widget().setEnabled(False)
-
         # Calculate value to put in "Delta" column. When possible, use
         # percentages, but when initial value is 0, use absolute changes
-        if self.initial_opt_info is None or \
-           tab_index >= len(self.initial_opt_info) or \
+        if tab_name not in self.initial_opt_ranges or \
            not self.dqchkbox[label].isChecked():
-          #self.dqdiff_label[label].setEnabled(False)
+          self.dqdiff_label[label].setEnabled(False)
           self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
-          self.dqopt_label[label].setText('')
-          self.dqdiff_label[label].setText('')
+          text = '--'
+          color_fmt = "QLabel { color : black; }"
+          self.dqopt_label[label].setText(text)
+          self.dqopt_label[label].setStyleSheet(color_fmt)
+          self.dqopt_label[label].setAlignment(Qt.AlignHCenter)
+          self.dqdiff_label[label].setAlignment(Qt.AlignHCenter)
         else:
-          initial_value = float(self.initial_opt_info[tab_index][label]['initial'])
+          initial_value = float(self.initial_opt_ranges[tab_name][label]['initial'])
           self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
           self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
-          if not initial_value == 0:
-            diff = 100 * (value - initial_value)/initial_value
-            if diff < 0:
-              text = ("%2.2f %%"%diff)
-              color_fmt = "QLabel { color : red; }"
-            elif diff > 0:
-              text = ("+%2.2f %%"%diff)
-              color_fmt = "QLabel { color : green; }"
-            else:
-              text = "0.0 %"
-              color_fmt = "QLabel { color : black; }"
+          self.dqopt_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+          self.dqdiff_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+
+          if isclose(value, initial_value, abs_tol=1e-7):
+            diff = 0
+            text = "0.0"
+            color_fmt = "QLabel { color : black; }"
           else:
             diff = value - initial_value
+
+          if initial_value == 0:
+            # can't calculate %
             if diff < 0:
               text = ("%6f"%diff).rstrip('0').rstrip('.')
               color_fmt = "QLabel { color : red; }"
             elif diff > 0:
               text = ("+%6f"%diff).rstrip('0').rstrip('.')
               color_fmt = "QLabel { color : green; }"
-            else:
-              text = "0.0"
-              color_fmt = "QLabel { color : black; }"
-          self.dqdiff_label[label].setText(text)
-          self.dqdiff_label[label].setStyleSheet(color_fmt)
+          else:
+            # calculate percent difference
+            percent_diff = 100 * diff/initial_value
+            if percent_diff < 0:
+              text = ("%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : red; }"
+            elif percent_diff > 0:
+              text = ("+%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : green; }"
+
+        self.dqdiff_label[label].setStyleSheet(color_fmt)
+        self.dqdiff_label[label].setText(text)
+
+  def updateRangeFromSlider(self, label, range_min, range_max):
+    import re
+
+    label_match = re.search('(evprox|evdist)_([0-9]+)', label)
+    if label_match:
+      tab_name = label_match.group(1) + '_' + label_match.group(2)
+    else:
+      print("ERR: can't determine input name from parameter: %s" % label)
+      return
+
+    self.dqrange_label[label].setText(format_range_str(range_min) + " - " +
+                                      format_range_str(range_max))
+    self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
+    self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
+
+  def updateOptRanges(self):
+    max_width = 0
+
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      tab_name = self.dtab_names[tab_index]
+
+      if not self.optimization_running:
+        # before optimization has started update 'mean', 'sigma',
+        # 'start', and 'user_end'
+        start_time_label = 't_' + tab_name
+        try:
+          try:
+            range_multiplier = float(self.dqrange_multiplier[start_time_label].text())
+          except ValueError:
+            range_multiplier = 0.0
+          value = self.dparams[start_time_label]
+          timing_sigma = self.get_input_timing_sigma(tab_name)
+          timing_bound = timing_sigma * range_multiplier
+          range_min = max(0, value - timing_bound)
+          range_max = min(self.simlength, value + timing_bound)
+          self.opt_params[tab_name]['mean'] = value
+          self.opt_params[tab_name]['sigma'] = value
+          self.opt_params[tab_name]['user_start'] = range_min
+          self.opt_params[tab_name]['user_end'] = range_max
+        except KeyError:
+          print("ERR: could not find start time parameter: %s" % start_time_label)
+          continue
+
+      # now update the ranges
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+
+        if not self.dqchkbox[label].isChecked():
+          # remove this param from the dictionary used during opt.
+          if label in self.opt_params[tab_name]['ranges']:
+            del self.opt_params[tab_name]['ranges'][label]
+          continue
+        elif self.optimization_running:
+          if tab_name in self.chunk_list[self.current_opt_step]['inputs']:
+            # we are currently optimizating the input on this tab. make no
+            # changes
+            continue
+
+        if tab_name not in self.initial_opt_ranges or \
+           label not in self.initial_opt_ranges[tab_name]:
+          value = self.dparams[label]
+        else:
+          value = float(self.initial_opt_ranges[tab_name][label]['initial'])
+
+        range_type = self.dqrange_mode[label].text()
+        if range_type == "(%)" and value == 0.0:
+          # change to range from 0 to 1
+          range_type = "(max)"
+          self.dqrange_mode[label].setText(range_type)
+          self.dqrange_multiplier[label].setText("1.0")
+        elif range_type == "(max)" and value > 0.0:
+          # change back to %
+          range_type = "(%)"
+          self.dqrange_mode[label].setText(range_type)
+          self.dqrange_multiplier[label].setText("500.0")
+
+        try:
+          range_multiplier = float(self.dqrange_multiplier[label].text())
+        except ValueError:
+          range_multiplier = 0.0
+        self.dqrange_multiplier[label].setText(str(range_multiplier))
+
+        if self.optimization_running:
+          continue
+
+        if range_type == "(max)":
+          range_min = 0
+          try:
+            range_max = float(self.dqrange_mode[label].text())
+          except ValueError:
+            range_max = 1.0
+        elif range_type == "(stdev)":  # timing
+          range_min = self.opt_params[tab_name]['user_start']
+          range_max = self.opt_params[tab_name]['user_end']
+        else:  # range_type == "(%)"
+          range_min = max(0, value - (value * range_multiplier / 100.0))
+          range_max = value + (value * range_multiplier / 100.0)
+
+        # add param to list for optimization
+        self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
+
+        # set up the slider
+        self.dqrange_slider[label].setLine(value)
+        self.dqrange_slider[label].setMin(range_min)
+        self.dqrange_slider[label].setMax(range_max)
+
+        self.dqrange_slider[label].setRange(range_min, range_max)
+        if range_min == range_max:
+          self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
+          self.dqrange_label[label].setEnabled(False)
+          # uncheck because invalid range
+          self.dqchkbox[label].setChecked(False)
+          # disable slider
+          self.dqrange_slider[label].setEnabled(False)
+        else:
+          self.dqrange_label[label].setText(format_range_str(range_min) +
+                                            " - " +
+                                            format_range_str(range_max))
+
+        if self.dqrange_label[label].sizeHint().width() > max_width:
+          max_width = self.dqrange_label[label].sizeHint().width() + 15
+        # fix the size for the defined range so that changing the slider doesn't change
+        # the dialog's width
+        self.dqrange_label[label].setMinimumWidth(max_width)
+        self.dqrange_label[label].setMaximumWidth(max_width)
+
+  def updateOptDialog(self):
+    self.updateOptRanges()
+    self.rebuildOptStepInfo()
+    self.updateOptDeltas()
 
   def setfromdin (self,din):
     if not din:
@@ -1823,27 +2430,43 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     for k,v in din.items():
       if k in self.dparams:
-        # Enforce no sci. not. + limit field len + remove trailing 0's
-        self.dparams[k] = float(v)
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.dparams[k] = new_value
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
         lks = k.split('_')
         eloc = lks[1]
         enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'] = float(v)
-            self.dparams['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'] = float(v)
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
+            key_str = base_key_str + ct + '_nmda'
+            self.dparams[key_str] = new_value
 
-    self.updateDispRanges()
-    if not 'opt_info' in dconf:
-      # initialize opt_info if it doesn't exist
-      self.updateOptInfo()
+    self.createOptParams()
+    self.updateOptDialog()
 
   def __str__ (self):
     # don't write any values to param file
@@ -3188,7 +3811,6 @@ class HNNGUI (QMainWindow):
     self.setCentralWidget(widget)
 
     self.c = Communicate()
-    self.c.updateRanges.connect(self.baseparamwin.optparamwin.updateRanges)
     self.c.commsig.connect(self.baseparamwin.updateDispParam)
 
     self.d = DoneSignal()
@@ -3273,7 +3895,7 @@ class HNNGUI (QMainWindow):
       try:
         self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
       except RuntimeError:
-        print("Optimization aborted")
+        print("ERR: Optimization aborted")
 
   def controlsim (self):
     # control the simulation

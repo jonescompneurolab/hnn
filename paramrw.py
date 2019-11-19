@@ -772,28 +772,29 @@ def diffdict (d1, d2, verbose=True):
       if d1[k] != d2[k]:
         print('d1[',k,']=',d1[k],' d2[',k,']=',d2[k])
 
-def consolidate_chunks(inputs):
+def consolidate_chunks(input_dict):
     # get a list of sorted chunks
-    sorted_inputs = sorted(inputs.items(), key=lambda x: x[1]['start'])
+    sorted_inputs = sorted(input_dict.items(), key=lambda x: x[1]['user_start'])
 
     consolidated_chunks = []
     for one_input in sorted_inputs:
+        if not 'opt_start' in one_input[1]:
+            continue
+
         # extract info from sorted list
         input_dict = {'inputs': [one_input[0]],
-                      'start': one_input[1]['start'],
-                      'end': one_input[1]['end'],
-                      'mean': one_input[1]['mean'],
-                      'sigma': one_input[1]['sigma'],
+                      'chunk_start': one_input[1]['user_start'],
+                      'chunk_end': one_input[1]['user_end'],
                       'opt_start': one_input[1]['opt_start'],
                       'opt_end': one_input[1]['opt_end'],
                       'weights': one_input[1]['weights'],
                       }
 
         if (len(consolidated_chunks) > 0) and \
-            (input_dict['start'] <= consolidated_chunks[-1]['end']):
+            (input_dict['chunk_start'] <= consolidated_chunks[-1]['chunk_end']):
             # update previous chunk
             consolidated_chunks[-1]['inputs'].extend(input_dict['inputs'])
-            consolidated_chunks[-1]['end'] = input_dict['end']
+            consolidated_chunks[-1]['chunk_end'] = input_dict['chunk_end']
             consolidated_chunks[-1]['opt_end'] = max(consolidated_chunks[-1]['opt_end'], input_dict['opt_end'])
             # average the weights
             consolidated_chunks[-1]['weights'] = (consolidated_chunks[-1]['weights'] + one_input[1]['weights'])/2
@@ -806,21 +807,39 @@ def consolidate_chunks(inputs):
 def combine_chunks(input_chunks):
     # Used for creating the opt params of the last step with all inputs
 
-    combined_chunk = {'inputs': [],
-                      'opt_start': 0.0,
-                      'opt_end': 0.0,
-    }
+    final_chunk = {'inputs': [],
+                   'opt_start': 0.0,
+                   'opt_end': 0.0,
+                   'chunk_start': 0.0,
+                   'chunk_end': 0.0}
 
     for evinput in input_chunks:
-        combined_chunk['inputs'].extend(evinput['inputs'])
-        if evinput['opt_end'] > combined_chunk['opt_end']:
-            combined_chunk['opt_end'] = evinput['opt_end']
+        final_chunk['inputs'].extend(evinput['inputs'])
+        if evinput['opt_end'] > final_chunk['opt_end']:
+            final_chunk['opt_end'] = evinput['opt_end']
+        if evinput['chunk_end'] > final_chunk['chunk_end']:
+            final_chunk['chunk_end'] = evinput['chunk_end']
 
     # wRMSE with weights of 1's is the same as regular RMSE.
-    combined_chunk['weights'] = np.ones(len(input_chunks[-1]['weights']))
-    return combined_chunk
+    final_chunk['weights'] = np.ones(len(input_chunks[-1]['weights']))
+    return final_chunk
 
 def chunk_evinputs(opt_params, sim_tstop, sim_dt):
+    """
+    Take dictionary (opt_params) sorted by input and
+    return a sorted list of dictionaries describing
+    chunks with inputs consolidated as determined the
+    range between 'user_start' and 'user_end'.
+
+    The keys of the chunks in chunk_list dictionary
+    returned are:
+    'weights'
+    'chunk_start'
+    'chunk_end'
+    'opt_start'
+    'opt_end'
+    """
+
     import re
     import scipy.stats as stats
     from math import ceil, floor
@@ -828,14 +847,31 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
     num_step = ceil(sim_tstop / sim_dt) + 1
     times = np.linspace(0, sim_tstop, num_step)
 
-    for input_name in opt_params.keys():
-        # calculate cdf using start time (minival of optimization range)
-        cdf = stats.norm.cdf(times, opt_params[input_name]['start'],
-                             opt_params[input_name]['sigma'])
-        opt_params[input_name]['cdf'] = cdf.copy()
+    # input_dict will be passed to consolidate_chunks, so it has
+    # keys 'user_start' and 'user_end' instead of chunk_start and
+    # 'chunk_start' that will be returned in the dicts returned
+    # in chunk_list
+    input_dict = {}
+    cdfs = {}
+
 
     for input_name in opt_params.keys():
-        opt_params[input_name]['weights'] = opt_params[input_name]['cdf'].copy()
+        if opt_params[input_name]['user_start'] >= sim_tstop:
+            # can't optimize over this input
+            continue
+
+        # calculate cdf using start time (minival of optimization range)
+        cdf = stats.norm.cdf(times, opt_params[input_name]['user_start'],
+                             opt_params[input_name]['sigma'])
+        cdfs[input_name] = cdf.copy()
+
+    for input_name in opt_params.keys():
+        if opt_params[input_name]['user_start'] >= sim_tstop:
+            # can't optimize over this input
+            continue
+        input_dict[input_name] = {'weights': cdfs[input_name].copy(),
+                                  'user_start': opt_params[input_name]['user_start'],
+                                  'user_end': opt_params[input_name]['user_end']}
 
         for other_input in opt_params:
             if input_name == other_input:
@@ -849,28 +885,28 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
                 decay_factor = opt_params[input_name]['decay_multiplier']*(opt_params[other_input]['mean'] - \
                                   opt_params[input_name]['mean']) / \
                                   sim_tstop
-                opt_params[input_name]['weights'] -= opt_params[other_input]['cdf'] * decay_factor
+                input_dict[input_name]['weights'] -= cdfs[other_input] * decay_factor
 
         # weights should not drop below 0
-        opt_params[input_name]['weights'] = np.clip(opt_params[input_name]['weights'], a_min=0, a_max=None)
+        input_dict[input_name]['weights'] = np.clip(input_dict[input_name]['weights'], a_min=0, a_max=None)
 
         # start and stop optimization where the weights are insignificant
-        opt_params[input_name]['opt_start'] = min(opt_params[input_name]['start'], times[np.where( opt_params[input_name]['weights'] > 0.01)][0])
-        opt_params[input_name]['opt_end'] = max(opt_params[input_name]['end'], times[np.where( opt_params[input_name]['weights'] > 0.01)][-1])
+        input_dict[input_name]['opt_start'] = min(opt_params[input_name]['user_start'], times[np.where( input_dict[input_name]['weights'] > 0.01)][0])
+        input_dict[input_name]['opt_end'] = max(opt_params[input_name]['user_end'], times[np.where( input_dict[input_name]['weights'] > 0.01)][-1])
 
         # convert to multiples of dt
-        opt_params[input_name]['opt_start'] = floor(opt_params[input_name]['opt_start']/sim_dt)*sim_dt
-        opt_params[input_name]['opt_end'] = ceil(opt_params[input_name]['opt_end']/sim_dt)*sim_dt
+        input_dict[input_name]['opt_start'] = floor(input_dict[input_name]['opt_start']/sim_dt)*sim_dt
+        input_dict[input_name]['opt_end'] = ceil(input_dict[input_name]['opt_end']/sim_dt)*sim_dt
 
     # combined chunks that have overlapping ranges
     # opt_params is a dict, turn into a list
-    input_chunks = consolidate_chunks(opt_params)
+    chunk_list = consolidate_chunks(input_dict)
 
     # add one last chunk to the end
-    if len(input_chunks) > 1:
-        input_chunks.append(combine_chunks(input_chunks))
+    if len(chunk_list) > 1:
+        chunk_list.append(combine_chunks(chunk_list))
 
-    return input_chunks
+    return chunk_list
 
 def get_inputs (params):
     import re
