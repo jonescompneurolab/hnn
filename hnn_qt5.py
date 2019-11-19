@@ -1786,7 +1786,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.tabs.addTab(tab, name_str)
  
     tab_index = len(self.ltabs)-1
-    self.tabs.setCurrentIndex(tab_index)
     self.dtab_idx[id_str] = tab_index
     self.dtab_names[tab_index] = id_str
 
@@ -1821,7 +1820,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     from functools import partial
     import re
 
-    current_tab = self.tabs.currentIndex()
+    current_tab = len(self.ltabs)-1
     tab.layout = QGridLayout()
     #tab.layout.setSpacing(10)
 
