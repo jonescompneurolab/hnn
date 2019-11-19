@@ -2100,6 +2100,9 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.btnrunop.setEnabled(True)
         self.btnrecalc.setEnabled(True)
 
+    # keep track of inputs to optimize over (check against self.opt_params later)
+    all_inputs = []
+
     # create a new grid sublayout with a row for each optimization step
     for chunk_index, chunk in enumerate(self.chunk_list):
       if len(self.chunk_list) == len(self.old_numsims):
@@ -2117,6 +2120,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         num_params = len(self.opt_params[input_name]['ranges'])
         if num_params > 0:
           chunk['num_params'] += num_params
+        all_inputs.append(input_name)
 
       if self.optimization_running:
         num_params = chunk['num_params']
@@ -2156,6 +2160,25 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.lqnumsim[chunk_index].minimumSizeHint())
       self.sublayout.addWidget(self.lqnumsim[chunk_index],
                                chunk_index, 5)
+
+    for input_name in self.opt_params.keys():
+      if input_name not in all_inputs and input_name in self.dtab_idx:
+        tab_index = self.dtab_idx[input_name]
+        self.removeInput(tab_index)
+        del self.dtab_idx[input_name]
+        del self.dtab_names[tab_index]
+        self.ltabkeys.pop(tab_index)
+
+    # rebuild dtab_idx and dtab_names
+    new_dtab_names = {}
+    new_dtab_idx = {}
+    for new_tab_index, old_tab_index in enumerate(self.dtab_idx.values()):
+      # self.dtab_idx[id_str] = tab_index
+      id_str = self.dtab_names[old_tab_index]
+      new_dtab_names[new_tab_index] = id_str
+      new_dtab_idx[id_str] = new_tab_index
+    self.dtab_names = new_dtab_names
+    self.dtab_idx = new_dtab_idx
 
   def toggleEnableUserFields(self, step, enable=True):
     if not enable:
@@ -2311,7 +2334,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           range_min = max(0, value - timing_bound)
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
-          self.opt_params[tab_name]['sigma'] = value
+          self.opt_params[tab_name]['sigma'] = timing_sigma
           self.opt_params[tab_name]['user_start'] = range_min
           self.opt_params[tab_name]['user_end'] = range_max
         except KeyError:
