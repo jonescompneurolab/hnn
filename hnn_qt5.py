@@ -2167,6 +2167,18 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.removeInput(tab_index)
         del self.dtab_idx[input_name]
         del self.dtab_names[tab_index]
+        self.ltabkeys.pop(tab_index)
+
+    # rebuild dtab_idx and dtab_names
+    new_dtab_names = {}
+    new_dtab_idx = {}
+    for new_tab_index, old_tab_index in enumerate(self.dtab_idx.values()):
+      # self.dtab_idx[id_str] = tab_index
+      id_str = self.dtab_names[old_tab_index]
+      new_dtab_names[new_tab_index] = id_str
+      new_dtab_idx[id_str] = new_tab_index
+    self.dtab_names = new_dtab_names
+    self.dtab_idx = new_dtab_idx
 
   def toggleEnableUserFields(self, step, enable=True):
     if not enable:

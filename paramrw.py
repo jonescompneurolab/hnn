@@ -856,7 +856,8 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
 
 
     for input_name in opt_params.keys():
-        if opt_params[input_name]['user_start'] >= sim_tstop:
+        if opt_params[input_name]['user_start'] > sim_tstop or \
+           opt_params[input_name]['user_end'] < 0:
             # can't optimize over this input
             continue
 
@@ -866,7 +867,8 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
         cdfs[input_name] = cdf.copy()
 
     for input_name in opt_params.keys():
-        if opt_params[input_name]['user_start'] >= sim_tstop:
+        if opt_params[input_name]['user_start'] > sim_tstop or \
+           opt_params[input_name]['user_end'] < 0:
             # can't optimize over this input
             continue
         input_dict[input_name] = {'weights': cdfs[input_name].copy(),
@@ -874,7 +876,8 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
                                   'user_end': opt_params[input_name]['user_end']}
 
         for other_input in opt_params:
-            if opt_params[other_input]['user_start'] >= sim_tstop:
+            if opt_params[other_input]['user_start'] > sim_tstop or \
+               opt_params[other_input]['user_end'] < 0:
                 # not optimizing over that input
                 continue
             if input_name == other_input:
@@ -894,8 +897,13 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
         input_dict[input_name]['weights'] = np.clip(input_dict[input_name]['weights'], a_min=0, a_max=None)
 
         # start and stop optimization where the weights are insignificant
-        input_dict[input_name]['opt_start'] = min(opt_params[input_name]['user_start'], times[np.where( input_dict[input_name]['weights'] > 0.01)][0])
-        input_dict[input_name]['opt_end'] = max(opt_params[input_name]['user_end'], times[np.where( input_dict[input_name]['weights'] > 0.01)][-1])
+        good_indices = np.where( input_dict[input_name]['weights'] > 0.01)
+        if len(good_indices) > 0:
+            input_dict[input_name]['opt_start'] = min(opt_params[input_name]['user_start'], times[good_indices][0])
+            input_dict[input_name]['opt_end'] = max(opt_params[input_name]['user_end'], times[good_indices][-1])
+        else:
+            input_dict[input_name]['opt_start'] = opt_params[other_input]['user_start']
+            input_dict[input_name]['opt_end']  = opt_params[other_input]['user_end']
 
         # convert to multiples of dt
         input_dict[input_name]['opt_start'] = floor(input_dict[input_name]['opt_start']/sim_dt)*sim_dt
