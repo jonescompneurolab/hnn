@@ -726,6 +726,7 @@ class RunSimThread (QThread):
       for param_name in self.step_ranges.keys():
         push_values[param_name] = self.step_ranges[param_name]['final']
       self.updatebaseparamwin(push_values)
+      self.baseparamwin.optparamwin.push_chunk_ranges(step,push_values)
 
       sleep(1)
 
@@ -2006,6 +2007,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       ranges.update(self.opt_params[input_name]['ranges'])
 
     return ranges
+
+  def push_chunk_ranges(self, step, ranges):
+    import re
+
+    for label, value in ranges.items():
+      for tab_name in self.opt_params.keys():
+        if label in self.opt_params[tab_name]['ranges']:
+          self.opt_params[tab_name]['ranges'][label]['initial'] = float(value)
 
   def save_opt_grid(self):
     self.old_numsims = []
