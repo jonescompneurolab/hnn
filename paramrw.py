@@ -874,6 +874,9 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
                                   'user_end': opt_params[input_name]['user_end']}
 
         for other_input in opt_params:
+            if opt_params[other_input]['user_start'] >= sim_tstop:
+                # not optimizing over that input
+                continue
             if input_name == other_input:
                 # don't subtract our own cdf(s)
                 continue
