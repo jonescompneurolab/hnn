@@ -2334,7 +2334,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           range_min = max(0, value - timing_bound)
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
-          self.opt_params[tab_name]['sigma'] = value
+          self.opt_params[tab_name]['sigma'] = timing_sigma
           self.opt_params[tab_name]['user_start'] = range_min
           self.opt_params[tab_name]['user_end'] = range_max
         except KeyError:
