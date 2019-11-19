@@ -2286,7 +2286,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
               color_fmt = "QLabel { color : green; }"
           else:
             # calculate percent difference
-            percent_diff = 100 * diff/initial_value
+            percent_diff = 100 * diff/abs(initial_value)
             if percent_diff < 0:
               text = ("%2.2f %%"%percent_diff)
               color_fmt = "QLabel { color : red; }"
