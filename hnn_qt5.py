@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, 
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
-from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont, QPen
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
 from PyQt5.QtCore import QMetaObject
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -90,19 +90,22 @@ QRangeSlider * {
     padding: 0px;
 }
 QRangeSlider #Head {
-    background: #a7adba;
+    background-color: rgba(157, 163, 176, 50);
 }
 QRangeSlider #Span {
-    background: #343d46;
+    background-color: rgba(22, 31, 50, 150);
 }
 QRangeSlider #Span:active {
-    background: #343d46;
+    background-color: rgba(22, 31, 50, 150);
 }
 QRangeSlider #Tail {
-    background: #a7adba;
+    background-color: rgba(157, 163, 176, 50);
+}
+QRangeSlider #LineBox {
+    background-color: rgba(255, 255, 255, 0);
 }
 QRangeSlider > QSplitter::handle {
-    background: #4f5b66;
+    background-color: rgba(79, 91, 102, 100);
 }
 QRangeSlider > QSplitter::handle:vertical {
     height: 4px;
@@ -123,6 +126,8 @@ class Ui_Form(object):
         Form.setObjectName("QRangeSlider")
         Form.resize(300, 30)
         Form.setStyleSheet(DEFAULT_CSS)
+        self._linebox = QWidget(Form)
+        self._linebox.setObjectName("LineBox")
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
@@ -196,6 +201,18 @@ class Tail(Element):
         qp.drawText(event.rect(), Qt.AlignRight, ("%.3f"%self.main.max()))
 
 
+class LineBox(Element):
+    def __init__(self, parent, main):
+        super(LineBox, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(QPen(Qt.red, 2, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin))
+        pos = self.main.valueToPos(self.main.line_value)
+        if (pos == 0):
+          pos += 1
+        qp.drawLine(pos, 0, pos, 50)
+
+
 class Handle(Element):
     def __init__(self, parent, main):
         super(Handle, self).__init__(parent, main)
@@ -247,6 +264,13 @@ class QRangeSlider(QWidget, Ui_Form):
         self.setupUi(self)
         self.setMouseTracking(False)
         self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+
+        self._linebox_layout = QHBoxLayout()
+        self._linebox_layout.setSpacing(0)
+        self._linebox_layout.setContentsMargins(0, 0, 0, 0)
+        self._linebox.setLayout(self._linebox_layout)
+        self.linebox = LineBox(self._linebox, main=self)
+        self._linebox_layout.addWidget(self.linebox)
         self._head_layout = QHBoxLayout()
         self._head_layout.setSpacing(0)
         self._head_layout.setContentsMargins(0, 0, 0, 0)
@@ -293,7 +317,7 @@ class QRangeSlider(QWidget, Ui_Form):
         self.startValueChanged.emit(value)
 
     def setStart(self, value):
-        v = self._valueToPos(value)
+        v = self.valueToPos(value)
         self._splitter.splitterMoved.disconnect()
         self._splitter.moveSplitter(v, self._SPLIT_START)
         self._splitter.splitterMoved.connect(self._handleMoveSplitter)
@@ -304,7 +328,7 @@ class QRangeSlider(QWidget, Ui_Form):
         self.endValueChanged.emit(value)
 
     def setEnd(self, value):
-        v = self._valueToPos(value)
+        v = self.valueToPos(value)
         self._splitter.splitterMoved.disconnect()
         self._splitter.moveSplitter(v, self._SPLIT_END)
         self._splitter.splitterMoved.connect(self._handleMoveSplitter)
@@ -312,6 +336,9 @@ class QRangeSlider(QWidget, Ui_Form):
 
     def drawValues(self):
         return getattr(self, '__drawValues', None)
+
+    def setLine(self, value):
+        self.line_value = value
 
     def setDrawValues(self, draw):
         setattr(self, '__drawValues', draw)
@@ -345,7 +372,7 @@ class QRangeSlider(QWidget, Ui_Form):
     def setSpanStyle(self, style):
         self._handle.setStyleSheet(style)
 
-    def _valueToPos(self, value):
+    def valueToPos(self, value):
         return int(scale(value, (self.min(), self.max()), (0, self.width())))
 
     def _posToValue(self, xpos):
@@ -2350,6 +2377,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
 
         # set up the slider
+        self.dqrange_slider[label].setLine(value)
         self.dqrange_slider[label].setMin(range_min)
         self.dqrange_slider[label].setMax(range_max)
 
