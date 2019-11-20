@@ -1726,6 +1726,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.dqrange_mode = OrderedDict() # range mode (stdev, %, absolute)
     self.dqrange_slider = OrderedDict() # slider
     self.dqrange_label = OrderedDict() # defined range
+    self.dqrange_max = OrderedDict()
+    self.dqrange_min = OrderedDict()
 
     self.chunk_list = []
     self.lqnumsim = []
@@ -1838,6 +1840,10 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             del self.dqrange_label[k]
           if k in self.dqrange_slider:
             del self.dqrange_slider[k]
+          if k in self.dqrange_min:
+            del self.dqrange_min[k]
+          if k in self.dqrange_max:
+            del self.dqrange_max[k]
 
   def addGridToTab (self, d, tab):
     from functools import partial
@@ -1989,7 +1995,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.current_opt_step = 0
 
     # update the opt info dict to capture num_sims from GUI
-    self.updateOptDialog()
+    self.updateOptDialog(reset_ranges=False)
 
     # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
     # passed to BaseParamDialog then finally OptEvokedInputParamDialog
@@ -2307,12 +2313,14 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       print("ERR: can't determine input name from parameter: %s" % label)
       return
 
+    self.dqrange_min[label] = range_min
+    self.dqrange_max[label] = range_max
     self.dqrange_label[label].setText(format_range_str(range_min) + " - " +
                                       format_range_str(range_max))
     self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
     self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
 
-  def updateOptRanges(self):
+  def updateOptRanges(self, reset_ranges):
     max_width = 0
 
     # iterate through tabs. data is contained in grid layout
@@ -2335,8 +2343,15 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           range_max = min(self.simlength, value + timing_bound)
           self.opt_params[tab_name]['mean'] = value
           self.opt_params[tab_name]['sigma'] = timing_sigma
-          self.opt_params[tab_name]['user_start'] = range_min
-          self.opt_params[tab_name]['user_end'] = range_max
+          if reset_ranges:
+            self.opt_params[tab_name]['user_start'] = range_min
+            self.opt_params[tab_name]['user_end'] = range_max
+          elif start_time_label not in self.dqrange_min and start_time_label not in self.dqrange_max:
+            self.opt_params[tab_name]['user_start'] = range_min
+            self.opt_params[tab_name]['user_end'] = range_max
+          else:
+            self.opt_params[tab_name]['user_start'] = self.dqrange_min[start_time_label]
+            self.opt_params[tab_name]['user_end'] = self.dqrange_max[start_time_label]
         except KeyError:
           print("ERR: could not find start time parameter: %s" % start_time_label)
           continue
@@ -2396,6 +2411,16 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
           range_min = max(0, value - (value * range_multiplier / 100.0))
           range_max = value + (value * range_multiplier / 100.0)
 
+        if reset_ranges:
+          self.dqrange_min[label] = range_min
+          self.dqrange_max[label] = range_min
+        elif label not in self.dqrange_min and label not in self.dqrange_max:
+          self.dqrange_min[label] = range_min
+          self.dqrange_max[label] = range_max
+        else:
+          range_min = self.dqrange_min[label]
+          range_max = self.dqrange_max[label]
+
         # add param to list for optimization
         self.opt_params[tab_name]['ranges'][label] = {'initial': value, 'minval': range_min, 'maxval': range_max }
 
@@ -2404,7 +2429,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.dqrange_slider[label].setMin(range_min)
         self.dqrange_slider[label].setMax(range_max)
 
-        self.dqrange_slider[label].setRange(range_min, range_max)
+        self.dqrange_slider[label].setRange(self.dqrange_min[label], self.dqrange_max[label])
         if range_min == range_max:
           self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
           self.dqrange_label[label].setEnabled(False)
@@ -2424,8 +2449,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
         self.dqrange_label[label].setMinimumWidth(max_width)
         self.dqrange_label[label].setMaximumWidth(max_width)
 
-  def updateOptDialog(self):
-    self.updateOptRanges()
+  def updateOptDialog(self, reset_ranges=True):
+    self.updateOptRanges(reset_ranges)
     self.rebuildOptStepInfo()
     self.updateOptDeltas()
 
@@ -2489,7 +2514,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
             self.dparams[key_str] = new_value
 
     self.createOptParams()
-    self.updateOptDialog()
+    self.updateOptDialog(reset_ranges=False)
 
   def __str__ (self):
     # don't write any values to param file

@@ -898,7 +898,7 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
 
         # start and stop optimization where the weights are insignificant
         good_indices = np.where( input_dict[input_name]['weights'] > 0.01)
-        if len(good_indices) > 0:
+        if len(good_indices[0]) > 0:
             input_dict[input_name]['opt_start'] = min(opt_params[input_name]['user_start'], times[good_indices][0])
             input_dict[input_name]['opt_end'] = max(opt_params[input_name]['user_end'], times[good_indices][-1])
         else:
