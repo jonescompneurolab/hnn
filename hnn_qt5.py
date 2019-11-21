@@ -2261,6 +2261,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     # reset data for number of sims per chunk (step)
     self.lqnumsim = []
     self.lqnumparams = []
+    self.lqinputs = []
     self.old_num_steps = 0
 
   def rebuildOptStepInfo(self):
@@ -2268,6 +2269,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.chunk_list = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
 
     if len(self.chunk_list) == 0:
+      self.clean_opt_grid()
+
       qlabel = QLabel("No valid evoked inputs to optimize!")
       qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
       qlabel.resize(qlabel.minimumSizeHint())
@@ -2278,7 +2281,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.btnrunop.setEnabled(True)
       self.btnreset.setEnabled(True)
 
-      if len(self.chunk_list) < self.old_num_steps:
+      if len(self.chunk_list) < self.old_num_steps or \
+       self.old_num_steps == 0:
         # clean up the old grid sublayout
         self.clean_opt_grid()
 
@@ -2339,28 +2343,31 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
     self.old_num_steps = len(self.chunk_list)
 
-    rebuild = False
+    remove_list = []
     # remove a tab if necessary
     for input_name in self.opt_params.keys():
       if input_name not in all_inputs and input_name in self.dtab_idx:
-        tab_index = self.dtab_idx[input_name]
-        self.removeInput(tab_index)
-        del self.dtab_idx[input_name]
-        del self.dtab_names[tab_index]
-        self.ltabkeys.pop(tab_index)
-        rebuild=True
+        remove_list.append(input_name)
 
-    if rebuild:
+    while len(remove_list) > 0:
+      tab_name = remove_list.pop()
+      tab_index = self.dtab_idx[tab_name]
+
+      self.removeInput(tab_index)
+      del self.dtab_idx[tab_name]
+      del self.dtab_names[tab_index]
+      self.ltabkeys.pop(tab_index)
+
       # rebuild dtab_idx and dtab_names
-      new_dtab_names = {}
-      new_dtab_idx = {}
+      temp_dtab_names = {}
+      temp_dtab_idx = {}
       for new_tab_index, old_tab_index in enumerate(self.dtab_idx.values()):
         # self.dtab_idx[id_str] = tab_index
         id_str = self.dtab_names[old_tab_index]
-        new_dtab_names[new_tab_index] = id_str
-        new_dtab_idx[id_str] = new_tab_index
-      self.dtab_names = new_dtab_names
-      self.dtab_idx = new_dtab_idx
+        temp_dtab_names[new_tab_index] = id_str
+        temp_dtab_idx[id_str] = new_tab_index
+      self.dtab_names = temp_dtab_names
+      self.dtab_idx = temp_dtab_idx
 
   def toggleEnableUserFields(self, step, enable=True):
     if not enable:
