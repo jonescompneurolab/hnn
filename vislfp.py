@@ -157,6 +157,12 @@ class LFPCanvas (FigureCanvas):
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
     self.drawwavelet = True
+
+    p_exp = paramrw.ExpParams(self.paramf, 0)
+    expmt_group = p_exp.expmt_groups[0]
+    p = p_exp.return_pdict(expmt_group, 0)
+    self.spec_cmap = p['spec_cmap']
+
     self.plot()
 
   def clearaxes (self):
@@ -173,14 +179,14 @@ class LFPCanvas (FigureCanvas):
     lw = 2; clr = 'k'
     if ntrial > 1:
       if self.index == 0:
-        cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        cax = ax.imshow(ddat['avgCSD'],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap),interpolation='None')
         # overlay the time-series
         yrng,yfctr,yoff = getrngfctroff(ddat['avgCSD'])
         for i in range(ddat['avgCSD'].shape[0]):
           y = yfctr[i] * getnorm(ddat['avgCSD'][i,:]) + yoff[i]
           ax.plot(tvec,y,clr,linewidth=lw)
       else:
-        cax = ax.imshow(ddat['CSD'][self.index-1],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+        cax = ax.imshow(ddat['CSD'][self.index-1],extent=[0, tstop, 0, maxlfp-1], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap),interpolation='None')
         # overlay the time-series
         yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][self.index-1])
         for i in range(ddat['CSD'][self.index-1].shape[0]):
@@ -188,7 +194,7 @@ class LFPCanvas (FigureCanvas):
           ax.plot(tvec,y,clr,linewidth=lw)
     else:
       # draw CSD as image; blue/red corresponds to excit/inhib
-      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'),interpolation='None')
+      cax = ax.imshow(ddat['CSD'][0],extent=[0, tstop, 0, 15], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap),interpolation='None')
       # overlay the time-series
       yrng,yfctr,yoff = getrngfctroff(ddat['CSD'][0])
       for i in range(ddat['CSD'][0].shape[0]):
@@ -264,13 +270,13 @@ class LFPCanvas (FigureCanvas):
       if self.index == 0:
         if ntrial > 1:
           TFR,tmin,F = ddat['avgspec'][nlfp]
-          ax.imshow(TFR, extent=[tmin, tvec[-1], F[-1], F[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+          ax.imshow(TFR, extent=[tmin, tvec[-1], F[-1], F[0]], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap))
         else:
           ms = ddat['spec'][(0,nlfp)]
-          ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+          ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap))
       else:
         ms = ddat['spec'][(self.index-1,nlfp)]
-        ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+        ax.imshow(ms.TFR, extent=[ms.tmin, tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap))
       ax.set_xlim(minwavet,tvec[-1])
       if nlfp == maxlfp: ax.set_xlabel('Time (ms)')
       if not laminar: ax.set_ylabel('Frequency (Hz)');

@@ -162,6 +162,8 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['drawindivrast'] = confint("draw","drawindivrast",1)
   d['fontsize'] = confint("draw","fontsize",0)
 
+  d['decay_multiplier'] = conffloat('opt','decay_multiplier',1.6)
+
   readtips(d) # read tooltips for parameters
 
   return d
