@@ -3100,7 +3100,12 @@ class BaseParamDialog (QDialog):
 
   def updateDispParam (self):
     # now update the GUI components to reflect the param file selected
-    din = quickreadprm(paramf)
+    try:
+      din = quickreadprm(paramf)
+    except FileNotFoundError:
+      print("WARNING: no current parameter file")
+      return
+
     if not 'tstop' in din:
       print("WARNING: could not find a complete parameter file")
       return
