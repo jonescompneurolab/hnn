@@ -22,7 +22,7 @@ import numpy as np
 from math import ceil, isclose
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
+from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
@@ -2663,6 +2663,8 @@ class RunParamDialog (DictDialog):
     self.parent.updatesaveparams({})
 
   def initExtra (self):
+    global paramf
+
     DictDialog.initExtra(self)
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
@@ -2677,6 +2679,12 @@ class RunParamDialog (DictDialog):
                   'inferno',
                   'magma',
                   'cividis']
+
+    # get default spec_cmap
+    p_exp = ExpParams(paramf, 0)
+    expmt_group = p_exp.expmt_groups[0]
+    p = p_exp.return_pdict(expmt_group, 0)
+    self.spec_cmap = p['spec_cmap']
 
     self.spec_map_cb = QComboBox()
     for cmap in self.cmaps:
