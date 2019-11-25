@@ -172,6 +172,9 @@ class ExpParams():
         for coupled_param, val_param  in self.coupled_params.items():
             p_sim[coupled_param] = p_sim[val_param]
 
+        # Add spec_cmap
+        p_sim['spec_cmap'] = self.spec_cmap
+
         return p_sim
 
     # reads .param file and returns p_all_input dict
@@ -320,6 +323,7 @@ class ExpParams():
     # pop known values & strings off of the params list
     def __pop_known_values(self):
         self.sim_prefix = self.p_all.pop('sim_prefix')
+        self.spec_cmap = self.p_all.pop('spec_cmap')
 
         # create an experimental string prefix template
         self.exp_prefix_str = self.sim_prefix+"-%03d"

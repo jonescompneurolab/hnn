@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from neuron import h as nrn
 import axes_create as ac
 
-def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, ax_handles):
+def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, ax_handles, spec_cmap='jet'):
     T = paramrw.find_param(f_param, 'tstop')
     xlim = (50., T)
 
@@ -64,8 +64,8 @@ def pkernel(dfig_dpl, f_dpl, f_spk, f_spec, f_current, f_spec_current, f_param, 
 
     # grab the current spec and plot them
     spec_L2, spec_L5 = data_spec_current = specfn.read(f_spec_current, type='current')
-    pc_L2 = f.ax['spec_I'].imshow(spec_L2['TFR'], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
-    pc_L5 = f.ax['spec_I_L5'].imshow(spec_L5['TFR'], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+    pc_L2 = f.ax['spec_I'].imshow(spec_L2['TFR'], aspect='auto', origin='upper',cmap=plt.get_cmap(spec_cmap))
+    pc_L5 = f.ax['spec_I_L5'].imshow(spec_L5['TFR'], aspect='auto', origin='upper',cmap=plt.get_cmap(spec_cmap))
 
     # plot the current-based spec data
     # pci = specfn.pspec_ax(f.ax['spec_I'], f_spec_current, type='current')

@@ -22,7 +22,7 @@ import numpy as np
 from math import ceil, isclose
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
+from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
@@ -31,7 +31,6 @@ from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
 from threading import Lock
 
 prtime = False
-decay_multiplier = 1.6
 
 def isWindows ():
   # are we on windows? or linux/mac ?
@@ -2403,8 +2402,6 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     return timing_sigma
 
   def createOptParams(self):
-    global decay_multiplier
-
     self.opt_params = {}
 
     # iterate through tabs. data is contained in grid layout
@@ -2428,7 +2425,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.opt_params[tab_name] = {'ranges': {},
                                   'mean' : value,
                                   'sigma': timing_sigma,
-                                  'decay_multiplier': decay_multiplier}
+                                  'decay_multiplier': dconf['decay_multiplier']}
 
       timing_bound = timing_sigma * range_multiplier
       self.opt_params[tab_name]['user_start'] = max(0, value - timing_bound)
@@ -2606,6 +2603,7 @@ class RunParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
     super(RunParamDialog, self).__init__(parent,din)
     self.addHideButton()
+    self.parent = parent
 
   def initd (self):
 
@@ -2639,13 +2637,14 @@ class RunParamDialog (DictDialog):
     self.stitle = 'Run Parameters'
 
     self.addtransvar('tstop','Duration (ms)')
-    self.addtransvar('dt','Integration timestep (ms)')
+    self.addtransvar('dt','Integration Timestep (ms)')
     self.addtransvar('celsius','Temperature (C)')
-    self.addtransvar('threshold','Firing threshold (mV)')
+    self.addtransvar('threshold','Firing Threshold (mV)')
     self.addtransvar('N_trials','Trials')
-    self.addtransvar('save_spec_data','Save spectral data')
-    self.addtransvar('save_figs','Save figures')
-    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
+    self.addtransvar('save_spec_data','Save Spectral Data')
+    self.addtransvar('save_figs','Save Figures')
+    self.addtransvar('f_max_spec', 'Max Spectral Frequency (Hz)')
+    self.addtransvar('spec_cmap', 'Spectrogram Color Map')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
@@ -2659,12 +2658,39 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evprox_2','Evoked Proximal 2')
     self.addtransvar('prng_seedcore_evdist_2','Evoked Distal 2')
 
+  def selectionchange(self,i):
+    self.spec_cmap = self.cmaps[i]
+    self.parent.updatesaveparams({})
+
   def initExtra (self):
+    global paramf
+
     DictDialog.initExtra(self)
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
+
+    self.spec_map_cb = None
+
+    self.cmaps = ['jet',
+                  'viridis',
+                  'plasma',
+                  'inferno',
+                  'magma',
+                  'cividis']
+
+    # get default spec_cmap
+    p_exp = ExpParams(paramf, 0)
+    expmt_group = p_exp.expmt_groups[0]
+    p = p_exp.return_pdict(expmt_group, 0)
+    self.spec_cmap = p['spec_cmap']
+
+    self.spec_map_cb = QComboBox()
+    for cmap in self.cmaps:
+      self.spec_map_cb.addItem(cmap)
+    self.spec_map_cb.currentIndexChanged.connect(self.selectionchange)
+    self.ltabs[1].layout.addRow(self.transvar('spec_cmap'),self.spec_map_cb)
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
 
@@ -2678,6 +2704,15 @@ class RunParamDialog (DictDialog):
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
+      elif k == 'spec_cmap':
+        self.spec_cmap = v
+        self.spec_map_cb.setCurrentIndex(self.cmaps.index(self.spec_cmap))
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
+    s += 'spec_cmap: ' + self.spec_cmap + os.linesep
+    return s
 
 # widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
 class CellParamDialog (DictDialog):
@@ -3065,7 +3100,12 @@ class BaseParamDialog (QDialog):
 
   def updateDispParam (self):
     # now update the GUI components to reflect the param file selected
-    din = quickreadprm(paramf)
+    try:
+      din = quickreadprm(paramf)
+    except FileNotFoundError:
+      print("WARNING: no current parameter file")
+      return
+
     if not 'tstop' in din:
       print("WARNING: could not find a complete parameter file")
       return

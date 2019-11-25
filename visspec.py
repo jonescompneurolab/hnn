@@ -119,6 +119,12 @@ class SpecCanvas (FigureCanvas):
     self.lax = []
     self.avgdipole = []
     self.avgspec = []
+
+    p_exp = paramrw.ExpParams(self.paramf, 0)
+    expmt_group = p_exp.expmt_groups[0]
+    p = p_exp.return_pdict(expmt_group, 0)
+    self.spec_cmap = p['spec_cmap']
+
     self.plot()
 
   def clearaxes (self):
@@ -172,7 +178,7 @@ class SpecCanvas (FigureCanvas):
     else: ms = lspec[sdx-1]
     #print('ms.TFR.shape:',ms.TFR.shape)
 
-    ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap('jet'))
+    ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]], aspect='auto', origin='upper',cmap=plt.get_cmap(self.spec_cmap))
 
     ax.set_xlim(tvec[0],tvec[-1])
     ax.set_xlabel('Time (ms)')
