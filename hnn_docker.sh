@@ -10,6 +10,7 @@ START=0
 UNINSTALL=0
 OS=
 VCXSRV_PID=
+HNN_DOCKER_IMAGE=jonescompneurolab/hnn
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -27,7 +28,8 @@ done
 
 function cleanup {
   if [[ "$OS"  =~ "windows" ]] && [ ! -z "${VCXSRV_PID}" ]; then
-    kill -9 ${VCXSRV_PID} &> /dev/null
+    echo "Killing VcXsrv PID ${VCXSRV_PID}" >> hnn_docker.log
+    kill ${VCXSRV_PID} &> /dev/null
   fi
 }
 
@@ -107,15 +109,20 @@ else
 fi
 
 if [[ $UPGRADE -eq "1" ]]; then
-  echo "Downloading new HNN image from Docker Hub (may require login)." | tee -a hnn_docker.log
-  docker pull jonescompneurolab/hnn 2>&1
+  echo "Downloading new HNN image from Docker Hub (may require login)..." | tee -a hnn_docker.log
+  docker pull ${HNN_DOCKER_IMAGE} 2>&1
+  echo "Done" | tee -a hnn_docker.log
   if [[ $? -eq "0" ]]; then
-    echo "Done" | tee -a hnn_docker.log
-    docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+    DOCKER_CONTAINER=$(docker ps -a |grep hnn_container)
     if [[ $? -eq "0" ]]; then
-      remove_container
+      LAST_USED_IMAGE=$(echo ${DOCKER_CONTAINER}|cut -d' ' -f 2)
+      if [[ "${LAST_USED_IMAGE}" =~ "${HNN_DOCKER_IMAGE}" ]]; then
+        echo "HNN image already up to date." | tee -a hnn_docker.log
+      else
+        remove_container
+        RESTART_NEEDED=1
+      fi
     fi
-    RESTART_NEEDED=1
     RETURN_STATUS=0
   else
     echo "Failed" | tee -a hnn_docker.log
@@ -147,7 +154,7 @@ if [[ "$UNINSTALL" -eq "1" ]]; then
     echo
     read -p "Are you sure that you want to remove the HNN image? (y/n)" yn
     case $yn in
-      [Yy]* ) docker rmi -f jonescompneurolab/hnn
+      [Yy]* ) docker rmi -f ${HNN_DOCKER_IMAGE}
               if [[ "$?" -ne "0" ]]; then
                 echo "Failed to remove HNN image" | tee -a hnn_docker.log
                 exit 1
@@ -191,11 +198,22 @@ if [[ "$OS" =~ "windows" ]]; then
     echo "failed. Could not find 'C:\Program Files\VcXsrv'. Please run XLaunch manually" | tee -a hnn_docker.log
   fi
 
+  echo -n "Checking if VcXsrv is running... " | tee -a hnn_docker.log
+  VCXSRV_PID=$(tasklist|grep vcxsrv|awk '{print $2}')
+  if [ -n "${VCXSRV_PID}" ]; then
+    echo "stopping" | tee -a hnn_docker.log
+    cmd.exe //c taskkill //F //IM vcxsrv.exe >> hnn_docker.log 2>&1
+  else
+    echo "no" | tee -a hnn_docker.log
+  fi
+
   if [ -n "${XAUTH_BIN}" ]; then
     echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
-    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow >> hnn_docker.log 2>&1 &
+    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
     VCXSRV_PID=$!
-    echo done | tee -a hnn_docker.log
+    echo "done" | tee -a hnn_docker.log
+    echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow" >> hnn_docker.log
+    echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
 
     echo -n "Checking VcXsrv authorization... " | tee -a hnn_docker.log
     OUTPUT=$("${XAUTH_BIN}" nlist :0 2>> hnn_docker.log)
@@ -205,6 +223,8 @@ if [[ "$OS" =~ "windows" ]]; then
       exit 1
     fi
     echo "done" | tee -a hnn_docker.log
+    echo "Command: "${XAUTH_BIN}" nlist :0" >> hnn_docker.log
+    echo "Output: $OUTPUT" >> hnn_docker.log
   fi
 elif [[ "$OS" =~ "mac" ]]; then
   echo -n "Checking if XQuartz is installed... " | tee -a hnn_docker.log
