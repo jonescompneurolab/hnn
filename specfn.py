@@ -22,7 +22,7 @@ import axes_create as ac
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
-    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None, tmin = 50.0):
+    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None, tmin = 50.0, f_min = 1.):
         # Save variable portion of fdata_spec as identifying attribute
         # self.name = fdata_spec
 
@@ -35,6 +35,8 @@ class MorletSpec():
           self.p_dict = paramrw.read(fparam)[1]
         else:
           self.p_dict = p_dict
+
+        self.f_min = f_min
 
         # maximum frequency of analysis
         # Add 1 to ensure analysis is inclusive of maximum frequency
@@ -55,7 +57,7 @@ class MorletSpec():
         # Check that tstop is greater than tmin
         if self.p_dict['tstop'] > self.tmin:
             # Array of frequencies over which to sort
-            self.f = np.arange(1., self.f_max)
+            self.f = np.arange(self.f_min, self.f_max)
 
             # Number of cycles in wavelet (>5 advisable)
             self.width = 7.
