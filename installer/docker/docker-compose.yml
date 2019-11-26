@@ -3,11 +3,13 @@ services:
 
   hnn:
     image: jonescompneurolab/hnn
+    container_name: hnn_container
+    hostname: hnn-container
     environment:
-      XAUTHORITY: "/.Xauthority"
+      XAUTHORITY: "/home/hnn_user/.Xauthority"
       DISPLAY: ":0"
     volumes:
-      - "$HOME/.Xauthority:/.Xauthority"
+      - "$HOME/.Xauthority:/home/hnn_user/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "./hnn:/home/hnn_user/hnn"
+      - "./docker_hnn_out:/home/hnn_user/hnn_out"
     command: /home/hnn_user/start_hnn.sh

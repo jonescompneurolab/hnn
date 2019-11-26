@@ -13,14 +13,12 @@ except ImportError:
 
 # default config as string
 def_config = """
-[params]
 [run]
 dorun = 1
 doquit = 1
 debug = 0
 testlfp = 0
 testlaminarlfp = 0
-optrun = 0
 nsgrun = 0
 [paths]
 paramindir = param
@@ -36,6 +34,8 @@ drawavgdpl = 0
 [tips]
 tstop = Simulation duration; Evoked response simulations typically take 170 ms while ongoing rhythms are run for longer.
 dt = Simulation timestep - shorter timesteps mean more accuracy but longer runtimes.
+[opt]
+decay_multiplier = 1.6
 """
 
 # parameter used for optimization
@@ -121,24 +121,6 @@ def readconf (fn="hnn.cfg",nohomeout=False):
     for i,prm in enumerate(ltips):
       d[prm] = config.get('tips',prm).strip()      
 
-  def readoptprm (d):
-    dparams = OrderedDict()
-    d['params'] = dparams
-    if not config.has_section('params'): return False
-    lprm = config.options('params')
-    #print 'params:', lprm
-    for i,prm in enumerate(lprm):
-      #print prm
-      s = config.get('params',prm)    
-      sp = s.split()
-      if len(sp) > 4:
-        minval,maxval,origval,bounded,bestval = float(sp[0]),float(sp[1]),float(sp[2]),str2bool(sp[3]),float(sp[4])
-        p = param(origval,minval,maxval,bounded,prm,bestval)
-      else:
-        minval,maxval,origval,bounded = float(sp[0]),float(sp[1]),float(sp[2]),str2bool(sp[3])
-        p = param(origval,minval,maxval,bounded,prm)
-      dparams[prm] = p
-
   d = {}
 
   d['homeout'] = confint("paths","homeout",1) # whether user home directory for output
@@ -154,7 +136,7 @@ def readconf (fn="hnn.cfg",nohomeout=False):
     if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
   else:
     if d['homeout']: # user home directory for output
-      dbase = os.path.join(os.path.expanduser('~'),'hnn') # user home directory
+      dbase = os.path.join(os.path.expanduser('~'),'hnn_out') # user home directory
       if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
     else: # cwd for output
       dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG
@@ -173,7 +155,6 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['debug'] = confint("run","debug",0)
   d['testlfp'] = confint("run","testlfp",0)
   d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
-  d['optrun'] = confint("run","optrun",0)
   d['nsgrun'] = confint("run","nsgrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
@@ -181,9 +162,9 @@ def readconf (fn="hnn.cfg",nohomeout=False):
   d['drawindivrast'] = confint("draw","drawindivrast",1)
   d['fontsize'] = confint("draw","fontsize",0)
 
-  readtips(d) # read tooltips for parameters
+  d['decay_multiplier'] = conffloat('opt','decay_multiplier',1.6)
 
-  if d['optrun']: readoptprm(d)
+  readtips(d) # read tooltips for parameters
 
   return d
 

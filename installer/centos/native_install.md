@@ -1,6 +1,6 @@
 # HNN native install (CentOS)
 
-The scripts below can be used to install HNN and its prerequisites. However, there is a greater possibility that your base environment will not be compatible with the script and installation might require additional troubleshooting. Thus, we do not recommend this method. For the recommmeded Docker-based installation, please see the instructions below.
+The scripts below can be used to install HNN and its prerequisites. However, there is a greater possibility that your base environment will not be compatible with the script and installation might require additional troubleshooting. Thus, we do not recommend this method. For the recommended Docker-based installation, please see the instructions below.
   - Alternative: [Docker install instructions](README.md)
 
 See the scripts in this directory:
@@ -9,11 +9,6 @@ See the scripts in this directory:
   ```
   chmod +x ./centos7-installer.sh
   ./centos7-installer.sh
-  ```
-* [uninstall.sh](uninstall.sh)
-  ```
-  chmod +x ./uninstall.sh
-  ./uninstall.sh
   ```
 
 # Troubleshooting

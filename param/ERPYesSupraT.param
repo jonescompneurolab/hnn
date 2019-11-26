@@ -3,7 +3,7 @@ expmt_groups: {ERPYesSupraT}
 tstop: 170
 dt: 0.025
 celsius: 37.0
-N_trials: 1
+N_trials: 3
 threshold: 0.0
 save_figs: 0
 save_spec_data: 0
@@ -11,6 +11,7 @@ f_max_spec: 100
 dipole_scalefctr: 3000
 dipole_smooth_win: 20
 save_vsoma: 0
+prng_seedcore_opt: 0
 prng_seedcore_input_prox: 4
 prng_seedcore_input_dist: 4
 prng_seedcore_extpois: 4

@@ -133,6 +133,7 @@ def get_params_default (nprox = 2, ndist = 1):
         # analysis
         'save_spec_data': 0,
         'f_max_spec': 40.,
+        'spec_cmap': 'jet', # default color map for consistency with previous versions
         'dipole_scalefctr': 30e3, # scale factor for dipole - default at 30e3
         #based on scaling needed to match model ongoing rhythms from jones 2009 - for ERPs can use 300
         # for ongoing rhythms + ERPs ... use ... ?
@@ -169,6 +170,7 @@ def get_params_default (nprox = 2, ndist = 1):
         # prng seed cores are the base integer seed for the specific
         # prng object for a specific random number stream
         # 'prng_state': None,
+        'prng_seedcore_opt': 1,
         'prng_seedcore_input_prox': 0,
         'prng_seedcore_input_dist': 0,
         'prng_seedcore_extpois': 0,

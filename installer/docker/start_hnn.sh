@@ -1,40 +1,56 @@
 #!/bin/bash
 
-if [ ! -d /home/hnn_user/hnn ]; then
-  echo "creating /home/hnn_user/hnn"
-  mkdir /home/hnn_user/hnn
-else
-  echo "changing ownership permissions of /home/hnn_user/hnn"
-  sudo chown -R hnn_user:hnn_group /home/hnn_user/hnn
+source /home/hnn_user/hnn_envs
+cd /home/hnn_user/hnn_source_code
+
+echo "Starting HNN GUI..."
+
+if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
+  ulimit -l unlimited > /dev/null 2>&1
 fi
 
-cd /home/hnn_user/hnn_repo
+function retry_hnn {
+  if [ -z "$2" ]; then
+    export DISPLAY=:$1
+  else
+    export DISPLAY=$1:$2
+  fi
+  echo "Trying to start HNN with DISPLAY=$DISPLAY"
+  python3 hnn.py
+  if [[ "$?" -ne "0" ]]; then
+    echo "***************************************************"
+    echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
+    echo "***************************************************"
+    echo
+    return 1
+  else
+    echo "HNN GUI stopped by user."
+    exit 0
+  fi
+}
+
+export PYTHONPATH=/home/hnn_user/nrn/build/lib/python/
+export CPU=$(uname -m)
+export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin
+
+# get rid of warning about XDG_RUNTIME_DIR
+export XDG_RUNTIME_DIR=/tmp/runtime-hnn_user
+mkdir /tmp/runtime-hnn_user &> /dev/null
+chmod 700 /tmp/runtime-hnn_user
+
+# try once with current DISPLAY
+python3 hnn.py
+if [[ "$?" -eq "0" ]]; then
+  # HNN quit gracefully
+  echo "HNN GUI stopped by user."
+  exit 0
+fi
 
 done=
 XHOST=${DISPLAY%:0}
-# try some common hosts
-for XHOST in $XHOST 192.168.99.1 192.168.65.2 ""; do
-  for PORT in 0 1 2 3 4; do
-    export DISPLAY=$XHOST:$PORT
-    echo "Trying to start HNN with DISPLAY=$DISPLAY"
-    python3 hnn.py hnn.cfg
-    if [[ "$?" -ne "0" ]]; then
-      echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
-    else
-      done=1
-      break
-    fi
-  done
-  if [[ "$done" -eq "1" ]]; then
-    break
-  fi
+for PORT in 1 2; do
+  retry_hnn $XHOST $PORT
 done
 
-if [[ "$done" -eq "1" ]]; then
-  echo "HNN GUI stopped by user. Restart container to open again"
-else
-  echo "Failed to start HNN on any X port at host"
-fi
-
-# fallback to sleep infinity so that container won't stop if hnn is closed
-sleep infinity
+echo "Failed to start HNN on any X port"
+exit 1

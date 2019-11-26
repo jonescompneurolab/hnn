@@ -204,7 +204,7 @@ def pspecpwr_ax(ax_specpwr, specpwr_list, fparam_list, key_types):
 def pyerrorbars_ax(ax, x, y, yerr_vec):
     ax.errorbar(x, y, xerr=None, yerr=yerr_vec, fmt=None, ecolor='blue')
 
-def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param):
+def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param, spec_cmap='jet'):
     # load param dict
     _, p_dict = paramrw.read(f_param)
 
@@ -222,7 +222,7 @@ def aggregate_with_hist(f, ax, f_spec, f_dpl, f_spk, f_param):
 
     pc = spec.plot_TFR(ax['spec'], layer='agg', xlim=x)
     # pc = ax['spec'].imshow(TFR, extent=[timevec[0], timevec[-1], freqvec[-1], freqvec[0]], aspect='auto', origin='upper')
-    f.f.colorbar(pc, ax=ax['spec'],cmap=plt.get_cmap('jet'))
+    f.f.colorbar(pc, ax=ax['spec'],cmap=plt.get_cmap(spec_cmap))
 
     # grab the dipole data
     dpl = dipolefn.Dipole(f_dpl)

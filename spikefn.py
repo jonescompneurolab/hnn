@@ -26,12 +26,13 @@ class Spikes():
   # Each list corresponds to a cell, counted by range
   def filter (self, s_all):
     spike_list = []
-    if len(s_all):
+    if len(s_all) > 0:
       for ri in self.r:
         srange = s_all[s_all[:, 1] == ri][:, 0]
         srange[srange.argsort()]
         spike_list.append(srange)
-      return spike_list
+
+    return spike_list
 
   # simple return of all spikes *or* each spike indexed i in every list
   def collapse_all (self, i=None):
@@ -166,7 +167,7 @@ class ExtInputs (Spikes):
     if len(self.inputs['evdist']) > 0:
       if self.evdist_gid_range[0] <= gid <= self.evdist_gid_range[1]:
         return True
-    return False    
+    return False
 
   # check if gid is associated with a proximal input
   def is_prox_gid (self, gid):
@@ -180,7 +181,7 @@ class ExtInputs (Spikes):
     if gid == self.gid_dist: return True
     if len(self.inputs['evdist']) > 0:
       return self.evdist_gid_range[0] <= gid <= self.evdist_gid_range[1]
-    return False    
+    return False
 
   # check if gid is associated with a Poisson input
   def is_pois_gid (self, gid):
@@ -202,7 +203,7 @@ class ExtInputs (Spikes):
   def add_delay_times (self):
     # if prox delay to both layers is the same, add it to the prox input times
     if self.p_dict['input_prox_A_delay_L2'] == self.p_dict['input_prox_A_delay_L5']:
-      self.inputs['prox'] += self.p_dict['input_prox_A_delay_L2']          
+      self.inputs['prox'] += self.p_dict['input_prox_A_delay_L2']
     # if dist delay to both layers is the same, add it to the dist input times
     if self.p_dict['input_dist_A_delay_L2'] == self.p_dict['input_dist_A_delay_L5']:
       self.inputs['dist'] += self.p_dict['input_dist_A_delay_L2']
@@ -217,12 +218,16 @@ class ExtInputs (Spikes):
     self.inputs['t'] = t
 
   # extinput is either 'dist' or 'prox'
-  def plot_hist (self, ax, extinput, tvec, bins=150, xlim=None, color='green', hty='bar',lw=4):
+  def plot_hist (self, ax, extinput, tvec, bins='auto', xlim=None, color='green', hty='bar',lw=4):
+    if bins is 'auto':
+        bins = hist_bin_opt(self.inputs[extinput], 1)
     if not xlim:
       xlim = (0., p_dict['tstop'])
     if len(self.inputs[extinput]):
       #print("plot_hist bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput, histtype=hty,linewidth=lw)
+      ax.set_xticklabels([])
+      ax.tick_params(bottom=False, left=False)
     else:
       hist = None
     return hist
@@ -445,7 +450,7 @@ def pinput_hist(a0, a1, s_list0, s_list1, n_bins, xlim):
 def pinput_hist_onesided(a0, s_list, n_bins):
   hists = {
     'prox': a0.hist(s_list, n_bins, color='k', label='Proximal input', alpha=0.75),
-  }  
+  }
   return hists
 
 if __name__ == '__main__':

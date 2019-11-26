@@ -4,29 +4,31 @@ import sys, os
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog
-from PyQt5.QtGui import QIcon, QFont, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt
-from PyQt5 import QtCore
+from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
+from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont, QPen
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
+from PyQt5.QtCore import QMetaObject
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
-from subprocess import Popen, PIPE, call
+from subprocess import Popen, PIPE
 import shlex, shutil
 from collections import OrderedDict
-from time import time, clock, sleep
-import pickle, tempfile
+from copy import deepcopy
+from time import time, sleep
 from conf import dconf
 import conf
 import numpy as np
-import random
-from math import ceil
+from math import ceil, isclose
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs
+from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
+from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
 from simdat import SIMCanvas, getinputfiles, readdpltrials
-from gutils import scalegeom, scalefont, setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
-from ctune import expval, expvals, logval, logvals
+from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
+import nlopt
+from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
+from threading import Lock
 
 prtime = False
 
@@ -61,17 +63,380 @@ simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
+basedir = None
 
-defncore = multiprocessing.cpu_count() # default number of cores
+# get default number of cores
+defncore = 0
+try:
+  defncore = len(os.sched_getaffinity(0))
+except AttributeError:
+  defncore = cpu_count(logical=False)
+
+if defncore is None or defncore == 0:
+  # in case psutil is not supported (e.g. BSD)
+  defncore = multiprocessing.cpu_count()
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 if debug: print('getPyComm:',getPyComm())
 
+hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+
+DEFAULT_CSS = """
+QRangeSlider * {
+    border: 0px;
+    padding: 0px;
+}
+QRangeSlider #Head {
+    background-color: rgba(157, 163, 176, 50);
+}
+QRangeSlider #Span {
+    background-color: rgba(22, 31, 50, 150);
+}
+QRangeSlider #Span:active {
+    background-color: rgba(22, 31, 50, 150);
+}
+QRangeSlider #Tail {
+    background-color: rgba(157, 163, 176, 50);
+}
+QRangeSlider #LineBox {
+    background-color: rgba(255, 255, 255, 0);
+}
+QRangeSlider > QSplitter::handle {
+    background-color: rgba(79, 91, 102, 100);
+}
+QRangeSlider > QSplitter::handle:vertical {
+    height: 4px;
+}
+QRangeSlider > QSplitter::handle:pressed {
+    background: #ca5;
+}
+"""
+
+def scale(val, src, dst):
+    try:
+      return ((val - src[0]) / float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0])
+    except ZeroDivisionError:
+      return 0 
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        Form.setObjectName("QRangeSlider")
+        Form.resize(300, 30)
+        Form.setStyleSheet(DEFAULT_CSS)
+        self._linebox = QWidget(Form)
+        self._linebox.setObjectName("LineBox")
+        self.gridLayout = QGridLayout(Form)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
+        self._splitter = QSplitter(Form)
+        self._splitter.setMinimumSize(QSize(0, 0))
+        self._splitter.setMaximumSize(QSize(16777215, 16777215))
+        self._splitter.setOrientation(Qt.Horizontal)
+        self._splitter.setObjectName("splitter")
+        self._head = QGroupBox(self._splitter)
+        self._head.setTitle("")
+        self._head.setObjectName("Head")
+        self._handle = QGroupBox(self._splitter)
+        self._handle.setTitle("")
+        self._handle.setObjectName("Span")
+        self._tail = QGroupBox(self._splitter)
+        self._tail.setTitle("")
+        self._tail.setObjectName("Tail")
+        self.gridLayout.addWidget(self._splitter, 0, 0, 1, 1)
+        self.retranslateUi(Form)
+        QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QCoreApplication.translate
+        Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
+
+
+class Element(QGroupBox):
+    def __init__(self, parent, main):
+        super(Element, self).__init__(parent)
+        self.main = main
+
+    def setStyleSheet(self, style):
+        self.parent().setStyleSheet(style)
+
+    def textColor(self):
+        return getattr(self, '__textColor', QColor(125, 125, 125))
+
+    def setTextColor(self, color):
+        if type(color) == tuple and len(color) == 3:
+            color = QColor(color[0], color[1], color[2])
+        elif type(color) == int:
+            color = QColor(color, color, color)
+        setattr(self, '__textColor', color)
+
+    def paintEvent(self, event):
+        qp = QPainter()
+        qp.begin(self)
+        if self.main.drawValues():
+            self.drawText(event, qp)
+        qp.end()
+
+
+class Head(Element):
+    def __init__(self, parent, main):
+        super(Head, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignLeft, ("%.3f"%self.main.min()))
+
+
+class Tail(Element):
+    def __init__(self, parent, main):
+        super(Tail, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(self.textColor())
+        qp.setFont(QFont('Arial', 10))
+        qp.drawText(event.rect(), Qt.AlignRight, ("%.3f"%self.main.max()))
+
+
+class LineBox(Element):
+    def __init__(self, parent, main):
+        super(LineBox, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        qp.setPen(QPen(Qt.red, 2, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin))
+        pos = self.main.valueToPos(self.main.line_value)
+        if (pos == 0):
+          pos += 1
+        qp.drawLine(pos, 0, pos, 50)
+
+
+class Handle(Element):
+    def __init__(self, parent, main):
+        super(Handle, self).__init__(parent, main)
+
+    def drawText(self, event, qp):
+        pass
+        # qp.setPen(self.textColor())
+        # qp.setFont(QFont('Arial', 10))
+        # qp.drawText(event.rect(), Qt.AlignLeft, str(self.main.start()))
+        # qp.drawText(event.rect(), Qt.AlignRight, str(self.main.end()))
+
+    def mouseMoveEvent(self, event):
+        event.accept()
+        mx = event.globalX()
+        _mx = getattr(self, '__mx', None)
+        if not _mx:
+            setattr(self, '__mx', mx)
+            dx = 0
+        else:
+            dx = mx - _mx
+        setattr(self, '__mx', mx)
+        if dx == 0:
+            event.ignore()
+            return
+        elif dx > 0:
+            dx = 1
+        elif dx < 0:
+            dx = -1
+        s = self.main.start() + dx
+        e = self.main.end() + dx
+        if s >= self.main.min() and e <= self.main.max():
+            self.main.setRange(s, e)
+
+
+class QRangeSlider(QWidget, Ui_Form):
+    endValueChanged = pyqtSignal(int)
+    maxValueChanged = pyqtSignal(int)
+    minValueChanged = pyqtSignal(int)
+    startValueChanged = pyqtSignal(int)
+    rangeValuesChanged = pyqtSignal(str, float, float)
+
+    _SPLIT_START = 1
+    _SPLIT_END = 2
+
+    def __init__(self, label, parent):
+        super(QRangeSlider, self).__init__(parent)
+        self.label = label
+        self.rangeValuesChanged.connect(parent.updateRangeFromSlider)
+        self.setupUi(self)
+        self.setMouseTracking(False)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+
+        self._linebox_layout = QHBoxLayout()
+        self._linebox_layout.setSpacing(0)
+        self._linebox_layout.setContentsMargins(0, 0, 0, 0)
+        self._linebox.setLayout(self._linebox_layout)
+        self.linebox = LineBox(self._linebox, main=self)
+        self._linebox_layout.addWidget(self.linebox)
+        self._head_layout = QHBoxLayout()
+        self._head_layout.setSpacing(0)
+        self._head_layout.setContentsMargins(0, 0, 0, 0)
+        self._head.setLayout(self._head_layout)
+        self.head = Head(self._head, main=self)
+        self._head_layout.addWidget(self.head)
+        self._handle_layout = QHBoxLayout()
+        self._handle_layout.setSpacing(0)
+        self._handle_layout.setContentsMargins(0, 0, 0, 0)
+        self._handle.setLayout(self._handle_layout)
+        self.handle = Handle(self._handle, main=self)
+        self.handle.setTextColor((150, 255, 150))
+        self._handle_layout.addWidget(self.handle)
+        self._tail_layout = QHBoxLayout()
+        self._tail_layout.setSpacing(0)
+        self._tail_layout.setContentsMargins(0, 0, 0, 0)
+        self._tail.setLayout(self._tail_layout)
+        self.tail = Tail(self._tail, main=self)
+        self._tail_layout.addWidget(self.tail)
+        self.setDrawValues(True)
+
+    def min(self):
+        return getattr(self, '__min', None)
+
+    def max(self):
+        return getattr(self, '__max', None)
+
+    def setMin(self, value):
+        setattr(self, '__min', value)
+        self.minValueChanged.emit(value)
+
+    def setMax(self, value):
+        setattr(self, '__max', value)
+        self.maxValueChanged.emit(value)
+
+    def start(self):
+        return getattr(self, '__start', None)
+
+    def end(self):
+        return getattr(self, '__end', None)
+
+    def _setStart(self, value):
+        setattr(self, '__start', value)
+        self.startValueChanged.emit(value)
+
+    def setStart(self, value):
+        v = self.valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_START)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setStart(value)
+
+    def _setEnd(self, value):
+        setattr(self, '__end', value)
+        self.endValueChanged.emit(value)
+
+    def setEnd(self, value):
+        v = self.valueToPos(value)
+        self._splitter.splitterMoved.disconnect()
+        self._splitter.moveSplitter(v, self._SPLIT_END)
+        self._splitter.splitterMoved.connect(self._handleMoveSplitter)
+        self._setEnd(value)
+
+    def drawValues(self):
+        return getattr(self, '__drawValues', None)
+
+    def setLine(self, value):
+        self.line_value = value
+
+    def setDrawValues(self, draw):
+        setattr(self, '__drawValues', draw)
+
+    def getRange(self):
+        return (self.start(), self.end())
+
+    def setRange(self, start, end):
+        self.setStart(start)
+        self.setEnd(end)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left:
+            s = self.start()-1
+            e = self.end()-1
+        elif key == Qt.Key_Right:
+            s = self.start()+1
+            e = self.end()+1
+        else:
+            event.ignore()
+            return
+        event.accept()
+        if s >= self.min() and e <= self.max():
+            self.setRange(s, e)
+
+    def setBackgroundStyle(self, style):
+        self._tail.setStyleSheet(style)
+        self._head.setStyleSheet(style)
+
+    def setSpanStyle(self, style):
+        self._handle.setStyleSheet(style)
+
+    def valueToPos(self, value):
+        return int(scale(value, (self.min(), self.max()), (0, self.width())))
+
+    def _posToValue(self, xpos):
+        return scale(xpos, (0, self.width()), (self.min(), self.max()))
+
+    def _handleMoveSplitter(self, xpos, index):
+        hw = self._splitter.handleWidth()
+        def _lockWidth(widget):
+            width = widget.size().width()
+            widget.setMinimumWidth(width)
+            widget.setMaximumWidth(width)
+        def _unlockWidth(widget):
+            widget.setMinimumWidth(0)
+            widget.setMaximumWidth(16777215)
+        if index == self._SPLIT_START:
+            v = self._posToValue(xpos)
+            _lockWidth(self._tail)
+            if v >= self.end():
+                return
+            offset = -20
+            w = xpos + offset
+            self._setStart(v)
+            self.rangeValuesChanged.emit(self.label, v, self.end())
+        elif index == self._SPLIT_END:
+            # account for width of head
+            xpos += 4
+            v = self._posToValue(xpos)
+            _lockWidth(self._head)
+            if v <= self.start():
+                return
+            offset = -40
+            w = self.width() - xpos + offset
+            self._setEnd(v)
+            self.rangeValuesChanged.emit(self.label, self.start(), v)
+        _unlockWidth(self._tail)
+        _unlockWidth(self._head)
+        _unlockWidth(self._handle)
+
+# see https://stackoverflow.com/questions/12182133/pyqt4-combine-textchanged-and-editingfinished-for-qlineedit
+class MyLineEdit(QLineEdit):
+    textModified = pyqtSignal(str) # (label)
+
+    def __init__(self, contents, label, parent=None):
+        super(MyLineEdit, self).__init__(contents, parent)
+        self.editingFinished.connect(self.__handleEditingFinished)
+        self.textChanged.connect(self.__handleTextChanged)
+        self._before = contents
+        self._label = label
+
+    def __handleTextChanged(self, text):
+        if not self.hasFocus():
+            self._before = text
+
+    def __handleEditingFinished(self):
+        before, after = self._before, self.text()
+        if before != after:
+            self._before = after
+            self.textModified.emit(self._label)
+
 # for signaling
-class Communicate (QObject):    
-  finishSim = pyqtSignal()
+class Communicate (QObject):
+  commsig = pyqtSignal()
+
+class DoneSignal (QObject):
+  finishSim = pyqtSignal(bool, bool)
 
 # for signaling - passing text
 class TextSignal (QObject):
@@ -82,12 +447,47 @@ class ParamSignal (QObject):
   psig = pyqtSignal(OrderedDict)
 
 class CanvSignal (QObject):
-  csig = pyqtSignal(bool)
+  csig = pyqtSignal(bool, bool)
 
 def bringwintobot (win):
   #win.show()
   #win.lower()
   win.hide()
+
+def kill_list_of_procs(procs):
+  # try terminate first
+  for p in procs:
+    try:
+      p.terminate()
+    except NoSuchProcess:
+      pass
+  gone, alive = wait_procs(procs, timeout=3)
+
+  # now try kill
+  for p in alive:
+    p.kill()
+  gone, alive = wait_procs(procs, timeout=3)
+
+  return alive
+
+
+def get_nrniv_procs_running():
+  ls = []
+  name = 'nrniv'
+  for p in process_iter(attrs=["name", "exe", "cmdline"]):
+      if name == p.info['name'] or \
+              p.info['exe'] and os.path.basename(p.info['exe']) == name or \
+              p.info['cmdline'] and p.info['cmdline'][0] == name:
+          ls.append(p)
+  return ls
+
+def kill_and_check_nrniv_procs():
+  procs = get_nrniv_procs_running()
+  if len(procs) > 0:
+    running = kill_list_of_procs(procs)
+    if len(running) > 0:
+      pids = [ proc.pid for proc in running ]
+      print("ERROR: failed to kill nrniv process(es) %s" % ','.join(pids))
 
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
@@ -104,9 +504,10 @@ def bringwintotop (win):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
+  def __init__ (self,c,d,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
     QThread.__init__(self)
     self.c = c
+    self.d = d
     self.killed = False
     self.proc = None
     self.ntrial = ntrial
@@ -128,6 +529,8 @@ class RunSimThread (QThread):
     if self.mainwin is not None:
       self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
+    self.lock = Lock()
+
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
     self.txtComm.tsig.emit(txt)
@@ -135,154 +538,406 @@ class RunSimThread (QThread):
   def updatebaseparamwin (self, d):
     self.prmComm.psig.emit(d)
 
-  def updatedrawerr (self):
-    self.canvComm.csig.emit(False) # False means do not recalculate error
+  def updatedispparam (self):
+    self.c.commsig.emit()
 
-  def stop (self): self.killed = True
+  def updatedrawerr (self):
+    self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
+
+  def stop (self):
+    self.killproc()
 
   def __del__ (self):
     self.quit()
     self.wait()
 
   def run (self):
+    failed=False
+
     if self.opt and self.baseparamwin is not None:
-      self.optmodel() # run optimization
+      try:
+        self.optmodel() # run optimization
+      except RuntimeError:
+        failed = True
+        self.baseparamwin.optparamwin.toggleEnableUserFields(self.cur_step, enable=True)
+        self.baseparamwin.optparamwin.clear_initial_opt_ranges()
+        self.baseparamwin.optparamwin.optimization_running = False
     else:
-      self.runsim() # run simulation
-    self.c.finishSim.emit() # send the finish signal
+      try:
+        self.runsim() # run simulation
+        self.updatedispparam() # update params in all windows (optimization)
+      except RuntimeError:
+        failed = True
+
+    self.d.finishSim.emit(self.opt, failed) # send the finish signal
+
 
   def killproc (self):
-    if self.proc is None: return
-    if debug: print('Thread killing sim. . .')
-    try:
-      self.proc.kill() # has to be called before proc ends
-      self.proc = None
-    except:
-      print('ERR: could not stop simulation process.')
+    if self.proc is None:
+      # any nrniv processes found are not part of current sim
+      return
 
-  # run sim command via mpi, then delete the temp file.
-  def runsim (self):
+    if debug: print('Thread killing sim. . .')
+
+    # try the nice way to stop the mpiexec proc
+    self.proc.terminate()
+
+    retries = 0
+    while self.proc.poll() is None and retries < 5:
+      # mpiexec still running
+      self.proc.kill()
+      if self.proc.poll() is None:
+        sleep(1)
+      retries += 1
+
+    # make absolute sure all nrniv procs have been killed
+    kill_and_check_nrniv_procs()
+
+    self.lock.acquire()
+    self.killed = True
+    self.lock.release()
+
+  def spawn_sim (self, simlength, banner=False):
     import simdat
-    self.killed = False
-    if debug: print("Running simulation using",self.ncore,"cores.")
-    if debug: print('self.onNSG:',self.onNSG)
+
+    mpicmd = 'mpiexec -np '
+
+    if banner:
+      nrniv_cmd = ' nrniv -python -mpi '
+    else:
+      nrniv_cmd = ' nrniv -python -mpi -nobanner '
+
     if self.onNSG:
       cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
+    elif not simlength is None:
+      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
     else:
-      cmd = 'mpiexec -np ' + str(self.ncore) + ' nrniv -python -mpi ' + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
-    maxruntime = 1200 # 20 minutes - will allow terminating sim later
+      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
     simdat.dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd,posix="win" not in sys.platform) # https://github.com/maebert/jrnl/issues/348
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
     else: 
-      #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd()) # may want to read/display stderr too
-      self.proc = Popen(cmdargs,stdout=PIPE,cwd=os.getcwd(),universal_newlines=True)
-    #cstart = time(); 
-    while not self.killed and self.proc.poll() is None: # job is not done
-      for stdout_line in iter(self.proc.stdout.readline, ""):
+      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd(),universal_newlines=True)
+
+  def get_proc_stream (self, stream, print_to_console=False):
+    try:
+      for line in iter(stream.readline, ""):
+        if print_to_console:
+          print(line.strip())
         try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
-          self.updatewaitsimwin(stdout_line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
+          self.updatewaitsimwin(line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
         except:
           if debug: print('RunSimThread updatewaitsimwin exception...')
           pass # catch exception in case anything else goes wrong
-        if self.killed:
-          self.killproc()
-          return
-      self.proc.stdout.close()
-      sleep(1)
-      # cend = time(); rtime = cend - cstart
-    if debug: print('sim finished')
-    if not self.killed:  
-      if debug: print('not self.killed')
-      try: # lack of output file may occur if invalid param values lead to an nrniv crash
+    except ValueError:
+      # if process is killed and stream.readline() gives I/O error
+      pass
+    stream.close()
 
-        simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
-        if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
-        if os.path.isfile(simdat.dfile['spec']):
-          simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
+  # run sim command via mpi, then delete the temp file.
+  def runsim (self, is_opt=False, banner=True, simlength=None):
+    import simdat
+
+    global defncore
+    self.lock.acquire()
+    self.killed = False
+    self.lock.release()
+
+    self.spawn_sim(simlength, banner=banner)
+    retried = False
+
+    #cstart = time()
+    while True:
+      status = self.proc.poll()
+      if not status is None:
+        if status == 0:
+          # success, use same number of cores next time
+          defncore = self.ncore
+          break
+        elif status == 1 and not retried:
+          self.ncore = ceil(self.ncore/2)
+          txt = "INFO: Failed starting mpiexec, retrying with %d cores" % self.ncore
+          print(txt)
+          self.updatewaitsimwin(txt)
+          self.spawn_sim(simlength, banner=banner)
+          retried = True
         else:
-          simdat.ddat['spec'] = None
-        simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
-        simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
-        if debug: print("Read simulation outputs:",simdat.dfile.values())
+          txt = "Simulation exited with return code %d. Stderr from console:"%status
+          print(txt)
+          self.updatewaitsimwin(txt)
+          self.get_proc_stream(self.proc.stderr, print_to_console=True)
+          kill_and_check_nrniv_procs()
+          raise RuntimeError
 
+      self.get_proc_stream(self.proc.stdout, print_to_console=False)
+
+      # check if proc was killed
+      self.lock.acquire()
+      if self.killed:
+        self.lock.release()
+        # exit using RuntimeError
+        raise RuntimeError
+      else:
+        self.lock.release()
+
+      sleep(1)
+
+    #cend = time()
+    #rtime = cend - cstart
+    #if debug: print('sim finished in %.3f s'%rtime)
+
+    try:
+      # load data from sucessful sim
+      simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
+      if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
+      if os.path.isfile(simdat.dfile['spec']):
+        simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
+      else:
+        simdat.ddat['spec'] = None
+      simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
+      simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
+      if debug: print("Read simulation outputs:",simdat.dfile.values())
+
+      if not is_opt:
         simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    except OSError:
+      print('WARN: could not read simulation outputs:',simdat.dfile.values())
 
-      except: # no output to read yet
-        print('WARN: could not read simulation outputs:',simdat.dfile.values())
-    else:
-      if debug: print('self.killproc')
-      self.killproc()
-    print(''); self.updatewaitsimwin('')
-  
   def optmodel (self):
+    import simdat
+
+    global basedir
+    need_initial_ddat = False
+
+    # initialize RNG with seed from config
+    seed = int(find_param(paramf,'prng_seedcore_opt'))
+    nlopt.srand(seed)
+
+    # initial_ddat stores the initial fit (from "Run Simulation").
+    # To be displayed in final dipole plot as black dashed line.
+    if len(simdat.ddat) > 0:
+      simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
+      simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    else:
+      need_initial_ddat = True
+
+    self.baseparamwin.optparamwin.populate_initial_opt_ranges()
+
+    # save initial parameters file
+    param_out = os.path.join(basedir,'before_opt.param')
+    shutil.copyfile(paramf, param_out)
+
     self.updatewaitsimwin('Optimizing model. . .')
-    from neuron import h # for praxis
-    self.optiter = 0 # optimization iteration
-    fpopt = open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'w')
-    fpopt.close()
-    self.minopterr = 1e9
 
-    def optrun (vparam):
-      # create parameter dictionary of current values to test
-      lparam = list(dconf['params'].values())
-      dtest = OrderedDict() # parameter values to test      
-      for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
-        if val >= prm.minval and val <= prm.maxval:
-          if debug: print('optrun prm:',prm.var,prm.minval,prm.maxval,val)
-          dtest[prm.var] = val
-        else:
-          if debug: print('optrun:', val, 'out of bounds for ' , prm.var, prm.minval, prm.maxval)
-          return 1e9 # invalid param value -> large error
-      if debug:
-        if type(vparam)==list: print('set params:', vparam)
-        else: print('set params:', vparam.as_numpy())
+    self.last_step = False
+    self.first_step = True
+    num_steps = self.baseparamwin.optparamwin.get_num_chunks()
+    for step in range(num_steps):
+      self.cur_step = step
+      if step == num_steps - 1:
+        self.last_step = True
 
-      self.updatebaseparamwin(dtest) # put new param values into GUI
+      # disable range sliders for each step once that step has begun
+      self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=False)
+
+      self.step_ranges = self.baseparamwin.optparamwin.get_chunk_ranges(step)
+      self.step_sims = self.baseparamwin.optparamwin.get_sims_for_chunk(step)
+
+      if self.step_sims == 0:
+        txt = "Skipping optimization step %d (0 simulations)"%(step+1)
+        self.updatewaitsimwin(txt)
+        continue
+
+      if len(self.step_ranges) == 0:
+        txt = "Skipping optimization step %d (0 parameters)"%(step+1)
+        self.updatewaitsimwin(txt)
+        continue
+
+      txt = "Starting optimization step %d/%d" % (step + 1, num_steps)
+      self.updatewaitsimwin(txt)
+      self.runOptStep(step)
+
+      if 'dpl' in self.best_ddat:
+        simdat.ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
+      if 'errtot' in self.best_ddat:
+        simdat.ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
+
+      if need_initial_ddat:
+        simdat.initial_ddat = deepcopy(simdat.ddat)
+
+      simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with best from this step
+
+      # put best opt results into GUI and save to param file
+      push_values = OrderedDict()
+      for param_name in self.step_ranges.keys():
+        push_values[param_name] = self.step_ranges[param_name]['final']
+      self.updatebaseparamwin(push_values)
+      self.baseparamwin.optparamwin.push_chunk_ranges(step,push_values)
+
       sleep(1)
 
-      self.runsim() # run the simulation as usual and read its output
-      import simdat
-      simdat.calcerr(simdat.ddat) # make sure error re-calculated (synchronously)
-      self.updatedrawerr() # send event to draw updated error (asynchronously)
-      self.updatewaitsimwin(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep) # print error
-      print(os.linesep+'Simulation finished: error='+str(simdat.ddat['errtot'])+os.linesep)#,'time=',time())
+      self.first_step = False
 
-      with open(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0],'optinf.txt'),'a') as fpopt:
+    # one final sim with the best parameters to update display
+    self.runsim(is_opt=True, banner=False)
+    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
+
+    # re-enable all the range sliders
+    self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
+
+    self.baseparamwin.optparamwin.clear_initial_opt_ranges()
+    self.baseparamwin.optparamwin.optimization_running = False
+
+
+  def runOptStep (self, step):
+    import simdat
+    global basedir, paramf
+
+    self.optsim = 0
+    self.minopterr = 1e9
+    self.stepminopterr = self.minopterr
+    self.best_ddat = {}
+    self.opt_start = self.baseparamwin.optparamwin.get_chunk_start(step)
+    self.opt_end = self.baseparamwin.optparamwin.get_chunk_end(step)
+    self.opt_weights = self.baseparamwin.optparamwin.get_chunk_weights(step)
+    def optrun (new_params, grad=0):
+      txt = "Optimization step %d, simulation %d" % (step + 1,
+                                                     self.optsim + 1)
+      self.updatewaitsimwin(txt)
+      print(txt)
+
+      dtest = OrderedDict() # parameter values to test      
+      for param_name, test_value in zip(self.step_ranges.keys(), new_params): # set parameters
+        if test_value >= self.step_ranges[param_name]['minval'] and \
+           test_value <= self.step_ranges[param_name]['maxval']:
+          if debug:
+            print('optrun prm:', self.step_ranges[param_name]['initial'],
+                                 self.step_ranges[param_name]['minval'],
+                                 self.step_ranges[param_name]['maxval'],
+                                 test_value)
+          dtest[param_name] = test_value
+        else:
+          # This test is not strictly necessary with COBYLA, but in case the algorithm
+          # is changed at some point in the future
+          print('INFO: optimization chose %.3f for %s outside of [%.3f-%.3f].'
+                % (test_value, param_name,
+                   self.step_ranges[param_name]['minval'],
+                   self.step_ranges[param_name]['maxval']))
+          return 1e9 # invalid param value -> large error
+
+      # put new param values into GUI and save params to file
+      self.updatebaseparamwin(dtest)
+      sleep(1)
+
+      # run the simulation, but stop early if possible
+      self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
+
+      # calculate wRMSE for all steps
+      simdat.weighted_rmse(simdat.ddat,
+                           self.opt_end,
+                           self.opt_weights,
+                           tstart=self.opt_start)
+      err = simdat.ddat['werrtot']
+
+      if self.last_step:
+        # weighted RMSE with weights of all 1's is the same as
+        # regular RMSE
+        simdat.ddat['errtot'] = simdat.ddat['werrtot']
+        txt = "RMSE = %f"%err
+      else:
+        # calculate regular RMSE for displaying on plot
+        simdat.calcerr(simdat.ddat,
+                      self.opt_end,
+                      tstart=self.opt_start)
+
+        txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
+
+      print(txt)
+      self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
+
+      fnoptinf = os.path.join(basedir,'optinf.txt')
+      with open(fnoptinf,'a') as fpopt:
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
-      # backup the current param file
-      outdir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      prmloc0 = os.path.join(outdir,paramf.split(os.path.sep)[-1])
-      prmloc1 = os.path.join(outdir,str(self.optiter)+'.param')
-      shutil.copyfile(prmloc0,prmloc1)
-      if simdat.ddat['errtot'] < self.minopterr:
-        self.minopterr = simdat.ddat['errtot']
-        shutil.copyfile(prmloc0,os.path.join(outdir,'best.param')) # convenience, save best here
-      self.optiter += 1
+      # save copy param file
+      param_fname = os.path.basename(paramf)
+      curr_paramf = os.path.join(basedir, param_fname)
 
-      return simdat.ddat['errtot'] # return error to praxis
+      # save params numbered by optsim
+      param_out = os.path.join(basedir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
+      shutil.copyfile(curr_paramf, param_out)
 
-    tol = 1e-5; nstep = 100; stepsz = 0.5 # 1.0 #stepsz = 0.5
-    h.attr_praxis(tol, stepsz, 3)
-    h.stop_praxis(nstep) # 
-    lparam = list(dconf['params'].values())
-    lvar = [p.var for p in lparam]
-    if debug: print('lparam=',lparam)
-    vparam = h.Vector()
-    # read current parameters from GUI
-    s = str(self.baseparamwin)
-    for l in s.split(os.linesep):
-      if l.count(': ') < 1: continue
-      k,v = l.split(': ')
-      if debug: print('k=',k,'v=',v)
-      if k in lvar:
-        prm = lparam[lvar.index(k)]
-        vparam.append(logval(prm,float(v)))
-        if debug: print('optmodel: k',k,'in lparam')
-    x = h.fit_praxis(optrun, vparam) #x = optrun(vparam)
+      if err < self.stepminopterr:
+        self.updatewaitsimwin("new best with RMSE %f"%err)
+
+        self.stepminopterr = err
+        # save best param file
+        shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
+        if 'dpl' in simdat.ddat:
+          self.best_ddat['dpl'] = simdat.ddat['dpl']
+        if 'errtot' in simdat.ddat:
+          self.best_ddat['errtot'] = simdat.ddat['errtot']
+
+      if self.optsim == 0 and not self.first_step:
+        # Update plots for the first simulation only of this step (best results from last round)
+        # Skip the first step because there are no optimization results to show yet.
+        self.updatedrawerr() # send event to draw updated error (asynchronously)
+
+      self.optsim += 1
+
+      return err # return error
+
+    def optimize(params_input, evals, algorithm):
+        opt_params = []
+        lb = []
+        ub = []
+
+        for param_name in params_input.keys():
+            upper = params_input[param_name]['maxval']
+            lower = params_input[param_name]['minval']
+            if upper == lower:
+              continue
+
+            ub.append(upper)
+            lb.append(lower)
+            opt_params.append(params_input[param_name]['initial'])
+
+        if algorithm == nlopt.G_MLSL_LDS or algorithm == nlopt.G_MLSL:
+            # In case these mixed mode (global + local) algorithms are used in the future
+            local_opt = nlopt.opt(nlopt.LN_COBYLA, num_params)
+            opt.set_local_optimizer(local_opt)
+
+        opt.set_lower_bounds(lb)
+        opt.set_upper_bounds(ub)
+        opt.set_min_objective(optrun)
+        opt.set_xtol_rel(1e-4)
+        opt.set_maxeval(evals)
+        opt_results = opt.optimize(opt_params)
+
+        return opt_results
+
+    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
+                                                self.opt_end)
+    self.updatewaitsimwin(txt)
+
+    num_params = len(self.step_ranges)
+    algorithm = nlopt.LN_COBYLA
+    opt = nlopt.opt(algorithm, num_params)
+    opt_results = optimize(self.step_ranges, self.step_sims, algorithm)
+
+    # update opt params for the next round
+    for var_name, new_value in zip(self.step_ranges, opt_results):
+        old_value = self.step_ranges[var_name]['initial']
+
+        # only change the parameter value if it changed significantly
+        if not isclose(old_value, new_value, abs_tol=1e-9):
+          self.step_ranges[var_name]['final'] = new_value
+        else:
+          self.step_ranges[var_name]['final'] = \
+            self.step_ranges[var_name]['initial']
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -291,6 +946,16 @@ def lookupresource (fn):
     return os.path.join('res',fn+'2.png')
   else:
     return os.path.join('res',fn+'.png')
+
+def format_range_str(value):
+  if value == 0:
+    value_str = "0.000"
+  elif value < 0.1 :
+    value_str = ("%6f" % value)
+  else:
+    value_str = ("%.3f" % value)
+
+  return value_str
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
 # specifiable via cfg file format - then can customize gui without changing py code
@@ -381,7 +1046,7 @@ class DictDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
     self.setWindowTitle(self.stitle)  
-    nw, nh = setscalegeom(self, 150, 150, 625, 300)
+    #nw, nh = setscalegeom(self, 150, 150, 625, 300)
     #nx = parent.rect().x()+parent.rect().width()/2-nw/2
     #ny = parent.rect().y()+parent.rect().height()/2-nh/2
     #print(parent.rect(),nx,ny)
@@ -600,7 +1265,7 @@ class SynGainParamDialog (QDialog):
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
-    grid.addWidget(self.btncancel, row, 1, 1, 1); 
+    grid.addWidget(self.btncancel, row, 1, 1, 1)
 
     self.setLayout(grid)  
     setscalegeom(self, 150, 150, 270, 180)
@@ -720,45 +1385,92 @@ class EvokedInputParamDialog (QDialog):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
 
+  def set_qline_float (self, key_str, value):
+    try:
+      new_value = float(value)
+    except ValueError:
+      print("WARN: bad value for param %s: %s. Unable to convert"
+            " to a floating point number" % (key_str, value))
+      return
+
+    # Enforce no sci. not. + limit field len + remove trailing 0's
+    self.dqline[key_str].setText(("%7f" % new_value).rstrip('0').rstrip('.'))
+
   def setfromdin (self,din):
     if not din: return
-    self.removeAllInputs() # turn off any previously set inputs
-    nprox, ndist = countEvokedInputs(din)
-    for i in range(nprox+ndist):
-      if i % 2 == 0:
-        if self.nprox < nprox:
-          self.addProx()
-        elif self.ndist < ndist:
-          self.addDist()
-      else:
-        if self.ndist < ndist:          
-          self.addDist()
-        elif self.nprox < nprox:
-          self.addProx()
+
+    if 'dt' in din:
+
+      # Optimization feature introduces the case where din just contains optimization
+      # relevant parameters. In that case, we don't want to remove all inputs, just
+      # modify existing inputs.
+      self.removeAllInputs() # turn off any previously set inputs
+
+      nprox, ndist = countEvokedInputs(din)
+      for i in range(nprox+ndist):
+        if i % 2 == 0:
+          if self.nprox < nprox:
+            self.addProx()
+          elif self.ndist < ndist:
+            self.addDist()
+        else:
+          if self.ndist < ndist:
+            self.addDist()
+          elif self.nprox < nprox:
+            self.addProx()
+
     for k,v in din.items():
       if k == 'sync_evinput':
-        if float(v)==0.0:
-          self.chksync.setChecked(False)
-        elif float(v)==1.0:
+        try:
+          new_value = bool(int(v))
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a boolean value" % (k,v))
+          continue
+        if new_value:
           self.chksync.setChecked(True)
+        else:
+          self.chksync.setChecked(False)
       elif k == 'inc_evinput':
-        self.incedit.setText(str(v).strip())
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.incedit.setText(str(new_value).strip())
       elif k in self.dqline:
-        self.dqline[k].setText(str(v).strip())
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0): 
+        if k.startswith('numspikes'):
+          try:
+            new_value = int(v)
+          except ValueError:
+            print("WARN: bad value for param %s: %s. Unable to convert"
+                  " to a integer" % (k, v))
+            continue
+          self.dqline[k].setText(str(new_value))
+        else:
+          self.set_qline_float(k, v)
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
         eloc = lks[1]
         enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
         if eloc == 'evprox':
-          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
         elif eloc == 'evdist':
-          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+          for ct in ['L2Pyr', 'L2Basket', 'L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip()) 
+            key_str = base_key_str + ct + '_ampa'
+            self.set_qline_float(key_str, v)
+            key_str = base_key_str + ct + '_nmda'
+            self.set_qline_float(key_str, v)
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -767,7 +1479,7 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addStretch(1)
 
     self.ltabs = []
-    self.tabs = QTabWidget(); 
+    self.tabs = QTabWidget()
     self.layout.addWidget(self.tabs)
     
     self.button_box = QVBoxLayout() 
@@ -939,7 +1651,7 @@ class EvokedInputParamDialog (QDialog):
     self.bbhidebox.addWidget(self.btnhide)
     self.layout.addLayout(self.bbhidebox)
 
-  def addTab (self,prox,s):
+  def addTab (self,s):
     tab = QWidget()
     self.ltabs.append(tab)
     self.tabs.addTab(tab,s)
@@ -983,13 +1695,13 @@ class EvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_nmda', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Basket_ampa', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Basket_nmda', 0.),
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),                                   
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),                                   
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket_ampa', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket_nmda', 0.)])
     self.ld.append(dprox)
     self.addtransvarfromdict(dprox)
-    self.addFormToTab(dprox, self.addTab(True,'Proximal ' + str(self.nprox)))
+    self.addFormToTab(dprox, self.addTab('Proximal ' + str(self.nprox)))
     self.ltabs[-1].layout.addRow(self.makePixLabel(lookupresource('proxfig')))
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
@@ -1010,18 +1722,888 @@ class EvokedInputParamDialog (QDialog):
                          ('gbar_evdist_' + str(self.ndist) + '_L5Pyr_nmda', 0.)])
     self.ld.append(ddist)
     self.addtransvarfromdict(ddist)
-    self.addFormToTab(ddist,self.addTab(True,'Distal ' + str(self.ndist)))
+    self.addFormToTab(ddist,self.addTab('Distal ' + str(self.ndist)))
     self.ltabs[-1].layout.addRow(self.makePixLabel(lookupresource('distfig')))
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
     self.addtips()
-    
+
+class OptEvokedInputParamDialog (EvokedInputParamDialog):
+
+  def __init__ (self, parent, optrun_func):
+    super(EvokedInputParamDialog, self).__init__(None)
+    self.nprox = self.ndist = 0 # number of proximal,distal inputs
+    self.ld = [] # list of dictionaries for proximal/distal inputs
+    self.dtab_idx = {} # for translating input names to tab indices
+    self.dtab_names = {} # for translating tab indices to input names
+    self.dparams = OrderedDict()  # actual values
+    self.dqline = OrderedDict() # not used, prevents failure in removeInput
+
+    # these store values used in grid
+    self.dqchkbox = OrderedDict()  # optimize
+    self.dqparam_name = OrderedDict()  # parameter name
+    self.dqinitial_label = OrderedDict()  # initial
+    self.dqopt_label = OrderedDict()  # optimtized
+    self.dqdiff_label = OrderedDict() # delta
+    self.dqrange_multiplier = OrderedDict() # user-defined multiplier
+    self.dqrange_mode = OrderedDict() # range mode (stdev, %, absolute)
+    self.dqrange_slider = OrderedDict() # slider
+    self.dqrange_label = OrderedDict() # defined range
+    self.dqrange_max = OrderedDict()
+    self.dqrange_min = OrderedDict()
+
+    self.chunk_list = []
+    self.lqnumsim = []
+    self.lqnumparams = []
+    self.lqinputs = []
+    self.opt_params = {}
+    self.initial_opt_ranges = []
+    self.dtabdata = []
+    self.dtransvar = {} # for translating model variable name to more human-readable form
+    self.simlength = 0.0
+    self.sim_dt = 0.0
+    self.default_num_step_sims = 30
+    self.default_num_total_sims = 50
+    self.optrun_func = optrun_func
+    self.optimization_running = False
+    self.initUI()
+    self.parent = parent
+    self.old_num_steps = 0
+
+  def initUI (self):
+    self.ltabs = []
+    self.ltabkeys = []
+    self.tabs = QTabWidget()
+    self.din = {}
+
+    self.grid = QGridLayout()
+
+    row = 0
+    self.sublayout = QGridLayout()
+    self.old_numsims = []
+    self.grid.addLayout(self.sublayout, row, 0)
+
+    row += 1
+    self.grid.addWidget(self.tabs, row, 0)
+
+    row += 1
+    self.btnrunop = QPushButton('Run Optimization', self)
+    self.btnrunop.resize(self.btnrunop.sizeHint())
+    self.btnrunop.setToolTip('Run Optimization')
+    self.btnrunop.clicked.connect(self.runOptimization)
+    self.grid.addWidget(self.btnrunop, row, 0)
+
+    row += 1
+    self.btnreset = QPushButton('Reset Ranges',self)
+    self.btnreset.resize(self.btnreset.sizeHint())
+    self.btnreset.clicked.connect(self.updateOptRanges)
+    self.btnreset.setToolTip('Reset Ranges')
+    self.grid.addWidget(self.btnreset, row, 0)
+
+    row += 1
+    btnhide = QPushButton('Hide Window',self)
+    btnhide.resize(btnhide.sizeHint())
+    btnhide.clicked.connect(self.hide)
+    btnhide.setToolTip('Hide Window')
+    self.grid.addWidget(btnhide, row, 0)
+
+    self.setLayout(self.grid)
+
+    self.setWindowTitle("Configure Optimization")
+
+    # the largest horizontal component will be column 0 (headings)
+    self.resize(self.minimumSizeHint())
+
+  def toggle_enable_param(self, label):
+    import re
+
+    widget_dict_list = [self.dqinitial_label, self.dqopt_label,
+                          self.dqdiff_label, self.dqparam_name,
+                          self.dqrange_mode, self.dqrange_multiplier,
+                          self.dqrange_label, self.dqrange_slider]
+
+    if self.dqchkbox[label].isChecked():
+      # set all other fields in the row to enabled
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(True)
+      toEnable = True
+    else:
+      # disable all other fields in the row
+      for widget_dict in widget_dict_list:
+        widget_dict[label].setEnabled(False)
+      toEnable = False
+
+    self.changeParamEnabledStatus(label, toEnable)
+
+  def addTab (self,id_str):
+    tab = QWidget()
+    self.ltabs.append(tab)
+
+    name_str = trans_input(id_str)
+    self.tabs.addTab(tab, name_str)
+ 
+    tab_index = len(self.ltabs)-1
+    self.dtab_idx[id_str] = tab_index
+    self.dtab_names[tab_index] = id_str
+
+    return tab
+
+  def cleanLabels(self):
+    """
+    To avoid memory leaks we need to delete all widgets when we recreate grid.
+    Go through all tabs and check for each var name (k)
+    """
+    for idx in range(len(self.ltabs)):
+      for k in self.ld[idx].keys():
+        if k in self.dqinitial_label:
+          del self.dqinitial_label[k]
+        if k in self.dqopt_label:
+          del self.dqopt_label[k]
+        if k in self.dqdiff_label:
+          del self.dqdiff_label[k]
+        if k in self.dqparam_name:
+          del self.dqparam_name[k]
+        if not self.optimization_running:
+          if k in self.dqrange_mode:
+            del self.dqrange_mode[k]
+          if k in self.dqrange_multiplier:
+            del self.dqrange_multiplier[k]
+          if k in self.dqrange_label:
+            del self.dqrange_label[k]
+          if k in self.dqrange_slider:
+            del self.dqrange_slider[k]
+          if k in self.dqrange_min:
+            del self.dqrange_min[k]
+          if k in self.dqrange_max:
+            del self.dqrange_max[k]
+
+  def addGridToTab (self, d, tab):
+    from functools import partial
+    import re
+
+    current_tab = len(self.ltabs)-1
+    tab.layout = QGridLayout()
+    #tab.layout.setSpacing(10)
+
+    self.ltabkeys.append([])
+
+    # The first row has column headings
+    row = 0
+    self.ltabkeys[current_tab].append("")
+    for column_index, column_name in enumerate(["Optimize", "Parameter name",
+      "Initial", "Optimized", "Delta"]):
+      widget = QLabel(column_name)
+      widget.resize(widget.sizeHint())
+      tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Range specifier")
+    widget.setMinimumWidth(100)
+    tab.layout.addWidget(widget, row, column_index, 1, 2)
+
+    column_index += 2
+    widget = QLabel("Range slider")
+    # widget.setMinimumWidth(160)
+    tab.layout.addWidget(widget, row, column_index)
+
+    column_index += 1
+    widget = QLabel("Defined range")
+    tab.layout.addWidget(widget, row, column_index)
+
+    # The second row is a horizontal line
+    row = 1
+    self.ltabkeys[current_tab].append("")
+    qthline = QFrame()
+    qthline.setFrameShape(QFrame.HLine)
+    qthline.setFrameShadow(QFrame.Sunken)
+    tab.layout.addWidget(qthline, row, 0, 1, 9)
+
+    # The rest are the parameters
+    row = 2
+    for k,v in d.items():
+      self.ltabkeys[current_tab].append(k)
+
+      # create and format widgets
+      self.dparams[k] = float(v)
+      self.dqchkbox[k] = QCheckBox()
+      self.dqchkbox[k].setStyleSheet("""
+      .QCheckBox {
+            spacing: 20px;
+          }
+      .QCheckBox::unchecked {
+            color: grey;
+          }
+      .QCheckBox::checked {
+            color: black;
+          }
+      """)
+      self.dqchkbox[k].setChecked(True)
+      # use partial instead of lamda (so args won't be evaluated ahead of time?)
+      self.dqchkbox[k].clicked.connect(partial(self.toggle_enable_param, k))
+      self.dqparam_name[k] = QLabel(self)
+      self.dqparam_name[k].setText(self.transvar(k))
+      self.dqinitial_label[k] = QLabel()
+      self.dqopt_label[k] = QLabel()
+      self.dqdiff_label[k] = QLabel()
+
+      # add widgets to grid
+      tab.layout.addWidget(self.dqchkbox[k], row, 0, alignment = Qt.AlignBaseline | Qt.AlignCenter)
+      tab.layout.addWidget(self.dqparam_name[k], row, 1)
+      tab.layout.addWidget(self.dqinitial_label[k], row, 2)  # initial value
+      tab.layout.addWidget(self.dqopt_label[k], row, 3)  # optimized value
+      tab.layout.addWidget(self.dqdiff_label[k], row, 4)  # delta
+
+      if k.startswith('t'):
+        range_mode = "(stdev)"
+        range_multiplier = "3.0"
+      elif k.startswith('sigma'):
+        range_mode = "(%)"
+        range_multiplier = "50.0"
+      else:
+        range_mode = "(%)"
+        range_multiplier = "500.0"
+
+      if not self.optimization_running:
+        self.dqrange_slider[k] = QRangeSlider(k,self)
+        self.dqrange_slider[k].setMinimumWidth(140)
+        self.dqrange_label[k] = QLabel()
+        self.dqrange_multiplier[k] = MyLineEdit(range_multiplier, k)
+        self.dqrange_multiplier[k].textModified.connect(self.updateRange)
+        self.dqrange_multiplier[k].setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+        self.dqrange_multiplier[k].setMinimumWidth(50)
+        self.dqrange_multiplier[k].setMaximumWidth(50)
+        self.dqrange_mode[k] = QLabel(range_mode)
+        tab.layout.addWidget(self.dqrange_multiplier[k], row, 5)  # range specifier
+        tab.layout.addWidget(self.dqrange_mode[k], row, 6)  # range mode
+        tab.layout.addWidget(self.dqrange_slider[k], row, 7)  # range slider
+        tab.layout.addWidget(self.dqrange_label[k], row, 8)  # calculated range
+
+      row += 1
+
+    # A spacer in the last row stretches to fill remaining space.
+    # For inputs with fewer parameters than the rest, this pushes parameters
+    # to the top with the same spacing as the other inputs.
+    tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 9)
+    tab.layout.setRowStretch(row,1)
+    tab.setLayout(tab.layout)
+
+  def addProx (self):
+    self.nprox += 1 # starts at 1
+    # evprox feed strength
+    dprox = OrderedDict([('t_evprox_' + str(self.nprox), 0.), # times and stdevs for evoked responses
+                         ('sigma_t_evprox_' + str(self.nprox), 2.5),
+                         #('numspikes_evprox_' + str(self.nprox), 1),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_nmda', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L2Basket_nmda', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Basket_nmda', 0.)])
+    self.ld.append(dprox)
+    self.addtransvarfromdict(dprox)
+    tab = self.addTab('evprox_' + str(self.nprox))
+    self.addGridToTab(dprox, tab)
+
+  def addDist (self):
+    self.ndist += 1
+    # evdist feed strengths
+    ddist = OrderedDict([('t_evdist_' + str(self.ndist), 0.),
+                         ('sigma_t_evdist_' + str(self.ndist), 6.),
+                         #('numspikes_evdist_' + str(self.ndist), 1),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Pyr_nmda', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L2Basket_nmda', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr_ampa', 0.),
+                         ('gbar_evdist_' + str(self.ndist) + '_L5Pyr_nmda', 0.)])
+    self.ld.append(ddist)
+    self.addtransvarfromdict(ddist)
+    tab = self.addTab('evdist_' + str(self.ndist))
+    self.addGridToTab(ddist, tab)
+
+  def changeParamEnabledStatus(self, label, toEnable):
+    import re
+
+    label_match = re.search('(evprox|evdist)_([0-9]+)', label)
+    if label_match:
+      my_input_name = label_match.group(1) + '_' + label_match.group(2)
+    else:
+      print("ERR: can't determine input name from parameter: %s" % label)
+      return
+
+    # decrease the count of num params
+    for chunk_index in range(self.old_num_steps):
+      for input_name in self.chunk_list[chunk_index]['inputs']:
+        if input_name == my_input_name:
+          try:
+            num_params = int(self.lqnumparams[chunk_index].text())
+          except ValueError:
+            print("ERR: could not get number of params for step %d"%chunk_index)
+
+          if toEnable:
+            num_params += 1
+          else:
+            num_params -= 1
+          self.lqnumparams[chunk_index].setText(str(num_params))
+          self.opt_params[input_name]['ranges'][label]['enabled'] = toEnable
+
+  def updateRange(self, label, save_slider=True):
+    import re
+
+    max_width = 0
+
+    label_match = re.search('(evprox|evdist)_([0-9]+)', label)
+    if label_match:
+      tab_name = label_match.group(1) + '_' + label_match.group(2)
+    else:
+      print("ERR: can't determine input name from parameter: %s" % label)
+      return
+
+    if self.dqchkbox[label].isChecked():
+      self.opt_params[tab_name]['ranges'][label]['enabled'] = True
+    else:
+      self.opt_params[tab_name]['ranges'][label]['enabled'] = False
+      return
+
+    if tab_name not in self.initial_opt_ranges or \
+        label not in self.initial_opt_ranges[tab_name]:
+      value = self.dparams[label]
+    else:
+      value = float(self.initial_opt_ranges[tab_name][label]['initial'])
+
+    range_type = self.dqrange_mode[label].text()
+    if range_type == "(%)" and value == 0.0:
+      # change to range from 0 to 1
+      range_type = "(max)"
+      self.dqrange_mode[label].setText(range_type)
+      self.dqrange_multiplier[label].setText("1.0")
+    elif range_type == "(max)" and value > 0.0:
+      # change back to %
+      range_type = "(%)"
+      self.dqrange_mode[label].setText(range_type)
+      self.dqrange_multiplier[label].setText("500.0")
+
+    try:
+      range_multiplier = float(self.dqrange_multiplier[label].text())
+    except ValueError:
+      range_multiplier = 0.0
+    self.dqrange_multiplier[label].setText(str(range_multiplier))
+
+    if range_type == "(max)":
+      range_min = 0
+      try:
+        range_max = float(self.dqrange_multiplier[label].text())
+      except ValueError:
+        range_max = 1.0
+    elif range_type == "(stdev)":  # timing
+      timing_sigma = self.get_input_timing_sigma(tab_name)
+      timing_bound = timing_sigma * range_multiplier
+      range_min = max(0, value - timing_bound)
+      range_max = min(self.simlength, value + timing_bound)
+    else:  # range_type == "(%)"
+      range_min = max(0, value - (value * range_multiplier / 100.0))
+      range_max = value + (value * range_multiplier / 100.0)
+
+    # set up the slider
+    self.dqrange_slider[label].setLine(value)
+    self.dqrange_slider[label].setMin(range_min)
+    self.dqrange_slider[label].setMax(range_max)
+
+    if not save_slider:
+      self.dqrange_min.pop(label, None)
+      self.dqrange_max.pop(label, None)
+
+    self.opt_params[tab_name]['ranges'][label]['initial'] = value
+    if label in self.dqrange_min and label in self.dqrange_max:
+      range_min = self.dqrange_min[label]
+      range_max = self.dqrange_max[label]
+
+    self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
+    self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
+    self.dqrange_slider[label].setRange(range_min, range_max)
+
+    if range_min == range_max:
+      self.dqrange_label[label].setText(format_range_str(range_min))  # use the exact value
+      self.dqrange_label[label].setEnabled(False)
+      # uncheck because invalid range
+      self.dqchkbox[label].setChecked(False)
+      # disable slider
+      self.dqrange_slider[label].setEnabled(False)
+      self.changeParamEnabledStatus(label, False)
+    else:
+      self.dqrange_label[label].setText(format_range_str(range_min) +
+                                        " - " +
+                                        format_range_str(range_max))
+
+    if self.dqrange_label[label].sizeHint().width() > max_width:
+      max_width = self.dqrange_label[label].sizeHint().width() + 15
+    # fix the size for the defined range so that changing the slider doesn't change
+    # the dialog's width
+    self.dqrange_label[label].setMinimumWidth(max_width)
+    self.dqrange_label[label].setMaximumWidth(max_width)
+
+  def prepareOptimization(self):
+    self.createOptParams()
+    self.rebuildOptStepInfo()
+    self.updateOptDeltas()
+    self.updateOptRanges(save_sliders=True)
+    self.btnreset.setEnabled(True)
+    self.btnrunop.setText('Run Optimization')
+    self.btnrunop.clicked.disconnect()
+    self.btnrunop.clicked.connect(self.runOptimization)
+
+  def runOptimization(self):
+    self.current_opt_step = 0
+
+    # update the ranges to find which parameters have been disabled (unchecked)
+    self.updateOptRanges(save_sliders=True)
+
+    # update the opt info dict to capture num_sims from GUI
+    self.rebuildOptStepInfo()
+    self.optimization_running = True
+
+    # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
+    # passed to BaseParamDialog then finally OptEvokedInputParamDialog
+    self.optrun_func()
+
+  def get_chunk_start(self, step):
+    return self.chunk_list[step]['opt_start']
+
+  def get_chunk_end(self, step):
+    return self.chunk_list[step]['opt_end']
+
+  def get_chunk_weights(self, step):
+    return self.chunk_list[step]['weights']
+
+  def get_num_chunks(self):
+    return len(self.chunk_list)
+
+  def get_sims_for_chunk(self, step):
+    try:
+      num_sims = int(self.lqnumsim[step].text())
+    except KeyError:
+      print("ERR: number of sims not found for step %d"%step)
+      num_sims = 0
+    except ValueError:
+      if step == self.old_num_steps - 1:
+        num_sims = self.default_num_total_sims
+      else:
+        num_sims = self.default_num_step_sims
+
+    return num_sims
+
+  def get_chunk_ranges(self, step):
+    ranges = {}
+    for input_name in self.chunk_list[step]['inputs']:
+      # make sure initial value is between minval or maxval before returning
+      # ranges to the optimization
+      for label in self.opt_params[input_name]['ranges'].keys():
+        if not self.opt_params[input_name]['ranges'][label]['enabled']:
+          continue
+        range_min = self.opt_params[input_name]['ranges'][label]['minval']
+        range_max = self.opt_params[input_name]['ranges'][label]['maxval']
+        if range_min > self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_min
+        if range_max < self.opt_params[input_name]['ranges'][label]['initial']:
+          self.opt_params[input_name]['ranges'][label]['initial'] = range_max
+
+        # copy the values to the ranges dict to be returned
+        # to optimization
+        ranges[label] = self.opt_params[input_name]['ranges'][label].copy()
+
+    return ranges
+
+  def get_num_params(self, step):
+    num_params = 0
+
+    for input_name in self.chunk_list[step]['inputs']:
+      for label in self.opt_params[input_name]['ranges'].keys():
+        if not self.opt_params[input_name]['ranges'][label]['enabled']:
+          continue
+        else:
+          num_params += 1
+
+    return num_params
+
+  def push_chunk_ranges(self, step, ranges):
+    import re
+
+    for label, value in ranges.items():
+      for tab_name in self.opt_params.keys():
+        if label in self.opt_params[tab_name]['ranges']:
+          self.opt_params[tab_name]['ranges'][label]['initial'] = float(value)
+
+  def clean_opt_grid(self):
+    # This is the top part of the Configure Optimization dialog.
+
+    column_count = self.sublayout.columnCount()
+    row = 0
+    while True:
+      try:
+        self.sublayout.itemAtPosition(row,0).widget()
+      except AttributeError:
+        # no more rows
+        break
+
+      for column in range(column_count):
+        try:
+          # Use deleteLater() to avoid memory leaks.
+          self.sublayout.itemAtPosition(row, column).widget().deleteLater()
+        except AttributeError:
+          # if item wasn't found
+          pass
+      row += 1
+
+    # reset data for number of sims per chunk (step)
+    self.lqnumsim = []
+    self.lqnumparams = []
+    self.lqinputs = []
+    self.old_num_steps = 0
+
+  def rebuildOptStepInfo(self):
+    # split chunks from paramter file
+    self.chunk_list = chunk_evinputs(self.opt_params, self.simlength, self.sim_dt)
+
+    if len(self.chunk_list) == 0:
+      self.clean_opt_grid()
+
+      qlabel = QLabel("No valid evoked inputs to optimize!")
+      qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+      qlabel.resize(qlabel.minimumSizeHint())
+      self.sublayout.addWidget(qlabel, 0, 0)
+      self.btnrunop.setEnabled(False)
+      self.btnreset.setEnabled(False)
+    else:
+      self.btnrunop.setEnabled(True)
+      self.btnreset.setEnabled(True)
+
+      if len(self.chunk_list) < self.old_num_steps or \
+       self.old_num_steps == 0:
+        # clean up the old grid sublayout
+        self.clean_opt_grid()
+
+    # keep track of inputs to optimize over (check against self.opt_params later)
+    all_inputs = []
+
+    # create a new grid sublayout with a row for each optimization step
+    for chunk_index, chunk in enumerate(self.chunk_list):
+      chunk['num_params'] = self.get_num_params(chunk_index)
+
+      inputs = []
+      for input_name in chunk['inputs']:
+        all_inputs.append(input_name)
+        inputs.append(trans_input(input_name))
+
+      if chunk_index >= self.old_num_steps:
+        qlabel = QLabel("Optimization step %d:"%(chunk_index+1))
+        qlabel.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        qlabel.resize(qlabel.minimumSizeHint())
+        self.sublayout.addWidget(qlabel,chunk_index, 0)
+
+        self.lqinputs.append(QLabel("Inputs: %s"%', '.join(inputs)))
+        self.lqinputs[chunk_index].setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        self.lqinputs[chunk_index].resize(self.lqinputs[chunk_index].minimumSizeHint())
+        self.sublayout.addWidget(self.lqinputs[chunk_index], chunk_index, 1)
+
+        # spacer here for readability of input names and reduce size
+        # of "Num simulations:"
+        self.sublayout.addItem(QSpacerItem(0, 0, hPolicy = QSizePolicy.MinimumExpanding), chunk_index, 2)
+
+        qlabel_params = QLabel("Num params:")
+        qlabel_params.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        qlabel_params.resize(qlabel_params.minimumSizeHint())
+        self.sublayout.addWidget(qlabel_params,chunk_index, 3)
+
+        self.lqnumparams.append(QLabel(str(chunk['num_params'])))
+        self.lqnumparams[chunk_index].setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        self.lqnumparams[chunk_index].resize(self.lqnumparams[chunk_index].minimumSizeHint())
+        self.sublayout.addWidget(self.lqnumparams[chunk_index],chunk_index, 4)
+
+        qlabel_sims = QLabel("Num simulations:")
+        qlabel_sims.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
+        qlabel_sims.resize(qlabel_sims.minimumSizeHint())
+        self.sublayout.addWidget(qlabel_sims,chunk_index, 5)
+
+        if chunk_index == len(self.chunk_list) - 1:
+          chunk['num_sims'] = self.default_num_total_sims
+        else:
+          chunk['num_sims'] = self.default_num_step_sims
+        self.lqnumsim.append(QLineEdit(str(chunk['num_sims'])))
+        self.lqnumsim[chunk_index].resize(
+          self.lqnumsim[chunk_index].minimumSizeHint())
+        self.sublayout.addWidget(self.lqnumsim[chunk_index],
+                                chunk_index, 6)
+      else:
+        self.lqinputs[chunk_index].setText("Inputs: %s"%', '.join(inputs))
+        self.lqnumparams[chunk_index].setText(str(chunk['num_params']))
+
+    self.old_num_steps = len(self.chunk_list)
+
+    remove_list = []
+    # remove a tab if necessary
+    for input_name in self.opt_params.keys():
+      if input_name not in all_inputs and input_name in self.dtab_idx:
+        remove_list.append(input_name)
+
+    while len(remove_list) > 0:
+      tab_name = remove_list.pop()
+      tab_index = self.dtab_idx[tab_name]
+
+      self.removeInput(tab_index)
+      del self.dtab_idx[tab_name]
+      del self.dtab_names[tab_index]
+      self.ltabkeys.pop(tab_index)
+
+      # rebuild dtab_idx and dtab_names
+      temp_dtab_names = {}
+      temp_dtab_idx = {}
+      for new_tab_index, old_tab_index in enumerate(self.dtab_idx.values()):
+        # self.dtab_idx[id_str] = tab_index
+        id_str = self.dtab_names[old_tab_index]
+        temp_dtab_names[new_tab_index] = id_str
+        temp_dtab_idx[id_str] = new_tab_index
+      self.dtab_names = temp_dtab_names
+      self.dtab_idx = temp_dtab_idx
+
+  def toggleEnableUserFields(self, step, enable=True):
+    if not enable:
+      # the optimization called this to disable parameters on
+      # for the step passed in to this function
+      self.current_opt_step = step
+
+    for input_name in self.chunk_list[step]['inputs']:
+      tab_index = self.dtab_idx[input_name]
+      tab = self.ltabs[tab_index]
+
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        self.dqchkbox[label].setEnabled(enable)
+        self.dqrange_slider[label].setEnabled(enable)
+        self.dqrange_multiplier[label].setEnabled(enable)
+
+  def get_input_timing_sigma(self, tab_name):
+    """ get timing_sigma from already loaded values """
+
+    label = 'sigma_t_' + tab_name
+    try:
+      timing_sigma = self.dparams[label]
+    except KeyError:
+      timing_sigma = 3.0
+      print("ERR: Couldn't fing %s. Using default %f" %
+            (label,timing_sigma))
+
+    if timing_sigma == 0.0:
+      # sigma of 0 will not produce a CDF
+      timing_sigma = 0.01
+
+    return timing_sigma
+
+  def createOptParams(self):
+    self.opt_params = {}
+
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      tab_name = self.dtab_names[tab_index]
+
+      # before optimization has started update 'mean', 'sigma',
+      # 'start', and 'user_end'
+      start_time_label = 't_' + tab_name
+      try:
+        try:
+          range_multiplier = float(self.dqrange_multiplier[start_time_label].text())
+        except ValueError:
+          range_multiplier = 0.0
+        value = self.dparams[start_time_label]
+      except KeyError:
+        print("ERR: could not find start time parameter: %s" % start_time_label)
+        continue
+
+      timing_sigma = self.get_input_timing_sigma(tab_name)
+      self.opt_params[tab_name] = {'ranges': {},
+                                  'mean' : value,
+                                  'sigma': timing_sigma,
+                                  'decay_multiplier': dconf['decay_multiplier']}
+
+      timing_bound = timing_sigma * range_multiplier
+      self.opt_params[tab_name]['user_start'] = max(0, value - timing_bound)
+      self.opt_params[tab_name]['user_end'] = min(self.simlength, value + timing_bound)
+
+      # add an empty dictionary so that rebuildOptStepInfo() can determine
+      # how many parameters
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        self.opt_params[tab_name]['ranges'][label] = {'enabled': True}
+
+  def clear_initial_opt_ranges(self):
+    self.initial_opt_ranges = {}
+
+  def populate_initial_opt_ranges(self):
+    self.initial_opt_ranges = {}
+
+    for input_name in self.opt_params.keys():
+      self.initial_opt_ranges[input_name] = deepcopy(self.opt_params[input_name]['ranges'])
+
+  def updateOptDeltas(self):
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      tab_name = self.dtab_names[tab_index]
+
+      # update the initial value
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        value = self.dparams[label]
+
+        # Calculate value to put in "Delta" column. When possible, use
+        # percentages, but when initial value is 0, use absolute changes
+        if tab_name not in self.initial_opt_ranges or \
+           not self.dqchkbox[label].isChecked():
+          self.dqdiff_label[label].setEnabled(False)
+          self.dqinitial_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
+          text = '--'
+          color_fmt = "QLabel { color : black; }"
+          self.dqopt_label[label].setText(text)
+          self.dqopt_label[label].setStyleSheet(color_fmt)
+          self.dqopt_label[label].setAlignment(Qt.AlignHCenter)
+          self.dqdiff_label[label].setAlignment(Qt.AlignHCenter)
+        else:
+          initial_value = float(self.initial_opt_ranges[tab_name][label]['initial'])
+          self.dqinitial_label[label].setText(("%6f"%initial_value).rstrip('0').rstrip('.'))
+          self.dqopt_label[label].setText(("%6f"%self.dparams[label]).rstrip('0').rstrip('.'))
+          self.dqopt_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+          self.dqdiff_label[label].setAlignment(Qt.AlignVCenter|Qt.AlignLeft)
+
+          if isclose(value, initial_value, abs_tol=1e-7):
+            diff = 0
+            text = "0.0"
+            color_fmt = "QLabel { color : black; }"
+          else:
+            diff = value - initial_value
+
+          if initial_value == 0:
+            # can't calculate %
+            if diff < 0:
+              text = ("%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : red; }"
+            elif diff > 0:
+              text = ("+%6f"%diff).rstrip('0').rstrip('.')
+              color_fmt = "QLabel { color : green; }"
+          else:
+            # calculate percent difference
+            percent_diff = 100 * diff/abs(initial_value)
+            if percent_diff < 0:
+              text = ("%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : red; }"
+            elif percent_diff > 0:
+              text = ("+%2.2f %%"%percent_diff)
+              color_fmt = "QLabel { color : green; }"
+
+        self.dqdiff_label[label].setStyleSheet(color_fmt)
+        self.dqdiff_label[label].setText(text)
+
+  def updateRangeFromSlider(self, label, range_min, range_max):
+    import re
+
+    label_match = re.search('(evprox|evdist)_([0-9]+)', label)
+    if label_match:
+      tab_name = label_match.group(1) + '_' + label_match.group(2)
+    else:
+      print("ERR: can't determine input name from parameter: %s" % label)
+      return
+
+    self.dqrange_min[label] = range_min
+    self.dqrange_max[label] = range_max
+    self.dqrange_label[label].setText(format_range_str(range_min) + " - " +
+                                      format_range_str(range_max))
+    self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
+    self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
+
+  def updateOptRanges(self, save_sliders=False):
+    # iterate through tabs. data is contained in grid layout
+    for tab_index, tab in enumerate(self.ltabs):
+      # now update the ranges
+      for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+        label = self.ltabkeys[tab_index][row_index]
+        self.updateRange(label, save_sliders)
+
+  def setfromdin (self,din):
+    if not din:
+      return
+
+    if 'dt' in din:
+      # din proivdes a complete parameter set
+      self.din = din
+      self.simlength = float(din['tstop'])
+      self.sim_dt = float(din['dt'])
+
+      self.cleanLabels()
+      self.removeAllInputs() # turn off any previously set inputs
+      self.ltabkeys = []
+      self.dtab_idx = {}
+      self.dtab_names = {}
+
+      for evinput in get_inputs(din):
+        if 'evprox_' in evinput:
+          self.addProx()
+        elif 'evdist_' in evinput:
+          self.addDist()
+
+    for k,v in din.items():
+      if k in self.dparams:
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        self.dparams[k] = new_value
+      elif k.count('gbar') > 0 and \
+           (k.count('evprox') > 0 or \
+            k.count('evdist') > 0):
+        # NOTE: will be deprecated in future release
+        # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+        try:
+          new_value = float(v)
+        except ValueError:
+          print("WARN: bad value for param %s: %s. Unable to convert"
+                " to a floating point number" % (k,v))
+          continue
+        lks = k.split('_')
+        eloc = lks[1]
+        enum = lks[2]
+        base_key_str = 'gbar_' + eloc + '_' + enum + '_'
+        if eloc == 'evprox':
+          for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
+            # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
+        elif eloc == 'evdist':
+          for ct in ['L2Pyr','L2Basket','L5Pyr']:
+            # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
+            key_str = base_key_str + ct + '_ampa'
+            self.dparams[key_str] = new_value
+            key_str = base_key_str + ct + '_nmda'
+            self.dparams[key_str] = new_value
+
+    if not self.optimization_running:
+      self.createOptParams()
+      self.rebuildOptStepInfo()
+      self.updateOptRanges(save_sliders=True)
+
+    self.updateOptDeltas()
+
+  def __str__ (self):
+    # don't write any values to param file
+    return ''
+
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
     super(RunParamDialog, self).__init__(parent,din)
     self.addHideButton()
+    self.parent = parent
 
   def initd (self):
 
@@ -1040,7 +2622,8 @@ class RunParamDialog (DictDialog):
                                   ('dipole_smooth_win',15.0),
                                   ('save_vsoma',0)])
 
-    self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
+    self.drand = OrderedDict([('prng_seedcore_opt', 0),
+                              ('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
                               ('prng_seedcore_extpois', 0),
                               ('prng_seedcore_extgauss', 0),
@@ -1054,16 +2637,18 @@ class RunParamDialog (DictDialog):
     self.stitle = 'Run Parameters'
 
     self.addtransvar('tstop','Duration (ms)')
-    self.addtransvar('dt','Integration timestep (ms)')
+    self.addtransvar('dt','Integration Timestep (ms)')
     self.addtransvar('celsius','Temperature (C)')
-    self.addtransvar('threshold','Firing threshold (mV)')
+    self.addtransvar('threshold','Firing Threshold (mV)')
     self.addtransvar('N_trials','Trials')
-    self.addtransvar('save_spec_data','Save spectral data')
-    self.addtransvar('save_figs','Save figures')
-    self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
+    self.addtransvar('save_spec_data','Save Spectral Data')
+    self.addtransvar('save_figs','Save Figures')
+    self.addtransvar('f_max_spec', 'Max Spectral Frequency (Hz)')
+    self.addtransvar('spec_cmap', 'Spectrogram Color Map')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
+    self.addtransvar('prng_seedcore_opt','Parameter Optimization')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
@@ -1073,16 +2658,61 @@ class RunParamDialog (DictDialog):
     self.addtransvar('prng_seedcore_evprox_2','Evoked Proximal 2')
     self.addtransvar('prng_seedcore_evdist_2','Evoked Distal 2')
 
+  def selectionchange(self,i):
+    self.spec_cmap = self.cmaps[i]
+    self.parent.updatesaveparams({})
+
   def initExtra (self):
+    global paramf
+
     DictDialog.initExtra(self)
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
-    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores']) 
+    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
+
+    self.spec_map_cb = None
+
+    self.cmaps = ['jet',
+                  'viridis',
+                  'plasma',
+                  'inferno',
+                  'magma',
+                  'cividis']
+
+    # get default spec_cmap
+    p_exp = ExpParams(paramf, 0)
+    expmt_group = p_exp.expmt_groups[0]
+    p = p_exp.return_pdict(expmt_group, 0)
+    self.spec_cmap = p['spec_cmap']
+
+    self.spec_map_cb = QComboBox()
+    for cmap in self.cmaps:
+      self.spec_map_cb.addItem(cmap)
+    self.spec_map_cb.currentIndexChanged.connect(self.selectionchange)
+    self.ltabs[1].layout.addRow(self.transvar('spec_cmap'),self.spec_map_cb)
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
 
   def getncore (self): return int(self.dqextra['NumCores'].text().strip())
+
+  def setfromdin (self,din):
+    if not din: return
+
+    # number of cores may have changed if the configured number failed
+    self.dqextra['NumCores'].setText(str(defncore))
+    for k,v in din.items():
+      if k in self.dqline:
+        self.dqline[k].setText(str(v).strip())
+      elif k == 'spec_cmap':
+        self.spec_cmap = v
+        self.spec_map_cb.setCurrentIndex(self.cmaps.index(self.spec_cmap))
+
+  def __str__ (self):
+    s = ''
+    for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
+    s += 'spec_cmap: ' + self.spec_cmap + os.linesep
+    return s
 
 # widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
 class CellParamDialog (DictDialog):
@@ -1237,7 +2867,7 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
-          if lk[3] == 'hh2': nv += '(S/cm2)'
+          if lk[3] == 'hh2' or lk[3] == 'cat' or lk[3] == 'ar' : nv += '(S/cm2)'
           else: nv += '(pS/micron2)'
         elif lk[2].count('el') > 0: 
           nv = dtrans[lk[1]] + ' leak reversal (mV)'
@@ -1448,7 +3078,7 @@ class SchematicDialog (QDialog):
 
 class BaseParamDialog (QDialog):
   # base widget for specifying params (contains buttons to create other widgets
-  def __init__ (self, parent):
+  def __init__ (self, parent, optrun_func):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
     self.initUI()
@@ -1459,28 +3089,34 @@ class BaseParamDialog (QDialog):
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
     self.evparamwin = EvokedInputParamDialog(self,None)
+    self.optparamwin = OptEvokedInputParamDialog(self,optrun_func)
     self.poisparamwin = PoissonInputParamDialog(self,None)
     self.tonicparamwin = TonicInputParamDialog(self,None)
-    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin, self.proxparamwin, self.distparamwin, self.evparamwin,self.poisparamwin, self.tonicparamwin]
+    self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin,
+                    self.proxparamwin, self.distparamwin, self.evparamwin,
+                    self.poisparamwin, self.tonicparamwin, self.optparamwin]
     self.updateDispParam()
+    self.parent = parent
 
   def updateDispParam (self):
     # now update the GUI components to reflect the param file selected
     try:
       din = quickreadprm(paramf)
-      if usingEvokedInputs(din): # default for evoked is to show average dipole
-        conf.dconf['drawavgdpl'] = True        
-      elif usingOngoingInputs(din): # default for ongoing is NOT to show average dipole
-        conf.dconf['drawavgdpl'] = False        
-    except:
-      print('could not read',paramf)
-    ddef = params_default.get_params_default()
-    for dlg in self.lsubwin: dlg.setfromdin(ddef) # first set to default?
-    try:
-      for dlg in self.lsubwin: dlg.setfromdin(din) # then update to values from file
-      self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
-    except:
-      print('WARNING: could not read dialog settings.')
+    except FileNotFoundError:
+      print("WARNING: no current parameter file")
+      return
+
+    if not 'tstop' in din:
+      print("WARNING: could not find a complete parameter file")
+      return
+
+    if usingEvokedInputs(din): # default for evoked is to show average dipole
+      conf.dconf['drawavgdpl'] = True
+    elif usingOngoingInputs(din): # default for ongoing is NOT to show average dipole
+      conf.dconf['drawavgdpl'] = False
+
+    for dlg in self.lsubwin: dlg.setfromdin(din) # update to values from file
+    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
 
   def setrunparam (self): bringwintotop(self.runparamwin)
   def setcellparam (self): bringwintotop(self.cellparamwin)
@@ -1513,25 +3149,26 @@ class BaseParamDialog (QDialog):
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.setToolTip('Set Run Parameters')
     self.btnrun.clicked.connect(self.setrunparam)
-    grid.addWidget(self.btnrun, row, 0, 1, 1); 
+    grid.addWidget(self.btnrun, row, 0, 1, 1)
 
     self.btncell = QPushButton('Cell',self)
     self.btncell.resize(self.btncell.sizeHint())
     self.btncell.setToolTip('Set Cell (Geometry, Synapses, Biophysics) Parameters')
     self.btncell.clicked.connect(self.setcellparam)
-    grid.addWidget(self.btncell, row, 1, 1, 1); row+=1
+    grid.addWidget(self.btncell, row, 1, 1, 1)
+    row+=1
 
     self.btnnet = QPushButton('Local Network',self)
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.setToolTip('Set Local Network Parameters')
     self.btnnet.clicked.connect(self.setnetparam)
-    grid.addWidget(self.btnnet, row, 0, 1, 1); 
+    grid.addWidget(self.btnnet, row, 0, 1, 1)
 
     self.btnsyngain = QPushButton('Synaptic Gains',self)
     self.btnsyngain.resize(self.btnsyngain.sizeHint())
     self.btnsyngain.setToolTip('Set Local Network Synaptic Gains')
     self.btnsyngain.clicked.connect(self.setsyngainparam)
-    grid.addWidget(self.btnsyngain, row, 1, 1, 1); 
+    grid.addWidget(self.btnsyngain, row, 1, 1, 1)
 
     row+=1
 
@@ -1545,31 +3182,36 @@ class BaseParamDialog (QDialog):
     self.btndist.resize(self.btndist.sizeHint())
     self.btndist.setToolTip('Set Rhythmic Distal Inputs')
     self.btndist.clicked.connect(self.setdistparam)
-    grid.addWidget(self.btndist, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btndist, row, 0, 1, 2)
+    row+=1
 
     self.btnev = QPushButton('Evoked Inputs',self)
     self.btnev.resize(self.btnev.sizeHint())
     self.btnev.setToolTip('Set Evoked Inputs')
     self.btnev.clicked.connect(self.setevparam)
-    grid.addWidget(self.btnev, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnev, row, 0, 1, 2)
+    row+=1
 
     self.btnpois = QPushButton('Poisson Inputs',self)
     self.btnpois.resize(self.btnpois.sizeHint())
     self.btnpois.setToolTip('Set Poisson Inputs')
     self.btnpois.clicked.connect(self.setpoisparam)
-    grid.addWidget(self.btnpois, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnpois, row, 0, 1, 2)
+    row+=1
 
     self.btntonic = QPushButton('Tonic Inputs',self)
     self.btntonic.resize(self.btntonic.sizeHint())
     self.btntonic.setToolTip('Set Tonic (Current Clamp) Inputs')
     self.btntonic.clicked.connect(self.settonicparam)
-    grid.addWidget(self.btntonic, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btntonic, row, 0, 1, 2)
+    row+=1
 
     self.btnsave = QPushButton('Save Parameters To File',self)
     self.btnsave.resize(self.btnsave.sizeHint())
     self.btnsave.setToolTip('Save All Parameters to File (Specified by Simulation Name)')
     self.btnsave.clicked.connect(self.saveparams)
-    grid.addWidget(self.btnsave, row, 0, 1, 2); row+=1
+    grid.addWidget(self.btnsave, row, 0, 1, 2)
+    row+=1
 
     self.btnhide = QPushButton('Hide Window',self)
     self.btnhide.resize(self.btnhide.sizeHint())
@@ -1595,15 +3237,17 @@ class BaseParamDialog (QDialog):
       msg.setText(tmpf + ' already exists. Over-write?')
       msg.setWindowTitle('Over-write file(s)?')
       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
-      if msg.exec_() == QMessageBox.Ok: oktosave = True
+      if msg.exec_() == QMessageBox.Ok:
+          oktosave = True
+
     if oktosave:
-      if debug: print('Saving params to ',  tmpf)
-      try:
-        with open(tmpf,'w') as fp: fp.write(str(self))
-        paramf = dconf['paramf'] = tmpf # success? update paramf
-        basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      except:
-        print('Exception in saving param file!',tmpf)
+      with open(tmpf,'w') as fp:
+        fp.write(str(self))
+
+      paramf = dconf['paramf'] = tmpf # update paramf
+      basedir = os.path.join(dconf['datdir'], self.qle.text())
+      os.makedirs(basedir, exist_ok=True)
+
     return oktosave
 
   def updatesaveparams (self, dtest):
@@ -1681,7 +3325,7 @@ class HNNGUI (QMainWindow):
   # main HNN GUI class
   def __init__ (self):
     # initialize the main HNN GUI
-    global dfile, ddat, paramf
+    global dfile, paramf
     super().__init__()   
     self.runningsim = False
     self.runthread = None
@@ -1690,19 +3334,26 @@ class HNNGUI (QMainWindow):
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.dextdata = OrderedDict() # external data
     self.schemwin = SchematicDialog(self)
+    self.m = self.toolbar = None
+    self.baseparamwin = BaseParamDialog(self, self.startoptmodel)
+    self.optMode = False
     self.initUI()
-    self.baseparamwin = BaseParamDialog(self)
     self.visnetwin = VisnetDialog(self)
     self.helpwin = HelpDialog(self)
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     self.waitsimwin = WaitSimDialog(self)
+    default_param = os.path.join(dconf['dbase'],'data','default')
+    first_load = not (os.path.exists(default_param))
+    if first_load:
+      QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. Press 'Run Simulation' to display simulation output")
+    else:
+      self.statusBar().showMessage("Loaded %s"%default_param)
 
   def redraw (self):
     # redraw simulation & external data
-    self.m.plotsimdat()
-    self.m.draw()
     self.m.plot()
+    self.m.draw()
 
   def changeFontSize (self):
     # bring up window to change font sizes
@@ -1727,17 +3378,22 @@ class HNNGUI (QMainWindow):
     
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
-    global paramf,dfile
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'param')) # uses forward slash, even on Windows OS
+    global paramf,basedir,dfile
+    qfd = QFileDialog()
+    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    fn = qfd.getOpenFileName(self, 'Open param file',
+                                     os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
     if fn[0]:
       paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       try:
         dfile = getinputfiles(paramf) # reset input data - if already exists
       except:
         pass
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
-      self.initSimCanvas() # recreate canvas 
+      self.initSimCanvas() # recreate canvas
       # self.m.plot() # replot data
       self.setWindowTitle(paramf)
       # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
@@ -1746,27 +3402,40 @@ class HNNGUI (QMainWindow):
         simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
       self.populateSimCB() # populate the combobox
 
+      if len(self.dextdata) > 0:
+        self.toggleEnableOptimization(True)
+
   def loadDataFile (self, fn):
     # load a dipole data file
+    global paramf
+
     import simdat
     try:
       self.dextdata[fn] = np.loadtxt(fn)
       simdat.ddat['dextdata'] = self.dextdata
       print('Loaded data in ', fn)
     except:
-      print('Could not load data in ', fn)
+      raise
+      print('WARNING: could not load data in ', fn)
       return False
     try:
-      self.m.plotextdat()
+      self.m.plot()
       self.m.draw() # make sure new lines show up in plot
+
+      if paramf:
+        self.toggleEnableOptimization(True)
       return True
     except:
-      print('Could not plot data from ', fn)
+      print('WARNING: could not plot data from ', fn)
+      raise
       return False
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    fn = QFileDialog.getOpenFileName(self, 'Open file', os.path.join(dconf['dbase'],'data'))
+    qfd = QFileDialog()
+    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    fn = qfd.getOpenFileName(self, 'Open data file',
+                                     os.path.join(hnn_root_dir,'data'))
     if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
@@ -1774,6 +3443,8 @@ class HNNGUI (QMainWindow):
     import simdat
     self.m.clearlextdatobj()
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
+    self.toggleEnableOptimization(False)
+    self.m.plot()  # recreate canvas
     self.m.draw()
 
   def setparams (self):
@@ -1793,6 +3464,15 @@ class HNNGUI (QMainWindow):
                    "<a href=https://github.com/jonescompneurolab/hnn>HNN On Github</a><br>"+\
                    "© 2017-2019 <a href=http://brown.edu>Brown University, Providence, RI</a><br>"+\
                    "<a href=https://github.com/jonescompneurolab/hnn/blob/master/LICENSE>Software License</a>")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    msgBox.exec_()
+
+  def showOptWarnDialog (self):
+    # TODO : not implemented yet
+    msgBox = QMessageBox(self)
+    msgBox.setTextFormat(Qt.RichText)
+    msgBox.setWindowTitle('Warning')
+    msgBox.setText("")
     msgBox.setStandardButtons(QMessageBox.Ok)
     msgBox.exec_()
 
@@ -1844,7 +3524,6 @@ class HNNGUI (QMainWindow):
   def showRasterPlot (self):
     # start the raster plot visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
@@ -1853,7 +3532,6 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     # start the dipole visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
@@ -1865,7 +3543,7 @@ class HNNGUI (QMainWindow):
   def togAvgDpl (self):
     # toggle drawing of the average (across trials) dipole
     conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
-    self.m.plotsimdat()
+    self.m.plot()
     self.m.draw()
 
   def hidesubwin (self):
@@ -1885,7 +3563,6 @@ class HNNGUI (QMainWindow):
     if self.baseparamwin.syngainparamwin.isVisible(): lwin.append(self.baseparamwin.syngainparamwin)
     curx,cury,maxh=0,0,0
     for win in lwin: 
-      widget = win.geometry()
       win.move(curx, cury)
       curx += win.width()
       maxh = max(maxh,win.height())
@@ -1898,17 +3575,17 @@ class HNNGUI (QMainWindow):
   def updateDatCanv (self,fn):
     # update the simulation data and canvas
     try:
-      dfile = getinputfiles(fn) # reset input data - if already exists
+      getinputfiles(fn) # reset input data - if already exists
     except:
       pass
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.setWindowTitle(fn)
 
   def removeSim (self):
     # remove the currently selected simulation
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('removeSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
@@ -1922,6 +3599,8 @@ class HNNGUI (QMainWindow):
       simdat.lsimidx = max(0,len(simdat.lsimdat) - 1)
       if len(simdat.lsimdat) > 0:
         paramf = simdat.lsimdat[simdat.lsimidx][0]
+        param_fname = os.path.splitext(os.path.basename(paramf))
+        basedir = os.path.join(dconf['datdir'], param_fname[0])
         if debug: print('new paramf:',paramf,simdat.lsimidx)
         self.updateDatCanv(paramf)
         self.cbsim.setCurrentIndex(simdat.lsimidx)
@@ -1936,18 +3615,22 @@ class HNNGUI (QMainWindow):
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
       simdat.lsimidx -= 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
       self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def nextSim (self):
     # go to next simulation
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('nextSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
       simdat.lsimidx += 1
       paramf = simdat.lsimdat[simdat.lsimidx][0]
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       if debug: print('new paramf:',paramf,simdat.lsimidx)
       self.updateDatCanv(paramf)
       self.cbsim.setCurrentIndex(simdat.lsimidx)
@@ -1957,15 +3640,18 @@ class HNNGUI (QMainWindow):
     global paramf
     import simdat
     paramf = '' # set paramf to empty so no data gets loaded
+    basedir = None
     simdat.ddat = {} # clear data in simdat.ddat
     simdat.lsimdat = []
     simdat.lsimidx = 0
     self.populateSimCB() # un-populate the combobox
+    self.toggleEnableOptimization(False)
+
 
   def clearSimulations (self):
     # clear all simulation data and erase simulations from canvas (does not clear external data)
     self.clearSimulationData()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
@@ -1975,7 +3661,7 @@ class HNNGUI (QMainWindow):
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
@@ -2021,15 +3707,9 @@ class HNNGUI (QMainWindow):
     runSimNSGAct.setStatusTip('Run simulation on Neuroscience Gateway Portal (requires NSG account and internet connection).')
     runSimNSGAct.triggered.connect(self.controlNSGsim)
 
-    if dconf['optrun']:
-      optSimAct = QAction('Optimize model', self)
-      optSimAct.setShortcut('Ctrl+O')
-      optSimAct.setStatusTip('Optimize Model')
-      optSimAct.triggered.connect(self.startoptmodel)
-
-    menubar = self.menuBar()
-    fileMenu = menubar.addMenu('&File')
-    menubar.setNativeMenuBar(False)
+    self.menubar = self.menuBar()
+    fileMenu = self.menubar.addMenu('&File')
+    self.menubar.setNativeMenuBar(False)
     fileMenu.addAction(selParamFile)
     fileMenu.addSeparator()
     fileMenu.addAction(loadDataFile)
@@ -2038,7 +3718,7 @@ class HNNGUI (QMainWindow):
     fileMenu.addAction(exitAction)
 
     # part of edit menu for changing drawing properties (line thickness, font size, toggle avg dipole drawing)
-    editMenu = menubar.addMenu('&Edit')
+    editMenu = self.menubar.addMenu('&Edit')
     viewAvgDplAction = QAction('Toggle Average Dipole Drawing',self)
     viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
     viewAvgDplAction.triggered.connect(self.togAvgDpl)
@@ -2064,7 +3744,7 @@ class HNNGUI (QMainWindow):
     editMenu.addAction(clearCanv)
     
     # view menu - to view drawing/visualizations
-    viewMenu = menubar.addMenu('&View')
+    viewMenu = self.menubar.addMenu('&View')
     viewDipoleAction = QAction('View Simulation Dipoles',self)
     viewDipoleAction.setStatusTip('View Simulation Dipoles')
     viewDipoleAction.triggered.connect(self.showDipolePlot)
@@ -2118,14 +3798,19 @@ class HNNGUI (QMainWindow):
     hideWindowsAction.setShortcut('Ctrl+H')
     viewMenu.addAction(hideWindowsAction)
 
-    simMenu = menubar.addMenu('&Simulation')
+    simMenu = self.menubar.addMenu('&Simulation')
     setParmAct = QAction('Set Parameters',self)
     setParmAct.setStatusTip('Set Simulation Parameters')
     setParmAct.triggered.connect(self.setparams)
     simMenu.addAction(setParmAct)
     simMenu.addAction(runSimAct)    
     if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
-    if dconf['optrun']: simMenu.addAction(optSimAct)
+    setOptParamAct = QAction('Configure Optimization', self)
+    setOptParamAct.setShortcut('Ctrl+O')
+    setOptParamAct.setStatusTip('Set parameters for evoked input optimization')
+    setOptParamAct.triggered.connect(self.showoptparamwin)
+    simMenu.addAction(setOptParamAct)
+    self.toggleEnableOptimization(False)
     prevSimAct = QAction('Go to Previous Simulation',self)
     prevSimAct.setShortcut('Ctrl+Z')
     prevSimAct.setStatusTip('Go Back to Previous Simulation')
@@ -2141,7 +3826,7 @@ class HNNGUI (QMainWindow):
     clearSims2.triggered.connect(self.clearSimulations)
     simMenu.addAction(clearSims2)
 
-    aboutMenu = menubar.addMenu('&About')
+    aboutMenu = self.menubar.addMenu('&About')
     aboutAction = QAction('About HNN',self)
     aboutAction.setStatusTip('About HNN')
     aboutAction.triggered.connect(self.showAboutDialog)
@@ -2150,6 +3835,15 @@ class HNNGUI (QMainWindow):
     helpAction.setStatusTip('Help on how to use HNN (parameters).')
     helpAction.triggered.connect(self.showHelpDialog)
     #aboutMenu.addAction(helpAction)
+
+  def toggleEnableOptimization (self, toEnable):
+    for menu in self.menubar.findChildren(QMenu):
+      if menu.title() == '&Simulation':
+        for item in menu.actions():
+          if item.text() == 'Configure Optimization':
+            item.setEnabled(toEnable)
+            break
+        break
 
   def addButtons (self, gRow):
     self.pbtn = pbtn = QPushButton('Set Parameters', self)
@@ -2176,6 +3870,7 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
     
   def shownetparamwin (self): bringwintotop(self.baseparamwin.netparamwin)
+  def showoptparamwin (self): bringwintotop(self.baseparamwin.optparamwin)
   def showdistparamwin (self): bringwintotop(self.erselectdistal)
   def showproxparamwin (self): bringwintotop(self.erselectprox)
   def showvisnet (self): Popen([getPyComm(), 'visnet.py', 'cells', paramf]) # nonblocking
@@ -2259,7 +3954,7 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    self.initSimCanvas(gRow)
+    self.initSimCanvas(gRow=gRow, reInit=False)
     gRow += 2
 
     # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
@@ -2283,10 +3978,13 @@ class HNNGUI (QMainWindow):
     # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
-    self.setCentralWidget(widget);
+    self.setCentralWidget(widget)
 
     self.c = Communicate()
-    self.c.finishSim.connect(self.done)
+    self.c.commsig.connect(self.baseparamwin.updateDispParam)
+
+    self.d = DoneSignal()
+    self.d.finishSim.connect(self.done)
 
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass
@@ -2301,12 +3999,14 @@ class HNNGUI (QMainWindow):
 
   def onActivateSimCB (self, s):
     # load simulation when activating simulation combobox
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('onActivateSimCB',s,paramf,self.cbsim.currentIndex(),simdat.lsimidx)
     if self.cbsim.currentIndex() != simdat.lsimidx:
       if debug: print('Loading',s)
       paramf = s
+      param_fname = os.path.splitext(os.path.basename(paramf))
+      basedir = os.path.join(dconf['datdir'], param_fname[0])
       simdat.lsimidx = self.cbsim.currentIndex()
       self.updateDatCanv(paramf)
 
@@ -2320,30 +4020,27 @@ class HNNGUI (QMainWindow):
       self.cbsim.addItem(l[0])
     self.cbsim.setCurrentIndex(simdat.lsimidx)
 
-  def initSimCanvas (self,gRow=1,recalcErr=True):
+  def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
     # initialize the simulation canvas, loading any required data
-    try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
-      self.grid.removeWidget(self.m)
-      self.grid.removeWidget(self.toolbar)
-      self.m.setParent(None)
-      self.toolbar.setParent(None)
-      self.m = self.toolbar = None
-    except:
-      pass
+
+    gCol = 0
+
+    if reInit == True:
+      self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
+      self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
+
     if debug: print('paramf in initSimCanvas:',paramf)
-    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI()) # also loads data
+    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
-    gCol = 0
     gWidth = 4
-    self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
-    self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
+    self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth)
+    self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth)
     if len(self.dextdata.keys()) > 0:
       import simdat
       simdat.ddat['dextdata'] = self.dextdata
-      self.m.plotextdat(recalcErr)
-      # self.m.plotsimdat()
+      self.m.plot(recalcErr)
       self.m.draw()
 
   def setcursors (self,cursor):
@@ -2364,13 +4061,18 @@ class HNNGUI (QMainWindow):
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
-      self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
+      self.optMode = True
+      try:
+        self.optmodel(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
+      except RuntimeError:
+        print("ERR: Optimization aborted")
 
   def controlsim (self):
     # control the simulation
     if self.runningsim:
       self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
     else:
+      self.optMode = False
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
   def controlNSGsim (self):
@@ -2388,12 +4090,21 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage('Terminating sim. . .')
       self.runningsim = False
       self.runthread.stop() # killed = True # terminate()
-      self.btnsim.setText("Start Simulation")
+      self.btnsim.setText("Run Simulation")
       self.qbtn.setEnabled(True)
       self.statusBar().showMessage('')
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
+    # make sure params saved and ok to run
+    if not self.baseparamwin.saveparams():
+      return
+
+    self.baseparamwin.optparamwin.btnreset.setEnabled(False)
+    self.baseparamwin.optparamwin.btnrunop.setText('Stop Optimization')
+    self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+    self.baseparamwin.optparamwin.btnrunop.clicked.connect(self.stopsim)
+
     # optimize the model
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
@@ -2402,10 +4113,8 @@ class HNNGUI (QMainWindow):
     self.runningsim = True
 
     self.statusBar().showMessage("Optimizing model. . .")
-    self.btnsim.setText("Stop Optimization") 
-    self.qbtn.setEnabled(False)
 
-    self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
+    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -2421,7 +4130,7 @@ class HNNGUI (QMainWindow):
 
     self.setcursors(Qt.WaitCursor)
 
-    print('Starting simulation. . .')
+    print('Starting simulation (%d cores). . .'%ncore)
     self.runningsim = True
 
     if onNSG:
@@ -2429,7 +4138,7 @@ class HNNGUI (QMainWindow):
     else:
       self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
+    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -2443,20 +4152,32 @@ class HNNGUI (QMainWindow):
 
     bringwintotop(self.waitsimwin)
 
-  def done (self):
+  def done (self, optMode, failed):
     # called when the simulation completes running
     if debug: print('done')
     self.runningsim = False
     self.waitsimwin.hide()
     self.statusBar().showMessage("")
-    self.btnsim.setText("Start Simulation")
+    self.btnsim.setText("Run Simulation")
     self.qbtn.setEnabled(True)
-    self.initSimCanvas() # recreate canvas (plots too) to avoid incorrect axes
+    self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     self.setcursors(Qt.ArrowCursor)
-    QMessageBox.information(self, "Done!", "Finished running sim using " + paramf + '. Saved data/figures in: ' + basedir)
+    if failed:
+      msg = "Failed "
+    else:
+      msg = "Finished "
+
+    if optMode:
+      msg += "running optimization "
+      self.baseparamwin.optparamwin.btnrunop.setText('Prepare for Another Optimization')
+      self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+      self.baseparamwin.optparamwin.btnrunop.clicked.connect(self.baseparamwin.optparamwin.prepareOptimization)
+    else:
+      msg += "running sim "
+
+    QMessageBox.information(self, "Done!", msg + "using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle(paramf)
     self.populateSimCB() # populate the combobox
 

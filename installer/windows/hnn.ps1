@@ -423,7 +423,7 @@ if ($null -ne $script:VIRTUALENV) {
   $script:PYTHON = "$HOME\venv\hnn\Scripts\python.exe"
   if (Test-Python-3($script:PYTHON)) {
     # use pip3 for good measure
-    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install PyOpenGL pyqtgraph matplotlib scipy PyQt5" -Wait
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install PyOpenGL pyqtgraph matplotlib scipy PyQt5 psutil nlopt" -Wait
   }
   else {
     Write-Warning "Virtualenv failed to create a valid python3 environment"
@@ -448,12 +448,14 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda
+    # python 3.7 doesn't work with NEURON (tried 7.7) as of 8/19/19
+    conda create -y -n hnn python=3.6 PyOpenGL pyqtgraph matplotlib scipy conda psutil
+    Start-Process "$CONDA_ENV\Scripts\pip3" "install nlopt" -Wait
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null
 
-    "set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
+    #"set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
     "set PYTHONHOME=$CONDA_ENV" | Add-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
   }
   else {
@@ -498,7 +500,7 @@ elseif ($null -ne $script:VIRTUALENV) {
   Write-Host "$HOME\venv\hnn\Scripts\activate"
 }
 Write-Host "cd $HNN_PATH"
-Write-Host "python hnn.py hnn.cfg"
+Write-Host "python hnn.py"
 Write-Host ""
 
 return
