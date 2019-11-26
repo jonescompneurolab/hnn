@@ -3,6 +3,9 @@
 source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
 
+# make sure hnn_out directory is readable by the user
+sudo chown -R hnn_user:hnn_group /home/hnn_user/hnn_out
+
 echo "Starting HNN GUI..."
 
 if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
