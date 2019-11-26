@@ -19,6 +19,7 @@ import currentfn
 import dipolefn
 import spikefn
 import axes_create as ac
+from conf import dconf
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
@@ -81,7 +82,7 @@ class MorletSpec():
     # plots spec to axis
     def plot_to_ax(self, ax_spec, dt):
         # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
+        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper', cmap=plt.get_cmap(self.p_dict['spec_cmap']))
 
         return pc
 
@@ -343,7 +344,8 @@ class PhaseLock():
 
 # functions on the aggregate spec data
 class Spec():
-    def __init__(self, fspec, dtype='dpl'):
+    def __init__(self, fspec, spec_cmap='jet', dtype='dpl'):
+        print("here")
         # save dtype
         self.dtype = dtype
 
@@ -356,6 +358,8 @@ class Spec():
         except:
           self.expmt = ''
         self.fname = 'spec.npz' # fspec.split('/')[-1].split('-spec')[0]
+
+        self.spec_cmap = spec_cmap
 
         # parse data
         self.__parse_f(fspec)
@@ -579,7 +583,7 @@ class Spec():
         extent_xy = [xmin, xmax, ymax, ymin]
 
         # plot
-        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
+        im = ax.imshow(dcut['TFR'], extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap(self.spec_cmap))
 
         return im
 
@@ -666,11 +670,11 @@ def read(fdata_spec, type='dpl'):
         return spec_L2, spec_L5
 
 # average spec data for a given set of files
-def average(fname, fspec_list):
+def average(fname, fspec_list, spec_cmap='jet'):
     for fspec in fspec_list:
         print(fspec)
         # load spec data
-        spec = Spec(fspec)
+        spec = Spec(fspec, spec_cmap)
 
         # if this is first file, copy spec data structure wholesale to x
         if fspec is fspec_list[0]:
@@ -702,7 +706,7 @@ def average(fname, fspec_list):
         np.savez_compressed(fname, t_agg=x['agg']['t'], f_agg=x['agg']['f'], TFR_agg=x['agg']['TFR'])
 
 # spectral plotting kernel should be simpler and take just a file name and an axis handle
-def pspec_ax(ax_spec, fspec, xlim, layer=None):
+def pspec_ax(ax_spec, fspec, xlim, spec_cmap='jet', layer=None):
     """ Spectral plotting kernel for ONE simulation run
         ax_spec is the axis handle. fspec is the file name
     """
@@ -729,7 +733,7 @@ def pspec_ax(ax_spec, fspec, xlim, layer=None):
             print(data_spec.keys())
 
     extent_xy = [xlim[0], xlim[1], f[-1], 0.]
-    pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap('jet'))
+    pc = ax_spec.imshow(TFR, extent=extent_xy, aspect='auto', origin='upper', cmap=plt.get_cmap(spec_cmap))
     [vmin, vmax] = pc.get_clim()
     # print(np.min(TFR), np.max(TFR))
     # print(vmin, vmax)
