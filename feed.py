@@ -85,14 +85,13 @@ class ParFeedAll ():
     # values MUST be sorted for VecStim()!
     # start the initial value
     if lamtha > 0.:
-      t_gen = t0 + self.__t_wait(lamtha)
-      val_pois = np.array([])
-      if t_gen < T: np.append(val_pois, t_gen)
-      # vals are guaranteed to be monotonically increasing, no need to sort
+      val_pois = np.array([])      
+      t_gen = t0 - lamtha * 2 # start before t0 to remove artifact of lower event rate at start of period
       while t_gen < T:
-        # so as to not clobber confusingly base off of t_gen ...
-        t_gen += self.__t_wait(lamtha)
-        if t_gen < T: val_pois = np.append(val_pois, t_gen)
+        t_gen += self.__t_wait(lamtha) # move forward by the wait time (so as to not clobber base off of t_gen)
+        if t_gen >= t0 and t_gen < T: # make sure event time is within the specified interval
+          # vals are guaranteed to be monotonically increasing, no need to sort
+          val_pois = np.append(val_pois, t_gen) 
     else:
       val_pois = np.array([])
     # checks the distribution stats
