@@ -363,4 +363,3 @@ cellParams['L5Basket_rule'] = {
 for secName,sec in cellParams['L5Basket_rule']['secs'].items():
     sec['vinit'] = -64.9737
 
-

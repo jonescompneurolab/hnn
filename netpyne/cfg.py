@@ -95,7 +95,7 @@ cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80}
 # ----------------------------------------------------------------------------
 cfg.gridSpacingPyr = 1  # 50
 cfg.gridSpacingBasket = [1, 1, 3]  
-cfg.xzScaling = 1 #100
+cfg.xzScaling = 100
 cfg.sizeY = 2000 
 
 cfg.localConn = True
