@@ -25,14 +25,7 @@ It is necessary to turn off Hyper-V for using HNN with Docker Toolbox. You may f
 
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download)
    * Here's the link to the [direct download of version 64.1.20.1.4](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
-2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder. If you choose a different folder the `hnn_docker.sh` script will not be able to launch it automatically. You can start it manually using the procedure below:
-    * (optional) starting VcXsrv manually:
-        1. Start the XLaunch desktop app from the VcXsrv folder in the start menu.
-        2. Choose "Multiple windows" and click 'Next'.
-        3. Select "Start no client" and click 'Next'.
-        4. **Make sure that "Disable access control" is checked under "Extra settings".** Click 'Next'.
-        5. Click "Save configuration" to create a shortcut with the settings we just chose. Click "Finish" and an "X" icon will appear in the lower-right dock signaling that VcXsrv has started.
-        6. A message from Windows firewall to allow connections may pop up. If it does, choose options allowing connections to the VcXsrv when connected to both public and private networks.
+2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder. If you choose a different folder the `hnn_docker.sh` script will not be able to launch it automatically.
 
 ## Prerequisite: Docker Toolbox
 
