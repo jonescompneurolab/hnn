@@ -7,6 +7,7 @@ UPGRADE=0
 RESTART_NEEDED=0
 STOP=0
 START=0
+FAILED=0
 UNINSTALL=0
 OS=
 VCXSRV_PID=
@@ -27,10 +28,23 @@ while [ -n "$1" ]; do
 done
 
 function cleanup {
+  FAILED=0
+  [[ $1 ]] && FAILED=$1
+
   if [[ "$OS"  =~ "windows" ]] && [ ! -z "${VCXSRV_PID}" ]; then
     echo "Killing VcXsrv PID ${VCXSRV_PID}" >> hnn_docker.log
     kill ${VCXSRV_PID} &> /dev/null
   fi
+
+  if [[ $FAILED -eq "0" ]]; then
+    echo "Script hnn_docker.sh finished successfully" | tee -a hnn_docker.log
+    exit 0
+  elif [[ $FAILED -eq "1" ]]; then
+    echo "Script cannot conntinue" | tee -a hnn_docker.log
+  elif [[ $FAILED -eq "2" ]]; then
+    echo "Please see hnn_docker.log for more details" | tee -a hnn_docker.log
+  fi
+  exit $FAILED
 }
 
 function remove_container {
@@ -44,22 +58,32 @@ function remove_container {
                 echo "done" | tee -a hnn_docker.log
               else
                 echo "failed" | tee -a hnn_docker.log
-                cleanup
-                exit 1
+                cleanup 2
               fi
               break;;
-      [Nn]* ) echo "Cannot continue" | tee -a hnn_docker.log
-              cleanup
-              exit 1
+      [Nn]* ) cleanup 1
               break;;
       * ) echo "Please answer yes or no.";;
     esac
   done
 }
 
+ALREADY_RUNNING=0
+function stop_container {
+  echo -n "Stopping HNN container... " | tee -a hnn_docker.log
+  docker stop hnn_container &> /dev/null
+  if [[ $? -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup 2
+  else
+    ALREADY_RUNNING=0
+    echo "done" | tee -a hnn_docker.log
+  fi
+}
+
 if [[ $START -eq "0" ]] && [[ $STOP -eq "0" ]] && [[ $UNINSTALL -eq "0" ]] && [[ $UPGRADE -eq "0" ]]; then
   echo "No valid action provided. Available actions are start, stop, upgrade, and uninstall"
-  exit 1
+  cleanup 1
 fi
 
 echo "Performing pre-checks before starting HNN" | tee -a hnn_docker.log
@@ -105,14 +129,16 @@ else
   else
     echo "Docker version ${DOCKER_VERSION} is installed, but needs to be started." | tee -a hnn_docker.log
   fi
-  exit 1
+  cleanup 1
 fi
 
 if [[ $UPGRADE -eq "1" ]]; then
   echo "Downloading new HNN image from Docker Hub (may require login)..." | tee -a hnn_docker.log
+  echo "Running command: docker pull ${HNN_DOCKER_IMAGE}" >> hnn_docker.log
   docker pull ${HNN_DOCKER_IMAGE} 2>&1
   echo "Done" | tee -a hnn_docker.log
   if [[ $? -eq "0" ]]; then
+    echo "Running command: docker ps -a |grep hnn_container" >> hnn_docker.log
     DOCKER_CONTAINER=$(docker ps -a |grep hnn_container)
     if [[ $? -eq "0" ]]; then
       LAST_USED_IMAGE=$(echo ${DOCKER_CONTAINER}|cut -d' ' -f 2)
@@ -131,21 +157,16 @@ if [[ $UPGRADE -eq "1" ]]; then
   fi
   if [[ $START -eq "0" ]]; then
     # just doing upgrade
-    exit ${RETURN_STATUS}
+    cleanup ${RETURN_STATUS}
   fi
 fi
 
 if [[ "$STOP" -eq "1" ]]; then
-  docker stop hnn_container
-  if [[ "$?" -ne "0" ]]; then
-    echo "Failed to stop HNN container" | tee -a hnn_docker.log
-  else
-    echo "Successfully stopped HNN container" | tee -a hnn_docker.log
-  fi
-  exit 0
+  stop_container
 fi
 
 if [[ "$UNINSTALL" -eq "1" ]]; then
+  echo "Running command: docker ps -a |grep hnn_container" >> hnn_docker.log
   docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
   if [[ $? -eq "0" ]]; then
     remove_container
@@ -154,10 +175,11 @@ if [[ "$UNINSTALL" -eq "1" ]]; then
     echo
     read -p "Are you sure that you want to remove the HNN image? (y/n)" yn
     case $yn in
-      [Yy]* ) docker rmi -f ${HNN_DOCKER_IMAGE}
+      [Yy]* ) echo "Running command: docker rmi -f ${HNN_DOCKER_IMAGE}" >> hnn_docker.log
+              docker rmi -f ${HNN_DOCKER_IMAGE}
               if [[ "$?" -ne "0" ]]; then
                 echo "Failed to remove HNN image" | tee -a hnn_docker.log
-                exit 1
+                cleanup 2
               else
                 echo "Removed HNN image" | tee -a hnn_docker.log
               fi
@@ -167,7 +189,7 @@ if [[ "$UNINSTALL" -eq "1" ]]; then
     esac
   done
 
-  exit 0
+  cleanup 0
 fi
 
 echo -n "Checking if docker-compose is found... " | tee -a hnn_docker.log
@@ -177,7 +199,7 @@ if [[ "$?" -eq "0" ]]; then
 else
   echo "failed" | tee -a hnn_docker.log
   echo "docker-compose could not be found. Please make sure it was installed with docker." | tee -a hnn_docker.log
-  exit 1
+  cleanup 1
 fi
 
 XAUTH=~/.Xauthority
@@ -219,8 +241,7 @@ if [[ "$OS" =~ "windows" ]]; then
     OUTPUT=$("${XAUTH_BIN}" nlist :0 2>> hnn_docker.log)
     if [[ -z $OUTPUT ]]; then
       echo "failed. Still an error with xauth" | tee -a hnn_docker.log
-      cleanup
-      exit 1
+      cleanup 2
     fi
     echo "done" | tee -a hnn_docker.log
     echo "Command: "${XAUTH_BIN}" nlist :0" >> hnn_docker.log
@@ -236,7 +257,7 @@ elif [[ "$OS" =~ "mac" ]]; then
     echo "ok" | tee -a hnn_docker.log
   else
     echo "failed. Please install XQuartz" | tee -a hnn_docker.log
-    exit 1
+    cleanup 2
   fi
 
   XAUTH_BIN="$(which xauth)"
@@ -258,7 +279,6 @@ elif [[ "$OS" =~ "mac" ]]; then
     fi
   fi
   if [[ "$XQUARTZ_NOAUTH" =~ "1" ]]; then
-
     defaults write org.macosforge.xquartz.X11.plist no_auth 0 >> hnn_docker.log 2>&1
     if [[ $? -ne "0" ]]; then
       STATUS=1
@@ -268,7 +288,7 @@ elif [[ "$OS" =~ "mac" ]]; then
     echo "ok" | tee -a hnn_docker.log
   else
     echo "failed" | tee -a hnn_docker.log
-    exit 1
+    cleanup 2
   fi
 
   echo -n "Checking XQuartz authorization... " | tee -a hnn_docker.log
@@ -283,7 +303,7 @@ elif [[ "$OS" =~ "mac" ]]; then
     OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
     if [[ -z $OUTPUT ]]; then
       echo "failed. Still an error with xauth" | tee -a hnn_docker.log
-      exit 1
+      cleanup 2
     fi
     killall Xquartz >> hnn_docker.log 2>&1
     sleep 1
@@ -296,7 +316,7 @@ elif [[ "$OS" =~ "mac" ]]; then
     echo "ok" | tee -a hnn_docker.log
   else
     echo "failed" | tee -a hnn_docker.log
-    exit 1
+    cleanup 2
   fi
 fi
 
@@ -315,9 +335,9 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo "Could not find source code files for starting docker container."
   echo "Please run this script from the source code directory. e.g.:"
   echo "./hnn_docker.sh"
-  cleanup
-  exit 1
+  cleanup 1
 fi
+
 echo $CWD | tee -a hnn_docker.log
 
 echo | tee -a hnn_docker.log
@@ -338,8 +358,7 @@ if [[ ! "$OS" =~ "linux" ]]; then
       if [[ "$?" -ne "0" ]] || [[ -f "${XAUTH}-n" ]]; then
         echo "failed"
         rm -f "${XAUTH}-n"
-        cleanup
-        exit 1
+        cleanup 2
       fi
       echo "done" | tee -a hnn_docker.log
       RESTART_NEEDED=1
@@ -360,9 +379,8 @@ if [[ ! "$OS" =~ "linux" ]]; then
     fi
 
     if [[ $? -ne "0" ]]; then
-      echo "failed running ssh-keygen. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-      cleanup
-      exit 1
+      echo "failed running ssh-keygen." | tee -a hnn_docker.log
+      cleanup 2
     fi
 
     echo -n "command=\"/home/hnn_user/start_hnn.sh\" " > "$SSH_AUTHKEYS"
@@ -393,49 +411,46 @@ if [[ "$RESTART_NEEDED" -eq "1" ]]; then
 
       read -p "Restart needed$str. Please confirm that you want to force stopping the HNN container? (y/n)" yn
       case $yn in
-          [Yy]* ) echo -n "Stopping HNN container... " | tee -a hnn_docker.log
-                  docker stop hnn_container &> /dev/null
-                  if [[ $? -ne "0" ]]; then
-                    echo "Failed to stop container" | tee -a hnn_docker.log
-                    cleanup
-                    exit 1
-                  else
-                    ALREADY_RUNNING=0
-                    echo "done" | tee -a hnn_docker.log
-                  fi
+          [Yy]* ) stop_container
                   break;;
-          [Nn]* ) break;;
+          [Nn]* ) echo "Continuing without restarting container"
+                  break;;
           * ) echo "Please answer yes or no.";;
       esac
     done
   fi
+elif [[ "$ALREADY_RUNNING" -eq "1" ]]; then
+  stop_container
 fi
 
-if [[ "$ALREADY_RUNNING" -eq "0" ]]; then
-  echo "Starting HNN container..." | tee -a hnn_docker.log
+if [[ "$ALREADY_RUNNING" -eq "0" ]] || [[ "$OS" =~ "linux" ]]; then
+  echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
   docker-compose -f "$COMPOSE_FILE" up -d >> hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
     # try removing container
-    echo "failed starting with docker-compose." | tee -a hnn_docker.log
+    echo "failed" | tee -a hnn_docker.log
+    echo "Running command: docker ps -a |grep hnn_container" >> hnn_docker.log
+    echo -n "Looking for old containers..." | tee -a hnn_docker.log
     docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
     if [[ $? -eq "0" ]]; then
-      echo "Found an old container that could have cause this failure" | tee -a hnn_docker.log
+      echo "found" | tee -a hnn_docker.log
       remove_container
     else
-      echo "Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-      cleanup
-      exit 1
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
     fi
 
-    echo -n "Starting HNN container again... " | tee -a hnn_docker.log
+    echo -n "Starting HNN container again in background... " | tee -a hnn_docker.log
     docker-compose -f "$COMPOSE_FILE" up -d >> hnn_docker.log 2>&1
     if [[ $? -ne "0" ]]; then
-      echo "failed starting with docker-compose." | tee -a hnn_docker.log
-      cleanup
-      exit 1
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
     elif [[ $? -eq "0" ]] && [[ "$OS" =~ "linux" ]]; then
-      echo "User exited HNN" | tee -a hnn_docker.log
+      echo "done" | tee -a hnn_docker.log
+      cleanup 0
     fi
+  else
+    echo "done" | tee -a hnn_docker.log
   fi
 fi
 
@@ -445,18 +460,16 @@ if [[ ! "$OS" =~ "linux" ]]; then
   echo -n "Copying authorized_keys..." >> hnn_docker.log
   docker cp "$SSH_AUTHKEYS" hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
-    echo "failed running docker cp. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-    cleanup
-    exit 1
+    echo "failed running docker cp $SSH_AUTHKEYS hnn_container:/home/hnn_user/.ssh/authorized_keys" | tee -a hnn_docker.log
+    cleanup 2
   fi
   echo "done" >> hnn_docker.log
 
   echo -n "Copying known_hosts..." >> hnn_docker.log
   docker cp "$SSH_PUBKEY" hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
-    echo "failed running docker cp. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-    cleanup
-    exit 1
+    echo "failed running docker cp $SSH_PUBKEY hnn_container:/home/hnn_user/.ssh/known_hosts" | tee -a hnn_docker.log
+    cleanup 2
   fi
   echo "done" >> hnn_docker.log
 
@@ -471,8 +484,7 @@ if [[ ! "$OS" =~ "linux" ]]; then
   re='^[0-9]+$'
   if ! [[ $SSH_PORT =~ $re ]] ; then
     echo "failed" | tee -a hnn_docker.log
-    cleanup
-    exit 1
+    cleanup 2
   fi
   echo "done" | tee -a hnn_docker.log
 
@@ -484,11 +496,10 @@ if [[ ! "$OS" =~ "linux" ]]; then
   fi
   DISPLAY=localhost:0 ssh -o "SendEnv DISPLAY" -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -t -i "$SSH_PRIVKEY" -R 6000:localhost:6000 hnn_user@$DOCKER_HOST -p $SSH_PORT >> hnn_docker.log 2>&1
   if [[ $? -ne "0" ]]; then
-    echo "failed to start HNN. Please see hnn_docker.log for more details" | tee -a hnn_docker.log
-    cleanup
-    exit 1
+    echo "failed to start HNN." | tee -a hnn_docker.log
+    cleanup 2
   else
-    echo "User exited HNN" | tee -a hnn_docker.log
+    echo "done" | tee -a hnn_docker.log
+    cleanup 0
   fi
 fi
-cleanup
