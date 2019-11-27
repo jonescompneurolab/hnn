@@ -216,9 +216,26 @@ else
 fi
 DOCKER_STATUS=$?
 if [[ $DOCKER_STATUS -ne "0" ]]; then
-  echo "failed" | tee -a hnn_docker.log
-  if [[ "$DOCKER_TOOLBOX" -eq "1" ]]; then
-    echo -n "Trying to start docker machine... " | tee -a hnn_docker.log
+  COMMAND="which docker-machine"
+  silent_run_command
+  if [[ "$?" -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup 2
+  fi
+
+  eval $(docker-machine env -u 2> /dev/null)
+  eval $(docker-machine env 2> /dev/null)
+  if [[ "$OS" =~ "mac" ]]; then
+    DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+  else
+    DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+  fi
+
+  if [[ "$?" -eq "0" ]]; then
+    echo "ok (Docker Toolbox)" | tee -a hnn_docker.log
+  else
+    echo "failed" | tee -a hnn_docker.log
+    echo -n "Starting docker machine... " | tee -a hnn_docker.log
     COMMAND="docker-machine start"
     run_command
     # rerun env commands in case IP address changed
@@ -235,17 +252,18 @@ if [[ $DOCKER_STATUS -ne "0" ]]; then
     if [[ $DOCKER_STATUS -ne "0" ]]; then
       echo "failed" | tee -a hnn_docker.log
       cleanup 2
-    else
-      echo "ok${toolbox_str}" | tee -a hnn_docker.log
     fi
-  else
-    cleanup 2
+    echo "ok (Docker Toolbox)" | tee -a hnn_docker.log
   fi
 elif [[ $? -eq "124" ]]; then
   echo "Error: timed out connecting to Docker. Please check Docker install" | tee -a hnn_docker.log
   cleanup 2
 else
   echo "ok${toolbox_str}" | tee -a hnn_docker.log
+fi
+
+if  [[ -n "${DOCKER_MACHINE_NAME}" ]]; then
+  DOCKER_TOOLBOX=1
 fi
 
 DOCKER_VERSION=
@@ -263,8 +281,7 @@ fi
 
 if [[ $UPGRADE -eq "1" ]]; then
   echo "Downloading new HNN image from Docker Hub (may require login)..." | tee -a hnn_docker.log
-  COMMAND="docker pull ${HNN_DOCKER_IMAGE}"
-  silent_run_command
+  docker pull ${HNN_DOCKER_IMAGE}
   if [[ $? -eq "0" ]]; then
     DOCKER_CONTAINER=$(docker ps -a |grep hnn_container)
     DOCKER_STATUS=$?
@@ -291,6 +308,11 @@ fi
 
 if [[ "$STOP" -eq "1" ]]; then
   stop_container
+  if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
+    echo -n "Stopping docker machine... " | tee -a hnn_docker.log
+    COMMAND="docker-machine stop"
+    run_command
+  fi
   cleanup 0
 fi
 
