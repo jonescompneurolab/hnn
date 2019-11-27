@@ -209,7 +209,11 @@ if  [[ -n "${DOCKER_MACHINE_NAME}" ]]; then
 fi
 
 echo -n "Checking if Docker is working... " | tee -a hnn_docker.log
-DOCKER_OUTPUT=$(timeout 5 docker version)
+if [[ "$OS" =~ "mac" ]]; then
+  DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+else
+  DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+fi
 DOCKER_STATUS=$?
 if [[ $DOCKER_STATUS -ne "0" ]]; then
   echo "failed" | tee -a hnn_docker.log
@@ -222,7 +226,11 @@ if [[ $DOCKER_STATUS -ne "0" ]]; then
     eval $(docker-machine env 2> /dev/null)
     echo -n "Checking again if Docker is working... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
-    DOCKER_OUTPUT=$(timeout 5 docker version)
+    if [[ "$OS" =~ "mac" ]]; then
+      DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+    else
+      DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+    fi
     DOCKER_STATUS=$?
     if [[ $DOCKER_STATUS -ne "0" ]]; then
       echo "failed" | tee -a hnn_docker.log
@@ -231,11 +239,10 @@ if [[ $DOCKER_STATUS -ne "0" ]]; then
       echo "ok${toolbox_str}" | tee -a hnn_docker.log
     fi
   else
-    echo "failed" | tee -a hnn_docker.log
     cleanup 2
   fi
 elif [[ $? -eq "124" ]]; then
-  echo "ERROR: timed out connecting to Docker. Please check Docker install" | tee -a hnn_docker.log
+  echo "Error: timed out connecting to Docker. Please check Docker install" | tee -a hnn_docker.log
   cleanup 2
 else
   echo "ok${toolbox_str}" | tee -a hnn_docker.log
@@ -377,26 +384,37 @@ elif [[ "$OS" =~ "mac" ]]; then
     fi
   done <<< "$XQUARTZ_OUTPUT"
 
-  STATUS=0
-  if [[ "$XQUARTZ_NOLISTEN" =~ "0" ]]; then
+  RESTART_XQUARTZ=0
+  if [[ "$XQUARTZ_NOLISTEN" =~ "1" ]]; then
+    RESTART_XQUARTZ=1
     echo -n "Setting XQuartz preferences to listen for network connections... " | tee -a hnn_docker.log
     COMMAND="defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0"
     run_command
   fi
 
   if [[ "$XQUARTZ_NOAUTH" =~ "1" ]]; then
+    RESTART_XQUARTZ=1
     echo -n "Setting XQuartz preferences to use authentication... " | tee -a hnn_docker.log
     COMMAND="defaults write org.macosforge.xquartz.X11.plist no_auth 0"
     run_command
   fi
 
+  if [[ "$RESTART_XQUARTZ" =~ "1" ]]; then
+    echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
+    killall Xquartz 2>> hnn_docker.log && sleep 1
+    open -a XQuartz && sleep 3
+    fail_on_bad_exit $?
+  fi
+
   echo -n "Retrieving current XQuartz authentication keys... " | tee -a hnn_docker.log
   OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
+  echo "done" | tee -a hnn_docker.log
   if [[ -z $OUTPUT ]]; then
     echo "XQuartz authentication keys need to be updated" | tee -a hnn_docker.log
     echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
-    COMMAND="killall Xquartz && sleep 1 && open -a XQuartz && sleep 3"
-    run_command
+    killall Xquartz 2>> hnn_docker.log && sleep 1
+    open -a XQuartz && sleep 3
+    fail_on_bad_exit $?
 
     # run xauth again
     OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
@@ -404,14 +422,7 @@ elif [[ "$OS" =~ "mac" ]]; then
       echo "Error: still no keys valid keys" | tee -a hnn_docker.log
       cleanup 2
     fi
-    COMMAND="killall Xquartz && sleep 1"
-    silent_run_command
   fi
-  echo "done" | tee -a hnn_docker.log
-
-  echo -n "Starting XQuartz... " | tee -a hnn_docker.log
-  COMMAND="open -a XQuartz"
-  run_command
 fi
 
 echo -n "Locating HNN source code... " | tee -a hnn_docker.log
@@ -443,7 +454,6 @@ if [[ ! "$OS" =~ "linux" ]]; then
   # https://stackoverflow.com/questions/16296753/can-you-run-gui-applications-in-a-docker-container/25280523#25280523
 
   # we can assume ~/.Xauthority exists because xauth nlist was successful
-
   if [ -n "${XAUTH_BIN}" ]; then
     AUTH_KEYS=$("${XAUTH_BIN}" nlist :0 |grep -v '^ffff')
     if [[ -n $AUTH_KEYS ]]; then
