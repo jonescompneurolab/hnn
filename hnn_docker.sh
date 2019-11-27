@@ -105,13 +105,13 @@ function get_container_port {
 }
 
 function ssh_start_hnn {
-  echo -n "Starting HNN... " | tee -a hnn_docker.log
+  echo -n "Starting HNN GUI... " | tee -a hnn_docker.log
   COMMAND="ssh -o SendEnv=DISPLAY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$DOCKER_HOST_IP -p $SSH_PORT"
   echo -e "\nCommand: $COMMAND" >> hnn_docker.log
   DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1
 }
 
-function prompt_restart_container {
+function prompt_stop_container {
   while true; do
     echo | tee -a hnn_docker.log
     if [[ "$UPGRADE" -eq "1" ]]; then
@@ -157,6 +157,13 @@ function copy_security_files {
       >> hnn_docker.log 2>&1
     fail_on_bad_exit $?
   fi
+}
+
+function restart_xquartz {
+  echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
+  killall Xquartz 2>> hnn_docker.log && sleep 1
+  open -a XQuartz && sleep 3
+  fail_on_bad_exit $?
 }
 
 if [[ $START -eq "0" ]] && [[ $STOP -eq "0" ]] && [[ $UNINSTALL -eq "0" ]] && [[ $UPGRADE -eq "0" ]]; then
@@ -406,26 +413,23 @@ elif [[ "$OS" =~ "mac" ]]; then
     fi
   done <<< "$XQUARTZ_OUTPUT"
 
-  RESTART_XQUARTZ=0
+  NEED_RESTART_XQUARTZ=0
   if [[ "$XQUARTZ_NOLISTEN" =~ "1" ]]; then
-    RESTART_XQUARTZ=1
+    NEED_RESTART_XQUARTZ=1
     echo -n "Setting XQuartz preferences to listen for network connections... " | tee -a hnn_docker.log
     COMMAND="defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0"
     run_command
   fi
 
   if [[ "$XQUARTZ_NOAUTH" =~ "1" ]]; then
-    RESTART_XQUARTZ=1
+    NEED_RESTART_XQUARTZ=1
     echo -n "Setting XQuartz preferences to use authentication... " | tee -a hnn_docker.log
     COMMAND="defaults write org.macosforge.xquartz.X11.plist no_auth 0"
     run_command
   fi
 
-  if [[ "$RESTART_XQUARTZ" =~ "1" ]]; then
-    echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
-    killall Xquartz 2>> hnn_docker.log && sleep 1
-    open -a XQuartz && sleep 3
-    fail_on_bad_exit $?
+  if [[ "$NEED_RESTART_XQUARTZ" =~ "1" ]]; then
+    restart_xquartz
   fi
 
   echo -n "Retrieving current XQuartz authentication keys... " | tee -a hnn_docker.log
@@ -433,10 +437,7 @@ elif [[ "$OS" =~ "mac" ]]; then
   echo "done" | tee -a hnn_docker.log
   if [[ -z $OUTPUT ]]; then
     echo "XQuartz authentication keys need to be updated" | tee -a hnn_docker.log
-    echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
-    killall Xquartz 2>> hnn_docker.log && sleep 1
-    open -a XQuartz && sleep 3
-    fail_on_bad_exit $?
+    restart_xquartz
 
     # run xauth again
     OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
@@ -467,10 +468,7 @@ fi
 
 echo $CWD | tee -a hnn_docker.log
 
-echo | tee -a hnn_docker.log
-echo "Starting HNN" | tee -a hnn_docker.log
-echo "--------------------------------------" | tee -a hnn_docker.log
-
+XAUTH_UPDATED=0
 if [[ ! "$OS" =~ "linux" ]]; then
   # ignore hostname in Xauthority by setting FamilyWild mask
   # https://stackoverflow.com/questions/16296753/can-you-run-gui-applications-in-a-docker-container/25280523#25280523
@@ -487,6 +485,7 @@ if [[ ! "$OS" =~ "linux" ]]; then
         cleanup 2
       fi
       echo "done" | tee -a hnn_docker.log
+      XAUTH_UPDATED=1
     fi
   fi
 
@@ -510,9 +509,12 @@ if [[ ! "$OS" =~ "linux" ]]; then
   echo "done" | tee -a hnn_docker.log
 fi
 
+echo | tee -a hnn_docker.log
+echo "Starting HNN" | tee -a hnn_docker.log
+echo "--------------------------------------" | tee -a hnn_docker.log
+
 echo -n "Checking for running HNN container... " | tee -a hnn_docker.log
-COMMAND="docker ps|grep hnn_container"
-silent_run_command
+docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
 if [[ $? -eq "0" ]]; then
   ALREADY_RUNNING=1
   echo "found" | tee -a hnn_docker.log
@@ -522,7 +524,9 @@ else
 fi
 
 if [[ "$RESTART_NEEDED" -eq "1" ]] && [[ "$ALREADY_RUNNING" -eq "1" ]]; then
-  prompt_restart_container
+  prompt_stop_container
+elif [[ "$XAUTH_UPDATED" -eq "1" ]]; then
+  stop_container
 fi
 
 if [[ "$OS" =~ "linux" ]]; then
@@ -594,7 +598,7 @@ if [[ ! "$OS" =~ "linux" ]]; then
   if [[ $? -ne "0" ]]; then
     echo "failed" | tee -a hnn_docker.log
     echo "Will try to restart HNN container..." | tee -a hnn_docker.log
-    prompt_restart_container
+    prompt_stop_container
     echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
     COMMAND="docker-compose -f $COMPOSE_FILE start"
     run_command
