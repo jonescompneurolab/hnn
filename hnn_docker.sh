@@ -379,18 +379,28 @@ if [[ "$OS" =~ "windows" ]]; then
     echo "yes" | tee -a hnn_docker.log
     echo -n "Stopping VcXsrv... " | tee -a hnn_docker.log
     COMMAND="cmd.exe //c taskkill //F //IM vcxsrv.exe >> hnn_docker.log 2>&1"
-    run_command
+    silent_run_command
+    if [[ $? -ne "0" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      echo "WARNING: continuing with existing VcXsrv process. You many need to quit manually for GUI to display"
+    else
+      echo "done" | tee -a hnn_docker.log
+      VCXSRV_PID=
+    fi
   else
     echo "no" | tee -a hnn_docker.log
+    VCXSRV_PID=
   fi
 
   if [ -n "${XAUTH_BIN}" ]; then
-    echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
-    echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow > /dev/null 2>&1 &" >> hnn_docker.log
-    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
-    VCXSRV_PID=$!
-    echo "done" | tee -a hnn_docker.log
-    echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
+    if [ -z "${VCXSRV_PID}" ]; then
+      echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
+      echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow > /dev/null 2>&1 &" >> hnn_docker.log
+      "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
+      VCXSRV_PID=$!
+      echo "done" | tee -a hnn_docker.log
+      echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
+    fi
 
     echo -n "Checking VcXsrv authorization... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
