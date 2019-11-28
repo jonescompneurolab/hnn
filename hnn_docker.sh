@@ -312,15 +312,13 @@ if [[ $UPGRADE -eq "1" ]]; then
         prompt_remove_container
       fi
     fi
-    RETURN_STATUS=0
   else
     echo "Failed" | tee -a hnn_docker.log
-    echo "WARNING: continuing with old image" | tee -a hnn_docker.log
-    RETURN_STATUS=1
+    cleanup 2
   fi
   if [[ $START -eq "0" ]]; then
     # just doing upgrade
-    cleanup ${RETURN_STATUS}
+    cleanup 0
   fi
 fi
 
