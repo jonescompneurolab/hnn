@@ -179,11 +179,16 @@ class ExpParams():
 
     # reads .param file and returns p_all_input dict
     def __read_sim(self, f_psim):
-        lines = fio.clean_lines(f_psim)
+        p = {}
+
+        try:
+            lines = fio.clean_lines(f_psim)
+        except FileNotFoundError:
+            print("Warning: no param file found")
+            return p
 
         # ignore comments
         lines = [line for line in lines if line[0] is not '#']
-        p = {}
 
         for line in lines:
             # splits line by ':'
