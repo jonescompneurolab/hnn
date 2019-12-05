@@ -120,8 +120,12 @@ class SpecCanvas (FigureCanvas):
     self.avgdipole = []
     self.avgspec = []
 
+    # get spec_cmap
     p_exp = paramrw.ExpParams(self.paramf, 0)
-    expmt_group = p_exp.expmt_groups[0]
+    if len(p_exp.expmt_groups) > 0:
+      expmt_group = p_exp.expmt_groups[0]
+    else:
+      expmt_group = None
     p = p_exp.return_pdict(expmt_group, 0)
     self.spec_cmap = p['spec_cmap']
 

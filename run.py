@@ -228,8 +228,10 @@ ddir = setupsimdir(f_psim,p_exp,pcID) # one directory for all experiments
 # create rotating data files
 doutf = setoutfiles(ddir)
 # core iterator through experimental groups
-expmt_group = p_exp.expmt_groups[0]
-
+if len(p_exp.expmt_groups) > 0:
+  expmt_group = p_exp.expmt_groups[0]
+else:
+  expmt_group = None
 simparams = p = p_exp.return_pdict(expmt_group, 0) # return the param dict for this simulation
 
 pc.barrier() # get all nodes to this place before continuing

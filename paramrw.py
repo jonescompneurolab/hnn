@@ -161,8 +161,9 @@ class ExpParams():
                 p_sim[param] = val_list[i]
 
         # go through the expmt group-based params
-        for param, val in self.p_group[expmt_group].items():
-            p_sim[param] = val
+        if expmt_group in self.p_group:
+            for param, val in self.p_group[expmt_group].items():
+                p_sim[param] = val
 
         # add alpha distributions. A bit hack-y
         for param, val in self.alpha_distributions.items():
@@ -179,11 +180,18 @@ class ExpParams():
 
     # reads .param file and returns p_all_input dict
     def __read_sim(self, f_psim):
-        lines = fio.clean_lines(f_psim)
+        p = {}
+        self.p_group = {}
+        self.expmt_groups = []
+
+        try:
+            lines = fio.clean_lines(f_psim)
+        except FileNotFoundError:
+            print("Warning: no param file found. Using default values.")
+            return p
 
         # ignore comments
         lines = [line for line in lines if line[0] is not '#']
-        p = {}
 
         for line in lines:
             # splits line by ':'

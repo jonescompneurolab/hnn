@@ -486,8 +486,8 @@ def kill_and_check_nrniv_procs():
   if len(procs) > 0:
     running = kill_list_of_procs(procs)
     if len(running) > 0:
-      pids = [ proc.pid for proc in running ]
-      print("ERROR: failed to kill nrniv process(es) %s" % ','.join(pids))
+      pids = [ str(proc.pid) for proc in running ]
+      print("ERROR: failed to kill nrniv process(es) %s" % pids.join(','))
 
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
@@ -2644,7 +2644,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('save_spec_data','Save Spectral Data')
     self.addtransvar('save_figs','Save Figures')
     self.addtransvar('f_max_spec', 'Max Spectral Frequency (Hz)')
-    self.addtransvar('spec_cmap', 'Spectrogram Color Map')
+    self.addtransvar('spec_cmap', 'Spectrogram Colormap')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
@@ -2682,7 +2682,10 @@ class RunParamDialog (DictDialog):
 
     # get default spec_cmap
     p_exp = ExpParams(paramf, 0)
-    expmt_group = p_exp.expmt_groups[0]
+    if len(p_exp.expmt_groups) > 0:
+      expmt_group = p_exp.expmt_groups[0]
+    else:
+      expmt_group = None
     p = p_exp.return_pdict(expmt_group, 0)
     self.spec_cmap = p['spec_cmap']
 
