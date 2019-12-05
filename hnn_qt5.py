@@ -2644,7 +2644,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('save_spec_data','Save Spectral Data')
     self.addtransvar('save_figs','Save Figures')
     self.addtransvar('f_max_spec', 'Max Spectral Frequency (Hz)')
-    self.addtransvar('spec_cmap', 'Spectrogram Color Map')
+    self.addtransvar('spec_cmap', 'Spectrogram Colormap')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
     self.addtransvar('save_vsoma','Save Somatic Voltages')
@@ -2682,7 +2682,10 @@ class RunParamDialog (DictDialog):
 
     # get default spec_cmap
     p_exp = ExpParams(paramf, 0)
-    expmt_group = p_exp.expmt_groups[0]
+    if len(p_exp.expmt_groups) > 0:
+      expmt_group = p_exp.expmt_groups[0]
+    else:
+      expmt_group = None
     p = p_exp.return_pdict(expmt_group, 0)
     self.spec_cmap = p['spec_cmap']
 

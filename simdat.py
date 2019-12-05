@@ -679,8 +679,11 @@ class SIMCanvas (FigureCanvas):
     if DrawSpec: #
       if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
 
-      p_exp = ExpParams(self.paramf, debug=debug) # creates p_exp.sim_prefix and other param structures
-      expmt_group = p_exp.expmt_groups[0]
+      p_exp = ExpParams(self.paramf, debug=debug)
+      if len(p_exp.expmt_groups) > 0:
+        expmt_group = p_exp.expmt_groups[0]
+      else:
+        expmt_group = None
       p = p_exp.return_pdict(expmt_group, 0)
 
       gRow = 6
