@@ -613,10 +613,17 @@ if [[ ! "$OS" =~ "linux" ]]; then
     DOCKER_HOST_IP=localhost
   fi
 
+  pre_start_time=$(date +%s)
   ssh_start_hnn
-  if [[ $? -ne "0" ]]; then
+  HNN_STATUS=$?
+  if [[ ${HNN_STATUS} -ne "0" ]]; then
     echo "failed" | tee -a hnn_docker.log
-    echo "Will try to restart HNN container..." | tee -a hnn_docker.log
+    post_start_time=$(date +%s)
+    let delta=post_start_time-pre_start_time
+    if [[ $delta -gt 10 ]]; then
+      fail_on_bad_exit ${HNN_STATUS}
+    fi
+    echo "Detected failure starting GUI. Will try to restart HNN container..." | tee -a hnn_docker.log
     prompt_stop_container
     echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
     COMMAND="docker-compose -f $COMPOSE_FILE start"
