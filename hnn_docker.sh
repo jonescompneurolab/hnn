@@ -371,6 +371,7 @@ if [[ "$OS" =~ "windows" ]]; then
   else
     unset XAUTH_BIN
     echo "failed. Could not find 'C:\Program Files\VcXsrv'. Please run XLaunch manually" | tee -a hnn_docker.log
+    cleanup 2
   fi
 
   echo -n "Checking if VcXsrv is running... " | tee -a hnn_docker.log
@@ -392,27 +393,36 @@ if [[ "$OS" =~ "windows" ]]; then
     VCXSRV_PID=
   fi
 
-  if [ -n "${XAUTH_BIN}" ]; then
-    if [ -z "${VCXSRV_PID}" ]; then
-      echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
-      echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow > /dev/null 2>&1 &" >> hnn_docker.log
-      "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
-      VCXSRV_PID=$!
-      echo "done" | tee -a hnn_docker.log
-      echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
-    fi
-
-    echo -n "Checking VcXsrv authorization... " | tee -a hnn_docker.log
+  if [ -z "${VCXSRV_PID}" ]; then
+    echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
-    echo "Command: "${XAUTH_BIN}" nlist :0" >> hnn_docker.log
-    OUTPUT=$("${XAUTH_BIN}" nlist :0 2>> hnn_docker.log)
-    if [[ -z $OUTPUT ]]; then
-      echo "failed. Still an error with xauth" | tee -a hnn_docker.log
-      cleanup 2
-    fi
+    echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow > /dev/null 2>&1 &" >> hnn_docker.log
+    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
+    VCXSRV_PID=$!
     echo "done" | tee -a hnn_docker.log
-    echo "Output: $OUTPUT" >> hnn_docker.log
+    echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
   fi
+
+  if [ ! -e "$XAUTH" ]; then
+    echo -n "Generating $XAUTH... " | tee -a hnn_docker.log
+    echo >> hnn_docker.log
+    echo "Command: ${XAUTH_BIN} generate localhost:0 ." >> hnn_docker.log
+    OUTPUT=$("${XAUTH_BIN}" generate localhost:0 . 2>> hnn_docker.log)
+    COMMAND_STATUS=$?
+    echo "Output: $OUTPUT" >> hnn_docker.log
+    fail_on_bad_exit $COMMAND_STATUS
+  fi
+
+  echo -n "Checking VcXsrv authorization... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  echo "Command: ${XAUTH_BIN} nlist" >> hnn_docker.log
+  OUTPUT=$("${XAUTH_BIN}" nlist 2>> hnn_docker.log)
+  echo "Output: $OUTPUT" >> hnn_docker.log
+  if [[ -z $OUTPUT ]]; then
+    echo "failed. Still an error with xauth" | tee -a hnn_docker.log
+    cleanup 2
+  fi
+  echo "done" | tee -a hnn_docker.log
 elif [[ "$OS" =~ "mac" ]]; then
   echo -n "Checking if XQuartz is installed... " | tee -a hnn_docker.log
   XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist)
@@ -452,14 +462,19 @@ elif [[ "$OS" =~ "mac" ]]; then
   fi
 
   echo -n "Retrieving current XQuartz authentication keys... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  echo "Command: ${XAUTH_BIN} nlist :0" >> hnn_docker.log
   OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
+  echo "Output: $OUTPUT" >> hnn_docker.log
   echo "done" | tee -a hnn_docker.log
   if [[ -z $OUTPUT ]]; then
     echo "XQuartz authentication keys need to be updated" | tee -a hnn_docker.log
     restart_xquartz
 
     # run xauth again
+    echo "Command: ${XAUTH_BIN} nlist :0" >> hnn_docker.log
     OUTPUT=$(${XAUTH_BIN} nlist :0 2>> hnn_docker.log)
+    echo "Output: $OUTPUT" >> hnn_docker.log
     if [[ -z $OUTPUT ]]; then
       echo "Error: still no keys valid keys" | tee -a hnn_docker.log
       cleanup 2
