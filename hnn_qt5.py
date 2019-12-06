@@ -65,7 +65,8 @@ simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
-basedir = None
+param_fname = os.path.splitext(os.path.basename(paramf))
+basedir = os.path.join(dconf['datdir'], param_fname[0])
 
 # get default number of cores
 defncore = 0
@@ -705,6 +706,8 @@ class RunSimThread (QThread):
       if not is_opt:
         simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
     except OSError:
+      print('WARN: could not read simulation outputs:',simdat.dfile.values())
+    except ValueError:
       print('WARN: could not read simulation outputs:',simdat.dfile.values())
 
   def optmodel (self):
@@ -3328,7 +3331,7 @@ class HNNGUI (QMainWindow):
   # main HNN GUI class
   def __init__ (self):
     # initialize the main HNN GUI
-    global dfile, paramf
+    global dfile, paramf, basedir
     super().__init__()   
     self.runningsim = False
     self.runthread = None
@@ -3413,8 +3416,8 @@ class HNNGUI (QMainWindow):
     qfd.setHistory([os.path.join(dconf['dbase'],'data')])
     fn = qfd.getOpenFileName(self, 'Open param file',
                                      os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
-    if len(fn) == 0:
-      print('WARNING: no file selected')
+    if fn[0] == '':
+      # no file selected in dialog
       return
 
     paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
@@ -3536,7 +3539,6 @@ class HNNGUI (QMainWindow):
       msg.setStandardButtons(QMessageBox.Ok)      
       msg.exec_()
     else:
-      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
       lcmd = [getPyComm(), 'visvolt.py',paramf]
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
@@ -3544,7 +3546,6 @@ class HNNGUI (QMainWindow):
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3552,7 +3553,6 @@ class HNNGUI (QMainWindow):
   def showLFPPlot (self):
     # start the LFP visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vislfp.py',paramf]
     if debug: print('vislfp cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3560,7 +3560,6 @@ class HNNGUI (QMainWindow):
   def showSpecPlot (self):
     # start the spectrogram visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visspec.py',paramf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3568,7 +3567,14 @@ class HNNGUI (QMainWindow):
   def showRasterPlot (self):
     # start the raster plot visualization process (separate window)
     global basedir
-    lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+
+    spikefile = os.path.join(basedir,'spk.txt')
+    if os.path.isfile(spikefile):
+      lcmd = [getPyComm(), 'visrast.py',paramf,spikefile]
+    else:
+      QMessageBox.information(self, "HNN", "WARNING: no spiking data at %s" % spikefile)
+      return
+
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3576,7 +3582,14 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     # start the dipole visualization process (separate window)
     global basedir
-    lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+
+    dipole_file = os.path.join(basedir,'dpl.txt')
+    if os.path.isfile(dipole_file):
+      lcmd = [getPyComm(), 'visdipole.py',paramf,dipole_file]
+    else:
+      QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
+      return
+
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
@@ -3653,7 +3666,7 @@ class HNNGUI (QMainWindow):
 
   def prevSim (self):
     # go to previous simulation 
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('prevSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
