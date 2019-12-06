@@ -1524,7 +1524,6 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
 
-    setscalegeom(self, 150, 150, 475, 300)
     self.setWindowTitle('Evoked Inputs')
 
     self.addRemoveInputButton()
@@ -1777,6 +1776,9 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.old_num_steps = 0
 
   def initUI (self):
+    # start with a reasonable size
+    setscalegeom(self, 150, 150, 475, 300)
+
     self.ltabs = []
     self.ltabkeys = []
     self.tabs = QTabWidget()
@@ -3227,8 +3229,6 @@ class BaseParamDialog (QDialog):
 
     self.setLayout(grid) 
         
-    setscalegeom(self, 100, 100, 400, 100)
-
     self.setWindowTitle('Set Parameters')    
 
   def saveparams (self, checkok = True):
@@ -3999,6 +3999,12 @@ class HNNGUI (QMainWindow):
 
     setscalegeomcenter(self, 1500, 1300) # start GUI in center of screenm, scale based on screen w x h 
 
+    # move param windows to be offset from main GUI
+    new_x = max(0, self.x() - 300)
+    new_y = max(0, self.y() + 100)
+    self.baseparamwin.move(new_x, new_y)
+    self.baseparamwin.evparamwin.move(new_x+50, new_y+50)
+    self.baseparamwin.optparamwin.move(new_x+100, new_y+100)
     self.setWindowTitle(paramf)
     QToolTip.setFont(QFont('SansSerif', 10))        
 
