@@ -23,12 +23,14 @@ from math import ceil, isclose
 import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
-from paramrw import chunk_evinputs, get_inputs, trans_input, find_param
+from paramrw import chunk_evinputs, get_inputs, trans_input, find_param, validate_param_file
 from simdat import SIMCanvas, getinputfiles, readdpltrials
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
 from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
 from threading import Lock
+import traceback
+from collections import namedtuple
 
 prtime = False
 
@@ -63,7 +65,8 @@ simf = dconf['simf']
 paramf = dconf['paramf']
 debug = dconf['debug']
 testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
-basedir = None
+param_fname = os.path.splitext(os.path.basename(paramf))
+basedir = os.path.join(dconf['datdir'], param_fname[0])
 
 # get default number of cores
 defncore = 0
@@ -703,6 +706,8 @@ class RunSimThread (QThread):
       if not is_opt:
         simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
     except OSError:
+      print('WARN: could not read simulation outputs:',simdat.dfile.values())
+    except ValueError:
       print('WARN: could not read simulation outputs:',simdat.dfile.values())
 
   def optmodel (self):
@@ -3104,14 +3109,12 @@ class BaseParamDialog (QDialog):
   def updateDispParam (self):
     # now update the GUI components to reflect the param file selected
     try:
-      din = quickreadprm(paramf)
-    except FileNotFoundError:
-      print("WARNING: no current parameter file")
+      validate_param_file(paramf)
+    except ValueError:
+      QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % paramf)
       return
 
-    if not 'tstop' in din:
-      print("WARNING: could not find a complete parameter file")
-      return
+    din = quickreadprm(paramf)
 
     if usingEvokedInputs(din): # default for evoked is to show average dipole
       conf.dconf['drawavgdpl'] = True
@@ -3328,7 +3331,7 @@ class HNNGUI (QMainWindow):
   # main HNN GUI class
   def __init__ (self):
     # initialize the main HNN GUI
-    global dfile, paramf
+    global dfile, paramf, basedir
     super().__init__()   
     self.runningsim = False
     self.runthread = None
@@ -3349,9 +3352,36 @@ class HNNGUI (QMainWindow):
     default_param = os.path.join(dconf['dbase'],'data','default')
     first_load = not (os.path.exists(default_param))
     if first_load:
-      QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. Press 'Run Simulation' to display simulation output")
+      QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. "
+                              "Press 'Run Simulation' to display simulation output")
     else:
       self.statusBar().showMessage("Loaded %s"%default_param)
+    # successful initialization, catch all further exceptions
+    sys.excepthook = self.excepthook
+
+  def _add_missing_frames(self, tb):
+    fake_tb = namedtuple(
+        'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
+    )
+    result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
+    frame = tb.tb_frame.f_back
+    while frame:
+        result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
+        frame = frame.f_back
+    return result
+
+  def excepthook(self, exc_type, exc_value, exc_tb):
+    enriched_tb = self._add_missing_frames(exc_tb) if exc_tb else exc_tb
+    # Note: sys.__excepthook__(...) would not work here.
+    # We need to use print_exception(...):
+    traceback.print_exception(exc_type, exc_value, enriched_tb)
+    msgBox = QMessageBox(self)
+    msgBox.information(self, "Exception", "WARNING: an exception occurred! Details can be "
+                      "found in hnn_docker.log or the console output. We would "
+                      "greatly appreciate reporting this issue to our development "
+                      "team: <a href=https://github.com/jonescompneurolab/hnn/issues>"
+                      "https://github.com/jonescompneurolab/hnn/issues</a>")
+
 
   def redraw (self):
     # redraw simulation & external data
@@ -3386,27 +3416,38 @@ class HNNGUI (QMainWindow):
     qfd.setHistory([os.path.join(dconf['dbase'],'data')])
     fn = qfd.getOpenFileName(self, 'Open param file',
                                      os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
-    if fn[0]:
-      paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
-      param_fname = os.path.splitext(os.path.basename(paramf))
-      basedir = os.path.join(dconf['datdir'], param_fname[0])
-      try:
-        dfile = getinputfiles(paramf) # reset input data - if already exists
-      except:
-        pass
-      # now update the GUI components to reflect the param file selected
-      self.baseparamwin.updateDispParam()
-      self.initSimCanvas() # recreate canvas
-      # self.m.plot() # replot data
-      self.setWindowTitle(paramf)
-      # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
-      import simdat
-      if 'dpl' in simdat.ddat:
-        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
-      self.populateSimCB() # populate the combobox
+    if fn[0] == '':
+      # no file selected in dialog
+      return
 
-      if len(self.dextdata) > 0:
-        self.toggleEnableOptimization(True)
+    paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
+    param_fname = os.path.splitext(os.path.basename(paramf))
+    basedir = os.path.join(dconf['datdir'], param_fname[0])
+
+    try:
+      validate_param_file(paramf)
+    except ValueError:
+      QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % fn[0])
+      return
+
+    try:
+      dfile = getinputfiles(paramf) # reset input data - if already exists
+    except:
+      pass
+
+    # now update the GUI components to reflect the param file selected
+    self.baseparamwin.updateDispParam()
+    self.initSimCanvas() # recreate canvas
+    # self.m.plot() # replot data
+    self.setWindowTitle(paramf)
+    # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
+    import simdat
+    if 'dpl' in simdat.ddat:
+      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    self.populateSimCB() # populate the combobox
+
+    if len(self.dextdata) > 0:
+      self.toggleEnableOptimization(True)
 
   def loadDataFile (self, fn):
     # load a dipole data file
@@ -3414,24 +3455,23 @@ class HNNGUI (QMainWindow):
 
     import simdat
     try:
-      self.dextdata[fn] = np.loadtxt(fn)
-      simdat.ddat['dextdata'] = self.dextdata
-      print('Loaded data in ', fn)
-    except:
-      raise
-      print('WARNING: could not load data in ', fn)
+     self.dextdata[fn] = np.loadtxt(fn)
+    except ValueError:
+      QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
       return False
-    try:
-      self.m.plot()
-      self.m.draw() # make sure new lines show up in plot
+    except IsADirectoryError:
+      QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
+      return False
 
-      if paramf:
-        self.toggleEnableOptimization(True)
-      return True
-    except:
-      print('WARNING: could not plot data from ', fn)
-      raise
-      return False
+    simdat.ddat['dextdata'] = self.dextdata
+    print('Loaded data in ', fn)
+
+    self.m.plot()
+    self.m.draw() # make sure new lines show up in plot
+
+    if paramf:
+      self.toggleEnableOptimization(True)
+    return True
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
@@ -3439,7 +3479,11 @@ class HNNGUI (QMainWindow):
     qfd.setHistory([os.path.join(dconf['dbase'],'data')])
     fn = qfd.getOpenFileName(self, 'Open data file',
                                      os.path.join(hnn_root_dir,'data'))
-    if fn[0]: self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
+    if len(fn) == 0:
+      print('WARNING: no file selected')
+      return
+
+    self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators
 
   def clearDataFile (self):
     # clear external dipole data
@@ -3495,7 +3539,6 @@ class HNNGUI (QMainWindow):
       msg.setStandardButtons(QMessageBox.Ok)      
       msg.exec_()
     else:
-      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
       lcmd = [getPyComm(), 'visvolt.py',paramf]
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
@@ -3503,7 +3546,6 @@ class HNNGUI (QMainWindow):
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vispsd.py',paramf]
     if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3511,7 +3553,6 @@ class HNNGUI (QMainWindow):
   def showLFPPlot (self):
     # start the LFP visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'vislfp.py',paramf]
     if debug: print('vislfp cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3519,7 +3560,6 @@ class HNNGUI (QMainWindow):
   def showSpecPlot (self):
     # start the spectrogram visualization process (separate window)
     global basedir
-    basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visspec.py',paramf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3527,7 +3567,14 @@ class HNNGUI (QMainWindow):
   def showRasterPlot (self):
     # start the raster plot visualization process (separate window)
     global basedir
-    lcmd = [getPyComm(), 'visrast.py',paramf,os.path.join(basedir,'spk.txt')]
+
+    spikefile = os.path.join(basedir,'spk.txt')
+    if os.path.isfile(spikefile):
+      lcmd = [getPyComm(), 'visrast.py',paramf,spikefile]
+    else:
+      QMessageBox.information(self, "HNN", "WARNING: no spiking data at %s" % spikefile)
+      return
+
     if dconf['drawindivrast']: lcmd.append('indiv')
     if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
@@ -3535,7 +3582,14 @@ class HNNGUI (QMainWindow):
   def showDipolePlot (self):
     # start the dipole visualization process (separate window)
     global basedir
-    lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
+
+    dipole_file = os.path.join(basedir,'dpl.txt')
+    if os.path.isfile(dipole_file):
+      lcmd = [getPyComm(), 'visdipole.py',paramf,dipole_file]
+    else:
+      QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
+      return
+
     if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
@@ -3612,7 +3666,7 @@ class HNNGUI (QMainWindow):
 
   def prevSim (self):
     # go to previous simulation 
-    global paramf,dfile
+    global paramf,basedir,dfile
     import simdat
     if debug: print('prevSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:

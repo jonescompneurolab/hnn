@@ -24,6 +24,30 @@ def quickreadprm (fn):
         d[sp[0].strip()]=str(sp[1]).strip()
   return d
 
+def validate_param_file (fn):
+    try:
+        fp = open(fn, 'r')
+    except OSError:
+        print("ERROR: could not open/read file")
+        raise ValueError
+
+    d = {}
+    with fp:
+        try:
+            ln = fp.readlines()
+        except UnicodeDecodeError:
+            print("ERROR: bad file format")
+            raise ValueError
+        for l in ln:
+            s = l.strip()
+            if s.startswith('#'): continue
+            sp = s.split(':')
+            if len(sp) > 1:
+                d[sp[0].strip()]=str(sp[1]).strip()
+    if not 'tstop' in d:
+        print("ERROR: parameter file not valid. Could not find 'tstop'")
+        raise ValueError
+
 # get dict of ':' separated params from fn; ignore lines starting with #
 def quickgetprm (fn,k,ty):
   d = quickreadprm(fn)
@@ -161,9 +185,8 @@ class ExpParams():
                 p_sim[param] = val_list[i]
 
         # go through the expmt group-based params
-        if expmt_group in self.p_group:
-            for param, val in self.p_group[expmt_group].items():
-                p_sim[param] = val
+        for param, val in self.p_group[expmt_group].items():
+            p_sim[param] = val
 
         # add alpha distributions. A bit hack-y
         for param, val in self.alpha_distributions.items():
@@ -180,18 +203,11 @@ class ExpParams():
 
     # reads .param file and returns p_all_input dict
     def __read_sim(self, f_psim):
-        p = {}
-        self.p_group = {}
-        self.expmt_groups = []
-
-        try:
-            lines = fio.clean_lines(f_psim)
-        except FileNotFoundError:
-            print("Warning: no param file found. Using default values.")
-            return p
+        lines = fio.clean_lines(f_psim)
 
         # ignore comments
         lines = [line for line in lines if line[0] is not '#']
+        p = {}
 
         for line in lines:
             # splits line by ':'
