@@ -579,7 +579,7 @@ echo "Starting HNN" | tee -a hnn_docker.log
 echo "--------------------------------------" | tee -a hnn_docker.log
 
 echo -n "Checking for running HNN container... " | tee -a hnn_docker.log
-docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+docker ps | grep hnn_container >> hnn_docker.log 2>&1
 if [[ $? -eq "0" ]]; then
   ALREADY_RUNNING=1
   echo "found" | tee -a hnn_docker.log
@@ -591,7 +591,15 @@ fi
 if [[ "$RESTART_NEEDED" -eq "1" ]] && [[ "$ALREADY_RUNNING" -eq "1" ]]; then
   prompt_stop_container
 elif [[ "$XAUTH_UPDATED" -eq "1" ]]; then
-  stop_container
+  echo -n "Looking for existing containers..." | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  find_existing_container
+  if [[ $? -eq "0" ]]; then
+    echo "found" | tee -a hnn_docker.log
+    stop_container
+  else
+    echo "not found" | tee -a hnn_docker.log
+  fi
 fi
 
 if [[ "$OS" =~ "linux" ]]; then
