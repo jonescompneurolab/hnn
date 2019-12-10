@@ -490,7 +490,7 @@ def kill_and_check_nrniv_procs():
     running = kill_list_of_procs(procs)
     if len(running) > 0:
       pids = [ str(proc.pid) for proc in running ]
-      print("ERROR: failed to kill nrniv process(es) %s" % pids.join(','))
+      print("ERROR: failed to kill nrniv process(es) %s" % ','.join(pids))
 
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
