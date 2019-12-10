@@ -596,7 +596,7 @@ fi
 
 if [[ "$OS" =~ "linux" ]]; then
   echo -n "Starting HNN container... " | tee -a hnn_docker.log
-  COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate"
+  COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate --exit-code-from hnn"
   silent_run_command
   if [[ $? -ne "0" ]]; then
     # try removing container
@@ -612,7 +612,7 @@ if [[ "$OS" =~ "linux" ]]; then
     fi
 
     echo -n "Starting HNN container again... " | tee -a hnn_docker.log
-    COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate"
+    COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate --exit-code-from hnn"
     run_command
     cleanup 0
   else
