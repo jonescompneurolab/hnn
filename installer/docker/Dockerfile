@@ -79,12 +79,12 @@ ARG VCS_TAG
 ARG SOURCE_BRANCH
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url="https://github.com/blakecaldwell/hnn.git" \
+      org.label-schema.vcs-url="https://github.com/jonescompneurolab/hnn.git" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version=$VCS_TAG
 
 RUN cd /home/hnn_user && \
-    git clone https://github.com/blakecaldwell/hnn.git \
+    git clone https://github.com/jonescompneurolab/hnn.git \
       --single-branch --branch $SOURCE_BRANCH hnn_source_code && \
     cd hnn_source_code && \
     make
