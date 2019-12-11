@@ -24,7 +24,7 @@ import spikefn
 import params_default
 from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param, validate_param_file
-from simdat import SIMCanvas, getinputfiles, readdpltrials
+from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
 from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
@@ -601,6 +601,7 @@ class RunSimThread (QThread):
     self.lock.release()
 
   def spawn_sim (self, simlength, banner=False):
+    global paramf
     import simdat
 
     mpicmd = 'mpiexec -np '
@@ -616,7 +617,6 @@ class RunSimThread (QThread):
       cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
     else:
       cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
-    simdat.dfile = getinputfiles(paramf)
     cmdargs = shlex.split(cmd,posix="win" not in sys.platform) # https://github.com/maebert/jrnl/issues/348
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
@@ -643,7 +643,7 @@ class RunSimThread (QThread):
   def runsim (self, is_opt=False, banner=True, simlength=None):
     import simdat
 
-    global defncore
+    global defncore, paramf
     self.lock.acquire()
     self.killed = False
     self.lock.release()
@@ -692,23 +692,13 @@ class RunSimThread (QThread):
     #if debug: print('sim finished in %.3f s'%rtime)
 
     try:
-      # load data from sucessful sim
-      simdat.ddat['dpl'] = np.loadtxt(simdat.dfile['dpl'])
-      if debug: print('loaded new dpl file:', simdat.dfile['dpl'])#,'time=',time())
-      if os.path.isfile(simdat.dfile['spec']):
-        simdat.ddat['spec'] = np.load(simdat.dfile['spec'])
-      else:
-        simdat.ddat['spec'] = None
-      simdat.ddat['spk'] = np.loadtxt(simdat.dfile['spk'])
-      simdat.ddat['dpltrials'] = readdpltrials(os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0]),self.ntrial)
-      if debug: print("Read simulation outputs:",simdat.dfile.values())
-
-      if not is_opt:
-        simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
-    except OSError:
-      print('WARN: could not read simulation outputs:',simdat.dfile.values())
+      simdat.updatedat(paramf)
     except ValueError:
-      print('WARN: could not read simulation outputs:',simdat.dfile.values())
+      print("Warning: failed to load simulation results for %s" % paramf)
+
+    if not is_opt and 'dpl' in simdat.ddat:
+      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+
 
   def optmodel (self):
     import simdat
@@ -3331,7 +3321,7 @@ class HNNGUI (QMainWindow):
   # main HNN GUI class
   def __init__ (self):
     # initialize the main HNN GUI
-    global dfile, paramf, basedir
+    global paramf, basedir
     super().__init__()   
     self.runningsim = False
     self.runthread = None
@@ -3411,7 +3401,7 @@ class HNNGUI (QMainWindow):
     
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
-    global paramf,basedir,dfile
+    global paramf,basedir
     qfd = QFileDialog()
     qfd.setHistory([os.path.join(dconf['dbase'],'data')])
     fn = qfd.getOpenFileName(self, 'Open param file',
@@ -3429,11 +3419,6 @@ class HNNGUI (QMainWindow):
     except ValueError:
       QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % fn[0])
       return
-
-    try:
-      dfile = getinputfiles(paramf) # reset input data - if already exists
-    except:
-      pass
 
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam()
@@ -3529,7 +3514,7 @@ class HNNGUI (QMainWindow):
 
   def showSomaVPlot (self): 
     # start the somatic voltage visualization process (separate window)
-    global basedir, dfile
+    global basedir
     if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
       smsg='In order to view somatic voltages you must first rerun the simulation with saving somatic voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Somatic Voltages, enter a 1 and then rerun the simulation.'
       msg = QMessageBox()
@@ -3642,7 +3627,7 @@ class HNNGUI (QMainWindow):
 
   def removeSim (self):
     # remove the currently selected simulation
-    global paramf,basedir,dfile
+    global paramf,basedir
     import simdat
     if debug: print('removeSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
@@ -3666,7 +3651,7 @@ class HNNGUI (QMainWindow):
 
   def prevSim (self):
     # go to previous simulation 
-    global paramf,basedir,dfile
+    global paramf,basedir
     import simdat
     if debug: print('prevSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
@@ -3680,7 +3665,7 @@ class HNNGUI (QMainWindow):
 
   def nextSim (self):
     # go to next simulation
-    global paramf,basedir,dfile
+    global paramf,basedir
     import simdat
     if debug: print('nextSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
@@ -4062,7 +4047,7 @@ class HNNGUI (QMainWindow):
 
   def onActivateSimCB (self, s):
     # load simulation when activating simulation combobox
-    global paramf,basedir,dfile
+    global paramf,basedir
     import simdat
     if debug: print('onActivateSimCB',s,paramf,self.cbsim.currentIndex(),simdat.lsimidx)
     if self.cbsim.currentIndex() != simdat.lsimidx:

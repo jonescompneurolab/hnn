@@ -62,7 +62,10 @@ class ExtInputs (Spikes):
   # class for external inputs - extracts gids and times
   def __init__ (self, fspk, fparam, evoked=False):
     # load gid and param dicts
-    self.gid_dict, self.p_dict = paramrw.read(fparam)
+    try:
+      self.gid_dict, self.p_dict = paramrw.read(fparam)
+    except OSError:
+      raise ValueError
     self.evoked = evoked
     # parse evoked prox and dist input gids from gid_dict
     # print('getting evokedinput gids')
@@ -150,7 +153,18 @@ class ExtInputs (Spikes):
 
   def __get_extinput_times (self, fspk):
     # load all spike times from file
-    s_all = np.loadtxt(open(fspk, 'rb'))
+    s_all = []
+    try:
+      s_all = np.loadtxt(open(fspk, 'rb'))
+    except OSError:
+      print('Warning: could not read file:', fspk)
+    except ValueError:
+      print('Warning: error reading data from:', fspk)
+
+    if len(s_all) == 0:
+      # couldn't read spike times
+      raise ValueError
+
     inputs = {k:np.array([]) for k in ['prox','dist','evprox','evdist','pois']}
     if self.gid_prox is not None: inputs['prox'] = self.get_times(self.gid_prox,s_all)
     if self.gid_dist is not None: inputs['dist'] = self.get_times(self.gid_dist,s_all)

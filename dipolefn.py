@@ -592,7 +592,13 @@ def pdipole_with_hist(f_dpl, f_spk, dfig, f_param, key_types, plot_dict):
   # set new xlim based on dipole plot
   xlim_new = f.ax['dipole'].get_xlim()
   # Get extinput data and account for delays
-  extinputs = spikefn.ExtInputs(f_spk, f_param)
+  try:
+    extinputs = spikefn.ExtInputs(f_spk, f_param)
+  except ValueError:
+    print("Error: could not load spike timings from %s" % f_spk)
+    f.close()
+    return
+
   extinputs.add_delay_times()
   # set number of bins (150 bins per 1000ms)
   bins = ceil(150. * (xlim_new[1] - xlim_new[0]) / 1000.) # bins needs to be an int

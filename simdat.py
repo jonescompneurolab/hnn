@@ -63,8 +63,12 @@ def readdpltrials (basedir,ntrial):
   for i in range(ntrial):
     fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
     if not os.path.exists(fn): break
-    ldpl.append(np.loadtxt(fn))
+    ldpl.append(readtxt(fn))
     if debug: print('loaded ', fn)
+
+  if len(ldpl) < ntrial and ntrial > 1:
+    print("Warning: only read data for %d trials" % len(ldpl))
+
   return ldpl
 
 def getinputfiles (paramf):
@@ -79,21 +83,44 @@ def getinputfiles (paramf):
   dfile['outparam'] = os.path.join(basedir,'param.txt')
   return dfile
 
+def readtxt (fn, silent=False):
+  contents = []
+
+  try:
+    contents = np.loadtxt(fn)
+  except OSError:
+    if not silent:
+      print('Warning: could not read file:', fn)
+  except ValueError:
+    if not silent:
+      print('Warning: error reading data from:', fn)
+
+  return contents
+
 def updatedat (paramf):
   # update data dictionary (ddat) from the param file
+
+  global basedir
   if debug: print('paramf:',paramf)
-  try:
-    getinputfiles(paramf)
-    for k in ['dpl','spk']:
-      if not os.path.isfile(dfile[k]): return False
-    ddat['dpl'] = np.loadtxt(dfile['dpl'])
-    if os.path.isfile(dfile['spec']): ddat['spec'] = np.load(dfile['spec'])
-    else: ddat['spec'] = None
-    ddat['spk'] = np.loadtxt(dfile['spk'])
-    ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
-    return True
-  except:
-    return False
+  getinputfiles(paramf)
+
+  for k in ['dpl','spk']:
+    if k in ddat:
+      del ddat[k]
+    silent = not os.path.exists(basedir)
+    ddat[k] = readtxt(dfile[k], silent)
+    if len(ddat[k]) == 0:
+      del ddat[k]
+
+  if not 'dpl' in ddat or not 'spk' in ddat:
+    raise ValueError
+
+  ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+
+  if os.path.isfile(dfile['spec']):
+    ddat['spec'] = np.load(dfile['spec'])
+  else:
+    ddat['spec'] = None
 
 def getscalefctr (paramf):
   # get dipole scaling factor parameter value from paramf file
@@ -261,11 +288,16 @@ class SIMCanvas (FigureCanvas):
     extinputs = None
     plot_distribs = False
 
+    sim_tstop = quickgetprm(self.paramf,'tstop',float)
+    sim_dt = quickgetprm(self.paramf,'dt',float)
+    num_step = ceil(sim_tstop / sim_dt) + 1
+    times = np.linspace(0, sim_tstop, num_step)
+
     try:
       extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
       extinputs.add_delay_times()
       dinput = extinputs.inputs
-    except FileNotFoundError:
+    except ValueError:
       dinput = self.getInputDistrib()
       plot_distribs = True
 
@@ -306,19 +338,19 @@ class SIMCanvas (FigureCanvas):
         print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
 
       if hasPois: # any Poisson inputs?
-        extinputs.plot_hist(self.axpois,'pois',ddat['dpl'][:,0],'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axpois,'pois',times,'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axdist,'dist',ddat['dpl'][:,0],'auto',xl,color='g',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axdist,'dist',times,'auto',xl,color='g',lw=self.gui.linewidth+1)
 
       if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axprox,'prox',ddat['dpl'][:,0],'auto',xl,color='r',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axprox,'prox',times,'auto',xl,color='r',lw=self.gui.linewidth+1)
 
       if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axdist,'evdist',ddat['dpl'][:,0],'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axdist,'evdist',times,'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
 
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axprox,'evprox',ddat['dpl'][:,0],'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
+        extinputs.plot_hist(self.axprox,'evprox',times,'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
     elif plot_distribs:
       if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
         prox_tot = np.zeros(len(dinput['evprox'][0][0]))
@@ -576,7 +608,12 @@ class SIMCanvas (FigureCanvas):
       dinty = self.getInputs()
 
       # try loading data. ignore failures
-      loaded_dat = updatedat(self.paramf)
+      try:
+        updatedat(self.paramf)
+        loaded_dat = True
+      except ValueError:
+        loaded_dat = False
+        pass
 
       xl = (0.0, quickgetprm(self.paramf,'tstop',float))
       if dinty['Ongoing'] or dinty['Evoked'] or dinty['Poisson']:
@@ -607,9 +644,12 @@ class SIMCanvas (FigureCanvas):
     if only_create_axes:
       return
 
-    if not updatedat(self.paramf):
-      return # if no data from sim, or data load problem return
-    if len(ddat.keys()) == 0: return
+    try:
+      updatedat(self.paramf)
+    except ValueError:
+      if 'dpl' not in ddat:
+        # failed to load dipole data, nothing more to plot
+        return
 
     ds = None
     xl = (0,ddat['dpl'][-1,0])
