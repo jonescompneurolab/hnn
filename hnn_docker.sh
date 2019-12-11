@@ -13,6 +13,7 @@ VCXSRV_PID=
 HNN_DOCKER_IMAGE=jonescompneurolab/hnn
 DOCKER_STATUS=
 ALREADY_RUNNING=0
+COPY_SSH_FILES=0
 NEW_CONTAINER=0
 SSH_PORT=
 XAUTH_BIN=
@@ -144,31 +145,30 @@ function prompt_stop_container {
 }
 
 function find_existing_container {
+  echo -n "Looking for existing containers..." | tee -a hnn_docker.log
   echo -e "\nCommand: docker ps -a |grep hnn_container" >> hnn_docker.log
   docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
 }
 
 function copy_security_files {
-  if [[ "$NEW_CONTAINER" -eq "1" ]]; then
-    echo -n "Copying authorized_keys file into container... " | tee -a hnn_docker.log
-    docker cp $SSH_AUTHKEYS hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
-    fail_on_bad_exit $?
+  echo -n "Copying authorized_keys file into container... " | tee -a hnn_docker.log
+  docker cp $SSH_AUTHKEYS hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
+  fail_on_bad_exit $?
 
-    echo -n "Copying known_hosts file into container... " | tee -a hnn_docker.log
-    docker cp $SSH_PUBKEY hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
-    fail_on_bad_exit $?
+  echo -n "Copying known_hosts file into container... " | tee -a hnn_docker.log
+  docker cp $SSH_PUBKEY hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
+  fail_on_bad_exit $?
 
-    echo -n "Changing container authorized_keys file permissions..." | tee -a hnn_docker.log
-    docker exec hnn_container bash -c 'sudo chown hnn_user /home/hnn_user/.ssh/authorized_keys && \
-                                      sudo chmod 600 /home/hnn_user/.ssh/authorized_keys' \
-      >> hnn_docker.log 2>&1
-    fail_on_bad_exit $?
+  echo -n "Changing container authorized_keys file permissions..." | tee -a hnn_docker.log
+  docker exec hnn_container bash -c 'sudo chown hnn_user /home/hnn_user/.ssh/authorized_keys && \
+                                    sudo chmod 600 /home/hnn_user/.ssh/authorized_keys' \
+    >> hnn_docker.log 2>&1
+  fail_on_bad_exit $?
 
-    echo -n "Changing container known_hosts file permissions..." | tee -a hnn_docker.log
-    docker exec hnn_container bash -c 'sudo chown hnn_user\:hnn_group /home/hnn_user/.ssh/known_hosts' \
-      >> hnn_docker.log 2>&1
-    fail_on_bad_exit $?
-  fi
+  echo -n "Changing container known_hosts file permissions..." | tee -a hnn_docker.log
+  docker exec hnn_container bash -c 'sudo chown hnn_user\:hnn_group /home/hnn_user/.ssh/known_hosts' \
+    >> hnn_docker.log 2>&1
+  fail_on_bad_exit $?
 }
 
 function restart_xquartz {
@@ -336,7 +336,10 @@ fi
 if [[ "$UNINSTALL" -eq "1" ]]; then
   find_existing_container
   if [[ $? -eq "0" ]]; then
+    echo "found" | tee -a hnn_docker.log
     prompt_remove_container
+  else
+    echo "not found" | tee -a hnn_docker.log
   fi
   while true; do
     echo
@@ -541,6 +544,7 @@ if [ -n "${XAUTH_BIN}" ]; then
   AUTH_KEYS=$("${XAUTH_BIN}" nlist :0 |grep -v '^ffff')
   if [[ -n $AUTH_KEYS ]]; then
     echo -n "Updating Xauthority file... " | tee -a hnn_docker.log
+    echo >> hnn_docker.log
     echo "Command: \"${XAUTH_BIN}\" nlist :0 | sed -e 's/^..../ffff/' | \"${XAUTH_BIN}\" -f \"$XAUTHORITY\" -b -i nmerge -" >> hnn_docker.log
     OUTPUT=$("${XAUTH_BIN}" nlist :0 | sed -e 's/^..../ffff/' | "${XAUTH_BIN}" -f "$XAUTHORITY" -b -i nmerge - >> hnn_docker.log 2>&1)
     if [[ "$?" -ne "0" ]] || [[ -f "${XAUTHORITY}-n" ]]; then
@@ -554,15 +558,26 @@ if [ -n "${XAUTH_BIN}" ]; then
 fi
 
 if [[ ! "$OS" =~ "linux" ]]; then
-  echo -n "Setting up SSH authentication files... " | tee -a hnn_docker.log
   # set up ssh keys
-  SSH_PRIVKEY="$CWD/installer/docker/id_rsa_hnn"
+  SSH_PRIVKEY="./installer/docker/id_rsa_hnn"
   SSH_PUBKEY="./installer/docker/id_rsa_hnn.pub"
   SSH_AUTHKEYS="./installer/docker/authorized_keys"
   if [[ ! -f "$SSH_PRIVKEY" ]] || [[ ! -f "$SSH_PUBKEY" ]] || [[ ! -f "$SSH_AUTHKEYS" ]]; then
-    rm -f "$SSH_PRIVKEY"
-    COMMAND="ssh-keygen -f $SSH_PRIVKEY -t rsa -N ''"
-    silent_run_command
+    if [[ -f "$SSH_PRIVKEY" ]]; then
+      echo -n "Removing $SSH_PRIVKEY... " >> hnn_docker.log
+      COMMAND="rm -f $SSH_PRIVKEY"
+      silent_run_command
+      if [[ $? -eq "0" ]]; then
+        echo "done" >> hnn_docker.log
+      else
+        echo "failed" >> hnn_docker.log
+        cleanup 2
+      fi
+    fi
+    echo -n "Setting up SSH authentication files... " | tee -a hnn_docker.log
+    echo >> hnn_docker.log
+    echo "Command: echo -e \"\n\" | ssh-keygen -f $SSH_PRIVKEY -t rsa -N ''" >> hnn_docker.log
+    echo -e "\n" | ssh-keygen -f $SSH_PRIVKEY -t rsa -N '' >> hnn_docker.log 2>&1
     if [[ $? -ne "0" ]]; then
       echo "Error: failed running ssh-keygen." | tee -a hnn_docker.log
       cleanup 2
@@ -570,8 +585,9 @@ if [[ ! "$OS" =~ "linux" ]]; then
 
     echo -n "command=\"/home/hnn_user/start_hnn.sh\" " > "$SSH_AUTHKEYS"
     cat "$SSH_PUBKEY" >> "$SSH_AUTHKEYS"
+    echo "done" | tee -a hnn_docker.log
+    COPY_SSH_FILES=1
   fi
-  echo "done" | tee -a hnn_docker.log
 fi
 
 echo | tee -a hnn_docker.log
@@ -591,8 +607,6 @@ fi
 if [[ "$RESTART_NEEDED" -eq "1" ]] && [[ "$ALREADY_RUNNING" -eq "1" ]]; then
   prompt_stop_container
 elif [[ "$XAUTH_UPDATED" -eq "1" ]]; then
-  echo -n "Looking for existing containers..." | tee -a hnn_docker.log
-  echo >> hnn_docker.log
   find_existing_container
   if [[ $? -eq "0" ]]; then
     echo "found" | tee -a hnn_docker.log
@@ -609,8 +623,6 @@ if [[ "$OS" =~ "linux" ]]; then
   if [[ $? -ne "0" ]]; then
     # try removing container
     echo "failed" | tee -a hnn_docker.log
-    echo -n "Looking for old containers..." | tee -a hnn_docker.log
-    echo >> hnn_docker.log
     find_existing_container
     if [[ $? -eq "0" ]]; then
       echo "found" | tee -a hnn_docker.log
@@ -629,7 +641,10 @@ if [[ "$OS" =~ "linux" ]]; then
   fi
 elif [[ "$ALREADY_RUNNING" -eq "0" ]]; then
   find_existing_container
-  if [[ $? -ne "0" ]]; then
+  if [[ $? -eq "0" ]]; then
+    echo "found" | tee -a hnn_docker.log
+  else
+    echo "not found" | tee -a hnn_docker.log
     NEW_CONTAINER=1
   fi
 
@@ -639,8 +654,6 @@ elif [[ "$ALREADY_RUNNING" -eq "0" ]]; then
   if [[ $? -ne "0" ]]; then
     # try removing container
     echo "failed" | tee -a hnn_docker.log
-    echo -n "Looking for old containers..." | tee -a hnn_docker.log
-    echo >> hnn_docker.log
     find_existing_container
     if [[ $? -eq "0" ]]; then
       echo "found" | tee -a hnn_docker.log
@@ -658,7 +671,9 @@ elif [[ "$ALREADY_RUNNING" -eq "0" ]]; then
 fi
 
 if [[ ! "$OS" =~ "linux" ]]; then
-  copy_security_files
+  if [[ "$NEW_CONTAINER" -eq "1" ]] || [[ "$COPY_SSH_FILES" -eq "1" ]]; then
+    copy_security_files
+  fi
   get_container_port
 
   if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
