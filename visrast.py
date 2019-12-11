@@ -49,7 +49,11 @@ for i in range(len(sys.argv)):
     PoissonInputs = paramrw.usingPoissonInputs(paramf)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
-extinputs = spikefn.ExtInputs(spkpath, outparamf)
+try:
+  extinputs = spikefn.ExtInputs(spkpath, outparamf)
+except ValueError:
+  print("Error: could not load spike timings from %s" % spkpath)
+
 extinputs.add_delay_times()
 
 alldat = {}
@@ -211,7 +215,11 @@ class SpikeCanvas (FigureCanvas):
     if idx in alldat: return
     alldat[idx] = {}
     if idx == 0:
-      extinputs = spikefn.ExtInputs(spkpath, outparamf)
+      try:
+        extinputs = spikefn.ExtInputs(spkpath, outparamf)
+      except ValueError:
+        print("Error: could not load spike timings from %s" % spkpath)
+        return
       extinputs.add_delay_times()
       dspk,haveinputs,dhist = getdspk(spkpath)
       alldat[idx]['dspk'] = dspk
@@ -221,7 +229,11 @@ class SpikeCanvas (FigureCanvas):
     else:
       spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index-1)+'.txt') 
       dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
-      extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+      try:
+        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+      except ValueError:
+        print("Error: could not load spike timings from %s" % spkpath)
+        return
       extinputs.add_delay_times()
       alldat[idx]['dspk'] = dspktrial
       alldat[idx]['haveinputs'] = haveinputs

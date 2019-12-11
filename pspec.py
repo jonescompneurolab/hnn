@@ -122,7 +122,13 @@ def pspec_with_hist(f_spec, f_dpl, f_spk, dfig, f_param, key_types, xlim=None, y
   # # Account for possible delays
   # s_dict = spikefn.add_delay_times(s_dict, p_dict)
   # Get extinput data and account for delays
-  extinputs = spikefn.ExtInputs(f_spk, f_param)
+  try:
+    extinputs = spikefn.ExtInputs(f_spk, f_param)
+  except ValueError:
+    print("Error: could not load spike timings from %s" % f_spk)
+    f.close()
+    return
+
   extinputs.add_delay_times()
   extinputs.get_envelope(dpl.t, feed='dist')
   # set number of bins (150 bins per 1000ms)

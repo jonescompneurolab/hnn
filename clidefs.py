@@ -1136,7 +1136,12 @@ def exec_phaselock(ddata, opts):
             tmp_array_dpl.append(dp)
 
             # Load extinput data, do stuff, and store it
-            extinput = spikefn.ExtInputs(f_spk, f_param)
+            try:
+                extinput = spikefn.ExtInputs(f_spk, f_param)
+            except ValueError:
+                print("Error: could not load spike timings from %s" % f_spk)
+                return
+
             extinput.add_delay_times()
             extinput.get_envelope(dpl.t, feed='dist', bins=150)
             inputs, t = extinput.truncate_ext('env', p['t_interval'])
