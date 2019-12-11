@@ -365,7 +365,7 @@ class Spec():
 
     # parses the specific data file
     def __parse_f(self, fspec):
-        data_spec = np.load(fspec)
+        data_spec = np.load(fspec, allow_pickle=True)
 
         if self.dtype == 'dpl':
             self.spec = {}
