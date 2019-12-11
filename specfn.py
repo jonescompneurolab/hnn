@@ -345,7 +345,6 @@ class PhaseLock():
 # functions on the aggregate spec data
 class Spec():
     def __init__(self, fspec, spec_cmap='jet', dtype='dpl'):
-        print("here")
         # save dtype
         self.dtype = dtype
 

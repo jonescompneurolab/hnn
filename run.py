@@ -29,6 +29,7 @@ from L2_basket import L2Basket
 from L5_basket import L5Basket
 from lfp import LFPElectrode
 from morphology import shapeplot, getshapecoords
+import traceback
 
 dconf = readconf()
 
@@ -445,14 +446,23 @@ def runsim ():
 
   if pcID == 0:
     if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
-    if debug: print("Simulation directory is: %s" % ddir.dsim)    
-    if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']): 
+    if debug: print("Simulation directory is: %s" % ddir.dsim)
+    if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']):
       runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
-    if paramrw.find_param(doutf['file_param'],'save_figs'): savefigs(ddir,p,p_exp) # save output figures
+    if paramrw.find_param(doutf['file_param'],'save_figs'):
+      savefigs(ddir,p,p_exp) # save output figures
 
   pc.barrier() # make sure all done in case multiple trials
 
+def excepthook(exc_type, exc_value, exc_tb):
+  traceback.print_exception(exc_type, exc_value, exc_tb, file=sys.stdout, chain=False)
+  traceback.print_exception(exc_type, exc_value, exc_tb, file=sys.stderr, chain=False)
+  pc.runworker()
+  pc.done()
+  exit(-1)
+
 if __name__ == "__main__":
+  sys.excepthook = excepthook
   if dconf['dorun']:
     if ntrial > 1: runtrials(ntrial,p['inc_evinput'])
     else: runsim()
