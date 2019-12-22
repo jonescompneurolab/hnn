@@ -22,16 +22,16 @@ cd $startdir && \
     mkdir nrn && \
     cd nrn && \
     git clone https://github.com/neuronsimulator/nrn src && \
-    cd /home/hnn_user/nrn/src && \
+    cd $startdir/nrn/src && \
     ./build.sh && \
     ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
       --without-iv --without-nrnoc-x11 --with-mpi \
-      --prefix=/home/hnn_user/nrn/build && \
+      --prefix=$startdir/nrn/build && \
     make -j4 && \
     make install -j4 && \
     cd src/nrnpython && \
     python3 setup.py install --user && \
-    cd /home/hnn_user/nrn/ && \
+    cd $startdir/nrn/ && \
     rm -rf src && \
     sudo yum clean all
 
