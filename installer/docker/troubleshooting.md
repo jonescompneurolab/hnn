@@ -4,65 +4,52 @@ Common problems that one might encounter running the HNN docker container are li
 
 Make sure to check the log hnn_docker.log for more verbose error messages that will hint at which of the sections to go to below.
 
-* [Failed to start HNN on any X port](#xdisplay)
+* [Failed to start HNN (No GUI)](#xdisplay)
 * [Starting HNN fails with 'Drive has not been shared'](#shared)
 * [This computer doesn't have VT-x/AMD-v enabled](#vtx)
 * [Image operating system linux cannot be used on this platform](#image)
 
-# Failed to start HNN
+## Failed to start HNN (No GUI)
 
 Output from `./docker_hnn.sh start`:
 
 ```none
-Starting HNN... failed to start HNN. Please see hnn_docker.log for more details
+Starting HNN... failed
+Please see hnn_docker.log for more details
 ```
 
-Check the contents of `hnn_docker.log` to determine which of the following issue applies
+Check the contents of `hnn_docker.log`. Most likely, they will be something similar to below:
 
-<a name="xdisplay"/>
-
-## Failed to start HNN on any X port
-
-`hnn_docker.log` contents:
 ```none
-Starting HNN GUI...
-No protocol specified
-qt.qpa.xcb: could not connect to display localhost:0
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-
-Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-egl, wayland-xcomposite-glx, webgl, xcb.
-
-/home/hnn_user/start_hnn.sh: line 41:   147 Aborted                 python3 hnn.py
-
-...[more output]...
-
-Failed to start HNN on any X port
-Connection to localhost closed.
+Creating hnn_container ... done
+Attaching to hnn_container
+hnn_container | Starting HNN GUI...
+hnn_container | No protocol specified
+hnn_container | qt.qpa.xcb: could not connect to display :0
+hnn_container | qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+hnn_container | This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+hnn_container |
+hnn_container | Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-egl, wayland-xcomposite-glx, webgl, xcb.
+hnn_container |
 ```
 
-macOS only: try forcing a restart of the container:
+The important line for troubleshooting is the next line and will look something like this:
 
-```bash
-./hnn_docker.sh -r start
+```none
+hnn_container | /home/hnn_user/start_hnn.sh: line 41:   147 Aborted                 python3 hnn.py
 ```
 
-Then try to start HNN manually: 
-```bash
-docker exec -ti hnn_container bash
+OR
+
+```none
+hnn_container | /home/hnn_user/start_hnn.sh: line 45:    12 Aborted                 (core dumped) python3 hnn.py
 ```
 
-Try starting HNN manually:
-
-```bash
-python3 hnn.py
-```
-
-If that doesn't work, troubleshooting steps diverge for each operating system.
+Troubleshooting steps diverge for each operating system.
 
 * Mac/Windows
 
-    1. Check that the X server is started (VcXsrv for Windows and XQuartz for Mac).
+    1. Check that the X server is started (VcXsrv for Windows and XQuartz for Mac) and verify that it works with other applications, such as with ssh X-forwarding, if possible.
 
 * Linux
 
@@ -70,11 +57,9 @@ If that doesn't work, troubleshooting steps diverge for each operating system.
 
         ```bash
         xhost +local:docker
-        cd hnn/installer/docker
-        docker-compose restart
         ```
 
-If issues persist, please include output from the above commands in a new [GitHub issue](https://github.com/jonescompneurolab/hnn/issues)
+If issues persist, we'd greatly appreciate it if you would report the issue on our [GitHub Issues](https://github.com/jonescompneurolab/hnn/issues). Please include output from hnn_docker.log and the above commands
 
 <a name="shared"/>
 
@@ -89,16 +74,17 @@ ERROR: for hnn_container  Cannot create container for service hnn: b'Drive has n
 
 ERROR: for hnn  Cannot create container for service hnn: b'Drive has not been shared'
 ```
+
 This will happen when starting the HNN container for the first time on Windows. When it is starting, there will be a prompt in the lower-right asking you to share the drive C:. Rerun the script to see the prompt again
 
 <a name="vtx"/>
 
-# This computer doesn't have VT-x/AMD-v enabled
+## This computer doesn't have VT-x/AMD-v enabled
 
 [MetaCell documentation link](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-this-computer-doesnt-have-vt-xamd-v-enabled)
 
 <a name="image"/>
 
-# Image operating system linux cannot be used on this platform
+## Image operating system linux cannot be used on this platform
 
 [MetaCell documentation link](https://github.com/MetaCell/NetPyNE-UI/wiki/Docker-installation#problem-image-operating-system-linux-cannot-be-used-on-this-platform)
