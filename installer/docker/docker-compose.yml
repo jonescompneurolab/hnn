@@ -12,4 +12,5 @@ services:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "./docker_hnn_out:/home/hnn_user/hnn_out"
+      - "../../shared:/home/hnn_user/shared"
     command: /home/hnn_user/start_hnn.sh
