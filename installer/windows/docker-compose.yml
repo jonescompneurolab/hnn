@@ -13,4 +13,5 @@ services:
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
       - "./docker_hnn_out:/home/hnn_user/hnn_out"
+      - "../../shared:/home/hnn_user/shared"
     command: "sudo /start_ssh.sh"
