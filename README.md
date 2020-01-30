@@ -29,8 +29,10 @@ For questions, comments/feedback, or troubleshooting information please contact
 us at hnneurosolver@gmail.com, and review our user forum at
 [https://www.neuron.yale.edu/phpBB/viewforum.php?f=46](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46) .
 
-# Citations
+# References
 
-To cite our software please use the following document object identifier:
+To cite the HNN software please use the following references:
+ [eLife 2020;9:e51214 DOI: 10.7554/eLife.51214 ](https://doi.org/10.7554/eLife.51214)
+ and
  [![DOI](https://zenodo.org/badge/128077928.svg)](https://zenodo.org/badge/latestdoi/128077928)
-
+ 
