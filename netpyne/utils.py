@@ -8,7 +8,7 @@ Contributors: salvadordura@gmail.com
 
 # utils 
 # Function to set cfg params from .param file
-def setCfgFromFile (fn, cfg):
+def setCfgFromFile (fn, cfg, exclude = []):
     d = {}
     with open(fn,'r') as fp:
         ln = fp.readlines()
@@ -30,6 +30,7 @@ def setCfgFromFile (fn, cfg):
                         value = str(sp[1])
                 d[sp[0].strip()] = value
     for k, v in d.items():
-        setattr(cfg, k, v)
+        if k not in exclude:
+            setattr(cfg, k, v)
     cfg.duration = cfg.tstop
     return cfg
