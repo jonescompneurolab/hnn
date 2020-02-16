@@ -24,8 +24,9 @@ cfgFile = '../param/ERPYes100Trials.param'      # ERP
 
 # Import simConfig and set parameters from file
 cfg, netParams = sim.readCmdLineArgs()
-
 cfg = setCfgFromFile(cfgFile, cfg, exclude = ['prng_seedcore_input_prox', 'prng_seedcore_input_dist'])
 
+from netParams import netParams
+
 # Create, simulate and analyze model
-sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams) 
+sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)   #
