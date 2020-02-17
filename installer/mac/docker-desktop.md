@@ -13,6 +13,9 @@
 4. Start the Docker application, acknowledging that it was downloaded from the Internet and you still want to open it.
 5. Log into your Docker Hub account if prompted by the Docker Desktop application.
 6. The Docker Desktop icon will appear in the taskbar with the message "Docker Desktop is starting", Followed by "Docker Desktop is now up and running!".
+7. Increase the number of cores that Docker can use (we recommend all cores) by clicking on the Docker Desktop icon in the taskbar and then clicking "Preferences". Choose the "Advanced" tab, and adjust with the slider. Then restart Docker Desktop to apply the setting.
+
+   <img src="install_pngs/docker_cores.png" height="300" />
 
 ## Start HNN
 

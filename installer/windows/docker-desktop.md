@@ -46,7 +46,11 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
      <img src="install_pngs/hyperv_error.png" width="500" />
 
-7. Reboot your computer after installing Docker
+7. Increase the number of cores that Docker can use (we recommend all cores) by right-clicking on the Docker Desktop icon in the lower-right dock and then clicking "Settings". Choose the "Advanced" tab, and adjust the CPU slider all the way to the right.
+
+    <img src="install_pngs/docker_cores.png" width="400"/>
+
+8. Reboot your computer after installing Docker
 
 ## Prerequisite: Git for Windows
 
