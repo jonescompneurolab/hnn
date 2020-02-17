@@ -399,7 +399,7 @@ else {
 }
 
 if (!($hnn_cloned)) {
-  Write-Host "HNN repository already existed at $HNN_PATH. Bringing up to date"
+  Write-Host "HNN repository already exists at $HNN_PATH. Bringing up to date"
   Set-Location $HNN_PATH
   git checkout master 2> $null
   git pull origin master 2> $null
@@ -448,9 +448,8 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    # python 3.7 doesn't work with NEURON (tried 7.7) as of 8/19/19
-    conda create -y -n hnn python=3.6 PyOpenGL pyqtgraph matplotlib scipy conda psutil
-    Start-Process "$CONDA_ENV\Scripts\pip3" "install nlopt" -Wait
+    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda psutil
+    conda install -y -n hnn -c conda-forge nlopt
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null

@@ -18,6 +18,8 @@ A [PowerShell install script](hnn.ps1) will manage downloading all prerequisites
 
 ## Run install script
 
+The PowerShell script used below will create a new directory called "hnn" in the place where the command is run from. If you have already cloned a copy of the HNN source code, you can avoid creating this new directory by running the script within the existing source code directory (using the third option below).
+
 1. Run the script from a cmd prompt:
 
     ```powershell
@@ -39,7 +41,7 @@ A [PowerShell install script](hnn.ps1) will manage downloading all prerequisites
 
    - There will be a permission prompt to install Microsoft MPI and a couple of terminal windows will
 open up. There will be a prompt for pressing ENTER after nrnmech.dll has been built
-   - If an existing Python 3.X installation isn't found, expect that installation will pause for ~5min while installing Miniconda
+   - If an existing Python 3.X installation isn't found, you should expect that installation will pause for ~5min while installing Miniconda
 
 2. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. Open up a new cmd.exe window (not PowerShell) for the environment variables to get set in the session.
 3. Run:
@@ -52,7 +54,31 @@ open up. There will be a prompt for pressing ENTER after nrnmech.dll has been bu
 
 4. That will launch the HNN GUI. You should now be able to run the tutorials at https://hnn.brown.edu/index.php/tutorials/
 
-# Troubleshooting
+## Troubleshooting
+
+### Running hnn fails with "Permission denied" for python3
+
+When trying to run simulations in HNN, you might see messages similar to below:
+
+```powershell
+Starting simulation (2 cores). . .
+Simulation exited with return code 4294967293. Stderr from console:
+NEURON -- VERSION 7.6.5 master (f3dad62b) 2019-01-11
+Duke, Yale, and the BlueBrain Project -- Copyright 1984-2018
+See http://neuron.yale.edu/neuron/credits
+
+C:/nrn/bin/nrnpyenv.sh: line 141: /cygdrive/c/Users/[USERNAME]/AppData/Local/Microsoft/WindowsApps/python3: Permission denied
+Python not available
+```
+
+This issue occurs after a particular Windows update is applied that inserts a non-functional alias for Python into the PATH environment variable before the functional version we installed. Since these are non-functional aliases, it is fine to remove them. HNN will then be able to locate the correct Python executable.
+
+```powershell
+rm c:\Users\[USERNAME]\AppData\Local\Microsoft\WindowsApps\python.exe
+rm c:\Users\[USERNAME]\AppData\Local\Microsoft\WindowsApps\python3.exe
+```
+
+### Other issues
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
 
