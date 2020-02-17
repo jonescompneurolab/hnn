@@ -70,14 +70,19 @@ basedir = os.path.join(dconf['datdir'], param_fname[0])
 
 # get default number of cores
 defncore = 0
+hyperthreading=False
+
 try:
   defncore = len(os.sched_getaffinity(0))
 except AttributeError:
-  defncore = cpu_count(logical=False)
+  physical_cores = cpu_count(logical=False)
+  logical_cores = multiprocessing.cpu_count()
 
-if defncore is None or defncore == 0:
-  # in case psutil is not supported (e.g. BSD)
-  defncore = multiprocessing.cpu_count()
+  if logical_cores is not None and logical_cores > physical_cores:
+    hyperthreading=True
+    defncore = logical_cores
+  else:
+    defncore = physical_cores
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
@@ -601,10 +606,14 @@ class RunSimThread (QThread):
     self.lock.release()
 
   def spawn_sim (self, simlength, banner=False):
-    global paramf
+    global paramf, hyperthreading
     import simdat
 
-    mpicmd = 'mpiexec -np '
+
+    if isWindows() or not hyperthreading:
+      mpicmd = 'mpiexec -np '
+    else:
+      mpicmd = 'mpiexec --use-hwthread-cpus -np '
 
     if banner:
       nrniv_cmd = ' nrniv -python -mpi '
@@ -643,7 +652,7 @@ class RunSimThread (QThread):
   def runsim (self, is_opt=False, banner=True, simlength=None):
     import simdat
 
-    global defncore, paramf
+    global defncore, paramf, hyperthreading
     self.lock.acquire()
     self.killed = False
     self.lock.release()
@@ -2660,7 +2669,7 @@ class RunParamDialog (DictDialog):
     self.parent.updatesaveparams({})
 
   def initExtra (self):
-    global paramf
+    global defncore, paramf
 
     DictDialog.initExtra(self)
     self.dqextra['NumCores'] = QLineEdit(self)
@@ -2697,6 +2706,8 @@ class RunParamDialog (DictDialog):
   def getncore (self): return int(self.dqextra['NumCores'].text().strip())
 
   def setfromdin (self,din):
+    global defncore
+
     if not din: return
 
     # number of cores may have changed if the configured number failed
