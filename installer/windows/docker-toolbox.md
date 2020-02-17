@@ -15,7 +15,7 @@ If you run into problems enabling hardware virtualization support, we recommend 
 It is necessary to turn off Hyper-V for using HNN with Docker Toolbox. You may find that this feature is already turned off, but use the following steps to confirm.
 
 1. Start typing "Turn Windows features on or off" in the search bar next to start menu and click on it to launch the control panel dialog window shown below.
-2. Make sure that the "Hyper-V" component is unchecked as shown in the image below and click "Ok".
+2. Make sure that both components, "Hyper-V" and "Containers" are unchecked and click "Ok".
 
     <img src="install_pngs/disable-hyperv.png" width="400" />
 
@@ -39,6 +39,8 @@ It is necessary to turn off Hyper-V for using HNN with Docker Toolbox. You may f
 8. Click on the "Docker Quickstart Terminal" shortcut. After opening the window, docker will run "pre-create checks" and then install VirtualBox (if needed). The output should be similar to below. Keep this window opening for running commands in later steps
 
     ```none
+    Creating CA: C:\Users\caldw\.docker\machine\certs\ca.pem
+    Creating client certificate: C:\Users\caldw\.docker\machine\certs\cert.pem
     Running pre-create checks...
     (default) Unable to get the latest Boot2Docker ISO release version:  Get https://api.github.com/repos/boot2docker/boot2docker/releases/latest: dial tcp: lookup api.github.com: no such host
     Creating machine...
