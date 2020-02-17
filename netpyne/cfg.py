@@ -37,7 +37,9 @@ cfg.printRunTime = 0.1
 cfg.printPopAvgRates = True
 cfg.distributeSynsUniformly = False  # one syn per section in list of sections
 cfg.allowSelfConns = False  # allow connections from a cell to itself
-cfg.allowConnsWithWeight0 = False # do not allow conns with weight 0 (faster)
+cfg.allowConnsWithWeight0 = False  # do not allow conns with weight 0 (faster)
+cfg.oneSynPerNetcon = False  # allow using the same synapse for multiple netcons
+
 
 # ----------------------------------------------------------------------------
 # Recording 
