@@ -477,11 +477,16 @@ if [ ! -e "$XAUTHORITY" ]; then
     fi
     echo -n "Generating $XAUTHORITY... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
-    echo "Command: ${XAUTH_BIN} generate $DSPLY ." >> hnn_docker.log
-    OUTPUT=$("${XAUTH_BIN}" generate $DSPLY . >> hnn_docker.log 2>&1)
+    echo "Command: ${XAUTH_BIN} -f $XAUTHORITY generate $DSPLY ." >> hnn_docker.log
+    OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" generate $DSPLY . >> hnn_docker.log 2>&1)
     COMMAND_STATUS=$?
     echo "Output: $OUTPUT" >> hnn_docker.log
     fail_on_bad_exit $COMMAND_STATUS
+
+    if [ ! -e "$XAUTHORITY" ]; then
+      echo "Still no .Xauthority file at $XAUTHORITY" | tee -a hnn_docker.log
+      cleanup 1
+    fi
   fi
 fi
 
@@ -492,8 +497,8 @@ else
 fi
 echo -n "Retrieving current X11 authentication keys... " | tee -a hnn_docker.log
 echo >> hnn_docker.log
-echo "Command: ${XAUTH_BIN} nlist $DSPLY" >> hnn_docker.log
-OUTPUT=$("${XAUTH_BIN}" nlist $DSPLY 2>> hnn_docker.log)
+echo "Command: ${XAUTH_BIN} -f $XAUTHORITY nlist $DSPLY" >> hnn_docker.log
+OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist $DSPLY 2>> hnn_docker.log)
 echo "Output: $OUTPUT" >> hnn_docker.log
 if [[ -z $OUTPUT ]]; then
   if [[ "$OS" =~ "mac" ]]; then
@@ -501,15 +506,15 @@ if [[ -z $OUTPUT ]]; then
     restart_xquartz
 
     # run xauth again
-    echo "Command: ${XAUTH_BIN} nlist :0" >> hnn_docker.log
-    OUTPUT=$("${XAUTH_BIN}" nlist :0 2>> hnn_docker.log)
+    echo "Command: ${XAUTH_BIN} -f $XAUTHORITY nlist :0" >> hnn_docker.log
+    OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist :0 2>> hnn_docker.log)
     echo "Output: $OUTPUT" >> hnn_docker.log
     if [[ -z $OUTPUT ]]; then
       echo "Error: still no keys valid keys" | tee -a hnn_docker.log
       cleanup 2
     fi
   else
-    echo "failed. Error with xauth" | tee -a hnn_docker.log
+    echo "failed. Error with xauth: no valid keys" | tee -a hnn_docker.log
     cleanup 2
   fi
 fi
