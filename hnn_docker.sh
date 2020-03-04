@@ -390,8 +390,8 @@ if [[ "$OS" =~ "windows" ]]; then
 
     echo -n "Starting VcXsrv... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
-    echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow > /dev/null 2>&1 &" >> hnn_docker.log
-    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
+    echo "Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow 2>&1 &" >> hnn_docker.log
+    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow >> hnn_docker.log 2>&1 &
     VCXSRV_PID=$!
     echo "done" | tee -a hnn_docker.log
     echo "Started VcXsrv with PID ${VCXSRV_PID}" >> hnn_docker.log
