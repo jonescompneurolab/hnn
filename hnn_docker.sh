@@ -513,6 +513,8 @@ if [[ -z $OUTPUT ]]; then
       echo "Error: still no keys valid keys" | tee -a hnn_docker.log
       cleanup 2
     fi
+  elif [[ "$OS" =~ "windows" ]]; then
+    echo "warning. Couldn't validate xauth keys" | tee -a hnn_docker.log
   else
     echo "failed. Error with xauth: no valid keys" | tee -a hnn_docker.log
     cleanup 2
