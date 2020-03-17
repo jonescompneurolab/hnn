@@ -440,7 +440,40 @@ elif [[ "$OS" =~ "mac" ]]; then
   fi
 fi
 
-if [[ "$OS" =~ "mac" ]] || [[ "$OS" =~ "linux" ]]; then
+if [[ "$OS" =~ "mac" ]]; then
+  echo -n "Checking for xauth... " | tee -a hnn_docker.log
+  echo "Command: which xauth" >> hnn_docker.log
+  XAUTH_BIN=$(which xauth 2>> hnn_docker.log)
+  COMMAND_STATUS=$?
+  echo "Output: $XAUTH_BIN" >> hnn_docker.log
+  fail_on_bad_exit $COMMAND_STATUS
+
+  # test xauth
+  echo -n "Checking that xauth works... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  echo "Command: ${XAUTH_BIN} info" >> hnn_docker.log
+  OUTPUT=$("${XAUTH_BIN}" info 2>> hnn_docker.log)
+  COMMAND_STATUS=$?
+  echo "Output: $OUTPUT" >> hnn_docker.log
+
+  if [[ $COMMAND_STATUS -ne "0" ]]; then
+    echo "failed." | tee -a hnn_docker.log
+    if [[ ! "${XAUTH_BIN}" =~ "/opt/X11/bin/xauth" ]] &&
+       [[ -f "/opt/X11/bin/xauth" ]]; then
+      XAUTH_BIN=/opt/X11/bin/xauth
+
+      echo -n "Instead trying $XAUTH_BIN... " | tee -a hnn_docker.log
+      echo >> hnn_docker.log
+      echo "Command: ${XAUTH_BIN} info" >> hnn_docker.log
+      OUTPUT=$("${XAUTH_BIN}" info 2>> hnn_docker.log)
+      COMMAND_STATUS=$?
+      echo "Output: $OUTPUT" >> hnn_docker.log
+      fail_on_bad_exit $COMMAND_STATUS
+    fi
+  else
+    echo "done." | tee -a hnn_docker.log
+  fi
+elif [[ "$OS" =~ "linux" ]]; then
   echo -n "Checking for xauth... " | tee -a hnn_docker.log
   echo "Command: which xauth" >> hnn_docker.log
   XAUTH_BIN=$(which xauth 2>> hnn_docker.log)
