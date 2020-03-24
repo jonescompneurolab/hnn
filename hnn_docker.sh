@@ -118,8 +118,18 @@ function get_container_port {
 }
 
 function ssh_start_hnn {
+  get_container_port
+  if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
+    DOCKER_HOST_IP=192.168.99.100
+  else
+    DOCKER_HOST_IP=localhost
+  fi
+
   echo -n "Starting HNN GUI... " | tee -a hnn_docker.log
   COMMAND="ssh -o SendEnv=DISPLAY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$DOCKER_HOST_IP -p $SSH_PORT"
+  if [[ $VERBOSE -eq 1 ]]; then
+    COMMAND="$COMMAND -v"
+  fi
   echo -e "\nCommand: $COMMAND" >> hnn_docker.log
   DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1
 }
@@ -708,20 +718,15 @@ elif [[ "$ALREADY_RUNNING" -eq "0" ]]; then
   else
     echo "done" | tee -a hnn_docker.log
   fi
+  copy_security_files
+else
+  # not linux and container is already running
+  if [[ "$COPY_SSH_FILES" -eq "1" ]]; then
+    copy_security_files
+  fi
 fi
 
 if [[ ! "$OS" =~ "linux" ]]; then
-  if [[ "$NEW_CONTAINER" -eq "1" ]] || [[ "$COPY_SSH_FILES" -eq "1" ]]; then
-    copy_security_files
-  fi
-  get_container_port
-
-  if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
-    DOCKER_HOST_IP=192.168.99.100
-  else
-    DOCKER_HOST_IP=localhost
-  fi
-
   pre_start_time=$(date +%s)
   ssh_start_hnn
   HNN_STATUS=$?
@@ -737,9 +742,7 @@ if [[ ! "$OS" =~ "linux" ]]; then
     echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
     COMMAND="docker-compose -f $COMPOSE_FILE start"
     run_command
-    NEW_CONTAINER=1  # make sure auth files are copied in
     copy_security_files
-    get_container_port
     ssh_start_hnn
     fail_on_bad_exit $?
   else
