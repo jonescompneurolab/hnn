@@ -8,74 +8,73 @@ matrix:
       # Linux
       - os: linux
         name: "Linux full"
-        services:
-          - xvfb
+        services: docker
           - docker
-        addons:
-          apt:
-            sources:
-              - ubuntu-toolchain-r-test
-            packages:
-              - libopenmpi-dev
-              - openmpi-bin
+        # addons:
+        #   apt:
+        #     sources:
+        #       - ubuntu-toolchain-r-test
+        #     packages:
+        #       - libopenmpi-dev
+        #       - openmpi-bin
       # OSX
       - os: osx
         name: "MacOS full"
         services: docker
 
 
-before_install:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-        wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-        wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
-    fi;
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p ${HOME}/miniconda
-  - export PATH=${HOME}/miniconda/bin:$PATH
-  - conda update --yes --quiet conda
+# before_install:
+#   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+#         wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+#     else
+#         wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+#     fi;
+#   - chmod +x miniconda.sh
+#   - ./miniconda.sh -b -p ${HOME}/miniconda
+#   - export PATH=${HOME}/miniconda/bin:$PATH
+#   - conda update --yes --quiet conda
 
-install:
-    - install_prefix=~
-    - conda create -n testenv --yes pip python=${PYTHON_VERSION}
-    - source activate testenv
-    - conda install --yes scipy numpy matplotlib
-    - |
-      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        conda install --yes mpi4py openmpi
-      else
-        pip install mpi4py
-      fi
-    - pip install flake8 pytest pytest-cov
-    - pip install mne psutil joblib
-    - pip install coverage coveralls
-    - travis_wait 60
-    - |
-      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        wget -q  https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-osx.pkg -O nrn.pkg
-        sudo installer -pkg nrn.pkg -allowUntrusted -target /
-      else
-        git clone https://github.com/neuronsimulator/nrn
-        cd nrn
-        ./build.sh
-        ./configure --with-nrnpython=python3 --without-iv --prefix=${install_prefix} \
-          --with-paranrn --disable-rx3d --without-nrnoc-x11 --with-mpi
-        make -j4
-        make install -j4
-        cd src/nrnpython/
-        python3 setup.py install
-        cd $TRAVIS_BUILD_DIR
-        export PATH=$PATH:${install_prefix}/x86_64/bin
-        make
-        python setup.py develop
-      fi
+# install:
+#     - install_prefix=~
+#     - conda create -n testenv --yes pip python=${PYTHON_VERSION}
+#     - source activate testenv
+#     - conda install --yes scipy numpy matplotlib
+#     - |
+#       if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+#         conda install --yes mpi4py openmpi
+#       else
+#         pip install mpi4py
+#       fi
+#     - pip install flake8 pytest pytest-cov
+#     - pip install mne psutil joblib
+#     - pip install coverage coveralls
+#     - travis_wait 60
+#     - |
+#       if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+#         wget -q  https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-osx.pkg -O nrn.pkg
+#         sudo installer -pkg nrn.pkg -allowUntrusted -target /
+#       else
+#         git clone https://github.com/neuronsimulator/nrn
+#         cd nrn
+#         ./build.sh
+#         ./configure --with-nrnpython=python3 --without-iv --prefix=${install_prefix} \
+#           --with-paranrn --disable-rx3d --without-nrnoc-x11 --with-mpi
+#         make -j4
+#         make install -j4
+#         cd src/nrnpython/
+#         python3 setup.py install
+#         cd $TRAVIS_BUILD_DIR
+#         export PATH=$PATH:${install_prefix}/x86_64/bin
+#         make
+#         python setup.py develop
+#       fi
 
 script:
-    - py.test tests/
+    # - py.test tests/
     - |
       if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
           export TRAVIS_TESTING=1
-          ./hnn_docker -u start
+          xvfb-run ./hnn_docker -u start
       fi
 
     after_success:
