@@ -121,7 +121,22 @@ function ssh_start_hnn {
   echo -n "Starting HNN GUI... " | tee -a hnn_docker.log
   COMMAND="ssh -o SendEnv=DISPLAY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$DOCKER_HOST_IP -p $SSH_PORT"
   echo -e "\nCommand: $COMMAND" >> hnn_docker.log
-  DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1 &
+    SSH_PID=$!
+    sleep 5
+    kill -9 $SSH_PID
+    wait $SSH_PID
+    if [[ $? -eq 137 ]]; then
+      echo "test successful"
+      cleanup 0
+    else
+      echo "test return status $?"
+      cleanup 2
+    fi
+  else
+    DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1
+  fi
 }
 
 function prompt_stop_container {
