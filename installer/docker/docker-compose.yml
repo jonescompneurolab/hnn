@@ -7,10 +7,10 @@ services:
     hostname: hnn-container
     environment:
       XAUTHORITY: "/home/hnn_user/.Xauthority"
-      DISPLAY: ":0"
+      DISPLAY: $DISPLAY
+      SYSTEM_USER_DIR: $HOME
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "./docker_hnn_out:/home/hnn_user/hnn_out"
-      - "../../shared:/home/hnn_user/shared"
+      - "$HOME:$HOME"
     command: /home/hnn_user/start_hnn.sh

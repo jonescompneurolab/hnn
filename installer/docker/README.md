@@ -21,7 +21,7 @@ The BUILD_DATE argument is important to build the container with the latest HNN 
 
 ```bash
 cd hnn/installer/docker
-docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master BUILD_DATE=$(date +%s) .
+docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master --build-arg BUILD_DATE=$(date +%s) .
 ```
 
 ## Running HNN container without docker-compose
