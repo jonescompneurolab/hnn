@@ -640,6 +640,52 @@ if [[ ! "$OS" =~ "linux" ]]; then
   fi
 fi
 
+echo -n "Checking permissions of hnn_out... " | tee -a hnn_docker.log
+if [ -d "$HOME/hnn_out" ]; then
+  test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
+  if [[ $? -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    echo -n "Updating permissions of hnn_out... " | tee -a hnn_docker.log
+    chmod a+rwx "$HOME/hnn_out"
+    if [[ $? -ne "0" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
+    else
+      echo "done" | tee -a hnn_docker.log
+      echo -n "(retry) Checking permissions of hnn_out... " | tee -a hnn_docker.log
+      test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
+      if [[ $? -ne "0" ]]; then
+        echo "failed" | tee -a hnn_docker.log
+        cleanup 2
+      else
+        echo "ok" | tee -a hnn_docker.log
+      fi
+    fi
+  else
+    echo "ok" | tee -a hnn_docker.log
+  fi
+else
+  echo "failed" | tee -a hnn_docker.log
+  echo -n "Creatig hnn_out directory... " | tee -a hnn_docker.log
+  test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
+  if [[ $? -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup 2
+  else
+    echo "ok" | tee -a hnn_docker.log
+  fi
+  echo -n "(retry) Checking permissions of hnn_out... " | tee -a hnn_docker.log
+  if [ -d "$HOME/hnn_out" ]; then
+    test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
+    if [[ $? -ne "0" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
+    else
+      echo "ok" | tee -a hnn_docker.log
+    fi
+  fi
+fi
+
 echo | tee -a hnn_docker.log
 echo "Starting HNN" | tee -a hnn_docker.log
 echo "--------------------------------------" | tee -a hnn_docker.log

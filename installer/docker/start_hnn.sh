@@ -3,10 +3,6 @@
 source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
 
-# make sure hnn_out directory is usable by hnn_user (world writable)
-if [[ ${SYSTEM_USER_DIR} ]] && [ -d ${SYSTEM_USER_DIR} ]; then
-  sudo chmod a+rwx ${SYSTEM_USER_DIR}/hnn_out
-fi
 
 echo "Starting HNN GUI..."
 
