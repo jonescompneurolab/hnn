@@ -1,5 +1,7 @@
 FROM caldweba/opengl-docker
 
+EXPOSE 22
+
 # avoid questions from debconf
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,30 +10,50 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
     adduser hnn_user sudo && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    chown -R hnn_user:hnn_group /home/hnn_user && \
     chsh -s /bin/bash hnn_user
+
+# Qt prerequisites packages
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        libfontconfig libxext6 libx11-xcb1 libxcb-glx0 \
+        libegl1 && \
+    apt-get clean
+
+# base prerequisites packages
+RUN apt-get install --no-install-recommends -y \
+        python3-pip python3-setuptools openssh-server openmpi-bin lsof && \
+    apt-get clean
 
 COPY date_base_install.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/date_base_install.sh && \
     /usr/local/bin/date_base_install.sh
 
-RUN apt-get update && apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
 
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
 
-EXPOSE 22
+# if users open up a shell, they should go to the hnn repo checkout
+WORKDIR /home/hnn_user/hnn_source_code
+RUN chown -R hnn_user:hnn_group /home/hnn_user
 
 USER hnn_user
 
-RUN mkdir /home/hnn_user/hnn_out && \
-    mkdir /home/hnn_user/.ssh
+# get HNN python dependencies
+# python3-dev and gcc needed for building psutil
+RUN sudo pip3 install --no-cache-dir --upgrade pip && \
+    sudo apt-get install --no-install-recommends -y \
+        gcc python3-dev && \
+    pip install --no-cache-dir --user matplotlib PyOpenGL \
+        pyqt5 pyqtgraph scipy numpy nlopt psutil && \
+    sudo apt-get -y remove --purge \
+        gcc python3-dev && \
+    sudo apt-get autoremove -y --purge && \
+    sudo apt-get clean
 
-# allow user to specify architecture if different than x86_64
-ARG CPU=x86_64
-# supply the path NEURON binaries for building hnn
-ENV PATH=${PATH}:/home/hnn_user/nrn/build/$CPU/bin
+RUN mkdir /home/hnn_user/hnn_out \
+          /home/hnn_user/.ssh
 
 # use environment variables from hnn_envs
 RUN echo 'source /home/hnn_user/hnn_envs' >> ~/.bashrc
@@ -41,38 +63,7 @@ RUN sudo -l
 
 CMD /home/hnn_user/start_hnn.sh
 
-# compile NEURON, only temporarily installing packages for building
-RUN sudo apt-get update && \
-    sudo apt-get install -y git python3-dev python3-pip python3-psutil \
-                       bison flex automake libtool libncurses-dev zlib1g-dev \
-                       libopenmpi-dev openmpi-bin libqt5core5a libllvm6.0 \
-                       libxaw7 libxmu6 libxpm4 libxcb-glx0 \
-                       libxkbcommon-x11-0 libfontconfig libx11-xcb1 libxrender1 \
-                       git vim iputils-ping net-tools iproute2 nano sudo \
-                       telnet language-pack-en-base && \
-    sudo pip3 install pip --upgrade && \
-    sudo pip install PyOpenGL matplotlib pyqt5 pyqtgraph scipy numpy nlopt && \
-    sudo rm -rf /home/hnn_user/.cache && \
-    cd /home/hnn_user/ && \
-    mkdir nrn && \
-    cd nrn && \
-    git clone https://github.com/neuronsimulator/nrn src && \
-    cd /home/hnn_user/nrn/src && \
-    git checkout 7.7 && \
-    ./build.sh && \
-    ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-      --without-iv --without-nrnoc-x11 --with-mpi \
-      --prefix=/home/hnn_user/nrn/build && \
-    make -j4 && \
-    make install -j4 && \
-    cd src/nrnpython && \
-    python3 setup.py install --user && \
-    cd /home/hnn_user/nrn/ && \
-    rm -rf src && \
-    sudo apt-get -y remove --purge bison flex python3-dev zlib1g-dev && \
-    sudo apt-get autoremove -y --purge && \
-    sudo apt-get clean
-
+# use args to avoid caching
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_TAG
@@ -83,11 +74,30 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version=$VCS_TAG
 
-RUN cd /home/hnn_user && \
+# install NEURON
+RUN wget -q https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-linux.deb -O /tmp/nrn.deb && \
+    sudo dpkg -i /tmp/nrn.deb && \
+    rm -f /tmp/nrn.deb
+
+# install HNN
+RUN sudo apt-get install --no-install-recommends -y \
+        make gcc libc6-dev libtinfo-dev libncurses-dev \
+        libx11-dev libreadline-dev && \
+    cd /home/hnn_user && \
     git clone https://github.com/jonescompneurolab/hnn.git \
-      --single-branch --branch $SOURCE_BRANCH hnn_source_code && \
+        --depth 1 --single-branch --branch $SOURCE_BRANCH hnn_source_code && \
     cd hnn_source_code && \
-    make
+    make && \
+    sudo apt-get -y remove --purge \
+        make gcc libc6-dev libtinfo-dev libncurses-dev \
+        libx11-dev libreadline-dev && \
+    sudo apt-get autoremove -y --purge && \
+    sudo apt-get clean
+
+# NEURON runtime prerequisites
+RUN sudo apt-get install --no-install-recommends -y \
+        libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev && \
+    sudo apt-get clean
 
 # copy the start script into the container
 COPY start_hnn.sh /home/hnn_user/
@@ -98,8 +108,3 @@ RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
     sudo chown root:root /start_ssh.sh && \
     sudo chmod +x /start_ssh.sh && \
     sudo chown hnn_user:hnn_group /home/hnn_user/hnn_envs
-
-RUN sudo sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
-
-# if users open up a shell, they should go to the hnn repo checkout
-WORKDIR /home/hnn_user/hnn_source_code
