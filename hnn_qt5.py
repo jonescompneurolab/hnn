@@ -3360,6 +3360,9 @@ class HNNGUI (QMainWindow):
     # successful initialization, catch all further exceptions
     sys.excepthook = self.excepthook
 
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      exit(0)
+
   def _add_missing_frames(self, tb):
     fake_tb = namedtuple(
         'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
