@@ -32,7 +32,7 @@ RUN mkdir /var/run/sshd
 
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY/' -i /etc/ssh/sshd_config
+RUN sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY SYSTEM_USER_DIR TRAVIS_TESTING/' -i /etc/ssh/sshd_config
 
 # if users open up a shell, they should go to the hnn repo checkout
 WORKDIR /home/hnn_user/hnn_source_code
