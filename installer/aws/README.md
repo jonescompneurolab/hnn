@@ -32,7 +32,7 @@ This guide describes running HNN on Amazon Web Services (AWS). An image containi
    hnn
    ```
 
-9. You can now proceed to the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/). Some things to note:
+4. You can now proceed to the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/). Some things to note:
    * The directory `/home/ubuntu/hnn_out` is where the results from your simulations (data and param files) will be stored.
    * The "Model Visualization" button will not work on the AWS virtualization hardware.
 

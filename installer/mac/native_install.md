@@ -174,9 +174,9 @@ sudo installer -pkg /tmp/nrn-7.7.x86_64-osx.pkg -allowUntrusted -target /
 <img src="install_pngs/orterun_firewall.png" width="400" />
 
 4. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
-   * A directory called "hnn_out" exists in your home directory where the results from your simulations (data and param files) will be stored.
+    - A directory called "hnn_out" exists in your home directory where the results from your simulations (data and param files) will be stored.
 
-# Troubleshooting
+## Troubleshooting
 
 For Mac OS specific issues: please see the [Mac OS troubleshooting page](troubleshooting.md)
 

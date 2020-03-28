@@ -136,7 +136,10 @@ def readconf (fn="hnn.cfg",nohomeout=False):
     if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
   else:
     if d['homeout']: # user home directory for output
-      dbase = os.path.join(os.path.expanduser('~'),'hnn_out') # user home directory
+      if 'SYSTEM_USER_DIR' in os.environ:
+        dbase = os.path.join(os.environ["SYSTEM_USER_DIR"],'hnn_out') # user home directory
+      else:
+        dbase = os.path.join(os.path.expanduser('~'),'hnn_out') # user home directory
       if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
     else: # cwd for output
       dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG

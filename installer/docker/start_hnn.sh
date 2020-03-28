@@ -3,8 +3,8 @@
 source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
 
-# make sure hnn_out directory is readable by the user
-sudo chown -R hnn_user:hnn_group /home/hnn_user/hnn_out
+# make sure hnn_out directory is usable by hnn_user (world writable)
+sudo chgrp a+rwx ${SYSTEM_USER_DIR}/hnn_out
 
 echo "Starting HNN GUI..."
 
@@ -13,11 +13,14 @@ if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
 fi
 
 function retry_hnn {
-  if [ -z "$2" ]; then
-    export DISPLAY=:$1
-  else
-    export DISPLAY=$1:$2
+  if [[ -n "$1" ]]; then
+    if [ -z "$2" ]; then
+      export DISPLAY=:$1
+    else
+      export DISPLAY=$1:$2
+    fi
   fi
+
   echo "Trying to start HNN with DISPLAY=$DISPLAY"
   python3 hnn.py
   if [[ "$?" -ne "0" ]]; then
@@ -32,22 +35,13 @@ function retry_hnn {
   fi
 }
 
-export PYTHONPATH=/home/hnn_user/nrn/build/lib/python/
-export CPU=$(uname -m)
-export PATH=$PATH:/home/hnn_user/nrn/build/$CPU/bin
-
 # get rid of warning about XDG_RUNTIME_DIR
 export XDG_RUNTIME_DIR=/tmp/runtime-hnn_user
 mkdir /tmp/runtime-hnn_user &> /dev/null
 chmod 700 /tmp/runtime-hnn_user
 
 # try once with current DISPLAY
-python3 hnn.py
-if [[ "$?" -eq "0" ]]; then
-  # HNN quit gracefully
-  echo "HNN GUI stopped by user."
-  exit 0
-fi
+retry_hnn
 
 done=
 XHOST=${DISPLAY%:0}
