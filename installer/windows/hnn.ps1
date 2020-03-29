@@ -6,7 +6,7 @@ install Miniconda:
  - Miniconda3-latest-Windows-x86_64.exe
 
 Additionally the following will be installed if they are not found:
- - nrn-7.6.w64-mingwsetup.exe
+ - nrn-7.7.w64-mingwsetup.exe
  - Git-2.13.0-64-bit.exe
 
 HNN requires Microsoft MPI and this script cannot download msmpisetup.exe without a browser,
@@ -315,8 +315,8 @@ if ($script:installMiniconda) {
 
 $program = "NEURON"
 if (!(Test-Installed($program))) {
-  $file = "nrn-7.6.w64-mingwsetup.exe"
-  $url = "https://neuron.yale.edu/ftp/neuron/versions/v7.6/$file"
+  $file = "nrn-7.7.w64-mingwsetup.exe"
+  $url = "https://neuron.yale.edu/ftp/neuron/versions/v7.7/$file"
   Download-Program $program $file $url
   $dirpath = $script:NEURON_PATH
   Write-Host "Installing $program to $dirpath..."
@@ -381,8 +381,14 @@ else {
 $hnn_cloned = $false
 $cur_dir = Split-Path -Path $MyInvocation.MyCommand.Definition -parent
 $test_dir = Resolve-Path -Path "$cur_dir\..\..\..\hnn" 2> $null
-if (($null -ne $test_dir) -and
+if ("$Env:TRAVIS" -eq "true") {
+  Write-Host "Running in Travis CI. Not pulling from repo"
+  $hnn_cloned = $true
+  $HNN_PATH = (Get-Item -Path "$test_dir").FullName
+}
+elseif (($null -ne $test_dir) -and
    (Test-Path -Path "$test_dir\.git")) {
+    Write-Host "TRAVIS = $Env:TRAVIS"
   # use the already existing repo.
   # hnn will not be cloned
   $HNN_PATH = (Get-Item -Path "$test_dir").FullName
@@ -470,14 +476,17 @@ else {
 if ($proc2) {
   Write-Host "Waiting for NEURON install to finish..."
   $proc2.WaitForExit() 2>$null
+  Update-User-Paths("$script:NEURON_PATH\bin")
   Write-Host "NEURON is finished"
 }
 
 if (!(Test-Path "$HNN_PATH\nrnmech.dll" -PathType Leaf)) {
   Write-Host "Creating nrnmech.dll"
   Set-Location $HNN_PATH\mod
-  $proc4 = Start-Process "$script:NEURON_PATH\mingw\usr\bin\sh.exe" "$script:NEURON_ESC_PATH/lib/mknrndll.sh C:\nrn\" -PassThru
-  $proc4.WaitForExit() 2> $null
+  Start-Process "$script:NEURON_PATH\mingw\usr\bin\sh.exe" "$script:NEURON_ESC_PATH/lib/mknrndll.sh C:\nrn\"
+  $obj = New-Object -com Wscript.Shell
+  sleep -s 10
+  $obj.SendKeys("{ENTER}")
   Copy-Item $HNN_PATH\mod\nrnmech.dll -Destination $HNN_PATH
 }
 else {
