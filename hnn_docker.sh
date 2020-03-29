@@ -128,15 +128,21 @@ function stop_container {
 
 function get_container_port {
   echo -n "Looking up port to connect to HNN container... " | tee -a hnn_docker.log
+  COMMAND="$DOCKER port hnn_container 22"
   PORT_STRING=$($DOCKER port hnn_container 22)
-  if [[ $? -ne "0" ]]; then
+  COMMAND_STATUS=$?
+  echo "Output: $PORT_STRING" >> hnn_docker.log
+  if [[ $COMMAND_STATUS -ne "0" ]]; then
     COMMAND="$DOCKER restart hnn_container"
     silent_run_command
-  fi
-  PORT_STRING=$($DOCKER port hnn_container 22)
-  if [[ $? -ne "0" ]]; then
-    echo "failed" | tee -a hnn_docker.log
-    cleanup 2
+    COMMAND="$DOCKER port hnn_container 22"
+    PORT_STRING=$($DOCKER port hnn_container 22)
+    COMMAND_STATUS=$?
+    echo "Output: $PORT_STRING" >> hnn_docker.log
+    if [[ $COMMAND_STATUS -ne "0" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
+    fi
   fi
 
   SSH_PORT=$(echo $PORT_STRING| cut -d':' -f 2)

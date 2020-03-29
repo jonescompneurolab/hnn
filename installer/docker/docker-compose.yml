@@ -5,6 +5,8 @@ services:
     image: jonescompneurolab/hnn
     container_name: hnn_container
     hostname: hnn-container
+    ports:
+      - "22"
     environment:
       XAUTHORITY: "/home/hnn_user/.Xauthority"
       DISPLAY: $DISPLAY
