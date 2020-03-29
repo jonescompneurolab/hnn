@@ -1,0 +1,188 @@
+language: c
+
+matrix:
+  include:
+      # Linux
+      - os: linux
+        dist: disco
+        name: "Ubuntu disco"
+        env:
+          - NEURON_VERSION=7.7
+        services:
+          - docker
+          - xvfb
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+      # OSX
+      - os: osx
+        name: "MacOS"
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+      # Windows
+      - os: windows
+        name: "Windows"
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+        services:
+          - docker
+      # WORKS
+      # - os: linux
+      #   dist: bionic
+      #   name: "Ubuntu bionic"
+      #   env:
+      #     - NEURON_VERSION=7.7
+      #   services:
+      #     - docker
+      #     - xvfb
+      #   apt:
+      #     sources:
+      #       - ubuntu-toolchain-r-test
+      # Needs nlopt installed in correct path
+      # - os: linux
+      #   dist: xenial
+      #   name: "Ubuntu xenial"
+      #   env:
+      #     - NEURON_VERSION=7.7
+      #   services:
+      #     - docker
+      #     - xvfb
+      #   apt:
+      #     sources:
+      #       - ubuntu-toolchain-r-test
+
+before_install:
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "osx" ]; then  # install osx prerequisites
+      # install miniconda, XQuartz, NEURON, docker
+      set -e
+
+      # install miniconda
+      wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+      chmod +x miniconda.sh
+      ./miniconda.sh -b -p ${HOME}/miniconda
+      export PATH=${HOME}/miniconda/bin:$PATH
+      # create conda environment
+      conda create -n hnn --yes pip python=${PYTHON_VERSION} openmpi scipy numpy matplotlib pyqtgraph pyopengl psutil
+      # conda is faster to install nlopt
+      conda install -y -n hnn -c conda-forge nlopt
+      conda init bash
+      source activate hnn
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/envs/hnn/lib
+
+      # install NEURON
+      wget -q \
+          https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.x86_64-osx.pkg \
+          -O nrn.pkg
+      echo "Starting NEURON installer..."
+      sudo installer -pkg nrn.pkg -target > /dev/null / &
+      # hack so that install doesn't take 5+ min
+      PID=$!
+      sleep 10
+      sudo kill -9 $PID
+      if [[ $? -ne 0 ]]; then
+        echo "$PID not running"
+        exit 1
+      fi
+      set +e
+      wait $PID
+      if [[ $? -eq 137 ]]; then
+        echo "NEURON installer successful"
+      else
+        echo "NEURON installer returned $?"
+        exit 1
+      fi
+      set -e
+      export PATH=$PATH:/Applications/NEURON-${NEURON_VERSION}/nrn/x86_64/bin
+      export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
+
+      # install docker for mac
+      wget -q https://download.docker.com/mac/stable/Docker.dmg -O Docker.dmg
+      hdiutil attach Docker.dmg
+      sudo rsync -a /Volumes/Docker/Docker.app /Applications
+      open --background -a /Applications/Docker.app
+      export PATH=$PATH:/Applications/Docker.app/Contents/Resources/bin/docker-compose
+      export PATH=$PATH:/Applications/Docker.app/Contents/Resources/bin
+    fi
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "windows" ]; then  # install windows prerequisites
+      set -e
+      choco install docker-compose vcxsrv
+      wget -q https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi \
+        -O $HOME/Downloads/msmpisdk.msi
+      wget -q https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe \
+        -O $HOME/Downloads/msmpisetup.exe;
+    fi
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then  # install Linux prerequisites
+      set -e
+      export PATH=/usr/bin:/usr/local/bin:$PATH
+      chmod +x installer/ubuntu/installer.sh
+      bash -xe ./installer/ubuntu/installer.sh
+    fi
+
+install:
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ] || [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      make;
+    fi;
+  - |
+    if [ "${TRAVIS_OS_NAME}" == "windows" ]; then  # install HNN for windows
+      set -e
+      powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1
+      export PATH=$PATH:/c/nrn/bin
+      export PATH=$PATH:$HOME/Miniconda3/envs/hnn/condabin
+      export PATH=$HOME/Miniconda3/envs/hnn/:$PATH
+      export PATH=$HOME/Miniconda3/envs/hnn/Scripts:$PATH
+      export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
+      export NEURONHOME=/c/nrn
+    fi
+  - pip install flake8 pytest pytest-cov
+  - pip install mne
+  - pip install coverage coveralls
+
+script:
+  - set +e
+  - |
+    # test native display
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      PYTHON=python3
+    else
+      PYTHON=python
+    fi
+
+    TRAVIS_TESTING=1 $PYTHON hnn.py
+    if [[ $? -ne 0 ]]; then
+      echo -ne "\n*******  Starting HNN failed  *******\n"
+      exit 1
+    fi
+  - |
+    # test docker
+    TRAVIS_TESTING=1 USE_SSH=0 ./hnn_docker.sh -u start
+    if [[ $? -ne 0 ]]; then
+      echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
+      cat hnn_docker.log
+      exit 1
+    fi
+  - |
+    TRAVIS_TESTING=1 USE_SSH=1 ./hnn_docker.sh start
+    if [[ $? -ne 0 ]]; then
+      echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
+      cat hnn_docker.log
+      exit 1
+    fi
+  - set -e
+  - |
+    # test docker script functions on linux
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      echo -e "test stop argument\n"
+      TRAVIS_TESTING=1 ./hnn_docker.sh stop
+      echo -e "\ntest start argument\n"
+      TRAVIS_TESTING=1 ./hnn_docker.sh start
+      echo -e "\ntest upgrade argument\n"
+      TRAVIS_TESTING=1 ./hnn_docker.sh upgrade
+      echo -e "\ntest uninstall argument\n"
+      TRAVIS_TESTING=1 ./hnn_docker.sh uninstall
+    fi
+  - py.test tests/

@@ -1,12 +1,14 @@
 #!/bin/bash
 
+[[ $TRAVIS_TESTING ]] || TRAVIS_TESTING=0
+
 return=0
 
 VERBOSE=0
 UPGRADE=0
 STOP=0
 START=0
-FAILED=0
+RETRY=0
 UNINSTALL=0
 OS=
 VCXSRV_PID=
@@ -14,9 +16,12 @@ HNN_DOCKER_IMAGE=jonescompneurolab/hnn
 DOCKER_STATUS=
 ALREADY_RUNNING=0
 COPY_SSH_FILES=0
-NEW_CONTAINER=0
 SSH_PORT=
 XAUTH_BIN=
+TEST_PID=
+DOCKER=
+DOCKER_MACHINE=
+DOCKER_COMPOSE=
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -32,23 +37,29 @@ while [ -n "$1" ]; do
 done
 
 function cleanup {
-  FAILED=0
-  [[ $1 ]] && FAILED=$1
+  local __failed=0
+  [[ $1 ]] && __failed=$1
 
   if [[ "$OS"  =~ "windows" ]] && [ ! -z "${VCXSRV_PID}" ]; then
     echo "Killing VcXsrv PID ${VCXSRV_PID}" >> hnn_docker.log
     kill ${VCXSRV_PID} &> /dev/null
   fi
 
-  if [[ $FAILED -eq "0" ]]; then
+  if [[ $__failed -eq "0" ]]; then
     echo "Script hnn_docker.sh finished successfully" | tee -a hnn_docker.log
     exit 0
-  elif [[ $FAILED -eq "1" ]]; then
+  elif [[ $__failed -eq "1" ]]; then
     echo "Script cannot conntinue" | tee -a hnn_docker.log
-  elif [[ $FAILED -eq "2" ]]; then
+  elif [[ $__failed -eq "2" ]]; then
     echo "Please see hnn_docker.log for more details"
   fi
-  exit $FAILED
+  exit $__failed
+}
+
+function cleanup_except_travis {
+  if [[ $TRAVIS_TESTING -ne 1 ]]; then
+    cleanup $1
+  fi
 }
 
 function silent_run_command {
@@ -67,45 +78,71 @@ function fail_on_bad_exit {
   fi
 }
 
+function fail_on_bad_exit_except_travis {
+  local  __statusvar=$1
+
+  if [[ $__statusvar -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup_except_travis 2
+  else
+    echo "done" | tee -a hnn_docker.log
+  fi
+}
+
 function run_command {
   silent_run_command
   fail_on_bad_exit $?
 }
 
+function remove_container {
+  COMMAND="$DOCKER rm -fv hnn_container"
+  run_command
+}
+
 function prompt_remove_container {
-  while true; do
-    echo
-    read -p "Please confirm that you want to remove the old HNN container? (y/n)" yn
-    case $yn in
-      [Yy]* ) echo -n "Removing old container... " | tee -a hnn_docker.log
-              COMMAND="docker rm -fv hnn_container"
-              run_command
-              break;;
-      [Nn]* ) cleanup 1
-              break;;
-      * ) echo "Please answer yes or no.";;
-    esac
-  done
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    echo -n "Removing old container... " | tee -a hnn_docker.log
+    remove_container
+  else
+    while true; do
+      echo
+      read -p "Please confirm that you want to remove the old HNN container? (y/n)" yn
+      case $yn in
+        [Yy]* ) echo -n "Removing old container... " | tee -a hnn_docker.log
+                remove_container
+                break;;
+        [Nn]* ) cleanup 1
+                break;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+  fi
 }
 
 function stop_container {
   echo -n "Stopping HNN container... " | tee -a hnn_docker.log
-  COMMAND="docker stop hnn_container"
+  COMMAND="$DOCKER stop hnn_container"
   run_command
   ALREADY_RUNNING=0
 }
 
 function get_container_port {
   echo -n "Looking up port to connect to HNN container... " | tee -a hnn_docker.log
-  PORT_STRING=$(docker port hnn_container 22)
-  if [[ $? -ne "0" ]]; then
-    COMMAND="docker restart hnn_container"
+  COMMAND="$DOCKER port hnn_container 22"
+  PORT_STRING=$($DOCKER port hnn_container 22)
+  COMMAND_STATUS=$?
+  echo "Output: $PORT_STRING" >> hnn_docker.log
+  if [[ $COMMAND_STATUS -ne "0" ]]; then
+    COMMAND="$DOCKER restart hnn_container"
     silent_run_command
-  fi
-  PORT_STRING=$(docker port hnn_container 22)
-  if [[ $? -ne "0" ]]; then
-    echo "failed" | tee -a hnn_docker.log
-    cleanup 2
+    COMMAND="$DOCKER port hnn_container 22"
+    PORT_STRING=$($DOCKER port hnn_container 22)
+    COMMAND_STATUS=$?
+    echo "Output: $PORT_STRING" >> hnn_docker.log
+    if [[ $COMMAND_STATUS -ne "0" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      cleanup 2
+    fi
   fi
 
   SSH_PORT=$(echo $PORT_STRING| cut -d':' -f 2)
@@ -126,15 +163,28 @@ function ssh_start_hnn {
   fi
 
   echo -n "Starting HNN GUI... " | tee -a hnn_docker.log
-  COMMAND="ssh -o SendEnv=DISPLAY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$DOCKER_HOST_IP -p $SSH_PORT"
+  COMMAND="ssh -o SendEnv=DISPLAY -o SendEnv=SYSTEM_USER_DIR -o SendEnv=TRAVIS_TESTING \
+               -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+               -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$DOCKER_HOST_IP -p $SSH_PORT"
   if [[ $VERBOSE -eq 1 ]]; then
     COMMAND="$COMMAND -v"
   fi
   echo -e "\nCommand: $COMMAND" >> hnn_docker.log
-  DISPLAY=localhost:0 $COMMAND >> hnn_docker.log 2>&1
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    DISPLAY=localhost:0 SYSTEM_USER_DIR=$HOME TRAVIS_TESTING=${TRAVIS_TESTING} $COMMAND \
+      >> hnn_docker.log 2>&1 &
+    TEST_PID=$!
+  else
+    DISPLAY=localhost:0 SYSTEM_USER_DIR=$HOME $COMMAND >> hnn_docker.log 2>&1
+  fi
 }
 
 function prompt_stop_container {
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    stop_container
+    return
+  fi
+
   while true; do
     echo | tee -a hnn_docker.log
     if [[ "$UPGRADE" -eq "1" ]]; then
@@ -156,36 +206,189 @@ function prompt_stop_container {
 
 function find_existing_container {
   echo -n "Looking for existing containers..." | tee -a hnn_docker.log
-  echo -e "\nCommand: docker ps -a |grep hnn_container" >> hnn_docker.log
-  docker ps -a |grep hnn_container >> hnn_docker.log 2>&1
+  echo -e "\nCommand: $DOCKER ps -a |grep hnn_container" >> hnn_docker.log
+  $DOCKER ps -a |grep hnn_container >> hnn_docker.log 2>&1
 }
 
-function copy_security_files {
+function copy_ssh_files {
   echo -n "Copying authorized_keys file into container... " | tee -a hnn_docker.log
-  docker cp $SSH_AUTHKEYS hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
-  fail_on_bad_exit $?
+  $DOCKER cp $SSH_AUTHKEYS hnn_container:/home/hnn_user/.ssh/authorized_keys >> hnn_docker.log 2>&1
+  fail_on_bad_exit_except_travis $?
 
   echo -n "Copying known_hosts file into container... " | tee -a hnn_docker.log
-  docker cp $SSH_PUBKEY hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
-  fail_on_bad_exit $?
-
-  echo -n "Changing container authorized_keys file permissions..." | tee -a hnn_docker.log
-  docker exec hnn_container bash -c 'sudo chown hnn_user /home/hnn_user/.ssh/authorized_keys && \
-                                    sudo chmod 600 /home/hnn_user/.ssh/authorized_keys' \
-    >> hnn_docker.log 2>&1
-  fail_on_bad_exit $?
-
-  echo -n "Changing container known_hosts file permissions..." | tee -a hnn_docker.log
-  docker exec hnn_container bash -c 'sudo chown hnn_user\:hnn_group /home/hnn_user/.ssh/known_hosts' \
-    >> hnn_docker.log 2>&1
-  fail_on_bad_exit $?
+  $DOCKER cp $SSH_PUBKEY hnn_container:/home/hnn_user/.ssh/known_hosts >> hnn_docker.log 2>&1
+  fail_on_bad_exit_except_travis $?
 }
 
 function restart_xquartz {
+  local __timeout=0
+  local __retries=0
+
+  if [[  $RETRY -eq 1 ]]; then
+    echo -n "(retry) " | tee -a hnn_docker.log
+  fi
   echo -n "Restarting XQuartz... " | tee -a hnn_docker.log
-  killall Xquartz 2>> hnn_docker.log && sleep 1
-  open -a XQuartz && sleep 3
-  fail_on_bad_exit $?
+  echo >> hnn_docker.log
+
+  let __retries=5
+  while [[ $__retries -gt 0 ]]; do
+    pgrep X11.bin > /dev/null 2>&1 || pgrep Xquartz > /dev/null 2>&1 || \
+      pgrep quartz-wm > /dev/null 2>&1 || pgrep xinit > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+      procs="X11.bin Xquartz quartz-wm xinit"
+      PIDS=$(pgrep -d ' ' $procs 2>&1)
+      if [[ $? -eq 0 ]]; then
+        pkill $procs >> hnn_docker.log 2>&1
+        if [[ $? -eq 0 ]]; then
+          echo "killed $procs ($CLEANED)" >> hnn_docker.log
+        else
+          echo "failed to kill $procs ($CLEANED)" >> hnn_docker.log
+        fi
+      fi
+    else
+      break
+    fi
+    sleep 1
+    (( __retries-- ))
+  done
+
+  if [[ $__retries -eq 0 ]]; then
+    echo "couldn't stop all Xquartz procs" >> hnn_docker.log
+    cleanup 2
+  fi
+
+  if [[ -e /tmp/.X*-lock ]]; then
+    echo "Removing locks: $(ls /tmp/.X*-lock)" >> hnn_docker.log
+    rm -f /tmp/.X*-lock
+  fi
+
+  COMMAND="open -a XQuartz"
+  run_command
+
+  echo -n "Waiting for XQuartz to start... " | tee -a hnn_docker.log
+  let __timeout=30
+  DISPLAY_INT=
+  while [[ $__timeout -gt 0 ]]; do
+    PID=$(pgrep Xquartz 2> /dev/null)
+    if [[ $? -eq 0 ]]; then
+      DISPLAY=$(ps $PID|grep -v PID|sed 's/.*\(\:[0-9]\{1,\}\).*/\1/')
+      DISPLAY_INT=$(echo $DISPLAY|sed 's/\:\([0-9]\{1,\}\)/\1/')
+      if [[ -e "/tmp/.X11-unix/X${DISPLAY_INT}" ]]; then
+        echo -e "\nStarted XQuartz on DISPLAY $DISPLAY" >> hnn_docker.log
+        break
+      fi
+    fi
+    sleep 1
+    (( __timeout-- ))
+  done
+
+  if [[ $__timeout -eq 0 ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    if [[ -n $DISPLAY_INT ]]; then
+      echo "/tmp/.X11-unix/X${DISPLAY_INT} not found" >> hnn_docker.log
+    fi
+    cleanup 2
+  else
+    echo "done" | tee -a hnn_docker.log
+  fi
+}
+
+function wait_for_container_to_start {
+  local __timeout=0
+  local __started=0
+
+  let __timeout=$1
+  while true; do
+    $DOCKER ps |grep hnn_container | grep Up > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+      __started="1"
+      # make sure GUI (Linux) starts
+      sleep 5
+      break
+    elif [[ $__timeout -eq 0 ]]; then
+      break
+    fi
+    sleep 1
+    (( __timeout-- ))
+  done
+
+  echo $__started
+}
+
+function docker_compose_up {
+  if [[  $RETRY -eq 1 ]]; then
+    echo -n "(retry) " | tee -a hnn_docker.log
+  fi
+  echo -n "Starting HNN container... " | tee -a hnn_docker.log
+  COMMAND="${DOCKER_COMPOSE} -f $COMPOSE_FILE up -d --no-recreate hnn"
+  silent_run_command
+  if [[ $? -ne 0 ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup_except_travis 2
+  else
+    TIMEOUT=20
+    STARTED=$(wait_for_container_to_start $TIMEOUT)
+    if [[ ! "$STARTED" =~ "1" ]]; then
+      echo "failed" | tee -a hnn_docker.log
+      echo "Waited for $TIMEOUT seconds for container to start" >> hnn_docker.log
+      false
+    else
+      echo "done" | tee -a hnn_docker.log
+    fi
+  fi
+}
+
+function print_docker_logs {
+  find_existing_container
+  if [[ $? -eq "0" ]]; then
+    echo "found" | tee -a hnn_docker.log
+    echo -e "\n Docker logs (100 lines):" >> hnn_docker.log
+    $DOCKER logs --tail 100  hnn_container >> hnn_docker.log 2>&1
+    echo >> hnn_docker.log
+  else
+    echo "not found" | tee -a hnn_docker.log
+  fi
+}
+
+function create_container {
+  echo -n "Creating HNN container... " | tee -a hnn_docker.log
+  if [[ "$OS" =~ "mac" ]]; then
+    COMMAND="${DOCKER_COMPOSE} -f $COMPOSE_FILE up --no-start hnn"
+  else
+    COMMAND="timeout 60 ${DOCKER_COMPOSE} -f $COMPOSE_FILE up --no-start hnn"
+  fi
+  silent_run_command
+  fail_on_bad_exit_except_travis $?
+
+  if [[ $USE_SSH -eq 1 ]]; then
+    copy_ssh_files
+  fi
+}
+
+function check_docker_machine {
+  if [[ "$OS" =~ "windows" ]]; then
+    COMMAND="which docker-machine.exe"
+    silent_run_command
+    COMMAND_STATUS=$?
+    DOCKER_MACHINE="docker-machine.exe"
+  else
+    COMMAND="which docker-machine"
+    silent_run_command
+    COMMAND_STATUS=$?
+    DOCKER_MACHINE="docker-machine"
+  fi
+  if [[ "${COMMAND_STATUS}" -ne "0" ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    cleanup 2
+  fi
+}
+
+function get_xauth_keys {
+  echo -n "Retrieving current X11 authentication keys... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  echo "Command: ${XAUTH_BIN} -f $XAUTHORITY nlist $DISPLAY" >> hnn_docker.log
+  OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist $DISPLAY 2>> hnn_docker.log)
+  echo "Output: $OUTPUT" >> hnn_docker.log
 }
 
 if [[ $START -eq "0" ]] && [[ $STOP -eq "0" ]] && [[ $UNINSTALL -eq "0" ]] && [[ $UPGRADE -eq "0" ]]; then
@@ -198,7 +401,7 @@ echo "--------------------------------------" | tee -a hnn_docker.log
 
 echo -n "Checking OS version... " | tee -a hnn_docker.log
 OS_OUTPUT=$(uname -a)
-if [[ $OS_OUTPUT =~ "MINGW" ]]; then
+if [[ $OS_OUTPUT =~ "MINGW" ]] || [[ $OS_OUTPUT =~ "MSYS" ]]; then
   OS="windows"
 elif [[ $OS_OUTPUT =~ "Darwin" ]]; then
   OS="mac"
@@ -207,10 +410,27 @@ elif [[ $OS_OUTPUT =~ "Linux" ]]; then
 fi
 echo "$OS" | tee -a hnn_docker.log
 
+# defaults
+if [[ "$OS" =~ "linux" ]]; then
+  [[ $USE_SSH ]] || USE_SSH=0
+else
+  [[ $USE_SSH ]] || USE_SSH=1
+fi
+
 echo -n "Checking if Docker is installed... " | tee -a hnn_docker.log
-COMMAND="which docker"
-silent_run_command
-if [[ "$?" -eq "0" ]]; then
+if [[ "$OS" =~ "windows" ]]; then
+  COMMAND="which docker.exe"
+  silent_run_command
+  COMMAND_STATUS=$?
+  DOCKER="docker.exe"
+else
+  COMMAND="which docker"
+  silent_run_command
+  COMMAND_STATUS=$?
+  DOCKER="docker"
+fi
+
+if [[ "${COMMAND_STATUS}" -eq "0" ]]; then
   echo "ok" | tee -a hnn_docker.log
 else
   echo "failed" | tee -a hnn_docker.log
@@ -219,9 +439,19 @@ else
 fi
 
 echo -n "Checking if docker-compose is found... " | tee -a hnn_docker.log
-COMMAND="which docker-compose"
-silent_run_command
-if [[ "$?" -eq "0" ]]; then
+if [[ "$OS" =~ "windows" ]]; then
+  COMMAND="which docker-compose.exe"
+  silent_run_command
+  COMMAND_STATUS=$?
+  DOCKER_COMPOSE="docker-compose.exe"
+else
+  COMMAND="which docker-compose"
+  silent_run_command
+  COMMAND_STATUS=$?
+  DOCKER_COMPOSE="docker-compose"
+fi
+
+if [[ "${COMMAND_STATUS}" -eq "0" ]]; then
   echo "ok" | tee -a hnn_docker.log
 else
   echo "failed" | tee -a hnn_docker.log
@@ -233,31 +463,28 @@ DOCKER_TOOLBOX=0
 if  [[ -n "${DOCKER_MACHINE_NAME}" ]]; then
   DOCKER_TOOLBOX=1
   toolbox_str=" (Docker Toolbox)"
-  eval $(docker-machine env -u 2> /dev/null)
-  eval $(docker-machine env 2> /dev/null)
+  check_docker_machine
+  eval $(${DOCKER_MACHINE} env -u 2> /dev/null)
+  eval $(${DOCKER_MACHINE} env 2> /dev/null)
 fi
 
 echo -n "Checking if Docker is working... " | tee -a hnn_docker.log
 if [[ "$OS" =~ "mac" ]]; then
-  DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+  DOCKER_OUTPUT=$($DOCKER version 2>> hnn_docker.log)
 else
-  DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+  DOCKER_OUTPUT=$(timeout 5 $DOCKER version 2>> hnn_docker.log)
 fi
 DOCKER_STATUS=$?
-if [[ $DOCKER_STATUS -ne "0" ]]; then
-  COMMAND="which docker-machine"
-  silent_run_command
-  if [[ "$?" -ne "0" ]]; then
+if [[ $DOCKER_STATUS -ne "0" ]] && [[ $TRAVIS_TESTING -eq 1 ]]; then
     echo "failed" | tee -a hnn_docker.log
-    cleanup 2
-  fi
-
-  eval $(docker-machine env -u 2> /dev/null)
-  eval $(docker-machine env 2> /dev/null)
+elif [[ $DOCKER_STATUS -ne "0" ]]; then
+  check_docker_machine
+  eval $(${DOCKER_MACHINE} env -u 2> /dev/null)
+  eval $(${DOCKER_MACHINE} env 2> /dev/null)
   if [[ "$OS" =~ "mac" ]]; then
-    DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+    DOCKER_OUTPUT=$($DOCKER version 2>> hnn_docker.log)
   else
-    DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+    DOCKER_OUTPUT=$(timeout 5 $DOCKER version 2>> hnn_docker.log)
   fi
 
   if [[ "$?" -eq "0" ]]; then
@@ -265,17 +492,17 @@ if [[ $DOCKER_STATUS -ne "0" ]]; then
   else
     echo "failed" | tee -a hnn_docker.log
     echo -n "Starting docker machine... " | tee -a hnn_docker.log
-    COMMAND="docker-machine start"
+    COMMAND="${DOCKER_MACHINE} start"
     run_command
     # rerun env commands in case IP address changed
-    eval $(docker-machine env -u 2> /dev/null)
-    eval $(docker-machine env 2> /dev/null)
+    eval $(${DOCKER_MACHINE} env -u 2> /dev/null)
+    eval $(${DOCKER_MACHINE} env 2> /dev/null)
     echo -n "Checking again if Docker is working... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
     if [[ "$OS" =~ "mac" ]]; then
-      DOCKER_OUTPUT=$(docker version 2>> hnn_docker.log)
+      DOCKER_OUTPUT=$($DOCKER version 2>> hnn_docker.log)
     else
-      DOCKER_OUTPUT=$(timeout 5 docker version 2>> hnn_docker.log)
+      DOCKER_OUTPUT=$(timeout 5 $$DOCKER version 2>> hnn_docker.log)
     fi
     DOCKER_STATUS=$?
     if [[ $DOCKER_STATUS -ne "0" ]]; then
@@ -305,14 +532,14 @@ done <<< "$DOCKER_OUTPUT"
 
 if [ -z $DOCKER_VERSION ]; then
   echo "Docker version could not be determined. Please make sure it is installed correctly." | tee -a hnn_docker.log
-  cleanup 1
+  cleanup_except_travis 1
 fi
 
 if [[ $UPGRADE -eq "1" ]]; then
-  echo "Downloading new HNN image from Docker Hub (may require login)..." | tee -a hnn_docker.log
-  docker pull ${HNN_DOCKER_IMAGE}
+  echo "Downloading new HNN image from Docker Hub..." | tee -a hnn_docker.log
+  $DOCKER pull ${HNN_DOCKER_IMAGE} 2>&1 | tee -a hnn_docker.log
   if [[ $? -eq "0" ]]; then
-    DOCKER_CONTAINER=$(docker ps -a |grep hnn_container)
+    DOCKER_CONTAINER=$($DOCKER ps -a |grep hnn_container)
     DOCKER_STATUS=$?
     if [[ $DOCKER_STATUS -eq "0" ]]; then
       LAST_USED_IMAGE=$(echo ${DOCKER_CONTAINER}|cut -d' ' -f 2)
@@ -325,7 +552,7 @@ if [[ $UPGRADE -eq "1" ]]; then
     fi
   else
     echo "Failed" | tee -a hnn_docker.log
-    cleanup 2
+    cleanup_except_travis 2
   fi
   if [[ $START -eq "0" ]]; then
     # just doing upgrade
@@ -337,7 +564,7 @@ if [[ "$STOP" -eq "1" ]]; then
   stop_container
   if [[ "${DOCKER_TOOLBOX}" -eq "1" ]]; then
     echo -n "Stopping docker machine... " | tee -a hnn_docker.log
-    COMMAND="docker-machine stop"
+    COMMAND="${DOCKER_MACHINE} stop"
     run_command
   fi
   cleanup 0
@@ -351,12 +578,20 @@ if [[ "$UNINSTALL" -eq "1" ]]; then
   else
     echo "not found" | tee -a hnn_docker.log
   fi
+
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    echo -n "Removing HNN image... " | tee -a hnn_docker.log
+    COMMAND="$DOCKER rmi -f ${HNN_DOCKER_IMAGE}"
+    run_command
+    cleanup 0
+  fi
+
   while true; do
     echo
     read -p "Are you sure that you want to remove the HNN image? (y/n)" yn
     case $yn in
       [Yy]* ) echo -n "Removing HNN image... " | tee -a hnn_docker.log
-              COMMAND="docker rmi -f ${HNN_DOCKER_IMAGE}"
+              COMMAND="$DOCKER rmi -f ${HNN_DOCKER_IMAGE}"
               run_command
               break;;
       [Nn]* ) cleanup 1
@@ -418,9 +653,18 @@ if [[ "$OS" =~ "windows" ]]; then
   fi
 elif [[ "$OS" =~ "mac" ]]; then
   echo -n "Checking if XQuartz is installed... " | tee -a hnn_docker.log
-  XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist)
+  XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist 2>> hnn_docker.log)
   XQUARTZ_STATUS=$?
-  fail_on_bad_exit $XQUARTZ_STATUS
+  if [[ $XQUARTZ_STATUS -ne 0 ]]; then
+    echo "failed" | tee -a hnn_docker.log
+    restart_xquartz
+    echo -n "Checking again if XQuartz is installed... " | tee -a hnn_docker.log
+    XQUARTZ_OUTPUT=$(defaults read org.macosforge.xquartz.X11.plist 2>> hnn_docker.log)
+    XQUARTZ_STATUS=$?
+    fail_on_bad_exit $XQUARTZ_STATUS
+  else
+    echo "done" | tee -a hnn_docker.log
+  fi
 
   while IFS= read -r line; do
     if [[ $line =~ "no_auth" ]]; then
@@ -492,6 +736,12 @@ elif [[ "$OS" =~ "linux" ]]; then
   fail_on_bad_exit $COMMAND_STATUS
 fi
 
+# XAUTH_BIN should be set
+if [[ ! -n "${XAUTH_BIN}" ]]; then
+  echo "xauth binary could not be located." | tee -a hnn_docker.log
+  cleanup 1
+fi
+
 # check if XAUTHORITY can be used (Linux)
 if [[ "$OS" =~ "linux" ]] && [[ -f "$XAUTHORITY" ]]; then
   true
@@ -505,56 +755,57 @@ else
   fi
 fi
 
+# set DISPLAY
+if [[ "$OS" =~ "windows" ]]; then
+  DISPLAY="localhost:0"
+elif [[ "$OS" =~ "mac" ]]; then
+  # DISPLAY may have been modified above
+  [[ $DISPLAY ]] || DISPLAY=":0"
+else
+  # linux
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    [[ $DISPLAY ]] || DISPLAY=":0"
+  else
+    DISPLAY=":0"
+  fi
+fi
+export DISPLAY
+
 if [ ! -e "$XAUTHORITY" ]; then
+  # handle missing ~/.Xauthority on mac by restarting xquartz
   if [[ ! "$OS" =~ "mac" ]]; then
-    if [[ "$OS" =~ "linux" ]]; then
-      DSPLY=":0"
-    else
-      # windows
-      if [[ -n "${XAUTH_BIN}" ]]; then
-        DSPLY="localhost:0"
-      else
-        echo "xauth binary could not be located. needed to create $XAUTHORITY" | tee -a hnn_docker.log
-        cleanup 1
-      fi
-    fi
     echo -n "Generating $XAUTHORITY... " | tee -a hnn_docker.log
     echo >> hnn_docker.log
-    echo "Command: ${XAUTH_BIN} -f $XAUTHORITY generate $DSPLY ." >> hnn_docker.log
-    OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" generate $DSPLY . >> hnn_docker.log 2>&1)
+    echo "Command: ${XAUTH_BIN} -f $XAUTHORITY generate $DISPLAY ." >> hnn_docker.log
+    OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" generate $DISPLAY . >> hnn_docker.log 2>&1)
     COMMAND_STATUS=$?
     echo "Output: $OUTPUT" >> hnn_docker.log
-    fail_on_bad_exit $COMMAND_STATUS
+    fail_on_bad_exit_except_travis $COMMAND_STATUS
 
     if [ ! -e "$XAUTHORITY" ]; then
       echo "Still no .Xauthority file at $XAUTHORITY" | tee -a hnn_docker.log
-      cleanup 1
+      cleanup_except_travis 1
     fi
   fi
 fi
 
-if [[ "$OS" =~ "windows" ]]; then
-  DSPLY=
-else
-  DSPLY=":0"
-fi
-echo -n "Retrieving current X11 authentication keys... " | tee -a hnn_docker.log
-echo >> hnn_docker.log
-echo "Command: ${XAUTH_BIN} -f $XAUTHORITY nlist $DSPLY" >> hnn_docker.log
-OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist $DSPLY 2>> hnn_docker.log)
-echo "Output: $OUTPUT" >> hnn_docker.log
+RETRY=0
+get_xauth_keys
 if [[ -z $OUTPUT ]]; then
   if [[ "$OS" =~ "mac" ]]; then
-    echo "XQuartz authentication keys need to be updated" | tee -a hnn_docker.log
+    # might be able to fix by restarting xquartz
+    echo "failed." | tee -a hnn_docker.log
+    echo "XQuartz authentication keys need to be updated" >> tee -a hnn_docker.log
     restart_xquartz
 
     # run xauth again
-    echo "Command: ${XAUTH_BIN} -f $XAUTHORITY nlist :0" >> hnn_docker.log
-    OUTPUT=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist :0 2>> hnn_docker.log)
-    echo "Output: $OUTPUT" >> hnn_docker.log
+    RETRY=1
+    get_xauth_keys
     if [[ -z $OUTPUT ]]; then
-      echo "Error: still no keys valid keys" | tee -a hnn_docker.log
+      echo "failed. Error with xauth: no valid keys" | tee -a hnn_docker.log
       cleanup 2
+    else
+      echo "done" | tee -a hnn_docker.log
     fi
   elif [[ "$OS" =~ "windows" ]]; then
     echo "warning. Couldn't validate xauth keys" | tee -a hnn_docker.log
@@ -562,8 +813,9 @@ if [[ -z $OUTPUT ]]; then
     echo "failed. Error with xauth: no valid keys" | tee -a hnn_docker.log
     cleanup 2
   fi
+else
+  echo "done" | tee -a hnn_docker.log
 fi
-echo "done" | tee -a hnn_docker.log
 
 echo -n "Locating HNN source code... " | tee -a hnn_docker.log
 # find the source code directory
@@ -607,7 +859,7 @@ if [ -n "${XAUTH_BIN}" ]; then
   fi
 fi
 
-if [[ ! "$OS" =~ "linux" ]]; then
+if [[ $USE_SSH -eq 1 ]]; then
   # set up ssh keys
   SSH_PRIVKEY="./installer/docker/id_rsa_hnn"
   SSH_PUBKEY="./installer/docker/id_rsa_hnn.pub"
@@ -640,50 +892,10 @@ if [[ ! "$OS" =~ "linux" ]]; then
   fi
 fi
 
-echo -n "Checking permissions of hnn_out... " | tee -a hnn_docker.log
-if [ -d "$HOME/hnn_out" ]; then
-  test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
-  if [[ $? -ne "0" ]]; then
-    echo "failed" | tee -a hnn_docker.log
-    echo -n "Updating permissions of hnn_out... " | tee -a hnn_docker.log
-    chmod a+rwx "$HOME/hnn_out"
-    if [[ $? -ne "0" ]]; then
-      echo "failed" | tee -a hnn_docker.log
-      cleanup 2
-    else
-      echo "done" | tee -a hnn_docker.log
-      echo -n "(retry) Checking permissions of hnn_out... " | tee -a hnn_docker.log
-      test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
-      if [[ $? -ne "0" ]]; then
-        echo "failed" | tee -a hnn_docker.log
-        cleanup 2
-      else
-        echo "ok" | tee -a hnn_docker.log
-      fi
-    fi
-  else
-    echo "ok" | tee -a hnn_docker.log
-  fi
-else
-  echo "failed" | tee -a hnn_docker.log
-  echo -n "Creatig hnn_out directory... " | tee -a hnn_docker.log
-  test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
-  if [[ $? -ne "0" ]]; then
-    echo "failed" | tee -a hnn_docker.log
-    cleanup 2
-  else
-    echo "ok" | tee -a hnn_docker.log
-  fi
-  echo -n "(retry) Checking permissions of hnn_out... " | tee -a hnn_docker.log
-  if [ -d "$HOME/hnn_out" ]; then
-    test -x "$HOME/hnn_out" && test -r "$HOME/hnn_out" && test -w "$HOME/hnn_out"
-    if [[ $? -ne "0" ]]; then
-      echo "failed" | tee -a hnn_docker.log
-      cleanup 2
-    else
-      echo "ok" | tee -a hnn_docker.log
-    fi
-  fi
+if [[ "$OS" =~ "linux" ]]; then
+  echo -n "Updating permissions of hnn_out... " | tee -a hnn_docker.log
+  find "$HOME/hnn_out" -type d -exec chmod o+rwx {} \; && find "$HOME/hnn_out" -type f -exec chmod o+rw {} \;
+  fail_on_bad_exit $?
 fi
 
 echo | tee -a hnn_docker.log
@@ -691,108 +903,80 @@ echo "Starting HNN" | tee -a hnn_docker.log
 echo "--------------------------------------" | tee -a hnn_docker.log
 
 echo -n "Checking for running HNN container... " | tee -a hnn_docker.log
-docker ps | grep hnn_container >> hnn_docker.log 2>&1
+$DOCKER ps |grep hnn_container > /dev/null 2>&1
 if [[ $? -eq "0" ]]; then
-  ALREADY_RUNNING=1
   echo "found" | tee -a hnn_docker.log
+  if [[ "$XAUTH_UPDATED" -eq "1" ]]; then
+    stop_container
+  elif [[ "$RESTART_NEEDED" -eq "1" ]]; then
+    prompt_stop_container
+  else
+    ALREADY_RUNNING=1
+  fi
 else
   ALREADY_RUNNING=0
   echo "not found" | tee -a hnn_docker.log
-fi
-
-if [[ "$RESTART_NEEDED" -eq "1" ]] && [[ "$ALREADY_RUNNING" -eq "1" ]]; then
-  prompt_stop_container
-elif [[ "$XAUTH_UPDATED" -eq "1" ]]; then
-  find_existing_container
-  if [[ $? -eq "0" ]]; then
-    echo "found" | tee -a hnn_docker.log
-    stop_container
-  else
-    echo "not found" | tee -a hnn_docker.log
-  fi
-fi
-
-if [[ "$OS" =~ "linux" ]]; then
-  echo -n "Starting HNN container... " | tee -a hnn_docker.log
-  COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate --exit-code-from hnn"
-  silent_run_command
-  if [[ $? -ne "0" ]]; then
-    # try removing container
-    echo "failed" | tee -a hnn_docker.log
-    find_existing_container
-    if [[ $? -eq "0" ]]; then
-      echo "found" | tee -a hnn_docker.log
-      prompt_remove_container
-    else
-      echo "not found" | tee -a hnn_docker.log
-    fi
-
-    echo -n "Starting HNN container again... " | tee -a hnn_docker.log
-    COMMAND="docker-compose -f $COMPOSE_FILE up --no-recreate --exit-code-from hnn"
-    run_command
-    cleanup 0
-  else
-    echo "done" | tee -a hnn_docker.log
-    cleanup 0
-  fi
-elif [[ "$ALREADY_RUNNING" -eq "0" ]]; then
   find_existing_container
   if [[ $? -eq "0" ]]; then
     echo "found" | tee -a hnn_docker.log
   else
     echo "not found" | tee -a hnn_docker.log
-    NEW_CONTAINER=1
+    create_container
   fi
+fi
 
-  echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
-  COMMAND="docker-compose -f $COMPOSE_FILE up -d --no-recreate"
-  silent_run_command
-  if [[ $? -ne "0" ]]; then
-    # try removing container
-    echo "failed" | tee -a hnn_docker.log
-    find_existing_container
-    if [[ $? -eq "0" ]]; then
-      echo "found" | tee -a hnn_docker.log
-      prompt_remove_container
-    else
-      echo "not found" | tee -a hnn_docker.log
+if [[ $ALREADY_RUNNING -eq 0 ]]; then
+  # start the container
+  RETRY=0
+  docker_compose_up
+  if [[ $? -ne 0 ]]; then
+    RETRY=1
+    # try starting again
+    docker_compose_up
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
     fi
-
-    echo -n "Starting HNN container again in background... " | tee -a hnn_docker.log
-    COMMAND="docker-compose -f $COMPOSE_FILE up -d --no-recreate"
-    run_command
-  else
-    echo "done" | tee -a hnn_docker.log
   fi
-  copy_security_files
+fi
+
+# for windows and mac, this as far as we can go
+if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" =~ "mac" ]]); then
+  echo "Skipping starting the GUI because container can't start in Travis" | tee -a hnn_docker.log
+  echo "Travis CI testing finished successfully." | tee -a hnn_docker.log
+  cleanup 0
+fi
+
+# start the GUI
+if [[ $USE_SSH -eq 0 ]]; then
+  echo -n "Starting HNN GUI... " | tee -a hnn_docker.log
+  COMMAND="$DOCKER exec -e TRAVIS_TESTING=$TRAVIS_TESTING hnn_container /home/hnn_user/start_hnn.sh"
+  run_command
 else
-  # not linux and container is already running
-  if [[ "$COPY_SSH_FILES" -eq "1" ]]; then
-    copy_security_files
+  # start sshd if running linux
+  if [[ "$OS" =~ "linux" ]]; then
+    COMMAND="$DOCKER exec -d -u root hnn_container /start_ssh.sh"
+    run_command
+    # allow sshd to start
+    sleep 2
   fi
-fi
 
-if [[ ! "$OS" =~ "linux" ]]; then
-  pre_start_time=$(date +%s)
   ssh_start_hnn
   HNN_STATUS=$?
   if [[ ${HNN_STATUS} -ne "0" ]]; then
     echo "failed" | tee -a hnn_docker.log
-    post_start_time=$(date +%s)
-    let delta=post_start_time-pre_start_time
-    if [[ $delta -gt 10 ]]; then
-      fail_on_bad_exit ${HNN_STATUS}
+    stop_container
+
+    # failure could be caused by bad ssh keys
+    copy_ssh_files
+    docker_compose_up
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
     fi
-    echo "Detected failure starting GUI. Will try to restart HNN container..." | tee -a hnn_docker.log
-    prompt_stop_container
-    echo -n "Starting HNN container in background... " | tee -a hnn_docker.log
-    COMMAND="docker-compose -f $COMPOSE_FILE start"
-    run_command
-    copy_security_files
     ssh_start_hnn
     fail_on_bad_exit $?
   else
     echo "done" | tee -a hnn_docker.log
-    cleanup 0
   fi
 fi
+
+cleanup 0

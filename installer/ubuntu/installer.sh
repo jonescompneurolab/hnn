@@ -1,55 +1,81 @@
 #!/bin/bash
+[[ ${NEURON_VERSION} ]] || NEURON_VERSION=7.7
+DISTRIB=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d'=' -f2)
+if [[ "$DISTRIB" =~ "xenial" ]]; then
+  PYTHON_VERSION=3.5
+elif [[ "$DISTRIB" =~ "bionic" ]]; then
+  PYTHON_VERSION=3.6
+elif [[ "$DISTRIB" =~ "disco" ]]; then
+  PYTHON_VERSION=3.7
+else
+  echo "ubuntu distribtion $DISTRIB not supported"
+  exit 1
+fi
 
-# make sure the package lists are current
+# avoid questions from debconf
+export DEBIAN_FRONTEND=noninteractive
+
 sudo apt-get update
+if [[ "${PYTHON_VERSION}" =~ "3.7" ]] && [[ "$DISTRIB" =~ "bionic" ]]; then
+  sudo apt-get install --no-install-recommends -y python3.7 python3-pip python3.7-tk python3.7-dev && \
+    sudo python3.7 -m pip install --upgrade pip setuptools
+else
+  sudo apt-get install --no-install-recommends -y python3 python3-pip python3-tk python3-setuptools && \
+    sudo pip3 install --upgrade pip
+fi
 
-# packages neded for NEURON and graphics
-sudo apt install -y zlib1g-dev bison flex automake libtool libncurses-dev \
-                    python3-dev libopenmpi-dev python3-psutil python3-pip \
-                    git
+# get prerequisites from pip. requires gcc to build psutil
+sudo apt-get install --no-install-recommends -y \
+        gcc python3-dev && \
+pip install --no-cache-dir --user matplotlib PyOpenGL \
+        pyqt5 pyqtgraph scipy numpy nlopt psutil
 
-sudo pip3 install pip --upgrade
-sudo pip install PyOpenGL matplotlib pyqt5 pyqtgraph scipy numpy nlopt
+# base prerequisites packages
+sudo apt-get install --no-install-recommends -y \
+        openmpi-bin lsof
+
+# Qt prerequisites packages
+sudo apt-get install --no-install-recommends -y \
+        libfontconfig libxext6 libx11-xcb1 libxcb-glx0 \
+        libxkbcommon-x11-0
 
 # save dir installing hnn to
 startdir=$(pwd)
-echo $startdir
 
 # Install NEURON
-cd $startdir && \
-    mkdir nrn && \
-    cd nrn && \
-    git clone https://github.com/neuronsimulator/nrn src && \
-    cd $startdir/nrn/src && \
-    ./build.sh && \
-    ./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-      --without-iv --without-nrnoc-x11 --with-mpi \
-      --prefix=$startdir/nrn/build && \
-    make -j4 && \
-    make install -j4 && \
-    cd src/nrnpython && \
-    python3 setup.py install --user && \
-    cd $startdir/nrn/ && \
-    rm -rf src && \
-    sudo apt-get -y remove --purge bison flex python3-dev zlib1g-dev python && \
-    sudo apt-get autoremove -y --purge && \
-    sudo apt-get clean
+wget -q https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.$(uname -p)-linux.deb -O /tmp/nrn.deb && \
+    sudo dpkg -i /tmp/nrn.deb && \
+    rm -f /tmp/nrn.deb
+
+# HNN build prerequisites
+sudo apt-get install --no-install-recommends -y \
+        make gcc libc6-dev libtinfo-dev libncurses-dev \
+        libx11-dev libreadline-dev
+
+# setup HNN itself
+cd $startdir
+if [ -d $startdir/hnn_source_code ]; then
+  cd hnn_source_code
+  if [ -d $startdir/hnn_source_code/.git ]; then
+    git pull origin master
+  fi
+  make
+else
+  git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code && \
+    cd hnn_source_code &&
+    make
+fi
+
+# NEURON runtime prerequisites
+sudo apt-get install --no-install-recommends -y \
+        libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev
+
+# Clean up a little
+sudo apt-get clean
 
 # create the global session variables
 echo '# these lines define global session variables for HNN' >> ~/.bashrc
-echo 'export CPU=$(uname -m)' >> ~/.bashrc
-echo "export PATH=\$PATH:$startdir/nrn/build/\$CPU/bin:$startdir/hnn_source_code" >> ~/.bashrc
-echo "export PYTHONPATH=$startdir/nrn/build/lib/python" >> ~/.bashrc
-
-export CPU=$(uname -m)
-export PATH=${PATH}:$startdir/nrn/build/$CPU/bin:$startdir/hnn_source_code
-export PYTHONPATH=$startdir/nrn/build/lib/python
-
-# setup HNN itself
-cd $startdir && \
-    git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code && \
-    cd hnn_source_code && \
-    make
+echo "export PATH=\$PATH:$startdir/hnn_source_code" >> ~/.bashrc
 
 if [[ -d "$HOME/Desktop" ]]; then
     mkdir -p $HOME/.local/share/icons && \
