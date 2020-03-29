@@ -3352,6 +3352,12 @@ class HNNGUI (QMainWindow):
     self.waitsimwin = WaitSimDialog(self)
     default_param = os.path.join(dconf['dbase'],'data','default')
     first_load = not (os.path.exists(default_param))
+
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      print("Exiting because HNN was started with TRAVIS_TESTING=1")
+      qApp.quit()
+      exit(0)
+
     if first_load:
       QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. "
                               "Press 'Run Simulation' to display simulation output")
@@ -3359,9 +3365,6 @@ class HNNGUI (QMainWindow):
       self.statusBar().showMessage("Loaded %s"%default_param)
     # successful initialization, catch all further exceptions
     sys.excepthook = self.excepthook
-
-    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
-      exit(0)
 
   def _add_missing_frames(self, tb):
     fake_tb = namedtuple(
