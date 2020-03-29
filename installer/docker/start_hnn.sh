@@ -1,13 +1,34 @@
 #!/bin/bash
 
+[[ $TRAVIS_TESTING ]] || TRAVIS_TESTING=0
+
 source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
 
+echo -n "Checking permissions to access ${SYSTEM_USER_DIR}/hnn_out... "
+test -x "${SYSTEM_USER_DIR}/hnn_out" && test -r "${SYSTEM_USER_DIR}/hnn_out" && test -w "${SYSTEM_USER_DIR}/hnn_out"
+if [[ $? -ne 0 ]]; then
+  echo "failed. Can't start HNN."
+  exit 1
+else
+  echo "ok"
+fi
 
-echo "Starting HNN GUI..."
-
-if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
-  ulimit -l unlimited > /dev/null 2>&1
+which ulimit > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+  echo -n "Checking locked memory limits..."
+  if [[ ! "$(ulimit -l)" =~ "unlimited" ]]; then
+    echo "failed."
+    echo -n "Updating locked memory limits..."
+    ulimit -l unlimited > /dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+      echo "failed."
+    else
+      echo "ok."
+    fi
+  else
+    echo "ok."
+  fi
 fi
 
 function retry_hnn {
@@ -19,8 +40,7 @@ function retry_hnn {
     fi
   fi
 
-  echo "Trying to start HNN with DISPLAY=$DISPLAY"
-  python3 hnn.py
+  TRAVIS_TESTING=$TRAVIS_TESTING python3 hnn.py
   if [[ "$?" -ne "0" ]]; then
     echo "***************************************************"
     echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
