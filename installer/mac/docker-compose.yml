@@ -13,5 +13,6 @@ services:
       SYSTEM_USER_DIR: $HOME
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "$HOME:$HOME"
     command: "sudo /start_ssh.sh"

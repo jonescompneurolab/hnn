@@ -12,5 +12,5 @@ services:
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
-      - "$HOME:$HOME"
-    command: /home/hnn_user/start_hnn.sh
+      - "$HOME/hnn_out:$HOME/hnn_out"
+    command: sleep infinity
