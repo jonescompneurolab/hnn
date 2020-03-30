@@ -9,7 +9,6 @@ services:
       - "22"
     environment:
       XAUTHORITY: "/home/hnn_user/.Xauthority"
-      DISPLAY: $DISPLAY
       SYSTEM_USER_DIR: $HOME
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
