@@ -45,7 +45,7 @@ USER hnn_user
 RUN sudo pip3 install --no-cache-dir --upgrade pip && \
     sudo apt-get install --no-install-recommends -y \
         gcc python3-dev && \
-    pip install --no-cache-dir --user matplotlib PyOpenGL \
+    sudo pip install --no-cache-dir matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil && \
     sudo apt-get -y remove --purge \
         gcc python3-dev && \
