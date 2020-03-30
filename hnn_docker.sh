@@ -235,16 +235,18 @@ function restart_xquartz {
     pgrep X11.bin > /dev/null 2>&1 || pgrep Xquartz > /dev/null 2>&1 || \
       pgrep quartz-wm > /dev/null 2>&1 || pgrep xinit > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
-      procs="X11.bin Xquartz quartz-wm xinit"
-      PIDS=$(pgrep -d ' ' $procs 2>&1)
-      if [[ $? -eq 0 ]]; then
-        pkill $procs >> hnn_docker.log 2>&1
+      for proc in "X11.bin" "Xquartz" "quartz-wm" "xinit"; do
+        PIDS=$(pgrep -d ' ' $proc 2>&1)
         if [[ $? -eq 0 ]]; then
-          echo "killed $procs ($CLEANED)" >> hnn_docker.log
-        else
-          echo "failed to kill $procs ($CLEANED)" >> hnn_docker.log
+          pkill $proc >> hnn_docker.log 2>&1
+          if [[ $? -eq 0 ]]; then
+            echo "killed $proc ($PIDS)" >> hnn_docker.log
+          else
+            echo "failed to kill $proc ($PIDS)" >> hnn_docker.log
+          fi
         fi
-      fi
+      done
+      sleep 1
     else
       break
     fi
