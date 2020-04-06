@@ -87,13 +87,11 @@ matrix:
         env:
           - PYTHON_VERSION=3.7
           - NEURON_VERSION=7.7
-        services:
-          - docker
 
 before_install:
   - set -e
   - |
-    # functions test
+    # functions
     function script_fail {
       echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
       cat hnn_docker.log
@@ -128,12 +126,12 @@ before_install:
     function download_docker_image {
       let retries=5
       while [[ $retries -gt 0 ]]; do
-        "$HOME/download-frozen-image-v2.sh" "$HOME/docker_image" jonescompneurolab/hnn:master && break
+        "$HOME/download-frozen-image-v2.sh" "$HOME/docker_image" "$1" && break
         (( __retries-- ))
       done
 
       if [[ $retries -eq 0 ]]; then
-        echo "Error: failed to download jonescompneurolab/hnn:master."
+        echo "Error: failed to download $1."
         exit 1
       fi
     }
@@ -148,6 +146,17 @@ before_install:
     }
 
     export -f script_fail mac_timeout start_download sha256sum
+
+    export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
+    export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
+                          --disable-pie --disable-libusb --disable-hax --disable-kvm \
+                          --disable-debug-info --disable-docs --disable-nettle \
+                          --disable-sparse --disable-guest-agent --disable-qom-cast-debug \
+                          --disable-lzo --disable-bzip2 --disable-fdt \
+                          --disable-tpm --disable-replication --disable-modules --disable-blobs \
+                          --disable-gnutls --disable-vhost-crypto --disable-live-block-migration \
+                          --disable-user --disable-vhost-net"
+
   - |
     if [ "${TRAVIS_OS_NAME}" == "osx" ]; then  # install osx prerequisites
       # install miniconda, XQuartz, NEURON, docker, qemu
@@ -233,19 +242,6 @@ before_install:
         echo "Waiting for homebrew to complete..."
         NAME="homebrew command"
         wait_for_pid "${BREW_PID}" "$NAME"
-
-        # Install qemu, which allows virtual machines to be started without virtualbox.
-        # This means a Linux VM running docker containers can be started on a mac.
-        # Running the native docker command on the mac connects to the docker daemon
-        # running inside the virtual machine to start, stop, run containers.
-        QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
-                  --disable-pie --disable-libusb --disable-hax --disable-kvm \
-                  --disable-debug-info --disable-docs --disable-nettle \
-                  --disable-sparse --disable-guest-agent --disable-qom-cast-debug \
-                  --disable-lzo --disable-bzip2 --disable-fdt \
-                  --disable-tpm --disable-replication --disable-modules --disable-blobs \
-                  --disable-gnutls --disable-vhost-crypto --disable-live-block-migration \
-                  --disable-user --disable-vhost-net"
       fi
 
       if [[ $HOMEBREW_QEMU -eq 1 ]]; then
@@ -258,11 +254,16 @@ before_install:
         # export CFLAGS="-D_POSIX_C_SOURCE=199309L"
         export CFLAGS="-D_DARWIN_C_SOURCE -D_POSIX_C_SOURCE=200809L"
       elif [[ $BUILD_QEMU -eq 1 ]]; then
-        QEMU_OPTS="$QEMU_OPTS --disable-sheepdog --disable-parallels \
+        QEMU_OPTS="$BASE_QEMU_OPTS --disable-sheepdog --disable-parallels \
                    --disable-qed --disable-cloop --disable-bochs --disable-dmg --disable-qcow1 --disable-vdi \
                    --disable-vvfat"
         brew install --ignore-dependencies glib
       fi
+
+      # Install qemu, which allows virtual machines to be started without virtualbox.
+      # This means a Linux VM running docker containers can be started on a mac.
+      # Running the native docker command on the mac connects to the docker daemon
+      # running inside the virtual machine to start, stop, run containers.
 
       if [[ $HOMEBREW_QEMU -eq 1 ]] || [[ $BUILD_QEMU -eq 1 ]]; then
         echo "Waiting for qemu clone to finish"
@@ -321,7 +322,7 @@ before_install:
 
         make install
         command cd ${TRAVIS_BUILD_DIR}
-    fi
+      fi
 
       # create default VM with docker-machine
       echo "Starting qemu VM..."
@@ -331,7 +332,7 @@ before_install:
       curl -Lo "$HOME/download-frozen-image-v2.sh" https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
       chmod +x "$HOME/download-frozen-image-v2.sh"
 
-      download_docker_image &
+      download_docker_image "$DOCKER_IMAGE_NAME" &
       IMAGE_PID=$!
 
       # install NEURON
@@ -376,27 +377,167 @@ before_install:
       }
       export PATH=$PATH:/Applications/NEURON-${NEURON_VERSION}/nrn/x86_64/bin
       export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
+      export PYTHON=python3
 
       echo "Install finished"
     fi
   - |
     if [ "${TRAVIS_OS_NAME}" == "windows" ]; then  # install windows prerequisites
-      echo "Installing docker-compose and vcxsrv with Chocolatey"
-      choco install docker-compose vcxsrv
       echo "Fetching Microsoft MPI installers"
-      wget -q https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi \
-        -O $HOME/Downloads/msmpisdk.msi
-      wget -q https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe \
-        -O $HOME/Downloads/msmpisetup.exe
+      URL="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi"
+      FILENAME="$HOME/Downloads/msmpisdk.msi"
+      start_download "$FILENAME" "$URL" &
+      msmpisdk_PID=$!
+
+      URL="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
+      FILENAME="$HOME/Downloads/msmpisetup.exe"
+      start_download "$FILENAME" "$URL" &
+      msmpisetup_PID=$!
+
+      choco install -y docker
+
+      # echo "Cloning https://github.com/qemu/qemu"
+      # git clone --branch stable-4.1 https://github.com/qemu/qemu.git &
+      # GIT_CLONE_PID=$!
+
+      # [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+      # choco uninstall -y mingw
+      # choco upgrade --no-progress -y msys2
+      # export msys2='cmd //C RefreshEnv.cmd '
+      # export msys2+='& set MSYS=winsymlinks:nativestrict '
+      # export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
+      # export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
+      # export msys2+=" -msys2 -c "\"\$@"\" --"
+      # $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-toolchain base-devel git python make
+      # $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-glib2 mingw-w64-cross-binutils mingw-w64-x86_64-pixman
+
+      # ## Install more MSYS2 packages from https://packages.msys2.org/base here
+      # set +e
+      # taskkill //IM gpg-agent.exe //F # https://travis-ci.community/t/4967
+      # set -e
+
+      # export PATH=/C/tools/msys64/mingw64/bin:/C/tools/msys64/usr/bin:/C/tools/msys64/usr/bin/core_perl:/C/tools/msys64/opt/bin:$PATH
+      # export MAKE=mingw32-make  # so that Autotools can find it
+
+      # echo "Waiting for qemu clone to finish"
+      # NAME="https://github.com/qemu/qemu"
+      # wait_for_pid "${GIT_CLONE_PID}" "$NAME"
+
+      # echo "Building qemu from source"
+      # command cd qemu && mkdir build && command cd build
+      # export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$(dirname $(find /c/tools/ -name glib-*.pc))
+      # export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$(dirname $(find /c/tools/ -name gthread-*.pc))
+      # # find /c/tools/ -name glib*.pc
+      # # find /c/tools/ -name gthread*.pc
+
+      # QEMU_OPTS="$BASE_QEMU_OPTS --disable-sheepdog --disable-parallels \
+      #           --disable-qed --disable-cloop --disable-bochs --disable-dmg --disable-qcow1 --disable-vdi \
+      #           --disable-vvfat"
+      # export CFLAGS="-I/c/tools/msys64/mingw64/include/pixman-1 -I/c/tools/msys64/mingw64/include"
+      # # export LDFLAGS="-Wl,--nxcompat -Wl,--no-seh -Wl,--dynamicbase -Wl,--warn-common -m64"
+      # ../configure --target-list=x86_64-softmmu ${QEMU_OPTS} --cross-prefix=x86_64-w64-mingw32-
+      # echo "Building qemu from source"
+      # $msys2 make
+      # # MAKE_PID=$!
+
+      # choco install -y golang docker
+
+      # mkdir -p "$HOME/.docker/machine/cache"
+      # FILENAME="$HOME/.docker/machine/cache/boot2docker.iso"
+      # URL="https://github.com/boot2docker/boot2docker/releases/latest/download/boot2docker.iso"
+      # start_download "$FILENAME" "$URL" &
+      # boot2docker_PID=$!
+
+      # export PATH=$PATH:/c/Go/bin
+      # export GOPATH="$HOME/work"
+      # mkdir -p "$HOME/work/src/github.com/jigtools"
+      # cd "$HOME/work/src/github.com/jigtools"
+      # git clone https://github.com/jigtools/docker-machine-driver-qemu.git
+
+      # mkdir -p "$HOME/work/src/github.com/docker"
+      # cd "$HOME/work/src/github.com/docker"
+      # git clone https://github.com/docker/machine.git
+      # cd machine
+      # go get
+      # /C/tools/msys64/usr/bin/make build
+      # cp bin/docker-machine /c/Program\ Files/Docker/docker-machine.exe
+
+      # mkdir -p "$HOME/work/src/github.com/machine-drivers"
+      # cd "$HOME/work/src/github.com/machine-drivers"
+      # git clone https://github.com/machine-drivers/docker-machine-driver-qemu.git
+      # cd docker-machine-driver-qemu
+      # go get
+      # /C/tools/msys64/usr/bin/make build
+      # cp bin/docker-machine-driver-qemu /c/Program\ Files/Docker/docker-machine-driver-qemu.exe
+
+      # echo "Waiting for boot2docker download to finish"
+      # NAME="downloading boot2docker.iso"
+      # wait_for_pid "${boot2docker_PID}" "$NAME"
+
+      # echo "Waiting for qemu build to finish"
+      # NAME="building qemu"
+      # wait_for_pid "${MAKE_PID}" "$NAME"
+
+      # /C/tools/msys64/usr/bin/make install
+      # command cd ${TRAVIS_BUILD_DIR}
+
+      # echo "Starting qemu VM..."
+      # cd /c/Program\ Files/Docker/
+      # cmd "/C docker-machine.exe -D create --driver qemu --qemu-cpu-count 2 default" &
+      # MACHINE_PID=$!
+
+      choco install -y docker-compose vcxsrv
+
+      echo "Waiting for msmpisdk download to finish"
+      NAME="downloading msmpisdk.msi"
+      wait_for_pid "${msmpisdk_PID}" "$NAME"
+
+      echo "Waiting for msmpisetup download to finish"
+      NAME="downloading msmpisetup.exe"
+      wait_for_pid "${msmpisetup_PID}" "$NAME"
 
       echo "Starting Windows install script"
-      powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1
-      export PATH=$PATH:/c/nrn/bin
-      export PATH=$PATH:$HOME/Miniconda3/envs/hnn/condabin
+      (powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1) &
+      POWERSHELL_PID=$!
+
+      echo "Waiting for Windows install script to finish"
+      NAME="installing HNN"
+      wait_for_pid "${POWERSHELL_PID}" "$NAME"
+
+      # curl -Lo "$HOME/download-frozen-image-v2.sh" https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
+      # chmod +x "$HOME/download-frozen-image-v2.sh"
+
+      # download_docker_image "$DOCKER_IMAGE_NAME" &
+      # IMAGE_PID=$!
+
+      # echo "Waiting for VM to start..."
+      # NAME="starting docker VM"
+      # wait_for_pid "${MACHINE_PID}" "$NAME"
+
+      # set up environment variables to use docker within VM
+      # docker-machine env default >> "$HOME/.bashrc"
+      # eval "$(docker-machine env default)"
+
+      # echo "Waiting for HNN docker image download to finish"
+      # NAME="downloading HNN docker image"
+      # wait_for_pid "${IMAGE_PID}" "$NAME"
+      # echo "Loading downloaded image into docker"
+      # (tar -cC "$HOME/docker_image" . | docker load && \
+      #  docker tag jonescompneurolab/hnn:master jonescompneurolab/hnn:latest && \
+      #  touch $HOME/docker_image_loaded) &
+
+      # add miniconda python to the path
+      export PATH=$PATH:$HOME/Miniconda3/Scripts
       export PATH=$HOME/Miniconda3/envs/hnn/:$PATH
       export PATH=$HOME/Miniconda3/envs/hnn/Scripts:$PATH
       export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
+
+      # set other variables for neuron and HNN
+      export PATH=$PATH:/c/nrn/bin
+      export DISPLAY="localhost:0"
       export NEURONHOME=/c/nrn
+      export PYTHON=python
+
       echo "Install finished"
     fi
   - |
@@ -411,10 +552,12 @@ before_install:
       NLOPT_LIB=$(ls -d $HOME/.local/lib/python*/site-packages)
       echo $NLOPT_LIB
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NLOPT_LIB
+      export PYTHON=python3
     fi
   - export TRAVIS_TESTING=1
-  - xset -display $DISPLAY -q > /dev/null
-
+  - if [ ! "${TRAVIS_OS_NAME}" == "windows" ]; then
+      xset -display $DISPLAY -q > /dev/null;
+    fi;
 
 install:
   - if [[ ! "${TRAVIS_OS_NAME}" == "windows" ]]; then
@@ -429,7 +572,7 @@ script:
       (./hnn_docker.sh start -u > docker_status.txt 2>&1 || script_fail >> docker_status.txt) &
     fi
   - echo "Running Python tests" && py.test tests/
-  - echo "Testing GUI on host OS" && python3 hnn.py
+  - echo "Testing GUI on host OS" && $PYTHON hnn.py
   - |
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
       echo "Waiting on docker test:"
@@ -443,7 +586,7 @@ script:
         sleep 10
       done
       tail -1 docker_status.txt
-    else
+    elif [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then
       while ! test -e $HOME/docker_image_loaded; do
         echo "Sleeping for 10s while waiting for docker image download to complete"
         sleep 10
