@@ -26,8 +26,17 @@ fi
 
 # get prerequisites from pip. requires gcc to build psutil
 sudo apt-get install --no-install-recommends -y \
-        gcc python3-dev && \
-pip install --no-cache-dir --user matplotlib PyOpenGL \
+        make gcc g++ python3-dev
+
+which python > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+  # there is another python executable that might be version 2.7
+  export PYTHON=$(which python3)
+  PIP=pip3
+else
+  PIP=pip
+fi
+$PIP install --no-cache-dir --user matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil
 
 # base prerequisites packages
@@ -39,8 +48,7 @@ sudo apt-get install --no-install-recommends -y \
         libfontconfig libxext6 libx11-xcb1 libxcb-glx0 \
         libxkbcommon-x11-0
 
-# save dir installing hnn to
-startdir=$(pwd)
+
 
 # Install NEURON
 wget -q https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.$(uname -p)-linux.deb -O /tmp/nrn.deb && \
@@ -49,11 +57,13 @@ wget -q https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEU
 
 # HNN build prerequisites
 sudo apt-get install --no-install-recommends -y \
-        make gcc libc6-dev libtinfo-dev libncurses-dev \
+        libc6-dev libtinfo-dev libncurses-dev \
         libx11-dev libreadline-dev
 
+# save dir installing hnn to
+startdir=$(pwd)
+
 # setup HNN itself
-cd $startdir
 if [ -d $startdir/hnn_source_code ]; then
   cd hnn_source_code
   if [ -d $startdir/hnn_source_code/.git ]; then
@@ -65,6 +75,7 @@ else
     cd hnn_source_code &&
     make
 fi
+cd $startdir
 
 # NEURON runtime prerequisites
 sudo apt-get install --no-install-recommends -y \
