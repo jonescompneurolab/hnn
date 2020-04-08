@@ -154,7 +154,7 @@ function run_command {
   check_args "$@" $# 1
 
   silent_run_command "$1"
-  fail_on_bad_exit $?
+  fail_on_bad_exit_except_travis $?
 }
 
 function output_run_piped_command {
