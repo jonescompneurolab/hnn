@@ -9,9 +9,8 @@ services:
       - "22"
     environment:
       XAUTHORITY: "/home/hnn_user/.Xauthority"
-      DISPLAY: "host.docker.internal:0"
       SYSTEM_USER_DIR: $HOME
     volumes:
       - "$XAUTHORITY:/home/hnn_user/.Xauthority"
-      - "$HOME:$HOME"
-    command: "sudo /start_ssh.sh"
+      - "$HOME/hnn_out:$HOME/hnn_out"
+    command: sleep infinity
