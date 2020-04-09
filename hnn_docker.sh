@@ -50,6 +50,7 @@ HNN_CONTAINER_NAME=hnn_container
 HNN_CONTAINER_GROUP=hnn_group
 SYSTEM_USER_DIR=$HOME
 ALREADY_RUNNING=0
+START_SSHD=0
 COPY_SSH_FILES=0
 ESC_STR="%;"
 
@@ -343,11 +344,32 @@ function ssh_start_hnn {
   echo >> hnn_docker.log
   __command="ssh -o SendEnv=DISPLAY -o SendEnv=SYSTEM_USER_DIR -o SendEnv=TRAVIS_TESTING \
                -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-               -t -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$__docker_host_ip -p $SSH_PORT"
+               -q -T -i $SSH_PRIVKEY -R 6000:localhost:6000 hnn_user@$__docker_host_ip -p $SSH_PORT"
   if [[ $VERBOSE -eq 1 ]]; then
     __command="$__command -v"
   fi
   silent_run_command "$__command"
+}
+
+function check_container_sshd {
+  check_var DOCKER
+
+  echo -n "Checking if sshd is running in container... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  silent_run_command "$DOCKER exec $HNN_CONTAINER_NAME /home/hnn_user/check_sshd.sh"
+  if [[ $? -ne 0 ]]; then
+    echo "failed"
+    false
+  else
+    echo "ok"
+  fi
+}
+
+function get_sshd_log {
+  check_var DOCKER
+
+  echo -e "\nLogs from sshd in container: ">> hnn_docker.log
+  silent_run_command "$DOCKER exec -d -u root $HNN_CONTAINER_NAME cat /tmp/sshd.log"
 }
 
 function prompt_stop_container {
@@ -402,6 +424,7 @@ function find_existing_container {
     echo "found" | tee -a hnn_docker.log
   else
     echo "not found" | tee -a hnn_docker.log
+    false
   fi
 }
 
@@ -647,8 +670,8 @@ function docker_compose_up {
   fi
   echo -n "Starting HNN container... " | tee -a hnn_docker.log
   echo >> hnn_docker.log
-  echo -e "Command: USER_ID=$UID ${DOCKER_COMPOSE} -f $COMPOSE_FILE up -d --no-recreate hnn" >> hnn_docker.log
-  USER_ID=$UID ${DOCKER_COMPOSE} -f $COMPOSE_FILE up -d --no-recreate hnn >> hnn_docker.log 2>&1
+  echo -e "Command: ${DOCKER_COMPOSE} --no-ansi -f $COMPOSE_FILE up -d --no-recreate hnn" >> hnn_docker.log
+  ${DOCKER_COMPOSE} --no-ansi -f $COMPOSE_FILE up -d --no-recreate hnn 2>&1 | tr -d '\r' >> hnn_docker.log
   if [[ $? -ne 0 ]]; then
     echo "failed" | tee -a hnn_docker.log
     cleanup_except_travis 2
@@ -708,11 +731,8 @@ function create_container {
 
   echo -n "Creating HNN container... " | tee -a hnn_docker.log
   echo >> hnn_docker.log
-  if [[ ! "$OS" =~ "mac" ]]; then
-    timeout="timeout 60"
-  fi
-  echo -e "Command: USER_ID=$UID ${DOCKER_COMPOSE} -f $COMPOSE_FILE up --no-start hnn" >> hnn_docker.log
-  USER_ID=${timeout} USER_ID=$UID ${DOCKER_COMPOSE} -f $COMPOSE_FILE up --no-start hnn >> hnn_docker.log 2>&1
+  echo -e "Command: ${DOCKER_COMPOSE} --no-ansi -f $COMPOSE_FILE up --no-start hnn" >> hnn_docker.log
+  ${DOCKER_COMPOSE} --no-ansi -f $COMPOSE_FILE up --no-start hnn 2>&1 | tr -d '\r' >> hnn_docker.log
   fail_on_bad_exit_except_travis $?
 
   if [[ $USE_SSH -eq 1 ]]; then
@@ -766,13 +786,15 @@ function get_xauth_keys {
 function start_container_sshd {
   check_var DOCKER
 
-  if [[ ! "$OS" =~ "windows" ]]; then
-    echo -n "Starting sshd in container... " | tee -a hnn_docker.log
-    echo >> hnn_docker.log
-    run_command "$DOCKER exec -d -u root $HNN_CONTAINER_NAME /start_ssh.sh"
-    # allow sshd to start
-    sleep 2
-  fi
+  local __statusvar
+
+  echo -n "Starting sshd in container... " | tee -a hnn_docker.log
+  echo >> hnn_docker.log
+  run_command "$DOCKER exec -d -u root $HNN_CONTAINER_NAME /start_ssh.sh"
+  __statusvar=$?
+  # allow sshd to start
+  sleep 1
+  return $__statusvar
 }
 
 function check_xauth_bin {
@@ -1160,7 +1182,7 @@ if [[ -z $OUTPUT ]]; then
 
   if [[ "$OS" =~ "mac" ]]; then
     # might be able to fix by restarting xquartz
-    echo "XQuartz authentication keys need to be updated" >> tee -a hnn_docker.log
+    echo "XQuartz authentication keys need to be updated" | tee -a hnn_docker.log
     restart_xquartz
 
     # run xauth again
@@ -1350,7 +1372,21 @@ if [[ $USE_SSH -eq 0 ]]; then
 else
   # start sshd if running mac or linux
   if [[ $ALREADY_RUNNING -eq 0 ]]; then
+    START_SSHD=1
+  else
+    # container is stull running. check that sshd is running too
+    check_container_sshd
+    if [[ $? -ne 0 ]]; then
+      START_SSHD=1
+    fi
+  fi
+
+  if [[ $START_SSHD -eq 1 ]]; then
     start_container_sshd
+    if [[ $? -ne 0 ]]; then
+      get_sshd_log
+      cleanup 2
+    fi
   fi
 
   ssh_start_hnn
@@ -1365,7 +1401,17 @@ else
     if [[ $? -ne 0 ]]; then
       cleanup 2
     fi
+    export DEBUG=1
     start_container_sshd
+    if [[ $? -ne 0 ]]; then
+      get_sshd_log
+      cleanup 2
+    fi
+    check_container_sshd
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+      get_sshd_log
+    fi
     ssh_start_hnn
     fail_on_bad_exit $?
   else

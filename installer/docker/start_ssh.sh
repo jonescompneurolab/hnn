@@ -10,7 +10,8 @@ if [ -e "/home/hnn_user/.ssh/known_hosts" ]; then
     chown hnn_user:hnn_group /home/hnn_user/.ssh/known_hosts
 fi
 
-echo "HNN container has started. To start the HNN GUI run the following command:"
-echo "docker exec hnn_container /home/hnn_user/start_hnn.sh"
-
-/usr/sbin/sshd -D
+debug=
+if [[ "$DEBUG" = "1" ]]; then
+  debug="-d"
+fi
+/usr/sbin/sshd ${debug} -E /tmp/sshd.log

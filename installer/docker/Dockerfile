@@ -67,26 +67,28 @@ CMD /home/hnn_user/start_hnn.sh
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_TAG
-ARG SOURCE_BRANCH
+ARG SOURCE_REPO="https://github.com/jonescompneurolab/hnn.git"
+ARG SOURCE_BRANCH="master"
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url="https://github.com/jonescompneurolab/hnn.git" \
+      org.label-schema.vcs-url=$SOURCE_REPO \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version=$VCS_TAG
 
 # install NEURON
-RUN wget -q https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-linux.deb -O /tmp/nrn.deb && \
-    sudo dpkg -i /tmp/nrn.deb && \
-    rm -f /tmp/nrn.deb
+ARG NEURON_VERSION="7.7"
+ADD https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.x86_64-linux.deb /tmp/nrn.deb
+RUN sudo dpkg -i /tmp/nrn.deb && \
+    sudo rm -f /tmp/nrn.deb
 
 # install HNN
 RUN sudo apt-get install --no-install-recommends -y \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
         libx11-dev libreadline-dev && \
-    cd /home/hnn_user && \
     git clone https://github.com/jonescompneurolab/hnn.git \
-        --depth 1 --single-branch --branch $SOURCE_BRANCH hnn_source_code && \
-    cd hnn_source_code && \
+      --depth 1 --single-branch --branch $SOURCE_BRANCH \
+      /home/hnn_user/hnn_source_code && \
+    cd /home/hnn_user/hnn_source_code && \
     make && \
     sudo apt-get -y remove --purge \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
@@ -99,12 +101,13 @@ RUN sudo apt-get install --no-install-recommends -y \
         libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev && \
     sudo apt-get clean
 
-# copy the start script into the container
 COPY start_hnn.sh /home/hnn_user/
 COPY hnn_envs /home/hnn_user/
 COPY start_ssh.sh /
-RUN sudo chown hnn_user:hnn_group /home/hnn_user/start_hnn.sh && \
+COPY check_sshd.sh /home/hnn_user/
+
+RUN sudo chown -R hnn_user:hnn_group /home/hnn_user/ && \
     sudo chmod +x /home/hnn_user/start_hnn.sh && \
+    sudo chmod +x /home/hnn_user/check_sshd.sh && \
     sudo chown root:root /start_ssh.sh && \
-    sudo chmod +x /start_ssh.sh && \
-    sudo chown hnn_user:hnn_group /home/hnn_user/hnn_envs
+    sudo chmod +x /start_ssh.sh
