@@ -101,6 +101,7 @@ RUN sudo apt-get install --no-install-recommends -y \
         libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev && \
     sudo apt-get clean
 
+COPY QtProject.conf /home/hnn_user/.config/
 COPY start_hnn.sh /home/hnn_user/
 COPY hnn_envs /home/hnn_user/
 COPY start_ssh.sh /

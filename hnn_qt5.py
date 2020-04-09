@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridL
 from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont, QPen
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
-from PyQt5.QtCore import QMetaObject
+from PyQt5.QtCore import QMetaObject, QUrl
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -3420,10 +3420,11 @@ class HNNGUI (QMainWindow):
     # bring up window to select simulation parameter file
     global paramf,basedir
     qfd = QFileDialog()
-    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    qfd.setHistory([os.path.join(dconf['dbase'],'param'), os.path.join(hnn_root_dir,'param')])
     fn = qfd.getOpenFileName(self, 'Open param file',
-                                     os.path.join(hnn_root_dir,'param')) # uses forward slash, even on Windows OS
-    if fn[0] == '':
+                                     os.path.join(hnn_root_dir,'param'),
+                                     "Param files (*.param)")
+    if len(fn) > 0 and fn[0] == '':
       # no file selected in dialog
       return
 
@@ -3478,11 +3479,12 @@ class HNNGUI (QMainWindow):
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
     qfd = QFileDialog()
-    qfd.setHistory([os.path.join(dconf['dbase'],'data')])
+    qfd.setHistory([os.path.join(dconf['dbase'],'data'), os.path.join(hnn_root_dir,'data')])
     fn = qfd.getOpenFileName(self, 'Open data file',
-                                     os.path.join(hnn_root_dir,'data'))
-    if len(fn) == 0:
-      print('WARNING: no file selected')
+                                    os.path.join(hnn_root_dir,'data'),
+                                    "Data files (*.txt)")
+    if len(fn) > 0 and fn[0] == '':
+      # no file selected in dialog
       return
 
     self.loadDataFile(os.path.abspath(fn[0])) # use abspath to make sure have right path separators

@@ -1,9 +1,21 @@
 #!/bin/bash
 
 [[ $TRAVIS_TESTING ]] || TRAVIS_TESTING=0
+[[ $SYSTEM_USER_DIR ]] || SYSTEM_USER_DIR=$HOME
 
 source /home/hnn_user/hnn_envs
 cd /home/hnn_user/hnn_source_code
+
+grep -q "SYSTEM_USER_DIR" /home/hnn_user/.config/QtProject.conf > /dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+  echo -n "Updating Qt preferences... "
+  sed -i "s@\${SYSTEM_USER_DIR}@$SYSTEM_USER_DIR@" /home/hnn_user/.config/QtProject.conf
+  if [[ $? -eq 0 ]]; then
+    echo "changed"
+  else
+    echo "ok"
+  fi
+fi
 
 echo -n "Checking permissions to access ${SYSTEM_USER_DIR}/hnn_out... "
 test -x "${SYSTEM_USER_DIR}/hnn_out" && test -r "${SYSTEM_USER_DIR}/hnn_out" && test -w "${SYSTEM_USER_DIR}/hnn_out"
