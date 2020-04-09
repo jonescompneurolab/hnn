@@ -8,10 +8,7 @@ services:
     ports:
       - "22"
     environment:
-      XAUTHORITY: "/home/hnn_user/.Xauthority"
+      XAUTHORITY: "/tmp/.Xauthority"
       SYSTEM_USER_DIR: $HOME
     volumes:
-      - "$XAUTHORITY:/home/hnn_user/.Xauthority"
-      - "/tmp/.X11-unix:/tmp/.X11-unix"
       - "$HOME/hnn_out:$HOME/hnn_out"
-    command: sleep infinity

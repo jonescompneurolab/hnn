@@ -1,4 +1,4 @@
-version: "3"
+version: "3.3"
 services:
 
   hnn:
@@ -8,9 +8,9 @@ services:
     ports:
       - "22"
     environment:
-      XAUTHORITY: "/home/hnn_user/.Xauthority"
+      XAUTHORITY: "/tmp/.Xauthority"
       SYSTEM_USER_DIR: $HOME
     volumes:
-      - "$XAUTHORITY:/home/hnn_user/.Xauthority"
-      - "$HOME/hnn_out:$HOME/hnn_out"
-    command: sleep infinity
+      - type: bind
+        source: $HOME/hnn_out
+        target: $HOME_UNIX/hnn_out

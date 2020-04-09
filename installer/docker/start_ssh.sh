@@ -12,6 +12,8 @@ fi
 
 debug=
 if [[ "$DEBUG" = "1" ]]; then
-  debug="-d"
+  debug="-ddd"
 fi
-/usr/sbin/sshd ${debug} -E /tmp/sshd.log
+
+/usr/sbin/sshd -4 ${debug} -E /var/log/sshd.log -D
+echo "Started sshd"

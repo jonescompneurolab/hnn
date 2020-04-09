@@ -394,8 +394,6 @@ before_install:
       start_download "$FILENAME" "$URL" &
       msmpisetup_PID=$!
 
-      choco install -y docker
-
       # echo "Cloning https://github.com/qemu/qemu"
       # git clone --branch stable-4.1 https://github.com/qemu/qemu.git &
       # GIT_CLONE_PID=$!
@@ -408,39 +406,33 @@ before_install:
       # export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
       # export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
       # export msys2+=" -msys2 -c "\"\$@"\" --"
-      # $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-toolchain base-devel git python make
+      # $msys2 pacman --sync --noconfirm --needed base-devel mingw-w64-x86_64-toolchain python
       # $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-glib2 mingw-w64-cross-binutils mingw-w64-x86_64-pixman
 
-      # ## Install more MSYS2 packages from https://packages.msys2.org/base here
+      # # Install more MSYS2 packages from https://packages.msys2.org/base here
       # set +e
       # taskkill //IM gpg-agent.exe //F # https://travis-ci.community/t/4967
       # set -e
 
       # export PATH=/C/tools/msys64/mingw64/bin:/C/tools/msys64/usr/bin:/C/tools/msys64/usr/bin/core_perl:/C/tools/msys64/opt/bin:$PATH
-      # export MAKE=mingw32-make  # so that Autotools can find it
 
       # echo "Waiting for qemu clone to finish"
       # NAME="https://github.com/qemu/qemu"
       # wait_for_pid "${GIT_CLONE_PID}" "$NAME"
 
       # echo "Building qemu from source"
-      # command cd qemu && mkdir build && command cd build
-      # export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$(dirname $(find /c/tools/ -name glib-*.pc))
-      # export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$(dirname $(find /c/tools/ -name gthread-*.pc))
-      # # find /c/tools/ -name glib*.pc
-      # # find /c/tools/ -name gthread*.pc
+      # command cd qemu
+      # export PKG_CONFIG_PATH=/c/tools/msys64/mingw64/lib/pkgconfig
 
       # QEMU_OPTS="$BASE_QEMU_OPTS --disable-sheepdog --disable-parallels \
       #           --disable-qed --disable-cloop --disable-bochs --disable-dmg --disable-qcow1 --disable-vdi \
       #           --disable-vvfat"
-      # export CFLAGS="-I/c/tools/msys64/mingw64/include/pixman-1 -I/c/tools/msys64/mingw64/include"
-      # # export LDFLAGS="-Wl,--nxcompat -Wl,--no-seh -Wl,--dynamicbase -Wl,--warn-common -m64"
-      # ../configure --target-list=x86_64-softmmu ${QEMU_OPTS} --cross-prefix=x86_64-w64-mingw32-
-      # echo "Building qemu from source"
-      # $msys2 make
-      # # MAKE_PID=$!
+      # ./configure --target-list=x86_64-softmmu ${QEMU_OPTS} --cross-prefix=x86_64-w64-mingw32-
+      # $msys2 make -j2
 
-      # choco install -y golang docker
+      # MAKE_PID=$!
+
+      # choco install -y golang docker vcxsrv
 
       # mkdir -p "$HOME/.docker/machine/cache"
       # FILENAME="$HOME/.docker/machine/cache/boot2docker.iso"
@@ -451,42 +443,44 @@ before_install:
       # export PATH=$PATH:/c/Go/bin
       # export GOPATH="$HOME/work"
       # mkdir -p "$HOME/work/src/github.com/jigtools"
-      # cd "$HOME/work/src/github.com/jigtools"
+      # command cd "$HOME/work/src/github.com/jigtools"
       # git clone https://github.com/jigtools/docker-machine-driver-qemu.git
 
       # mkdir -p "$HOME/work/src/github.com/docker"
-      # cd "$HOME/work/src/github.com/docker"
+      # command cd "$HOME/work/src/github.com/docker"
       # git clone https://github.com/docker/machine.git
-      # cd machine
+      # command cd machine
       # go get
       # /C/tools/msys64/usr/bin/make build
       # cp bin/docker-machine /c/Program\ Files/Docker/docker-machine.exe
 
       # mkdir -p "$HOME/work/src/github.com/machine-drivers"
-      # cd "$HOME/work/src/github.com/machine-drivers"
+      # command cd "$HOME/work/src/github.com/machine-drivers"
       # git clone https://github.com/machine-drivers/docker-machine-driver-qemu.git
-      # cd docker-machine-driver-qemu
+      # command cd docker-machine-driver-qemu
       # go get
-      # /C/tools/msys64/usr/bin/make build
+      # make build
       # cp bin/docker-machine-driver-qemu /c/Program\ Files/Docker/docker-machine-driver-qemu.exe
 
       # echo "Waiting for boot2docker download to finish"
       # NAME="downloading boot2docker.iso"
       # wait_for_pid "${boot2docker_PID}" "$NAME"
 
+      # command cd qemu && mkdir build && command cd build
       # echo "Waiting for qemu build to finish"
       # NAME="building qemu"
       # wait_for_pid "${MAKE_PID}" "$NAME"
 
-      # /C/tools/msys64/usr/bin/make install
+      # command cd ${TRAVIS_BUILD_DIR}/qemu/build
+      # make install
       # command cd ${TRAVIS_BUILD_DIR}
 
       # echo "Starting qemu VM..."
-      # cd /c/Program\ Files/Docker/
+      # command cd /c/Program\ Files/Docker/
       # cmd "/C docker-machine.exe -D create --driver qemu --qemu-cpu-count 2 default" &
       # MACHINE_PID=$!
 
-      choco install -y docker-compose vcxsrv
+      choco install -y docker-compose
 
       echo "Waiting for msmpisdk download to finish"
       NAME="downloading msmpisdk.msi"
@@ -514,7 +508,7 @@ before_install:
       # NAME="starting docker VM"
       # wait_for_pid "${MACHINE_PID}" "$NAME"
 
-      # set up environment variables to use docker within VM
+      # # set up environment variables to use docker within VM
       # docker-machine env default >> "$HOME/.bashrc"
       # eval "$(docker-machine env default)"
 
@@ -525,6 +519,8 @@ before_install:
       # (tar -cC "$HOME/docker_image" . | docker load && \
       #  docker tag jonescompneurolab/hnn:master jonescompneurolab/hnn:latest && \
       #  touch $HOME/docker_image_loaded) &
+
+      # xset -display $DISPLAY -q > /dev/null;
 
       # add miniconda python to the path
       export PATH=$PATH:$HOME/Miniconda3/Scripts
@@ -553,39 +549,48 @@ before_install:
       echo $NLOPT_LIB
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NLOPT_LIB
       export PYTHON=python3
+      xset -display $DISPLAY -q > /dev/null;
     fi
   - export TRAVIS_TESTING=1
-  - if [ ! "${TRAVIS_OS_NAME}" == "windows" ]; then
-      xset -display $DISPLAY -q > /dev/null;
-    fi;
 
 install:
   - if [[ ! "${TRAVIS_OS_NAME}" == "windows" ]]; then
       make;
     fi;
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      if [[ "$TRAVIS_PULL_REQUEST" =~ "false" ]]; then
+        SOURCE_REPO="https://github.com/${TRAVIS_REPO_SLUG}.git"
+        SOURCE_BRANCH=$TRAVIS_BRANCH
+      else
+        SOURCE_REPO="https://github.com/${TRAVIS_PULL_REQUEST_SLUG}.git"
+        SOURCE_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
+      fi
+      echo "Starting docker build..."
+      (docker build --tag jonescompneurolab/hnn \
+        --build-arg NEURON_VERSION=${NEURON_VERSION} \
+        --build-arg SOURCE_BRANCH=${SOURCE_BRANCH} \
+        --build-arg SOURCE_REPO=${SOURCE_REPO} \
+        installer/docker > docker_build.txt 2>&1 || echo "Failed build" >> docker_build.txt) &
+    fi
   - pip install flake8 pytest pytest-cov coverage coveralls mne
 
 script:
-  - |
-    if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
-      echo "Starting docker test..."
-      (./hnn_docker.sh start -u > docker_status.txt 2>&1 || script_fail >> docker_status.txt) &
-    fi
   - echo "Running Python tests" && py.test tests/
   - echo "Testing GUI on host OS" && $PYTHON hnn.py
   - |
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
-      echo "Waiting on docker test:"
-      cat docker_status.txt
-      while ! cat docker_status.txt|grep "finished successfully"; do
-        if cat docker_status.txt|grep "Error"; then
+      echo "Waiting on docker build:"
+      cat docker_build.txt
+      while ! cat docker_build.txt|grep "Successfully built"; do
+        if cat docker_build.txt|grep "Failed build"; then
           exit 2
         fi
-        cp docker_status.txt docker_status.txt.old
-        diff docker_status.txt docker_status.txt.old > /dev/null || (tail -1 docker_status.txt && echo)
+        cp docker_build.txt docker_build.txt.old
+        diff docker_build.txt docker_build.txt.old > /dev/null || (tail -1 docker_build.txt && echo)
         sleep 10
       done
-      tail -1 docker_status.txt
+      tail -1 docker_build.txt
     elif [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then
       while ! test -e $HOME/docker_image_loaded; do
         echo "Sleeping for 10s while waiting for docker image download to complete"
@@ -593,19 +598,27 @@ script:
       done
       ./hnn_docker.sh start || script_fail
     fi
-  - echo "Testing GUI in docker without ssh" && USE_SSH=0 ./hnn_docker.sh start || script_fail
+  - |
+    if [[ ! "${TRAVIS_OS_NAME}" = "windows" ]]; then
+      echo "Testing GUI in docker without ssh" && USE_SSH=0 ./hnn_docker.sh start || script_fail
+    fi
   - |
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
       echo "Testing MPI in docker"
+      make clean
       # only run on linux because it's not virtualized through qemu
-      echo -e "\ntest MPI inside container\n"
-      timeout 300 docker exec -u $UID:hnn_group hnn_container bash -c "echo setting environment variables; source /home/hnn_user/hnn_envs && \
-        mpiexec -np 2 --oversubscribe nrniv -mpi -python run.py param/default.param; echo finished simulation" || { \
+      timeout 120 docker exec hnn_container bash -c "sudo apt-get install --no-install-recommends -y \
+        make gcc libc6-dev libtinfo-dev libncurses-dev libx11-dev libreadline-dev"
+      timeout 300 docker exec -u $UID:hnn_group hnn_container bash -c "make && source /home/hnn_user/hnn_envs && \
+        mpiexec -np 2 --oversubscribe nrniv -mpi -python run.py param/default.param && echo finished simulation" || { \
           echo -e "\nMPI test failed\n"
           docker ps -a | grep hnn_container
           false
         }
       echo "Testing hnn_docker.sh upgrade" && ./hnn_docker.sh upgrade || script_fail
     fi
-  - echo "Testing GUI in docker with ssh" && USE_SSH=1 ./hnn_docker.sh start || script_fail
-  - echo "Testing hnn_docker.sh uninstall command" && ./hnn_docker.sh uninstall || script_fail
+  - |
+    if [[ ! "${TRAVIS_OS_NAME}" = "windows" ]]; then
+      echo "Testing GUI in docker with ssh" && USE_SSH=1 ./hnn_docker.sh start || script_fail
+      echo "Testing hnn_docker.sh uninstall command" && ./hnn_docker.sh uninstall || script_fail
+    fi
