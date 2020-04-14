@@ -12,7 +12,7 @@ fi
 
 debug=
 if [[ "$DEBUG" = "1" ]]; then
-  debug="-ddd"
+  debug="-d"
 fi
 
 /usr/sbin/sshd -4 ${debug} -E /var/log/sshd.log -D

@@ -91,61 +91,21 @@ matrix:
 before_install:
   - set -e
   - |
-    # functions
-    function script_fail {
-      echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
-      cat hnn_docker.log
-      exit 2
-    }
+    export TRAVIS_TESTING=1
+
+    source scripts/utils.sh
+    export LOGFILE="hnn_travis.log"
+    set_globals
 
     function mac_timeout {
       perl -e 'alarm shift; exec @ARGV' "$@"
-    }
-
-    function start_download {
-      echo "Downloading $2"
-      let retries=5
-      while [[ $retries -gt 0 ]]; do
-        if [[ "${TRAVIS_OSX_IMAGE}" =~ "xcode8" ]]; then
-          curl -Lo "$1" --retry 5 --retry-delay 30 "$2" && break
-        else
-          curl -Lo "$1" --retry 5 --retry-delay 30 --retry-connrefused "$2" && break
-        fi
-        (( __retries-- ))
-      done
-      if [[ $retries -eq 0 ]]; then
-        echo "Error: failed to download $2."
-        exit 1
-      fi
     }
 
     function sha256sum {
       shasum -a 256 "$@"
     }
 
-    function download_docker_image {
-      let retries=5
-      while [[ $retries -gt 0 ]]; do
-        "$HOME/download-frozen-image-v2.sh" "$HOME/docker_image" "$1" && break
-        (( __retries-- ))
-      done
-
-      if [[ $retries -eq 0 ]]; then
-        echo "Error: failed to download $1."
-        exit 1
-      fi
-    }
-
-    function wait_for_pid {
-      wait $1 && {
-        echo "Finished $2"
-      } || {
-        echo "Error: failed $2"
-        exit 1
-      }
-    }
-
-    export -f script_fail mac_timeout start_download sha256sum
+    export -f mac_timeout sha256sum
 
     export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
     export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
@@ -202,6 +162,20 @@ before_install:
           :
           # softwareupdate --install "Command Line Tools (macOS Sierra version 10.12) for Xcode-9.2"
         elif [[ $TRAVIS_OSX_IMAGE =~ "xcode8" ]]; then
+          brew cask reinstall xquartz
+          set_local_display_for_host
+          get_xauth_bin
+          set +e
+          let RETRY=0
+          while ! config_xquartz; do
+            if [[ $RETRY -eq 3 ]]; then
+              break
+            fi
+            restart_xquartz
+            sleep 1
+            (( RETRY++ ))
+          done
+          set -e
           # softwareupdate --install "Command Line Tools (macOS El Capitan version 10.11) for Xcode-8.2"
           brew install --ignore-dependencies openssl libffi
         fi
@@ -379,10 +353,16 @@ before_install:
       export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
       export PYTHON=python3
 
+      # This will make sure that xquartz is running. We will configure it to
+      # accept TCP connections in hnn_docker.sh later
+      xset -display $DISPLAY -q > /dev/null
+
       echo "Install finished"
     fi
   - |
     if [ "${TRAVIS_OS_NAME}" == "windows" ]; then  # install windows prerequisites
+      VCXSRV_PID=
+
       echo "Fetching Microsoft MPI installers"
       URL="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi"
       FILENAME="$HOME/Downloads/msmpisdk.msi"
@@ -551,7 +531,6 @@ before_install:
       export PYTHON=python3
       xset -display $DISPLAY -q > /dev/null;
     fi
-  - export TRAVIS_TESTING=1
 
 install:
   - if [[ ! "${TRAVIS_OS_NAME}" == "windows" ]]; then
@@ -596,7 +575,6 @@ script:
         echo "Sleeping for 10s while waiting for docker image download to complete"
         sleep 10
       done
-      ./hnn_docker.sh start || script_fail
     fi
   - |
     if [[ ! "${TRAVIS_OS_NAME}" = "windows" ]]; then
