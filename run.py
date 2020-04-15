@@ -125,9 +125,9 @@ def savedat (p, rank, t_vec, dp_rec_L2, dp_rec_L5, net):
     with open(doutf['file_dpl'], 'w') as f:
       for k in range(int(t_vec.size())):
         f.write("%03.3f\t" % t_vec.x[k])
-        f.write("%5.4f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
-        f.write("%5.4f\t" % dp_rec_L2.x[k])
-        f.write("%5.4f\n" % dp_rec_L5.x[k])
+        f.write("%9.8f\t" % (dp_rec_L2.x[k] + dp_rec_L5.x[k]))
+        f.write("%9.8f\t" % dp_rec_L2.x[k])
+        f.write("%9.8f\n" % dp_rec_L5.x[k])
     # renormalize the dipole and save
     dpl = Dipole(doutf['file_dpl']) # fix to allow init from data rather than file
     dpl.baseline_renormalize(doutf['file_param'])
@@ -326,9 +326,9 @@ def catdpl ():
     with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
       for i in range(dpl.shape[0]):
         fp.write("%03.3f\t" % dpl[i,0])
-        fp.write("%5.8f\t" % dpl[i,1])
-        fp.write("%5.8f\t" % dpl[i,2])
-        fp.write("%5.8f\n" % dpl[i,3])
+        fp.write("%8.11f\t" % dpl[i,1])
+        fp.write("%8.11f\t" % dpl[i,2])
+        fp.write("%8.11f\n" % dpl[i,3])
     ldpl.append(dpl)
   return ldpl
 
