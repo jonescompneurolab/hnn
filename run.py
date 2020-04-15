@@ -326,9 +326,9 @@ def catdpl ():
     with open(os.path.join(datdir,pre+'.txt'), 'w') as fp:
       for i in range(dpl.shape[0]):
         fp.write("%03.3f\t" % dpl[i,0])
-        fp.write("%8.11f\t" % dpl[i,1])
-        fp.write("%8.11f\t" % dpl[i,2])
-        fp.write("%8.11f\n" % dpl[i,3])
+        fp.write("%9.8f\t" % dpl[i,1])
+        fp.write("%9.8f\t" % dpl[i,2])
+        fp.write("%9.8f\n" % dpl[i,3])
     ldpl.append(dpl)
   return ldpl
 
