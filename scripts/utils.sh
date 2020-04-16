@@ -110,10 +110,9 @@ function cleanup {
 
   echo -e "\n=====================" >> $LOGFILE
   echo "cleanup() called from: ${FUNCNAME[1]} (L:${BASH_LINENO[0]})" >> $LOGFILE
-  if [[ "$OS"  =~ "windows" ]]; then
-    check_var VCXSRV_PID
+  if [ ! -z "${VCXSRV_PID}" ]; then
     stop_vcxsrv
-    if [ ! -z "${VCXSRV_PID}" ]; then
+    if [[ $? -ne 0 ]]; then
       echo "Killing VcXsrv PID ${VCXSRV_PID}" >> $LOGFILE
       kill ${VCXSRV_PID} &> /dev/null
     fi
@@ -338,6 +337,8 @@ function stop_vcxsrv {
   run_command_print_status "cmd.exe //c taskkill //F //IM vcxsrv.exe"
   if [[ $? -eq "0" ]]; then
     VCXSRV_PID=
+  else
+    false
   fi
 }
 
