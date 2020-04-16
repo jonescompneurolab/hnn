@@ -460,7 +460,7 @@ before_install:
       # cmd "/C docker-machine.exe -D create --driver qemu --qemu-cpu-count 2 default" &
       # MACHINE_PID=$!
 
-      choco install -y docker-compose
+      choco install -y docker-compose vcxsrv golang
 
       echo "Waiting for msmpisdk download to finish"
       NAME="downloading msmpisdk.msi"
@@ -474,15 +474,15 @@ before_install:
       (powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1) &
       POWERSHELL_PID=$!
 
+      curl -Lo "$HOME/download-frozen-image-v2.sh" https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
+      chmod +x "$HOME/download-frozen-image-v2.sh"
+
+      # download_docker_image jonescompneurolab/hnn:windows &
+      # IMAGE_PID=$!
+
       echo "Waiting for Windows install script to finish"
       NAME="installing HNN"
       wait_for_pid "${POWERSHELL_PID}" "$NAME"
-
-      # curl -Lo "$HOME/download-frozen-image-v2.sh" https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
-      # chmod +x "$HOME/download-frozen-image-v2.sh"
-
-      # download_docker_image "$DOCKER_IMAGE_NAME" &
-      # IMAGE_PID=$!
 
       # echo "Waiting for VM to start..."
       # NAME="starting docker VM"
@@ -497,8 +497,7 @@ before_install:
       # wait_for_pid "${IMAGE_PID}" "$NAME"
       # echo "Loading downloaded image into docker"
       # (tar -cC "$HOME/docker_image" . | docker load && \
-      #  docker tag jonescompneurolab/hnn:master jonescompneurolab/hnn:latest && \
-      #  touch $HOME/docker_image_loaded) &
+      #   touch $HOME/docker_image_loaded) &
 
       # xset -display $DISPLAY -q > /dev/null;
 
