@@ -19,9 +19,10 @@ docker pull jonescompneurolab/hnn
 
 The BUILD_DATE argument is important to build the container with the latest HNN source code. Without it, the build will reuse the docker build cache, which may have been with an old code version.
 
+Optional arguments are SOURCE_BRANCH and SOURCE_REPO. If they are not specified, the image will be build from source at 'https://github.com/jonescompneurolab/hnn' on branch 'master'
+
 ```bash
-cd hnn/installer/docker
-docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master --build-arg BUILD_DATE=$(date +%s) .
+docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master SOURCE_REPO="https://github.com/jonescompneurolab/hnn" --build-arg BUILD_DATE=$(date +%s) installer/docker
 ```
 
 ## Running HNN container without docker-compose
@@ -37,5 +38,5 @@ export DOCKER_DISPLAY=192.168.99.1:0
 export DOCKER_DISPLAY=:0
 
 # Start container
-docker run -d -e XAUTHORITY="/.Xauthority" -e DISPLAY=$DOCKER_DISPLAY -v "./hnn:/home/hnn_user/hnn" -v ~/.Xauthority:/.Xauthority -v /tmp/.X11-unix:/tmp/.X11-unix jonescompneurolab/hnn /home/hnn_user/start_hnn.sh
+docker run -e DISPLAY=$DOCKER_DISPLAY -v "$(pwd):/home/hnn_user/hnn_source_code" -v ~/.Xauthority:/home/hnn_user/.Xauthority jonescompneurolab/hnn /home/hnn_user/start_hnn.sh
 ```

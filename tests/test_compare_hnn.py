@@ -1,7 +1,7 @@
 import os.path as op
 
 from numpy import loadtxt
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_allclose
 
 from mne.utils import _fetch_file
 
@@ -56,9 +56,9 @@ def test_hnn():
             pr = loadtxt(op.join(dirname, fname))
             master = loadtxt(fname)
 
-            assert_array_equal(pr[:, 1], master[:, 1])
+            assert_allclose(pr[:, 1], master[:, 1], rtol=1e-8, atol=0)
             if data_type in ['dpl', 'rawdpl', 'i']:
-                assert_array_equal(pr[:, 2], master[:, 2])
+                assert_allclose(pr[:, 2], master[:, 2], rtol=1e-8, atol=0)
             if data_type in ['dpl', 'rawdpl']:
-                assert_array_equal(pr[:, 3], master[:, 3])
+                assert_allclose(pr[:, 3], master[:, 3], rtol=1e-8, atol=0)
             print("done")
