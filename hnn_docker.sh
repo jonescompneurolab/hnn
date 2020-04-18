@@ -13,7 +13,6 @@
 source scripts/utils.sh
 export LOGFILE="hnn_docker.log"
 set_globals
-echo $1
 
 echo -e "======================================"
 while [ -n "$1" ]; do
@@ -37,6 +36,17 @@ fi
 echo >> $LOGFILE
 echo "Performing pre-checks before starting HNN" | tee -a $LOGFILE
 echo "--------------------------------------" | tee -a $LOGFILE
+
+print_header_message "Checking OS version... "
+OS=$(get_os)
+echo "$OS" | tee -a $LOGFILE
+
+# defaults
+if [[ "$OS" =~ "linux" ]]; then
+  [[ $USE_SSH ]] || USE_SSH=0
+else
+  [[ $USE_SSH ]] || USE_SSH=1
+fi
 
 print_header_message "Checking if Docker is installed... "
 if [[ "$OS" =~ "windows" ]]; then
@@ -185,8 +195,6 @@ if [[ "$UNINSTALL" -eq "1" ]]; then
   cleanup 0
 fi
 
-set_local_display_for_host
-
 if [[ "$OS" =~ "windows" ]]; then
   print_header_message_short "Checking if VcXsrv is running... "
   VCXSRV_PID=$(tasklist | grep vcxsrv | awk '{print $2}' 2> /dev/null)
@@ -235,16 +243,11 @@ if [[ "$OS" =~ "windows" ]]; then
     echo "done" | tee -a $LOGFILE
   fi
 elif [[ "$OS" =~ "mac" ]]; then
-  let RETRY=0
-  while ! config_xquartz; do
-    if [[ $RETRY -eq 3 ]]; then
-      cleanup 2
-    fi
-    restart_xquartz
-    sleep 1
-    (( RETRY++ ))
-  done
-  RETRY=0
+  check_xquartz_listening
+  if [[ $? -ne 0 ]]; then
+    cleanup 2
+  fi
+  # DISPLAY updated with current xquartz port number
 fi
 # should have X server running by now
 

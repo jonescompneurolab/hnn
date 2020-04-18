@@ -41,7 +41,7 @@ if [[ $? -eq 0 ]]; then
   fi
 fi
 
-function retry_hnn {
+function start_hnn {
   local __port
   local __ip
 
@@ -51,12 +51,14 @@ function retry_hnn {
     else
       export DISPLAY=$1:$2
     fi
+  else
+    DISPLAY=:0
   fi
 
   let __port=6000+${DISPLAY#*:}
   __ip=${DISPLAY%%:*}
   if [ ! -z $__ip ]; then
-    if nc -zvw3 $__ip $__port > /dev/null 2>&1; then
+    if nc -nzvw3 $__ip $__port > /dev/null 2>&1; then
       echo "Success connecting to X server at $__ip:$__port"
     else
       echo "Could not connect to X server at $__ip:$__port"
@@ -74,7 +76,6 @@ function retry_hnn {
     return
   else
     echo "HNN GUI stopped by user."
-    exit 0
   fi
 }
 
@@ -84,14 +85,4 @@ mkdir /tmp/runtime-hnn_user &> /dev/null
 chmod 700 /tmp/runtime-hnn_user
 
 # try once with current DISPLAY
-retry_hnn
-
-# ports other than :0 are not supported currently
-# done=
-# XHOST=${DISPLAY%:0}
-# for PORT in 1 2; do
-#   retry_hnn $XHOST $PORT
-# done
-
-echo "Failed to start HNN on any X port"
-exit 1
+start_hnn

@@ -49,17 +49,6 @@ function get_os {
 function set_globals {
   check_var LOGFILE
 
-  print_header_message "Checking OS version... "
-  OS=$(get_os)
-  echo "$OS" | tee -a $LOGFILE
-
-  # defaults
-  if [[ "$OS" =~ "linux" ]]; then
-    [[ $USE_SSH ]] || USE_SSH=0
-  else
-    [[ $USE_SSH ]] || USE_SSH=1
-  fi
-
   # globals
   UPGRADE=0
   STOP=0
@@ -74,7 +63,7 @@ function set_globals {
   NEW_XAUTH_KEYS=0
   ESC_STR="%;"
 
-  export OS USE_SSH UPGRADE STOP START RETRY UNINSTALL HNN_DOCKER_IMAGE HNN_CONTAINER_NAME SYSTEM_USER_DIR ALREADY_RUNNING SSHD_STARTED NEW_XAUTH_KEYS ESC_STR
+  export USE_SSH UPGRADE STOP START RETRY UNINSTALL HNN_DOCKER_IMAGE HNN_CONTAINER_NAME SYSTEM_USER_DIR ALREADY_RUNNING SSHD_STARTED NEW_XAUTH_KEYS ESC_STR
 }
 
 function errexit() {
@@ -466,7 +455,8 @@ function ssh_start_hnn {
     echo "done" | tee -a $LOGFILE
   fi
 
-  export DISPLAY=localhost:0
+  # since we assigned port 6000, we can be certain of this DISPLAY
+  export DISPLAY=127.0.0.1:0
   export XAUTHORITY=/tmp/.Xauthority
   export TRAVIS_TESTING
   export SYSTEM_USER_DIR
@@ -573,7 +563,7 @@ function check_x_authenticated {
   check_var OS
 
   if [[ ! "$OS" == "windows" ]]; then
-    print_header_message "Checking if X server is reachable from container... "
+    print_header_message "Checking if we can authenticate with X server... "
     run_command_print_status "xset -display $DISPLAY -q"
   fi
 }
@@ -598,13 +588,17 @@ function check_x_port_netcat {
     echo -n "(retry) " | tee -a $LOGFILE
   fi
 
-  print_header_message "Checking if X server is reachable locally... "
-  let __port=6000+${DISPLAY#*:}
   __ip=${DISPLAY%%:*}
-  if [ -z $__ip ]; then
-    __ip="127.0.0.1"
+  let __port=6000+${DISPLAY#*:}
+
+  getent hosts $__ip > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "Skipping netcat test for local DISPLAY $DISPLAY"
+    return
   fi
-  run_command_print_status "nc -zvw3 $__ip $__port"
+
+  print_header_message "Checking if X server is reachable at $DISPLAY... "
+  run_command_print_status "nc -nzvw3 $__ip $__port"
   if [[ $? -ne 0 ]]; then
     echo "Current XQuartz processes:" >> $LOGFILE
     __command=("ps" "auxw" "grep" "X11")
@@ -960,25 +954,33 @@ function get_xquartz_port {
 function start_xquartz {
   check_var LOGFILE
 
-  local __display_int
+  local __port
   local __command
 
   __command="open -a XQuartz"
   silent_run_command "$__command"
   if [[ $? -ne "0" ]]; then
     # this probably will never fail on a mac
-    echo "*failed*" | tee -a $LOGFILE
     cleanup 2
   fi
 
-  __display_int=$(get_xquartz_port)
-  if [[ ! $__display_int == "0" ]]; then
-    echo "unsupported display :${__display_int}. XQuartz must use :0" | tee -a $LOGFILE
+  __port=$(get_xquartz_port)
+  re='^[0-9]+$'
+  if ! [[ $__port =~ $re ]] ; then
+    echo "bad xquartz port number \"$__port\"" >> $LOGFILE
     false
+  else
+    # update DISPLAY
+    set_local_display_from_port $__port
   fi
 }
 
 function restart_xquartz {
+  # no arguments
+  # kills all xquartz processes that then starts one
+  # returns port number of listening xquartz process
+  local __xquartz_port
+
   print_header_message "Restarting XQuartz... "
   kill_xquartz && start_xquartz
   fail_on_bad_exit $?
@@ -1378,29 +1380,35 @@ function check_xauth_bin {
 function get_display_for_gui {
   # no arguments
   # set DISPLAY environment variable for the appropriate OS and/or testing environment
-  check_var OS
   check_var DOCKER_TOOLBOX
 
   local __display
+  local __port
+
+  if [ -n $DISPLAY ]; then
+    __port=${DISPLAY#*:}
+  else
+    __port="0"
+  fi
 
   # set DISPLAY for GUI
   if [[ "$OS" =~ "linux" ]]; then
     # linux can use direct port
     if [[ $TRAVIS_TESTING -eq 1 ]]; then
-      [[ $DISPLAY ]] && __display=$DISPLAY || __display=":0"
+      [[ $DISPLAY ]] && __display=$DISPLAY || __display=":$__port"
     else
-      __display=":0"
+      __display=":$__port"
     fi
   else
     if [[ $TRAVIS_TESTING -eq 1 ]]; then
       # qemu driver
-      __display="10.0.2.2:0"
+      __display="10.0.2.2:$__port"
     elif [[ $DOCKER_TOOLBOX -eq 1 ]]; then
       # virtualbox driver
-      __display="192.168.99.1:0"
+      __display="192.168.99.1:$__port"
     else
       # docker desktop
-      __display="host.docker.internal:0"
+      __display="host.docker.internal:$__port"
     fi
   fi
 
@@ -1416,8 +1424,8 @@ function get_host_xauth_key {
 
   local __key
 
-  echo -e "\n  ** Command: xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print \$9}'" >> $LOGFILE
-  __key=$(xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print $9}' 2>> $LOGFILE)
+  echo -e "\n  ** Command: xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print \$NF}'" >> $LOGFILE
+  __key=$(xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print $NF}' 2>> $LOGFILE)
   if [[ $? -ne 0 ]]; then
     return 1
   else
@@ -1442,9 +1450,9 @@ function get_container_xauth_key {
   __display=$(get_display_for_gui)
 
 
-  echo -e "\n  ** Command: $DOCKER exec -u $__user $HNN_CONTAINER_NAME bash -c \"timeout 5 xauth -ni nlist $__display | grep '^ffff' | head -1 | awk '{print \$9}'\"" >> $LOGFILE
+  echo -e "\n  ** Command: $DOCKER exec -u $__user $HNN_CONTAINER_NAME bash -c \"timeout 5 xauth -ni nlist $__display | grep '^ffff' | head -1 | awk '{print \$NF}'\"" >> $LOGFILE
   echo -n "  ** Stderr: " >> $LOGFILE
-  __key=$($DOCKER exec -u $__user $HNN_CONTAINER_NAME bash -c "timeout 5 xauth -ni nlist $__display | grep '^ffff' | head -1 | awk '{print \$9}'" 2>> $LOGFILE)
+  __key=$($DOCKER exec -u $__user $HNN_CONTAINER_NAME bash -c "timeout 5 xauth -ni nlist $__display | grep '^ffff' | head -1 | awk '{print \$NF}'" 2>> $LOGFILE)
   if [[ $? -ne 0 ]]; then
     return 1
   else
@@ -1535,29 +1543,64 @@ function setup_xauthority_in_container {
   fi
 }
 
-function set_local_display_for_host {
+function set_local_display_from_port {
+  # first argument in port number (e.g. 0, not :0)
+  check_args "$@" $# 1
+
   check_var DISPLAY
   check_var TRAVIS_TESTING
-  check_var OS
+
+  local __port="$1"
 
   # no arguments
   # set DISPLAY for local actions (e.g. generating xauth keys)
   if [[ "$OS" =~ "windows" ]]; then
-    DISPLAY="localhost:0"
+    DISPLAY="localhost:$__port"
   elif [[ "$OS" =~ "mac" ]]; then
-    DISPLAY=":0"
+    DISPLAY=":$__port"
   else
     # linux
     if [[ $TRAVIS_TESTING -eq 1 ]]; then
-      [[ $DISPLAY ]] || DISPLAY=":0"
+      [[ $DISPLAY ]] || DISPLAY=":$__port"
     else
-      DISPLAY=":0"
+      DISPLAY=":$__port"
     fi
   fi
   export DISPLAY
 }
 
-function config_xquartz {
+function check_xquartz_listening {
+  # no args
+  # will return when xquartz is configured and listening on tcp port
+  # DISPLAY will be updated
+
+  local __retry
+  local __current_port
+
+  [[ $OS ]] || export OS=$(get_os)
+
+  # before assuming port 0, check if xquartz is already running
+  __current_port=$(get_xquartz_port)
+  if [[ -z $__current_port ]]; then
+    __current_port="0"
+  fi
+  set_local_display_from_port $__current_port
+
+  let __retry=0
+  while ! config_xquartz_for_tcp; do
+    if [[ $__retry -eq 3 ]]; then
+      false
+      return
+    fi
+    __current_port=$(restart_xquartz)
+    sleep 1
+    (( __retry++ ))
+  done
+
+  true
+}
+
+function config_xquartz_for_tcp {
   check_var LOGFILE
   check_var RETRY
 
