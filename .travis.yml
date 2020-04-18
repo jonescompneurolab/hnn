@@ -105,7 +105,25 @@ before_install:
       shasum -a 256 "$@"
     }
 
-    export -f mac_timeout sha256sum
+    function cleanup {
+      check_var LOGFILE
+
+      local __failed
+
+      __failed=$1
+
+      echo -e "\n=====================" >> $LOGFILE
+      echo "cleanup() called from: ${FUNCNAME[1]} (L:${BASH_LINENO[0]})" >> $LOGFILE
+
+      if [[ $__failed -ne "0" ]]; then
+        echo -e "\n======================================"
+        echo "Error: Please see log output for more details"
+        cat $LOGFILE
+        return $__failed
+      fi
+    }
+
+    export -f mac_timeout sha256sum cleanup
 
     export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
     export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
@@ -163,19 +181,10 @@ before_install:
           # softwareupdate --install "Command Line Tools (macOS Sierra version 10.12) for Xcode-9.2"
         elif [[ $TRAVIS_OSX_IMAGE =~ "xcode8" ]]; then
           brew cask reinstall xquartz
-          set_local_display_for_host
-          get_xauth_bin
-          set +e
-          let RETRY=0
-          while ! config_xquartz; do
-            if [[ $RETRY -eq 3 ]]; then
-              break
-            fi
-            restart_xquartz
-            sleep 1
-            (( RETRY++ ))
-          done
-          set -e
+          check_xquartz_listening || {
+            cat $LOGFILE
+          }
+          # DISPLAY updated with current xquartz port number
           # softwareupdate --install "Command Line Tools (macOS El Capitan version 10.11) for Xcode-8.2"
           brew install --ignore-dependencies openssl libffi
         fi
