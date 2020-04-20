@@ -313,15 +313,9 @@ if [[ -z $OUTPUT ]]; then
     fi
   else
     print_header_message "Generating xauth key for display $DISPLAY... "
-    echo >> $LOGFILE
-
-    __command=("${XAUTH_BIN}" "-f $XAUTHORITY generate $DISPLAY .")
-    let __index=0
-    for __arg in "${__command[@]}"; do
-      __send_args[$__index]=$(echo $__arg|sed "s/ /$ESC_STR/g")
-      (( __index++ ))
-    done
-    output_run_specific_command "${__send_args[@]}" > /dev/null
+    echo -e "\n  ** Command: \"${XAUTH_BIN}\" -f \"$XAUTHORITY\" generate $DISPLAY ." >> $LOGFILE
+    echo -n "  ** Output: " >> $LOGFILE
+    "${XAUTH_BIN}" -f "$XAUTHORITY" generate $DISPLAY . >> $LOGFILE 2>&1
     fail_on_bad_exit $?
     print_header_message "(retry) Checking for X11 authentication keys... "
     OUTPUT=$(get_xauth_keys)
