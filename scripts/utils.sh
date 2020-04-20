@@ -755,8 +755,8 @@ function copy_xauthority_file {
   local __user
   __user="$1"
 
-  if [ ! -e $XAUTHORITY ]; then
-    echo "Couldn't find Xauthority file at $XAUTHORITY"
+  if [ ! -e "$XAUTHORITY" ]; then
+    echo "Couldn't find Xauthority file at \"$XAUTHORITY\""
     cleanup 2
   fi
 
@@ -1275,7 +1275,7 @@ function get_docker_machine {
   echo $__docker_machine
 }
 
-function get_xauth_keys {
+function generate_xauth_keys {
   check_var LOGFILE
   check_var XAUTH_BIN
   check_var XAUTHORITY
@@ -1284,13 +1284,39 @@ function get_xauth_keys {
   local __binary
   local __command_args
   local __output
-  local __command_status
-  __binary="${XAUTH_BIN}"
-  __command_args="-f $XAUTHORITY nlist $DISPLAY"
 
-  echo -e "\n  ** Command: $__binary $__command_args" >> $LOGFILE
+  print_header_message "Generating xauth key for display $DISPLAY... "
+  echo -e "\n  ** Command: \"${XAUTH_BIN}\" -f \"$XAUTHORITY\" generate $DISPLAY ." >> $LOGFILE
+  echo -n "  ** Output: " >> $LOGFILE
+  if [[ "$OS" =~ "windows" ]]; then
+    "${XAUTH_BIN}" -f "$XAUTHORITY" generate $DISPLAY . >> $LOGFILE 2>&1
+  else
+    "${XAUTH_BIN}" -f "$XAUTHORITY" generate $DISPLAY . >> $LOGFILE 2>&1
+  fi
+  if [[ $? -eq 0 ]]; then
+    true
+  else
+    false
+  fi
+}
+
+function get_xauth_keys {
+  check_var LOGFILE
+  check_var XAUTH_BIN
+  check_var XAUTHORITY
+  check_var DISPLAY
+
+  local __output
+  local __command_status
+
+  echo -e "\n  ** Command: \"${XAUTH_BIN}\" -f \"$XAUTHORITY\" nlist $DISPLAY" >> $LOGFILE
   echo -n "  ** Stderr: " >> $LOGFILE
-  __output=$("$__binary" $__command_args 2>> $LOGFILE)
+
+  if [[ "$OS" =~ "windows" ]]; then
+    __output=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist $DISPLAY 2>> $LOGFILE)
+  else
+    __output=$("${XAUTH_BIN}" -f "$XAUTHORITY" nlist $DISPLAY 2>> $LOGFILE)
+  fi
   __command_status=$?
 
   # don't print keys in log
@@ -1425,7 +1451,7 @@ function get_host_xauth_key {
   local __key
 
   echo -e "\n  ** Command: xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print \$NF}'" >> $LOGFILE
-  __key=$(xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print $NF}' 2>> $LOGFILE)
+  __key=$("${XAUTH_BIN}" -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print $NF}' 2>> $LOGFILE)
   if [[ $? -ne 0 ]]; then
     return 1
   else

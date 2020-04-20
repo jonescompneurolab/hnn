@@ -242,6 +242,9 @@ if [[ "$OS" =~ "windows" ]]; then
   else
     echo "done" | tee -a $LOGFILE
   fi
+
+  set_local_display_from_port 0
+
 elif [[ "$OS" =~ "mac" ]]; then
   check_xquartz_listening
   if [[ $? -ne 0 ]]; then
@@ -312,10 +315,7 @@ if [[ -z $OUTPUT ]]; then
       echo "done" | tee -a $LOGFILE
     fi
   else
-    print_header_message "Generating xauth key for display $DISPLAY... "
-    echo -e "\n  ** Command: \"${XAUTH_BIN}\" -f \"$XAUTHORITY\" generate $DISPLAY ." >> $LOGFILE
-    echo -n "  ** Output: " >> $LOGFILE
-    "${XAUTH_BIN}" -f "$XAUTHORITY" generate $DISPLAY . >> $LOGFILE 2>&1
+    generate_xauth_keys
     fail_on_bad_exit $?
     print_header_message "(retry) Checking for X11 authentication keys... "
     OUTPUT=$(get_xauth_keys)
