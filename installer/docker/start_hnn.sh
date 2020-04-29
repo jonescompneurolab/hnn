@@ -45,20 +45,10 @@ function start_hnn {
   local __port
   local __ip
 
-  if [[ -n "$1" ]]; then
-    if [ -z "$2" ]; then
-      export DISPLAY=:$1
-    else
-      export DISPLAY=$1:$2
-    fi
-  else
-    DISPLAY=:0
-  fi
-
   let __port=6000+${DISPLAY#*:}
   __ip=${DISPLAY%%:*}
   if [ ! -z $__ip ]; then
-    if nc -nzvw3 $__ip $__port > /dev/null 2>&1; then
+    if nc -zvw3 $__ip $__port > /dev/null 2>&1; then
       echo "Success connecting to X server at $__ip:$__port"
     else
       echo "Could not connect to X server at $__ip:$__port"
@@ -69,10 +59,8 @@ function start_hnn {
 
   TRAVIS_TESTING=$TRAVIS_TESTING python3 hnn.py
   if [[ "$?" -ne "0" ]]; then
-    echo "***************************************************"
     echo "HNN failed to start GUI using DISPLAY=$DISPLAY"
-    echo "***************************************************"
-    echo
+    false
     return
   else
     echo "HNN GUI stopped by user."

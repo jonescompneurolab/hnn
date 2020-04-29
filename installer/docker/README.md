@@ -22,7 +22,7 @@ The BUILD_DATE argument is important to build the container with the latest HNN 
 Optional arguments are SOURCE_BRANCH and SOURCE_REPO. If they are not specified, the image will be build from source at 'https://github.com/jonescompneurolab/hnn' on branch 'master'
 
 ```bash
-docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master SOURCE_REPO="https://github.com/jonescompneurolab/hnn" --build-arg BUILD_DATE=$(date +%s) installer/docker
+docker build --tag jonescompneurolab/hnn --build-arg SOURCE_BRANCH=master --build-arg SOURCE_REPO="https://github.com/jonescompneurolab/hnn" --build-arg BUILD_DATE=$(date +%s) installer/docker
 ```
 
 ## Running HNN container without docker-compose
