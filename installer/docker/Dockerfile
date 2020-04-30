@@ -20,7 +20,8 @@ RUN apt-get update && \
     apt-get clean
 
 # base prerequisites packages
-RUN apt-get install --no-install-recommends -y \
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
         python3-pip python3-setuptools openssh-server openmpi-bin lsof netcat xauth && \
     apt-get clean
 
@@ -45,6 +46,7 @@ USER hnn_user
 # get HNN python dependencies
 # python3-dev and gcc needed for building psutil
 RUN sudo pip3 install --no-cache-dir --upgrade pip && \
+    sudo apt-get update && \
     sudo apt-get install --no-install-recommends -y \
         gcc python3-dev && \
     sudo pip install --no-cache-dir matplotlib PyOpenGL \
@@ -82,7 +84,8 @@ RUN sudo dpkg -i /tmp/nrn.deb && \
     sudo rm -f /tmp/nrn.deb
 
 # install HNN
-RUN sudo apt-get install --no-install-recommends -y \
+RUN sudo apt-get update && \
+    sudo apt-get install --no-install-recommends -y \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
         libx11-dev libreadline-dev && \
     git clone ${SOURCE_REPO} \
@@ -97,7 +100,8 @@ RUN sudo apt-get install --no-install-recommends -y \
     sudo apt-get clean
 
 # NEURON runtime prerequisites
-RUN sudo apt-get install --no-install-recommends -y \
+RUN sudo apt-get update && \
+    sudo apt-get install --no-install-recommends -y \
         libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev && \
     sudo apt-get clean
 

@@ -97,10 +97,6 @@ before_install:
     export LOGFILE="hnn_travis.log"
     set_globals
 
-    function mac_timeout {
-      perl -e 'alarm shift; exec @ARGV' "$@"
-    }
-
     function sha256sum {
       shasum -a 256 "$@"
     }
@@ -123,7 +119,7 @@ before_install:
       fi
     }
 
-    export -f mac_timeout sha256sum cleanup
+    export -f sha256sum cleanup
 
     export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
     export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
