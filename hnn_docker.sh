@@ -10,7 +10,7 @@
   cleanup 1
 }
 
-source scripts/utils.sh
+source scripts/docker_functions.sh
 export LOGFILE="$(pwd)/hnn_docker.log"
 set_globals
 
@@ -54,7 +54,7 @@ else
   DOCKER_TOOLBOX=0
 fi
 
-find_program_print docker
+find_program_print docker || cleanup 1
 # ${docker_cmd} is set
 
 check_docker_working_print
@@ -76,11 +76,6 @@ if [[ $? -ne "0" ]]; then
     cleanup 1
   fi
 fi
-
-find_program_print docker-compose && find_compose_location || {
-  cleanup 1
-}
-# ${docker_compose_cmd}, DOCKER_COMPOSE_FILE, and DOCKER_COMPOSE_DIR are set now
 
 if [[ $UPGRADE -eq "1" ]]; then
   retry_docker_pull
@@ -167,13 +162,13 @@ elif [[ "$OS" =~ "mac" ]]; then
 
   # macOS will sometimes have a system X11 (before high sierra), so try it first
   # However, it is unlikely to work, so fall back to the XQuartz version
-  find_program_print "xauth" && check_xauth_bin_print
+  find_program_print "xauth" && check_xauth_cmd_print
   if [[ $? -ne "0" ]]; then
     if [[ "$OS" =~ "mac" ]]; then
       if [[ ! "${xauth_cmd}" =~ "/opt/X11/bin/xauth" ]] &&
         [[ -f "/opt/X11/bin/xauth" ]]; then
         export xauth_cmd=/opt/X11/bin/xauth
-        check_xauth_bin_print
+        check_xauth_cmd_print
         if [[ $? -ne "0" ]]; then
           cleanup 2
         fi
@@ -185,7 +180,7 @@ elif [[ "$OS" =~ "mac" ]]; then
     fi
   fi
 elif [[ "$OS" =~ "linux" ]]; then
-  find_program_print "xauth" && check_xauth_bin_print
+  find_program_print "xauth" && check_xauth_cmd_print
   if [[ $? -ne "0" ]]; then
     cleanup 2
   fi
@@ -241,6 +236,11 @@ if [[ $USE_SSH -eq 1 ]]; then
   fi
 fi
 
+check_hnn_out_perms_host
+if [[ $? -ne "0" ]]; then
+  create_hnn_out_fail
+fi
+
 echo | tee -a "$LOGFILE"
 echo "Starting HNN" | tee -a "$LOGFILE"
 echo "--------------------------------------" | tee -a "$LOGFILE"
@@ -259,21 +259,25 @@ if [[ $? -eq "0" ]]; then
     echo "not found" | tee -a "$LOGFILE"
   fi
 else
-  # container doesn't exist, so go ahead and create it
-  create_container_fail
   ALREADY_RUNNING=0
+
+  if [[ $TRAVIS_TESTING -eq 1 ]]; then
+    # The reason for this separation is to use the retry mechanism in retry_docker_pull since
+    # qemu virtualized docker on Travis with docker toolbox is slow and prone to failures.
+    retry_docker_pull
+    if [[ $? -ne "0" ]]; then
+      cleanup 2
+    fi
+  fi
 fi
-# Container exists if not TRAVIS_TESTING=1. If TRAVIS_TESTING=1, the image has just been pulled.
-# The reason for this separation is to use the retry mechanism in retry_docker_pull since
-# qemu virtualized docker on Travis with docker toolbox is slow and prone to failures.
 
 if [[ $ALREADY_RUNNING -eq 0 ]]; then
   # start the container
-  docker_compose_up_print
+  docker_run_print
   if [[ $? -ne 0 ]]; then
     RETRY=1
     # try starting again
-    docker_compose_up_print
+    docker_run_print
     if [[ $? -ne 0 ]]; then
       cleanup 2
     fi
@@ -283,18 +287,20 @@ if [[ $ALREADY_RUNNING -eq 0 ]]; then
   # Workaround because in the qemu docker-machine (used with mac and windows).
   # volume mounts don't work (hnn_out and hnn_source_code).
   if [[ $TRAVIS_TESTING -eq 1 ]] && [[ ! "$OS" =~ "linux" ]]; then
-    prepare_user_volumes_fail
+    copy_hnn_source_fail
   fi
 fi
 
-check_x_port_container_fail
-# could open port
+if [[ $TRAVIS_TESTING -eq 0 ]] || [[ ! "$OS" =~ "windows" ]]; then
+  check_x_port_container_fail
+  # could open port
+
+  check_hnn_out_perms_container_fail
+  # can read/write to hnn_out directory
+fi
 
 setup_xauthority_in_container_fail
 # xauth is good
-
-check_hnn_out_perms_fail
-# can read/write to hnn_out directory
 
 if [[ $USE_SSH -eq 0 ]]; then
   # start the GUI without SSH
@@ -305,6 +311,10 @@ if [[ $USE_SSH -eq 0 ]]; then
     cleanup 2
   fi
 else
+  if [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" =~ "windows" ]]; then
+    echo "SSH mode not supported with windows containers"
+    cleanup 2
+  fi
   if [[ $ALREADY_RUNNING -eq 0 ]]; then
     # need to start sshd
     start_check_container_sshd_fail
@@ -335,7 +345,7 @@ else
 fi
 
 if [[ $TRAVIS_TESTING -eq 1 ]]; then
-  echo "Testing mode: exited succesfully" | tee -a "$LOGFILE"
+  echo "Testing mode: "/home/$TEST_USER/hnn/hnn_docker.log"" | tee -a "$LOGFILE"
 fi
 
 ## DONE! all successful cases reach here
