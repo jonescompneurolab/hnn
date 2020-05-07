@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM mcr.microsoft.com/windows/servercore:1909
 
 # SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 SHELL ["cmd", "/S", "/C"]
@@ -38,7 +38,8 @@ RUN powershell -executionpolicy bypass -File "C:\home\hnn_user\Downloads\hnn.ps1
     del home\hnn_user\Downloads\*.* /Q
 
 RUN cd home\hnn_user && \
-    move /y hnn hnn_source_code
+    move /y hnn hnn_source_code && \
+    mkdir .ssh
 
 WORKDIR /home/hnn_user/hnn_source_code
 
