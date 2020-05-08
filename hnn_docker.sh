@@ -179,7 +179,7 @@ elif [[ "$OS" =~ "mac" ]]; then
       cleanup 2
     fi
   fi
-elif [[ "$OS" =~ "linux" ]]; then
+else  # linux and wsl
   find_program_print "xauth" && check_xauth_cmd_print
   if [[ $? -ne "0" ]]; then
     cleanup 2
@@ -218,8 +218,8 @@ if [[ -n $KEYS_TO_CONVERT ]]; then
   print_header_message "Updating xauth keys for use with docker... "
   # this command is too complicated to try to wrap in a function... quoting all variables
   echo -e "\n  ** Command: \"${xauth_cmd}\" nlist $DISPLAY | sed -e 's/^..../ffff/' | \"${xauth_cmd}\" -f \"$XAUTHORITY\" -b -i nmerge -" >> "$LOGFILE"
-  echo -n "  ** Output: " >> "$LOGFILE"
-  "${xauth_cmd}" nlist "$DISPLAY" | sed -e 's/^..../ffff/' | "${xauth_cmd}" -f "$XAUTHORITY" -b -i nmerge - >> "$LOGFILE" 2>&1
+  echo -n "  ** Stderr: " >> "$LOGFILE"
+  "${xauth_cmd}" nlist "$DISPLAY" 2>> "$LOGFILE" | sed -e 's/^..../ffff/' | "${xauth_cmd}" -f "$XAUTHORITY" -b -i nmerge - 2>> "$LOGFILE"
   if [[ "$?" -ne "0" ]] || [[ -f "${XAUTHORITY}-n" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     rm -f "${XAUTHORITY}-n"
@@ -291,7 +291,7 @@ if [[ $ALREADY_RUNNING -eq 0 ]]; then
   fi
 fi
 
-if [[ $TRAVIS_TESTING -eq 0 ]] || [[ ! "$OS" =~ "windows" ]]; then
+if [[ $TRAVIS_TESTING -eq 0 ]] || ([[ ! "$OS" =~ "windows" ]] && [[ ! "$OS" =~ "wsl" ]]); then
   check_x_port_container_fail
   # could open port
 
@@ -311,7 +311,7 @@ if [[ $USE_SSH -eq 0 ]]; then
     cleanup 2
   fi
 else
-  if [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" =~ "windows" ]]; then
+  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
     echo "SSH mode not supported with windows containers"
     cleanup 2
   fi
