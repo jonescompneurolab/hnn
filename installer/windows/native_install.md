@@ -12,10 +12,6 @@ A [PowerShell install script](hnn.ps1) will manage downloading all prerequisites
 - Windows 7 or later. Windows Vista is not supported for lack of multiprocessing support.
 - PowerShell version 1.0 or later. If PowerShell is not installed, please follow [this link](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell) for downloading and running the PowerShell installer.
 
-## Prerequisite: Microsoft MPI
-
-1. Download Microsoft MPI (msmpisetup.exe) from [this link](https://msdn.microsoft.com/en-us/library/bb524831.aspx) and save it to the user's Downloads folder (C:\Users\\[MY_USERNAME]\Downloads).
-
 ## Run install script
 
 The PowerShell script used below will create a new directory called "hnn" in the place where the command is run from. If you have already cloned a copy of the HNN source code, you can avoid creating this new directory by running the script within the existing source code directory (using the third option below).

@@ -352,15 +352,11 @@ else {
 $program = "Microsoft MPI"
 if (!(Test-Installed($program))) {
   $file = "msmpisetup.exe"
+  $url = "https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/$file"
+  Download-Program $program $file $url
+  Write-Host "Installing Microsoft MPI..."
   $dst = "$HOME\Downloads\$file"
-  if (Test-Path $dst) {
-    Write-Host "Installing Microsoft MPI..."
-    & "$dst" "-unattend"
-  }
-  else {
-    Write-Warning "$file not found at $dst"
-    return
-  }
+  & "$dst" "-unattend"
 }
 else {
   Write-Host "$program already installed"
