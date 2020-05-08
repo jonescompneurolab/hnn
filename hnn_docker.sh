@@ -260,15 +260,6 @@ if [[ $? -eq "0" ]]; then
   fi
 else
   ALREADY_RUNNING=0
-
-  if [[ $TRAVIS_TESTING -eq 1 ]]; then
-    # The reason for this separation is to use the retry mechanism in retry_docker_pull since
-    # qemu virtualized docker on Travis with docker toolbox is slow and prone to failures.
-    retry_docker_pull
-    if [[ $? -ne "0" ]]; then
-      cleanup 2
-    fi
-  fi
 fi
 
 if [[ $ALREADY_RUNNING -eq 0 ]]; then
