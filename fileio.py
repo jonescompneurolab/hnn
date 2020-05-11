@@ -118,8 +118,7 @@ class SimulationPaths ():
   def create_datadir (self):
     dout = self.__simdir()
     print('making dout:',dout)
-    if not safemkdir(dout):
-      print("ERR: could not create output dir",dout)
+    safemkdir(dout)
 
   # extern function to create directories
   def create_dirs (self):
@@ -355,7 +354,7 @@ def safemkdir (dn):
     pass
   except OSError:
     print('ERR: incorrect permissions for creating', dn)
-    return False
+    raise
 
   return True
 
