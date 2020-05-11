@@ -1,4 +1,3 @@
-export PYTHONPATH=/usr/local/nrn/lib/python
 export OMPI_MCA_mpi_warn_on_fork=0
 export OMPI_MCA_btl_openib_allow_ib=1
 export OMPI_MCA_btl_vader_single_copy_mechanism=none
