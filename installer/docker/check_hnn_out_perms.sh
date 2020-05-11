@@ -13,11 +13,11 @@ for dir in "${SYSTEM_USER_DIR}/hnn_out" "${SYSTEM_USER_DIR}/hnn_out/data" "${SYS
     mkdir "$dir"
   fi
   if [[ $? -ne 0 ]]; then
-    echo "failed"
-    echo "Error: $dir has incorrect permissions or could not create $dir. Can't start HNN."
+    echo "*failed*"
+    echo "Error: $dir has incorrect permissions or could not create $dir. Output from ls -l:"
     ls -ld "$dir"
     exit 1
   fi
 done
 
-echo "ok"
+echo "done"
