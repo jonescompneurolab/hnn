@@ -1,10 +1,8 @@
 # HNN native install (Windows)
 
-This method will run HNN without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. However, the procedure is a set of steps that the user must follow, and there is a possibility that differences in the base environment may require additional troubleshooting. Thus, it is best suited for advanced users. For the recommended Docker-based installation please see the instructions below.
+This method will run HNN without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. However, there is a possibility that differences in the base environment may require additional troubleshooting. Thus, it is best suited for advanced users, and we recommend the [Docker-based install instructions](README.md).
 
-- Alternative: [Docker install instructions](README.md)
-
-A [PowerShell install script](hnn.ps1) will manage downloading all prerequisites except Microsoft MPI which requires a web browser to download. If the script finds msmpisetup.exe in the Downloads folder, it will take care of installing it.
+With this method, a [PowerShell install script](hnn.ps1) will manage downloading all prerequisites, including Python (Anaconda), NEURON, and Git for Windows.
 
 ## Requirements
 
@@ -18,6 +16,15 @@ The PowerShell script used below will create a new directory called "hnn" in the
 
 1. Run the script from a cmd prompt:
 
+    From a local copy (already checked out with git):
+
+    ```powershell
+    cd hnn
+    powershell.exe -ExecutionPolicy Bypass -File .\installer\windows\hnn.ps1
+    ```
+
+    OR to download and run the script from a url:
+
     ```powershell
     @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))"
     ```
@@ -28,18 +35,11 @@ The PowerShell script used below will create a new directory called "hnn" in the
     Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))
     ```
 
-    OR from a local copy (already checked out with git):
-
-    ```powershell
-    cd hnn
-    powershell.exe -ExecutionPolicy Bypass -File .\installer\windows\hnn.ps1
-    ```
-
    - There will be a permission prompt to install Microsoft MPI and a couple of terminal windows will
 open up. There will be a prompt for pressing ENTER after nrnmech.dll has been built
    - If an existing Python 3.X installation isn't found, you should expect that installation will pause for ~5min while installing Miniconda
 
-2. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. Open up a new cmd.exe window (not PowerShell) for the environment variables to get set in the session.
+2. After the script has completed, instructions will be displayed for using the environment either with virtualenv or Miniconda. **Open up a new cmd.exe window (not PowerShell)**.
 3. Run:
 
     ```powershell
@@ -70,8 +70,8 @@ Python not available
 This issue occurs after a particular Windows update is applied that inserts a non-functional alias for Python into the PATH environment variable before the functional version we installed. Since these are non-functional aliases, it is fine to remove them. HNN will then be able to locate the correct Python executable.
 
 ```powershell
-rm c:\Users\[USERNAME]\AppData\Local\Microsoft\WindowsApps\python.exe
-rm c:\Users\[USERNAME]\AppData\Local\Microsoft\WindowsApps\python3.exe
+rm $HOME\AppData\Local\Microsoft\WindowsApps\python.exe
+rm $HOME\AppData\Local\Microsoft\WindowsApps\python3.exe
 ```
 
 ### Other issues

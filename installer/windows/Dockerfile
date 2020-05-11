@@ -6,42 +6,42 @@ ADD https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.8.1/vcxsrv-64.1
 RUN vcxsrv-installer.exe /S && \
     erase vcxsrv-installer.exe
 
-ENV DISPLAY "host.docker.internal:0"
+RUN reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" /t REG_EXPAND_SZ /v ProfilesDirectory /d %SystemDrive%\home /f && \
+    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /t REG_DWORD /v UseWUServer /d 0 /f && \
+    echo > "C:\test_user_creds" && \
+    net user /add hnn_user /homedir:C:\home\hnn_user /profilepath:C:\home\hnn_user < "C:\test_user_creds" && \
+    erase C:\test_user_creds
+    # powershell -Command "Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0" ; \
+    # powershell -Command "Set-Service -Name sshd -StartupType 'Automatic'"
 
-RUN reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" /t REG_EXPAND_SZ /v ProfilesDirectory /d %SystemDrive%\home /f
-
-RUN echo > "/test_user_creds"
-RUN net user /add hnn_user /homedir:C:\home\hnn_user /profilepath:C:\home\hnn_user < "/test_user_creds"
-RUN net localgroup Administrators hnn_user /add
+# MSMPI require Administrator privileges
+RUN powershell -command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe', 'C:\msmpisetup.exe')" && \
+    C:\msmpisetup.exe -unattend && \
+    del C:\msmpisetup.exe /Q
 
 USER hnn_user
 
-# run a command to create user dir
-RUN erase "C:\test_user_creds"
+RUN whoami
 
-ADD hnn.ps1 /home/hnn_user/Downloads/
+COPY installer/docker/QtProject.conf /home/hnn_user/.config/
+COPY installer/docker/hnn_envs /home/hnn_user
+COPY installer/docker/start_hnn.sh /home/hnn_user
+COPY installer/docker/check_hnn_out_perms.sh /home/hnn_user
 
+ADD installer/windows/hnn.ps1 /home/hnn_user/Downloads/
 RUN powershell -executionpolicy bypass -File "C:\home\hnn_user\Downloads\hnn.ps1" && \
-    "C:\home\hnn_user\Miniconda3\Scripts\conda" clean -y -a && \
+    powershell -Command "$env:PATH = 'C:\home\hnn_user\AppData\Local\Programs\Git\bin;' + $env:PATH + \
+';"C:\Program Files\VcXsrv";C:\home\hnn_user\Miniconda3\Scripts;C:\home\hnn_user\Miniconda3\envs\hnn;' + \
+'C:\home\hnn_user\Miniconda3\envs\hnn\Scripts;C:\home\hnn_user\Miniconda3\envs\hnn\Library\bin' ; \
+[Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::User)" && \
+    C:\home\hnn_user\Miniconda3\Scripts\conda clean -y -a && \
     del home\hnn_user\Downloads\*.* /Q
 
-ADD "http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20161025.tar.xz" msys2.tar.xy
+RUN cd home\hnn_user && \
+    move /y hnn hnn_source_code
 
-RUN powershell -Command "Install-Package -Scope CurrentUser -Force 7Zip4Powershell" \
-    && powershell -Command "Expand-7zip msys2.tar.xy ." \
-    && powershell -Command "Expand-7zip msys2.tar C:\\" \
-    && erase "C:\msys2.tar"
-
-COPY QtProject.conf /home/hnn_user/.config/
-COPY QtProject.conf /.config/
-COPY start_hnn.sh /home/hnn_user
-COPY hnn_envs /home/hnn_user
-
-RUN powershell -Command "$env:PATH = 'C:\msys64\usr\bin;"C:\Program Files\VcXsrv";' + $env:PATH; \
-[Environment]::SetEnvironmentVariable('PATH', $env:PATH, [EnvironmentVariableTarget]::Machine)"
-
-WORKDIR /home/hnn_user/
-ENV HOME /c/home/hnn_user
+WORKDIR /home/hnn_user/hnn_source_code
 
 SHELL ["bash", "--login"]
+ENV HOME /c/home/hnn_user
 CMD ["bash", "-c", "sleep infinity"]

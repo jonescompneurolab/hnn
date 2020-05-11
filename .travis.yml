@@ -209,6 +209,8 @@ script:
   - echo "Testing GUI on host OS" && $PYTHON hnn.py
   - |
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
+      find "$HOME/hnn_out" -type d -exec chmod 777 {} \; && \
+        find "$HOME/hnn_out" -type f -exec chmod 666 {} \;
       echo "Waiting on docker build:"
       cat docker_build.txt
       while ! cat docker_build.txt|grep "Successfully built"; do

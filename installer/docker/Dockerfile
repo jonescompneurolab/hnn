@@ -1,7 +1,5 @@
 FROM caldweba/opengl-docker
 
-EXPOSE 22
-
 # avoid questions from debconf
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -25,24 +23,6 @@ RUN apt-get update && \
         python3-pip python3-setuptools openssh-server openmpi-bin lsof netcat xauth && \
     apt-get clean
 
-COPY date_base_install.sh /usr/local/bin
-RUN chmod +x /usr/local/bin/date_base_install.sh && \
-    /usr/local/bin/date_base_install.sh
-
-RUN mkdir /var/run/sshd
-
-# SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY XAUTHORITY SYSTEM_USER_DIR TRAVIS_TESTING/' -i /etc/ssh/sshd_config
-
-# if users open up a shell, they should go to the hnn repo checkout
-WORKDIR /home/hnn_user/hnn_source_code
-RUN chown -R hnn_user:hnn_group /home/hnn_user
-
-CMD sleep infinity
-
-USER hnn_user
-
 # get HNN python dependencies
 # python3-dev and gcc needed for building psutil
 RUN sudo pip3 install --no-cache-dir --upgrade pip && \
@@ -56,11 +36,34 @@ RUN sudo pip3 install --no-cache-dir --upgrade pip && \
     sudo apt-get autoremove -y --purge && \
     sudo apt-get clean
 
-RUN mkdir /home/hnn_user/hnn_out \
-          /home/hnn_user/.ssh
+COPY date_base_install.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/date_base_install.sh && \
+    /usr/local/bin/date_base_install.sh
+
+RUN mkdir /var/run/sshd
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN sed 's/AcceptEnv.*/AcceptEnv LANG LC_* DISPLAY XAUTHORITY SYSTEM_USER_DIR TRAVIS_TESTING/' -i /etc/ssh/sshd_config
+
+# if users open up a shell, they should go to the hnn repo checkout
+ENV HOME /home/hnn_user
+WORKDIR $HOME/hnn_source_code
+RUN chown -R hnn_user:hnn_group $HOME
+
+CMD sleep infinity
+
+USER hnn_user
+
+RUN mkdir $HOME/.ssh
+
+# get rid of warning about XDG_RUNTIME_DIR
+ENV XDG_RUNTIME_DIR=/tmp/runtime-hnn_user
+RUN mkdir /tmp/runtime-hnn_user && \
+    chmod 700 /tmp/runtime-hnn_user
 
 # use environment variables from hnn_envs
-RUN echo 'source /home/hnn_user/hnn_envs' >> ~/.bashrc
+RUN echo "source $HOME/hnn_envs" >> ~/.bashrc
 
 # run sudo to get rid of message on first login about using sudo
 RUN sudo -l
@@ -90,8 +93,8 @@ RUN sudo apt-get update && \
         libx11-dev libreadline-dev && \
     git clone ${SOURCE_REPO} \
       --depth 1 --single-branch --branch $SOURCE_BRANCH \
-      /home/hnn_user/hnn_source_code && \
-    cd /home/hnn_user/hnn_source_code && \
+      $HOME/hnn_source_code && \
+    cd $HOME/hnn_source_code && \
     make && \
     sudo apt-get -y remove --purge \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
@@ -105,20 +108,16 @@ RUN sudo apt-get update && \
         libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev && \
     sudo apt-get clean
 
-COPY QtProject.conf /home/hnn_user/.config/
-COPY QtProject.conf /.config/
-COPY check_hnn_out_perms.sh /home/hnn_user/
-COPY start_hnn.sh /home/hnn_user/
-COPY hnn_envs /home/hnn_user/
+COPY QtProject.conf $HOME/.config/
+COPY check_hnn_out_perms.sh $HOME/
+COPY start_hnn.sh $HOME/
+COPY hnn_envs $HOME
 COPY start_ssh.sh /
 COPY check_sshd_port.sh /
 COPY check_x_port.sh /
 
-RUN sudo chown -R hnn_user:hnn_group /home/hnn_user/ && \
-    sudo chmod +x /home/hnn_user/start_hnn.sh /home/hnn_user/check_hnn_out_perms.sh && \
+RUN sudo chown -R hnn_user:hnn_group $HOME && \
+    sudo chmod +x $HOME/start_hnn.sh $HOME/check_hnn_out_perms.sh && \
     sudo chmod +x /check_sshd_port.sh /start_ssh.sh /check_x_port.sh && \
     sudo chown root:root /check_sshd_port.sh /start_ssh.sh /check_x_port.sh && \
-    sudo chmod ugo+rw /.config/QtProject.conf && \
-    sudo chmod ugo+rwx /.config/
-
-USER root
+    sudo chmod 666 $HOME/.config/QtProject.conf

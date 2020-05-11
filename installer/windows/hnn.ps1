@@ -9,9 +9,6 @@ Additionally the following will be installed if they are not found:
  - nrn-7.7.w64-mingwsetup.exe
  - Git-2.13.0-64-bit.exe
 
-HNN requires Microsoft MPI and this script cannot download msmpisetup.exe without a browser,
-so it expects msmpisetup.exe to be present in the $HOME\Downloads directory
-
 Other requirements:
  - Only 64-bit installs are supported due to NEURON compatibility
  - Windows 7 or greater is required for multi-processing support
@@ -364,9 +361,13 @@ else {
 
 # Would be best to get install directory from git but this has
 # no lasting effect and was necessary to proceed
-$GitPath = "$env:ProgramFiles\Git\cmd"
-if (Test-Path "$GitPath\git.exe" -PathType Leaf) {
-  $Env:path += ";$GitPath"
+if (Test-Path "$env:ProgramFiles\Git\bin\git.exe" -PathType Leaf) {
+  $Env:path += ";$env:ProgramFiles\bin"
+  Update-User-Paths("$env:ProgramFiles\bin")
+}
+elseif (Test-Path "$HOME\AppData\Local\Programs\Git\bin\git.exe" -PathType Leaf) {
+  $Env:path += ";$HOME\AppData\Local\Programs\Git\bin"
+  Update-User-Paths("$HOME\AppData\Local\Programs\Git\bin")
 }
 else {
   Write-Warning "Didn't find git binary at $GitPath\git"
@@ -377,14 +378,14 @@ else {
 $hnn_cloned = $false
 $cur_dir = Split-Path -Path $MyInvocation.MyCommand.Definition -parent
 $test_dir = Resolve-Path -Path "$cur_dir\..\..\..\hnn" 2> $null
-if ("$Env:TRAVIS" -eq "true") {
+if ("$Env:TRAVIS_TESTING" -eq "1") {
   Write-Host "Running in Travis CI. Not pulling from repo"
   $hnn_cloned = $true
   $HNN_PATH = (Get-Item -Path "$test_dir").FullName
 }
 elseif (($null -ne $test_dir) -and
    (Test-Path -Path "$test_dir\.git")) {
-    Write-Host "TRAVIS = $Env:TRAVIS"
+    Write-Host "TRAVIS = $Env:TRAVIS_TESTING"
   # use the already existing repo.
   # hnn will not be cloned
   $HNN_PATH = (Get-Item -Path "$test_dir").FullName
