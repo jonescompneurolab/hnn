@@ -2353,6 +2353,11 @@ function get_docker_container_type {
     echo "$CONTAINER_TYPE" | tee -a "$LOGFILE"
   fi
 
+  if [[ "$CONTAINER_TYPE" == "windows" ]] && [[ "$OS" == "wsl" ]]; then
+    echo "** Windows containers not supported in WSL. Use Linux containers. **" | tee -a "$LOGFILE"
+    cleanup 1
+  fi
+
   export CONTAINER_TYPE
 }
 

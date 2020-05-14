@@ -50,11 +50,10 @@ function wait_for_pid {
 }
 
 function script_fail {
-  # This function is specific to .travis.yml. always use hnn_docker.log and not
-  # $LOGFILE
+  check_var LOGFILE
 
   echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
-  cat hnn_docker.log
+  cat "$LOGFILE"
   exit 2
 }
 
