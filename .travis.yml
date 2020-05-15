@@ -274,17 +274,8 @@ script:
       if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
         find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \
           start_vcxsrv_print || script_fail
-        echo "Testing GUI on WSL..."
-        wsl -- DISPLAY=:0 python3 hnn.py || exit $?
-        echo "Building HNN in WSL..."
-        wsl -- bash -ec "cd /mnt/c/users/travis/build/jonescompneurolab/hnn && make clean && make -j2" || exit $?
-        echo "Running Python tests in WSL..."
-        wsl -- bash -ec "cd /mnt/c/users/travis/build/jonescompneurolab/hnn && DISPLAY=:0 py.test tests/" || exit $?
-        echo "Testing MPI in WSL..."
-        wsl -- bash -ec "cd /mnt/c/users/travis/build/jonescompneurolab/hnn/ && \
-                        source installer/docker/hnn_envs && \
-                        mpiexec --allow-run-as-root -np 2 nrniv -mpi -python run.py" || exit $?
-        stop_vcxsrv
+        wsl -- //home/hnn_user/hnn/scripts/run-travis-wsl.sh
+        stop_vcxsrv || script_fail
       else
         echo "Testing MPI in docker..."
         if [[ "$CONTAINER_TYPE" == "linux" ]]; then

@@ -34,7 +34,7 @@ function cleanup {
 export -f cleanup
 
 echo "Installing Ubuntu WSL..."
-powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup-wsl.ps1 &
+powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup-travis-wsl.ps1 &
 WSL_PID=$!
 
 # prepare for installing msys2
@@ -110,6 +110,9 @@ $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa
 
 echo "Downloading python test packages..."
 pip download flake8 pytest pytest-cov coverage coveralls mne
+
+echo "Downloading python test packages in WSL (command may fail)..."
+wsl -- pip download flake8 pytest pytest-cov coverage coveralls mne || true
 
 echo "Waiting for WSL install to finish..."
 NAME="installing WSL"
