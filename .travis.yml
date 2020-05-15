@@ -2,10 +2,56 @@ language: c
 
 matrix:
   include:
+      # OSX
+      - os: osx
+        name: "MacOS sierra"
+        osx_image: xcode9.2
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - HOMEBREW_QEMU=1
+          - HOMEBREW_SDKROOT=
+
+      - os: osx
+        name: "MacOS el capitan"
+        osx_image: xcode8
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - BREW_UNTAP=1
+          - HOMEBREW_QEMU=1
+          - HOMEBREW_SDKROOT=
+
+      - os: osx
+        name: "MacOS mojave"
+        osx_image: xcode11.3
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+
+      - os: osx
+        name: "MacOS high sierra"
+        osx_image: xcode10.1
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - BUILD_QEMU=1
+
+      # Windows
+      - os: windows
+        name: "Windows"
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+
       # Linux
       - os: linux
-        dist: disco
-        name: "Ubuntu disco"
+        dist: xenial
+        name: "Ubuntu xenial"
         env:
           - NEURON_VERSION=7.7
         services:
@@ -30,8 +76,8 @@ matrix:
             - xvfb
 
       - os: linux
-        dist: xenial
-        name: "Ubuntu xenial"
+        dist: disco
+        name: "Ubuntu disco"
         env:
           - NEURON_VERSION=7.7
         services:
@@ -42,96 +88,36 @@ matrix:
           packages:
             - xvfb
 
-      # OSX
-      - os: osx
-        name: "MacOS mojave"
-        osx_image: xcode11.3
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-
-      - os: osx
-        name: "MacOS high sierra"
-        osx_image: xcode10.1
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - BUILD_QEMU=1
-
-      - os: osx
-        name: "MacOS sierra"
-        osx_image: xcode9.2
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - HOMEBREW_QEMU=1
-          - HOMEBREW_SDKROOT=
-
-      - os: osx
-        name: "MacOS el capitan"
-        osx_image: xcode8
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - BREW_UNTAP=1
-          - HOMEBREW_QEMU=1
-          - HOMEBREW_SDKROOT=
-
-      # Windows
-      - os: windows
-        name: "Windows"
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
 
 before_install:
-  - set -e
-  - |
+  - set -e  # error on any command failure
+  - | # function exports
     export TRAVIS_TESTING=1
 
-    source scripts/utils.sh
-    source scripts/docker_functions.sh
+    # source utility functions
     export LOGFILE="hnn_travis.log"
-    set_globals
-
-    # override cleanup function in docker_functions.sh
-    function cleanup {
-      check_var LOGFILE
-
-      local __failed
-
-      __failed=$1
-
-      echo -e "\n=====================" >> $LOGFILE
-      echo "cleanup() called from: ${FUNCNAME[1]} (L:${BASH_LINENO[0]})" >> $LOGFILE
-
-      if [[ $__failed -ne "0" ]]; then
-        echo -e "\n======================================"
-        echo "Error: Please see log output for more details"
-        cat $LOGFILE
-        return $__failed
-      fi
-    }
-
+    source scripts/docker_functions.sh
+    source scripts/utils.sh
     export -f cleanup
 
-    export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
-    export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
-                          --disable-pie --disable-libusb --disable-hax --disable-kvm \
-                          --disable-debug-info --disable-docs --disable-nettle \
-                          --disable-sparse --disable-guest-agent --disable-qom-cast-debug \
-                          --disable-lzo --disable-bzip2 --disable-fdt \
-                          --disable-tpm --disable-replication --disable-modules --disable-blobs \
-                          --disable-gnutls --disable-vhost-crypto --disable-live-block-migration \
-                          --disable-user --disable-vhost-net"
+    # some functions require $docker_cmd and $CONTAINER_TYPE
+    set_globals
 
   - |
     if [ "${TRAVIS_OS_NAME}" == "osx" ]; then  # install osx prerequisites
+      echo "Installing macOS prerequisites"
+
       scripts/setup-travis-mac.sh
+      export PATH=${HOME}/miniconda/bin:$PATH
+      export PATH=$PATH:/Applications/NEURON-${NEURON_VERSION}/nrn/x86_64/bin
+      export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
+      export PATH=$PATH:/Applications/Docker.app/Contents/Resources/bin
+      export PYTHON=python3
+      eval "$(docker-machine env default)"
+
+      # check container type
+      find_program_print docker && export docker_cmd || script_fail
+      get_docker_container_type && export CONTAINER_TYPE || script_fail
 
       # set up DISPLAY and make sure that xquartz is ready
       check_xquartz_listening || {
@@ -141,17 +127,16 @@ before_install:
       # accept TCP connections in hnn_docker.sh later
       xset -display $DISPLAY -q > /dev/null
 
-      export PATH=${HOME}/miniconda/bin:$PATH
-      export PATH=$PATH:/Applications/NEURON-${NEURON_VERSION}/nrn/x86_64/bin
-      export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
-      export PATH=$PATH:/Applications/Docker.app/Contents/Resources/bin
-      export PYTHON=python3
-      eval "$(docker-machine env default)"
-
       source activate hnn && echo "activated conda HNN environment"
     fi
-  - |
-    if [ "${TRAVIS_OS_NAME}" == "windows" ]; then  # install windows prerequisites
+  - | # windows
+    if [ "${TRAVIS_OS_NAME}" == "windows" ]; then
+      echo "Installing windows prerequisites"
+
+      # check container type
+      find_program_print docker && export docker_cmd || script_fail
+      get_docker_container_type && export CONTAINER_TYPE || script_fail
+
       scripts/setup-travis-windows.sh
 
       # add miniconda python to the path
@@ -160,34 +145,55 @@ before_install:
       export PATH=$HOME/Miniconda3/envs/hnn/Scripts:$PATH
       export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
 
+      # for using X server
+      export PATH="$PATH:/c/Program\ Files/VcXsrv"
+
+      # for MESA dll's
+      export PATH=$PATH:/c/tools/msys64/mingw64/bin
+
+      # for sharing with WSL environment
+      export WSLENV=TRAVIS_TESTING/u
+
       # set other variables for neuron and HNN
       export PATH=$PATH:/c/nrn/bin
       export DISPLAY="localhost:0"
       export NEURONHOME=/c/nrn
       export PYTHON=python
     fi
-  - |
+  - | # Linux
     if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+      echo "Installing Linux prerequisites"
+
+      # check container type
+      find_program_print docker && export docker_cmd || script_fail
+      get_docker_container_type && export CONTAINER_TYPE || script_fail
+
       echo "Starting fake Xserver"
       Xvfb :0 -listen tcp -screen 0 1024x768x24 > /dev/null &
+
       export DISPLAY=:0
       export PATH=/usr/bin:/usr/local/bin:$PATH
+
       echo "Starting Ubuntu install script"
-      bash -xe ./installer/ubuntu/installer.sh
-      echo "Install finished"
+      installer/ubuntu/hnn-ubuntu.sh
+
       NLOPT_LIB=$(ls -d $HOME/.local/lib/python*/site-packages)
       echo $NLOPT_LIB
       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NLOPT_LIB
       export PYTHON=python3
+
+      # test X server
       xset -display $DISPLAY -q > /dev/null;
     fi
 
 install:
-  - if [[ ! "${TRAVIS_OS_NAME}" == "windows" ]]; then
-      make;
-    fi;
-  - |
+  - | # for mac build HNN .mod files
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      make -j2
+    fi
+  - | # start the docker image build on linux
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      make -j2
       if [[ "$TRAVIS_PULL_REQUEST" =~ "false" ]]; then
         SOURCE_REPO="https://github.com/${TRAVIS_REPO_SLUG}.git"
         SOURCE_BRANCH=$TRAVIS_BRANCH
@@ -202,16 +208,28 @@ install:
         --build-arg SOURCE_REPO=${SOURCE_REPO} \
         installer/docker > docker_build.txt 2>&1 || echo "Failed build" >> docker_build.txt) &
     fi
-  - pip install flake8 pytest pytest-cov coverage coveralls mne
+  - |
+    pip install flake8 pytest pytest-cov coverage coveralls mne &
+    PIP_PID=$!
+    if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+      wsl -- pip install flake8 pytest pytest-cov coverage coveralls mne
+    fi
+    echo "Waiting for pip installation to finish..."
+    NAME="installing python test prerequisites"
+    wait_for_pid "${PIP_PID}" "$NAME"
 
 script:
-  - echo "Running Python tests" && py.test tests/
-  - echo "Testing GUI on host OS" && $PYTHON hnn.py
-  - |
+  - | # Check that the GUI starts on host OS
+    echo "Testing GUI on host OS..."
+    $PYTHON hnn.py
+  - | # Run py.test that includes running a simulation and verifying results
+    echo "Running Python tests on host OS..."
+    py.test tests/
+  - | # wait for docker image to be fully loaded into docker daemon
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
       find "$HOME/hnn_out" -type d -exec chmod 777 {} \; && \
         find "$HOME/hnn_out" -type f -exec chmod 666 {} \;
-      echo "Waiting on docker build:"
+      echo "Waiting on docker build..."
       cat docker_build.txt
       while ! cat docker_build.txt|grep "Successfully built"; do
         if cat docker_build.txt|grep "Failed build"; then
@@ -223,36 +241,56 @@ script:
       done
       tail -1 docker_build.txt
     else
+      echo "Waiting for docker image to be loaded..."
       while ! test -e $HOME/docker_image_loaded; do
-        echo "Sleeping for 10s while waiting for docker image download to complete"
-        sleep 10
+        sleep 1
       done
     fi
-  - |
-    if [[ "${TRAVIS_OS_NAME}" = "windows" ]]; then
-      echo "Testing GUI in docker without ssh as user 'test user'"
+  - | # test HNN using Docker without SSH
+    echo "Testing GUI in docker without ssh..."
+    if [[ "${CONTAINER_TYPE}" = "windows" ]]; then
+      echo "Running as user 'test user'"
       powershell -executionpolicy bypass -File "scripts\start-test-as-user.ps1"
     else
-      echo "Testing GUI in docker without ssh"
       USE_SSH=0 ./hnn_docker.sh start || script_fail
     fi
-  - |
+  - | # Testing hnn_docker.sh upgrade command
+    echo "Testing hnn_docker.sh upgrade"
     if [[ "${TRAVIS_OS_NAME}" = "linux" ]]; then
-      echo "Testing MPI in docker"
-      make clean
-      # only run on linux because it's not virtualized through qemu
-      timeout 120 docker exec hnn_container bash -c "sudo apt-get install --no-install-recommends -y \
-        make gcc libc6-dev libtinfo-dev libncurses-dev libx11-dev libreadline-dev"
-      timeout 300 docker exec -u $UID:hnn_group hnn_container bash -c "make && source /home/hnn_user/hnn_envs && \
-        mpiexec -np 2 --oversubscribe nrniv -mpi -python run.py param/default.param && echo finished simulation" || { \
-          echo -e "\nMPI test failed\n"
-          docker ps -a | grep hnn_container
-          false
-        }
-      echo "Testing hnn_docker.sh upgrade" && ./hnn_docker.sh upgrade || script_fail
+      ./hnn_docker.sh upgrade || script_fail
+    else
+      echo "Skipping"
     fi
-  - |
-    if [[ ! "${TRAVIS_OS_NAME}" = "windows" ]]; then
-      echo "Testing GUI in docker with ssh" && USE_SSH=1 ./hnn_docker.sh start || script_fail
-      echo "Testing hnn_docker.sh uninstall command" && ./hnn_docker.sh uninstall || script_fail
+  - | # For linux containers (mac/windows/linux OS), start HNN with docker using ssh
+    if [[ ! "${CONTAINER_TYPE}" = "windows" ]]; then
+      echo "Testing GUI in docker with ssh"
+      USE_SSH=1 ./hnn_docker.sh start || script_fail
     fi
+  - | # test running a MPI simulation within container
+    if [[ $TRAVIS_OSX_IMAGE == "xcode8" ]] || [[ $TRAVIS_OSX_IMAGE == "xcode9.2" ]]; then
+      # tests on mac take a long time. sierra and el capitan are close to maximum build times
+      echo "Skipping"
+    else
+      if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+        find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \
+          start_vcxsrv_print || script_fail
+        wsl -- //home/hnn_user/hnn/scripts/run-travis-wsl.sh
+        stop_vcxsrv || script_fail
+      else
+        echo "Testing MPI in docker..."
+        if [[ "$CONTAINER_TYPE" == "linux" ]]; then
+          timeout 120 docker exec hnn_container bash -c "sudo apt-get install --no-install-recommends -y \
+            make gcc libc6-dev libtinfo-dev libncurses-dev libx11-dev libreadline-dev"
+          timeout 120 docker exec -u hnn_user hnn_container bash -c "make clean && make"
+        fi
+        timeout 300 docker exec -u hnn_user hnn_container bash -c "source /home/hnn_user/hnn_envs && \
+          mpiexec -np 2 nrniv -mpi -python run.py && echo finished simulation" || { \
+            echo -e "\nMPI test failed\n"
+            docker ps -a | grep hnn_container
+            false
+          } || script_fail
+      fi
+    fi
+  - | # Test hnn_docker.sh uninstall command
+    echo "Testing hnn_docker.sh uninstall command"
+    ./hnn_docker.sh uninstall || script_fail

@@ -8,7 +8,8 @@ source "$DIR/utils.sh"
 
 # we use find_program_print and retry_docker_pull from docker_functions.sh
 source "$DIR/docker_functions.sh"
-export LOGFILE="docker_setup.log"
+
+[[ $LOGFILE ]] || LOGFILE="hnn_travis.log"
 # docker_functions.sh expects some globals to be set
 set_globals
 
@@ -32,12 +33,17 @@ function cleanup {
 }
 export -f cleanup
 
-# start the docker pull in the background
-find_program_print docker
-(retry_docker_pull && touch $HOME/docker_image_loaded) &
+echo "Installing Ubuntu WSL..."
+powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup-travis-wsl.ps1 &
+WSL_PID=$!
+
+# prepare for installing msys2
+[[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+choco uninstall -y mingw
 
 # enable windows remoting service to log in as a different user to run tests
 powershell -Command 'Start-Service -Name WinRM' > /dev/null
+powershell -Command 'Start-Service -Name seclogon' > /dev/null
 
 # change settings to allow a blank password for TEST_USER
 reg add HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa //t REG_DWORD //v LimitBlankPasswordUse //d 0 //f 2>&1 > /dev/null
@@ -58,51 +64,56 @@ runas //user:"$TEST_USER" "cmd /C whoami" > /dev/null < "$HOME/test_user_creds"
 # copy hnn source to test user's home directory
 TEST_USER_DIR="/c/Users/$TEST_USER"
 if [ -d "$TEST_USER_DIR" ]; then
-  mkdir "$TEST_USER_DIR/hnn"
   cp -r "$(pwd)" "$TEST_USER_DIR/"
 else
   echo "No user home directory created at $TEST_USER_DIR"
   exit 2
 fi
 
-echo "Starting Windows install script..."
-powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1 &
-POWERSHELL_PID=$!
+echo "Installing Microsoft MPI"
+powershell -command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe', 'msmpisetup.exe')" && \
+    ./msmpisetup.exe -unattend && \
+    rm -f msmpisetup.exe
 
-echo "Waiting for Windows install script to finish..."
-NAME="installing HNN on host system"
-wait_for_pid "${POWERSHELL_PID}" "$NAME"
-
-URL="https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.8.1/vcxsrv-64.1.20.8.1.installer.exe"
-FILENAME="$HOME/vcxsrv-64.1.20.8.1.installer.exe"
-start_download "$FILENAME" "$URL" > /dev/null &
-VCXSRV_PID=$!
-
-# install msys2 to get opengl32.dll from mesa
-# this is needed to be able to start vcxsrv for docker tests
-[[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
-choco uninstall -y mingw
-
-# install vcxsrv for docker tests
-echo "Waiting for VcXsrv download to finish..."
-NAME="downloading VcXsrv"
-wait_for_pid "${VCXSRV_PID}" "$NAME"
+echo "Running HNN Windows install script..."
+powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn-windows.ps1
+# add miniconda python to the path
+export PATH=$PATH:$HOME/Miniconda3/Scripts
+export PATH=$HOME/Miniconda3/envs/hnn/:$PATH
+export PATH=$HOME/Miniconda3/envs/hnn/Scripts:$PATH
+export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
 
 echo "Installing msys2 with choco..."
-choco upgrade --no-progress -y msys2 &
-MSYS2_PID=$!
+choco upgrade --no-progress -y msys2 &> /dev/null
+
+# start the docker pull in the background
+echo "Starting to pull the docker image..."
+find_program_print docker
+((retry_docker_pull > /dev/null || script_fail) && touch $HOME/docker_image_loaded ) &
+
+echo "Downloading VcXsrv..."
+URL="https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.8.1/vcxsrv-64.1.20.8.1.installer.exe"
+FILENAME="$HOME/vcxsrv-64.1.20.8.1.installer.exe"
+start_download "$FILENAME" "$URL" > /dev/null
 
 echo "Installing VcXsrv..."
 cmd //c "$HOME/vcxsrv-64.1.20.8.1.installer.exe /S"
 
-echo "Waiting for msys2 installation to finish..."
-NAME="isntalling msys2"
-wait_for_pid "${MSYS2_PID}" "$NAME"
-
+# get opengl32.dll from mesa
+# this is needed to be able to start vcxsrv for docker tests
 export msys2='cmd //C RefreshEnv.cmd '
 export msys2+='& set MSYS=winsymlinks:nativestrict '
 export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
 export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
 export msys2+=" -msys2 -c "\"\$@"\" --"
-$msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa &
-# the command above will complete before the docker test begins
+$msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa
+
+echo "Downloading python test packages..."
+pip download flake8 pytest pytest-cov coverage coveralls mne
+
+echo "Downloading python test packages in WSL (command may fail)..."
+wsl -- pip download flake8 pytest pytest-cov coverage coveralls mne || true
+
+echo "Waiting for WSL install to finish..."
+NAME="installing WSL"
+wait_for_pid "${WSL_PID}" "$NAME" || script_fail

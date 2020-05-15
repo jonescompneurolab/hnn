@@ -38,6 +38,45 @@ function check_var {
   fi
 }
 
+function get_wsl_home_path {
+  # no arguments
+  check_var ESC_STR
+
+  local __command
+  local __index
+  local __arg
+  local __send_args
+  local __home
+
+  log_header_message "Getting path outside of WSL... "
+  __command=("powershell.exe" "\$env:HOME" "tr" "-d '\r'")
+  let __index=0
+  for __arg in "${__command[@]}"; do
+    __send_args[$__index]=$(echo $__arg|sed "s/ /$ESC_STR/g")
+    (( __index++ ))
+  done
+  __home=$(output_run_piped_command "${__send_args[@]}")
+  if [[ $? -ne 0 ]]; then
+    echo "*failed*" >> "$LOGFILE"
+    return 2
+  else
+    echo "done" >> "$LOGFILE"
+  fi
+
+  log_header_message "Turning into UNIX path... "
+  COMMAND=(3 "cygpath.exe" "-u" "$__home")
+  convert_COMMAND_to_escaped_array
+  __home=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+  if [[ $? -ne 0 ]]; then
+    echo "*failed*" >> "$LOGFILE"
+    return 2
+  else
+    echo "done" >> "$LOGFILE"
+  fi
+
+  echo "$__home"
+}
+
 function get_os {
   OS_OUTPUT=$(uname -a)
   if [[ $OS_OUTPUT =~ "MINGW" ]] || [[ $OS_OUTPUT =~ "MSYS" ]]; then
@@ -68,24 +107,31 @@ function set_globals {
   SSHD_STARTED=0
   NEW_XAUTH_KEYS=0
   ESC_STR="%^%"
-  OS=$(get_os)
-  __command_status=$?
-  if [[ $__command_status -ne 0 ]]; then
-    echo "Failed to get OS type" | tee -a "$LOGFILE"
-    exit $__command_status
-  fi
-
-  if [[ "$OS" == "wsl" ]]; then
-    echo "WSL is not supported yet"
-    # exit 1
-    set_local_display_from_port 0
-  fi
-  # if display hasn't been set yet, give it a default value for the OS
-  [[ "$DISPLAY" ]] || set_local_display_from_port 0
+  VCXSRV_PID=
 
   SSH_PRIVKEY="$(pwd)/installer/docker/id_rsa_hnn"
   SSH_PUBKEY="$(pwd)/installer/docker/id_rsa_hnn.pub"
   SSH_AUTHKEYS="$(pwd)/installer/docker/authorized_keys"
+
+  export USE_SSH UPGRADE STOP START RETRY UNINSTALL HNN_DOCKER_IMAGE HNN_CONTAINER_NAME
+  export SYSTEM_USER_DIR ALREADY_RUNNING SSHD_STARTED NEW_XAUTH_KEYS ESC_STR VCXSRV_PID
+
+  OS=$(get_os)
+  __command_status=$?
+  if [[ $__command_status -ne 0 ]]; then
+    echo "Failed to get OS type" | tee -a "$LOGFILE"
+    return $__command_status
+  fi
+
+  if [[ "$OS" == "wsl" ]]; then
+    export SYSTEM_USER_DIR="$(get_wsl_home_path)"
+    if [[ $? -ne 0 ]]; then
+      return $?
+    fi
+    set_local_display_from_port 0
+  fi
+  # if display hasn't been set yet, give it a default value for the OS
+  [[ "$DISPLAY" ]] || set_local_display_from_port 0
 
   if [[ "$OS" == "mac" ]]; then
     function timeout {
@@ -93,9 +139,6 @@ function set_globals {
     }
     export timeout
   fi
-
-  export USE_SSH UPGRADE STOP START RETRY UNINSTALL HNN_DOCKER_IMAGE HNN_CONTAINER_NAME
-  export SYSTEM_USER_DIR ALREADY_RUNNING SSHD_STARTED NEW_XAUTH_KEYS ESC_STR
 }
 
 function errexit() {
@@ -134,10 +177,10 @@ function cleanup {
   echo "cleanup() called from: ${FUNCNAME[1]} (L:${BASH_LINENO[0]})" >> "$LOGFILE"
   if [ ! -z "${VCXSRV_PID}" ]; then
     stop_vcxsrv
-    # if [[ $? -ne 0 ]]; then
-    echo "Killing VcXsrv PID ${VCXSRV_PID}" >> "$LOGFILE"
-    kill ${VCXSRV_PID} &> /dev/null
-    # fi
+    if [[ $? -ne 0 ]]; then
+      echo "Killing VcXsrv PID ${VCXSRV_PID}" >> "$LOGFILE"
+      kill ${VCXSRV_PID} &> /dev/null
+    fi
   fi
 
   if [[ $__failed -eq "0" ]]; then
@@ -226,7 +269,7 @@ function output_run_piped_command {
 
   echo -e "\n  ** Command: $__binary1 $__command_args1 | $__binary2 $__command_args2" >> "$LOGFILE"
   echo -n "  ** Stderr: " >> "$LOGFILE"
-  __output=$("$__binary1" $__command_args1 | "$__binary2" $__command_args2 2>> "$LOGFILE")
+  __output=$("$__binary1" $__command_args1 2>> "$LOGFILE" | "$__binary2" $__command_args2 2>> "$LOGFILE")
   __command_status=$?
   if [[ ! -z "$__output" ]]; then
     echo -e "\n  ** Stdout: $__output" | tr -d '\r' >> "$LOGFILE"
@@ -265,8 +308,8 @@ function output_run_command_arguments {
   # note that output here is not expected to go to stdout, so redirect to LOGFILE
   re='^[0-9]+$'
   if ! [[ $1 =~ $re ]] ; then
-    echo -e "\nError: $FUNCNAME argument $1 is not a number" >> "$LOGFILE"
-    cleanup 1
+    echo -e "\nError: $FUNCNAME: argument '$1' is not a number" >> "$LOGFILE"
+    exit 1
   fi
 
   check_var LOGFILE
@@ -281,7 +324,7 @@ function output_run_command_arguments {
   if [[ $__num_args -ne $__expected_num_args ]]; then
     echo -e "\nError: $FUNCNAME (L:${BASH_LINENO[0]}) must have $__expected_num_args arguments" >> "$LOGFILE"
     echo "Got $__num_args arguments: $@" >> "$LOGFILE"
-    cleanup 1
+    exit 1
   fi
 
   local __index
@@ -322,11 +365,16 @@ function output_run_command_arguments {
   __command_status=$?
   if [[ -n "$__output" ]]; then
     echo >> "$LOGFILE"
-    echo "  ** Stdout: $__output" | tr -d '\r' >> "$LOGFILE"
+    if [[ $SUPPRESS_OUTPUT -eq 1 ]]; then
+      echo "  ** Stdout: ** suppresed **" >> "$LOGFILE"
+      SUPPRESS_OUTPUT=1
+    else
+      echo "  ** Stdout: $__output" | tr -d '\r' >> "$LOGFILE"
+    fi
   fi
 
   # send output back to caller
-  echo "$__output"
+  echo "$__output" | tr -d '\r'
 
   if [[ $__command_status -eq 0 ]]; then
     true
@@ -420,7 +468,16 @@ function remove_container_fail {
   check_var docker_cmd
   check_var HNN_CONTAINER_NAME
 
-  run_command_print_status_failure_exit "$docker_cmd rm -fv $HNN_CONTAINER_NAME"
+  COMMAND=(4 "$docker_cmd" "rm" "-fv" "$HNN_CONTAINER_NAME")
+  convert_COMMAND_to_escaped_array
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  if [[ $? -ne "0" ]]; then
+    echo "*failed*" | tee -a "$LOGFILE"
+    echo -e "\nFailure to remove container can sometimes be fixed by restarting Docker"
+    cleanup 2
+  else
+    echo "done" | tee -a "$LOGFILE"
+  fi
 }
 
 function print_header_message {
@@ -442,20 +499,42 @@ function print_header_message_short {
   echo -n "$1" | tee -a "$LOGFILE"
 }
 
+function log_header_message {
+  check_args "$@" $# 1
+  check_var LOGFILE
+
+  # first arg is message to print. surrounded by newlines in "$LOGFILE"
+  echo >> "$LOGFILE"
+  echo -n "$1" >> "$LOGFILE"
+  echo >> "$LOGFILE"
+}
+
 function start_vcxsrv_print {
   check_var LOGFILE
-  check_var VCXSRV_DIR
+  check_var vcxsrv_cmd
+
+  local __vcxsrv_dir
+
+  # duplicate the functionality of the 'basename' command
+  # (remove the part between the last '/' and the end of line '$')
+  __vcxsrv_dir="$(echo ${vcxsrv_cmd}|sed 's/\/[^\/]\{1,\}$//')"
+  if [[ ! -d "$__vcxsrv_dir" ]]; then
+    echo "Could not find directory for ${vcxsrv_cmd}"
+    cleanup 2
+  fi
 
   print_header_message "Starting VcXsrv... "
-  echo -e "\n  ** Command: ${VCXSRV_DIR}/vcxsrv.exe -wgl -multiwindow 2>&1 &" >> "$LOGFILE"
-  if [[ $DEBUG -eq 1 ]] || [[ $VERBOSE -eq 1 ]]; then
-    echo -n "  ** Output: " >> "$LOGFILE"
-    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow >> "$LOGFILE" 2>&1 &
-  else
-    "${VCXSRV_DIR}/vcxsrv.exe" -wgl -multiwindow > /dev/null 2>&1 &
-  fi
+  COMMAND=(3 "${__vcxsrv_dir}/vcxsrv.exe" "-wgl" "-multiwindow")
+  convert_COMMAND_to_escaped_array
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null &
   VCXSRV_PID=$!
-  echo "done" | tee -a "$LOGFILE"
+
+  log_header_message "Checking if VcXsrv is running..."
+  COMMAND=(3 "kill" "-0" "$VCXSRV_PID")
+  convert_COMMAND_to_escaped_array
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fail_on_bad_exit $?
+
   echo "Started VcXsrv with PID ${VCXSRV_PID}" >> "$LOGFILE"
 }
 
@@ -465,7 +544,11 @@ function stop_vcxsrv {
 
   print_header_message "Stopping VcXsrv... "
   echo >> "$LOGFILE"
-  run_command_print_status "cmd.exe //c taskkill //F //IM vcxsrv.exe"
+  if [[ "$OS" == "wsl" ]]; then
+    run_command_print_status "cmd.exe /c taskkill /F /IM vcxsrv.exe"
+  else
+    run_command_print_status "cmd.exe //c taskkill //F //IM vcxsrv.exe"
+  fi
   if [[ $? -eq "0" ]]; then
     VCXSRV_PID=
   else
@@ -516,6 +599,7 @@ function get_container_port {
   check_var LOGFILE
   check_var HNN_CONTAINER_NAME
   check_var docker_cmd
+  check_var TRAVIS_TESTING
 
   local __index
   local __send_args
@@ -529,6 +613,7 @@ function get_container_port {
     # this is hardcoded in docker-machine-driver-qemu
     __ssh_port="5000"
   else
+    log_header_message "Getting port that maps to docker container port 22... "
     __command=("$docker_cmd" "port $HNN_CONTAINER_NAME 22")
     let __index=0
     for __arg in "${__command[@]}"; do
@@ -538,6 +623,7 @@ function get_container_port {
 
     __port_string=$(output_run_specific_command "${__send_args[@]}")
     if [[ $? -ne "0" ]]; then
+      echo "*failed*" >> "$LOGFILE"
       echo "failed to run ${__command[@]}" >> "$LOGFILE"
       return 1
     fi
@@ -545,9 +631,11 @@ function get_container_port {
     __ssh_port=$(echo $__port_string| cut -d':' -f 2)
     re='^[0-9]+$'
     if ! [[ $__ssh_port =~ $re ]] ; then
+      echo "*failed*" >> "$LOGFILE"
       echo "failed to get a port number from \"$__ssh_port\"" >> "$LOGFILE"
       return 1
     fi
+    echo "done" >> "$LOGFILE"
   fi
 
   echo $__ssh_port
@@ -565,6 +653,8 @@ function ssh_start_hnn_print {
   check_var DEBUG
   check_var VERBOSE
   check_var LOGFILE
+  check_var CONTAINER_TYPE
+  check_var TRAVIS_TESTING
 
   local __verbose
   local __ssh_port
@@ -592,9 +682,13 @@ function ssh_start_hnn_print {
 
   # since we assigned port 6000, we can be certain of this DISPLAY
   export DISPLAY=127.0.0.1:0
-  export XAUTHORITY="/tmp/.Xauthority"
   export TRAVIS_TESTING
-  export SYSTEM_USER_DIR
+
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    export XAUTHORITY="/c/home/hnn_user/.Xauthority"
+  else
+    export XAUTHORITY="/tmp/.Xauthority"
+  fi
 
   if [[ $RETRY -eq 1 ]]; then
     echo -n "(retry) " | tee -a "$LOGFILE"
@@ -612,6 +706,7 @@ function ssh_start_hnn_print {
   # server is running) and port 6000 in the container we are ssh'ing into. Other options are to avoid
   # warnings about hostkeychecking and to not prompt for a password if public key authentication fails.
   print_header_message "Starting HNN GUI... "
+
   COMMAND=(23 "ssh" "-o" "SendEnv=DISPLAY" "-o" "SendEnv=XAUTHORITY" "-o" "SendEnv=SYSTEM_USER_DIR" "-o" "SendEnv=TRAVIS_TESTING" \
                "-o" "PasswordAuthentication=no" "-o" "UserKnownHostsFile=/dev/null" "-o" "StrictHostKeyChecking=no" \
                "$__verbose" "-i" "$SSH_PRIVKEY" "-R" "6000:127.0.0.1:6000" "hnn_user@$__docker_host_ip" "-p" "$__ssh_port")
@@ -630,16 +725,18 @@ function start_hnn_print {
   # runs start_hnn.sh script directly in container using "docker exec"
   check_var docker_cmd
   check_var TRAVIS_TESTING
+  check_var SYSTEM_USER_DIR
   check_var HNN_CONTAINER_NAME
   check_var LOGFILE
+  check_var CONTAINER_TYPE
+  check_var UID
 
   local __display
 
   # set DISPLAY for OS
+  print_header_message "Setting DISPLAY variable for $CONTAINER_TYPE containers... "
   __display=$(get_display_for_gui)
-  if [[ $? -ne 0 ]]; then
-    cleanup $?
-  fi
+  fail_on_bad_exit $?
 
   if [[ $RETRY -eq 1 ]]; then
     echo -n "(retry) " | tee -a "$LOGFILE"
@@ -647,16 +744,18 @@ function start_hnn_print {
   fi
 
   print_header_message "Starting HNN GUI... "
-  if [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" =~ "windows" ]]; then
-    COMMAND=(11 "$docker_cmd" "exec" "--env" "SYSTEM_USER_DIR=$HOME" "--env" "TRAVIS_TESTING=$TRAVIS_TESTING" \
-            "--env" "DISPLAY=$__display" "$HNN_CONTAINER_NAME" "bash" "/c/home/hnn_user/start_hnn.sh")
-  elif [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" == "wsl" ]]; then
-    COMMAND=(11 "$docker_cmd" "exec" "--env" "SYSTEM_USER_DIR=/$HOME" "--env" "TRAVIS_TESTING=$TRAVIS_TESTING" \
-            "--env" "DISPLAY=$__display" "$HNN_CONTAINER_NAME" "bash" "/c/home/hnn_user/start_hnn.sh")
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    __container_user="hnn_user"
+    __start_script="/c/home/hnn_user/start_hnn.sh"
   else
-    COMMAND=(12 "$docker_cmd" "exec" "--env" "SYSTEM_USER_DIR=$HOME" "--env" "TRAVIS_TESTING=$TRAVIS_TESTING" \
-            "--env" "DISPLAY=$__display" "-u" "$UID" "$HNN_CONTAINER_NAME" "/home/hnn_user/start_hnn.sh")
+    __container_user="$UID"
+    __start_script="/home/hnn_user/start_hnn.sh"
   fi
+  COMMAND=(13 "$docker_cmd" "exec" "--env" "TRAVIS_TESTING=$TRAVIS_TESTING" \
+          "--env" "SYSTEM_USER_DIR=$SYSTEM_USER_DIR" "--env" "DISPLAY=$__display" \
+          "-u" "$__container_user" "$HNN_CONTAINER_NAME" \
+          "bash" "$__start_script")
+
   convert_COMMAND_to_escaped_array
   MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   if [[ $? -ne "0" ]]; then
@@ -684,15 +783,30 @@ function check_sshd_proc {
   MSYS_NO_PATHCONV=1 run_command_print_status "$docker_cmd exec $HNN_CONTAINER_NAME pgrep sshd"
 }
 
-function create_hnn_out_fail {
+function fix_hnn_out_perms_host_fail {
   # no arguments
   check_var HOME
+  check_var TRAVIS_TESTING
 
-  print_header_message "Creating ${HOME}/hnn_out... "
-  COMMAND=(2 "mkdir" "${HOME}/hnn_out")
-  convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  if [[ ! -e "${SYSTEM_USER_DIR}/hnn_out/" ]]; then
+    print_header_message "Creating ${HOME}/hnn_out... "
+    COMMAND=(2 "mkdir" "${HOME}/hnn_out")
+    convert_COMMAND_to_escaped_array
+    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    fail_on_bad_exit $?
+    return
+  fi
+
+  print_header_message "Updating hnn_out permissions on host... "
+  find "${SYSTEM_USER_DIR}/hnn_out" -type d -exec chmod 777 {} \;  >> "$LOGFILE" 2>&1 && \
+    find "${SYSTEM_USER_DIR}/hnn_out" -type f -exec chmod 666 {} \; >> "$LOGFILE" 2>&1
   fail_on_bad_exit $?
+
+  if [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" == "mac" ]]; then
+    COMMAND=(2 "touch" "${SYSTEM_USER_DIR}/hnn_out/THIS_DIRECTORY_IS_SHARED_BETWEEN_DOCKER_AND_YOUR_OS")
+    convert_COMMAND_to_escaped_array
+    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fi
 }
 
 function check_hnn_out_perms_host {
@@ -700,62 +814,77 @@ function check_hnn_out_perms_host {
   check_var LOGFILE
   check_var HOME
 
-  COMMAND=(3 "test" "-w" "${HOME}/hnn_out")
-  convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  installer/docker/check_hnn_out_perms.sh
   if [[ $? -ne 0 ]]; then
     return 1
   fi
 }
 
-function check_hnn_out_perms_container_fail {
+function check_hnn_out_perms_container_print {
   # no arguments
   # runs script in container that checks permissions for hnn_out are okay
   check_var docker_cmd
   check_var HNN_CONTAINER_NAME
-  check_var TRAVIS_TESTING
+  check_var CONTAINER_TYPE
   check_var LOGFILE
   check_var RETRY
+  check_var SYSTEM_USER_DIR
+
+  local __script_path
+  local __user
+
 
   if [[ $RETRY -eq 1 ]]; then
     echo -n "(retry) " | tee -a "$LOGFILE"
     RETRY=0
   fi
 
-  print_header_message "Checking permissions of ${HOME}/hnn_out in container... "
-  COMMAND=(6 "$docker_cmd" "exec" "--env" "SYSTEM_USER_DIR=$HOME" "$HNN_CONTAINER_NAME" "/home/hnn_user/check_hnn_out_perms.sh")
+  print_header_message "Checking permissions of ${SYSTEM_USER_DIR}/hnn_out in container... "
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    __script_path="bash -c /c/home/hnn_user/check_hnn_out_perms.sh"
+  else
+    __script_path="/home/hnn_user/check_hnn_out_perms.sh"
+  fi
+  COMMAND=(6 "$docker_cmd" "exec" "$HNN_CONTAINER_NAME" "bash" "-c" "$__script_path")
   convert_COMMAND_to_escaped_array
   MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   if [[ $? -ne 0 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
-    check_hnn_out_perms_host
-    if [[ $? -ne 0 ]]; then
-      if [[ "$OS" == "linux" ]]; then
-        print_header_message "Updating permissions of hnn_out... "
-        find "$HOME/hnn_out" -type d -exec chmod o+rwx {} \;  >> "$LOGFILE" 2>&1 && \
-          find "$HOME/hnn_out" -type f -exec chmod o+rw {} \; >> "$LOGFILE" 2>&1
-        echo "done" | tee -a "$LOGFILE"
-      else
-        echo "Please make ${HOME}/hnn_out accessible by the user running docker (try making world readable/writable)" | tee -a "$LOGFILE"
-      fi
-    else
-      echo "done" | tee -a "$LOGFILE"
-      echo -e "\nFailure seems to be an issue with docker container." | tee -a "$LOGFILE"
-      echo "Please open an issue on github with $LOGFILE" | tee -a "$LOGFILE"
-      echo "https://github.com/jonescompneurolab/hnn/issues" | tee -a "$LOGFILE"
-    fi
-    echo "*failed*" | tee -a "$LOGFILE"
-    cleanup 2
+    false
   else
-    echo "done" | tee -a "$LOGFILE"
+    echo "done"
+  fi
+}
+
+function fix_hnn_out_perms_container_print {
+  # no arguments
+  # runs command in container to change permissions of hnn_out
+  check_var docker_cmd
+  check_var HNN_CONTAINER_NAME
+  check_var CONTAINER_TYPE
+  check_var LOGFILE
+  check_var SYSTEM_USER_DIR
+
+  local __container_user
+
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    return 0
+  else
+    __container_user="root"
   fi
 
-  if [[ $TRAVIS_TESTING -ne 0 ]] || [[ "$OS" == "linux" ]]; then
-    # This command will not work when a qemu VM is used with docker-machine.
-    # That is, only when TRAVIS_TESTING=1 and (OS="mac" or OS="windows")
-    COMMAND=(2 "touch" "$HOME/hnn_out/THIS_DIRECTORY_IS_SHARED_BETWEEN_DOCKER_AND_YOUR_OS")
+  check_hnn_out_perms_container_print
+  if [[ $? -ne 0 ]]; then
+    print_header_message "Updating hnn_out permissions inside container... "
+    COMMAND=(8 "$docker_cmd" "exec" "-u" "$__container_user" "$HNN_CONTAINER_NAME" "bash" "-c" \
+            "find \"${SYSTEM_USER_DIR}/hnn_out\" -type d -exec chmod 777 {} \; && \
+                find \"${SYSTEM_USER_DIR}/hnn_out\" -type f -exec chmod 666 {} \;")
     convert_COMMAND_to_escaped_array
-    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    fail_on_bad_exit $?
+
+    RETRY=1
+    check_hnn_out_perms_container_print
   fi
 }
 
@@ -763,6 +892,14 @@ function check_x_authenticated {
   # no arguments
   check_var DISPLAY
   check_var OS
+  check_var LOGFILE
+
+  if [[ "$OS" == "wsl" ]]; then
+    find_program_print xset
+    if [[ $? -ne 0 ]]; then
+      echo -e "Skipping X server test: install xset with 'sudo apt-get install x11-xserver-utils'\n" | tee -a "$LOGFILE"
+    fi
+  fi
 
   if [[ ! "$OS" == "windows" ]]; then
     print_header_message "Checking if we can authenticate with X server... "
@@ -809,7 +946,7 @@ function check_x_port_netcat {
       __send_args[$__index]=$(echo $__arg|sed "s/ /$ESC_STR/g")
       (( __index++ ))
     done
-    output_run_piped_command "${__send_args[@]}" > /dev/null
+    output_run_piped_command "${__send_args[@]}" >> "$LOGFILE"
     false
   fi
 }
@@ -826,7 +963,7 @@ function check_x_port_container_fail {
   # set DISPLAY for OS
   __display=$(get_display_for_gui)
   if [[ $? -ne 0 ]]; then
-    cleanup $?
+    cleanup 2
   fi
 
   print_header_message "Checking if X server is reachable from container... "
@@ -959,7 +1096,10 @@ function copy_xauthority_file_fail {
   check_var XAUTHORITY
   check_var HNN_CONTAINER_NAME
   check_var LOGFILE
+  check_var CONTAINER_TYPE
 
+  local __container_xauthority_path
+  local __xauthority_path
   local __command_status
   local __user
   __user="$1"
@@ -969,24 +1109,38 @@ function copy_xauthority_file_fail {
     cleanup 2
   fi
 
-  print_header_message_short "Copying Xauthority file into container... "
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
+  __container_xauthority_path="/tmp/.Xauthority"
+  __xauthority_path="$XAUTHORITY"
+
+  # exceptions for windows containers
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    __container_xauthority_path="/home/hnn_user/.Xauthority"
+
+    if [[ ! "$OS" == "wsl" ]]; then
+      COMMAND=(3 "cygpath.exe" "-w" "$__xauthority_path")
+      convert_COMMAND_to_escaped_array
+      __xauthority_path=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+      if [[ $? -ne 0 ]]; then
+        cleanup 2
+      fi
+    fi
+
     stop_container_silent
-    COMMAND=(4 "$docker_cmd" "cp" "$XAUTHORITY" "$HNN_CONTAINER_NAME:/windows/temp/.Xauthority")
-  else
-    COMMAND=(4 "$docker_cmd" "cp" "$XAUTHORITY" "$HNN_CONTAINER_NAME:/tmp/.Xauthority")
   fi
+
+  print_header_message_short "Copying Xauthority file into container... "
+  COMMAND=(4 "$docker_cmd" "cp" "$__xauthority_path" "$HNN_CONTAINER_NAME:$__container_xauthority_path")
   convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     start_container_silent
     return
   fi
 
   print_header_message "Changing Xauthority permissions in container... "
   COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" \
-           "chown $__user:hnn_group /tmp/.Xauthority && chmod g+rw /tmp/.Xauthority")
+           "chown $__user:hnn_group \"$__container_xauthority_path\" && chmod g+rw \"$__container_xauthority_path\"")
   convert_COMMAND_to_escaped_array
   output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
@@ -994,15 +1148,127 @@ function copy_xauthority_file_fail {
 }
 
 function copy_hnn_source_fail {
-  # copies $PWD to hnn_source_code and sets permissions for hnn_out directory
-  # for the appropriate user
+  # copies $PWD to hnn_source_code
   check_var docker_cmd
-  check_var XAUTHORITY
   check_var HNN_CONTAINER_NAME
+  check_var LOGFILE
+  check_var CONTAINER_TYPE
+
+  local __source_code_path
+  local __current_directory
+
+  if [[ ! -e "$PWD/hnn.py" ]]; then
+    echo -e "\nBad hnn_source_code directory at $PWD" | tee -a "$LOGFILE"
+    cleanup 2
+  fi
+
+  if [[ "$CONTAINER_TYPE" == "linux" ]]; then
+    __source_code_path="/home/hnn_user/hnn_source_code"
+  else
+    __source_code_path="/c/home/hnn_user/hnn_source_code"
+  fi
+
+  print_header_message "Removing old hnn_source_code from container... "
+  COMMAND=(6 "$docker_cmd" "exec" "$HNN_CONTAINER_NAME" "bash" "-c" "rm -rf $__source_code_path/*")
+  convert_COMMAND_to_escaped_array
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fail_on_bad_exit $?
+
+  # exceptions for windows containers
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    COMMAND=(3 "cygpath.exe" "-w" "$PWD")
+    convert_COMMAND_to_escaped_array
+    __current_directory=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+    fi
+    __current_directory="$__current_directory\."
+
+    stop_container_silent
+  else
+    __current_directory="$PWD/."
+  fi
+  print_header_message_short "Copying hnn_source_code into container... "
+  COMMAND=(4 "$docker_cmd" "cp" "$__current_directory" "$HNN_CONTAINER_NAME:/home/hnn_user/hnn_source_code/")
+  convert_COMMAND_to_escaped_array
+  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fail_on_bad_exit $?
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    start_container_silent
+  fi
+}
+
+function copy_hnn_out_fail {
+  # copies $SYSTEM_USER_DIR/hnn_out to hnn_source_code
+  check_var docker_cmd
+  check_var HNN_CONTAINER_NAME
+  check_var LOGFILE
+  check_var CONTAINER_TYPE
+  check_var TRAVIS_TESTING
+
+  local __hnn_out
+  __hnn_out="$SYSTEM_USER_DIR/hnn_out"
+
+  if [[ ! -e "$__hnn_out" ]]; then
+    echo -e "\nError: hnn_out doesn't exist at $__hnn_out" | tee -a "$LOGFILE"
+    cleanup 2
+  fi
+
+  if [[ "$OS" == "mac" ]] && [[ $TRAVIS_TESTING -eq 1 ]]; then
+    print_header_message "Creating hnn_out in container... "
+    COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" \
+             "mkdir -p \"$__hnn_out/data\" && \
+              mkdir -p \"$__hnn_out/param\" && \
+              chown -R hnn_user:hnn_group \"$__hnn_out\" && \
+              chmod 777 -R \"$__hnn_out\"")
+    convert_COMMAND_to_escaped_array
+    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    fail_on_bad_exit $?
+  else
+    print_header_message "Removing old hnn_out from container... "
+
+    if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+      COMMAND=(6 "$docker_cmd" "exec" "$HNN_CONTAINER_NAME" "bash" "-c" "rm -rf $__hnn_out/*")
+    else
+     COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" "rm -rf $__hnn_out/*")
+    fi
+    convert_COMMAND_to_escaped_array
+    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    fail_on_bad_exit $?
+  fi
+
+  __hnn_out_contents="$__hnn_out/."
+  # exceptions for windows containers
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    COMMAND=(3 "cygpath.exe" "-w" "$__hnn_out_contents")
+    convert_COMMAND_to_escaped_array
+    __hnn_out_contents=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+    fi
+
+    # remove leading /c/
+    __hnn_out="$(echo $__hnn_out | sed 's/^\/[cC]\(.*\)$/\1/')"
+    stop_container_silent
+  fi
+  print_header_message_short "Copying hnn_out into container... "
+  COMMAND=(4 "$docker_cmd" "cp" "$__hnn_out_contents" "$HNN_CONTAINER_NAME:$__hnn_out")
+  convert_COMMAND_to_escaped_array
+  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fail_on_bad_exit $?
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    start_container_silent
+  fi
+}
+
+function change_hnn_source_perms_fail {
+  check_var docker_cmd
+  check_var HNN_CONTAINER_NAME
+  check_var CONTAINER_TYPE
   check_var USE_SSH
   check_var UID
-  check_var LOGFILE
 
+  local __container_user
   local __user
 
   if [[ $USE_SSH -eq 0 ]]; then
@@ -1011,69 +1277,76 @@ function copy_hnn_source_fail {
     __user="hnn_user"
   fi
 
-  if [[ ! -e "$PWD/hnn.py" ]]; then
-    echo -e "\nBad hnn_source_code directory at $PWD" | tee -a "$LOGFILE"
-    cleanup 2
-  fi
-
-  print_header_message "Removing old hnn_source_code from container... "
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
-    COMMAND=(6 "$docker_cmd" "exec" "$HNN_CONTAINER_NAME" "bash" "-c" "rm -rf /home/hnn_user/hnn_source_code")
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    return 0
   else
-    COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" "rm -rf /home/hnn_user/hnn_source_code")
+    __container_user="root"
+    __source_code_path="/home/hnn_user/hnn_source_code"
   fi
+  print_header_message "Changing hnn_source_code permissions in container... "
+  COMMAND=(8 "$docker_cmd" "exec" "-u" "$__container_user" "$HNN_CONTAINER_NAME" "bash" "-c" \
+          "chown -R $__user $__source_code_path")
   convert_COMMAND_to_escaped_array
   output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
-
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
-    stop_container_silent
-  fi
-  print_header_message_short "Copying hnn_source_code into container... "
-  COMMAND=(4 "$docker_cmd" "cp" "$PWD" "$HNN_CONTAINER_NAME:/home/hnn_user/hnn_source_code")
-  convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
-  fail_on_bad_exit $?
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
-    start_container_silent
-  fi
-
-  if [[ $TRAVIS_TESTING -eq 0 ]] || ([[ ! "$OS" =~ "windows" ]] && [[ ! "$OS" == "wsl" ]]); then
-    print_header_message "Changing hnn directory permissions in container... "
-    COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" \
-            "chown -R $__user /home/hnn_user/hnn_source_code && chown $__user $SYSTEM_USER_DIR/hnn_out")
-    convert_COMMAND_to_escaped_array
-    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
-   fail_on_bad_exit $?
-  fi
 }
 
-function copy_ssh_files_to_running_container_fail {
+function copy_ssh_files_to_container_fail {
   # no arguments
+  # *** This probably won't work with windows containers because paths are in UNIX format *****
   check_var docker_cmd
   check_var SSH_AUTHKEYS
   check_var SSH_PUBKEY
+  check_var CONTAINER_TYPE
 
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
+  local __authkeys
+  local __pubkey
+  __authkeys="$SSH_AUTHKEYS"
+  __pubkey="$SSH_PUBKEY"
+
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    COMMAND=(3 "cygpath.exe" "-w" "$__authkeys")
+    convert_COMMAND_to_escaped_array
+    __authkeys=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+    fi
+
+    COMMAND=(3 "cygpath.exe" "-w" "$__pubkey")
+    convert_COMMAND_to_escaped_array
+    __pubkey=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+    fi
+
     stop_container_silent
   fi
+
   print_header_message_short "Copying authorized_keys file into container... "
-  COMMAND=(4 "$docker_cmd" "cp" "$SSH_AUTHKEYS" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/authorized_keys")
+  COMMAND=(4 "$docker_cmd" "cp" "$__authkeys" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/authorized_keys")
   convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
 
   print_header_message_short "Copying known_hosts file into container... "
-  COMMAND=(4 "$docker_cmd" "cp" "$SSH_PUBKEY" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/known_hosts")
+  COMMAND=(4 "$docker_cmd" "cp" "$__pubkey" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/known_hosts")
+  convert_COMMAND_to_escaped_array
+  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  fail_on_bad_exit $?
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    start_container_silent
+    # don't bother updating unix permissions
+    return 0
+  fi
+
+  print_header_message_short "Updating ownership on ssh files in container... "
+  COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" "chown -R hnn_user /home/hnn_user/.ssh")
   convert_COMMAND_to_escaped_array
   output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
-    start_container_silent
-  fi
 
-  print_header_message_short "Updating permissions on ssh files in container... "
-  COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" "chown -R hnn_user /home/hnn_user/.ssh")
+  print_header_message_short "Updating permissions on ssh authorized_keys file in container... "
+  COMMAND=(8 "$docker_cmd" "exec" "-u" "root" "$HNN_CONTAINER_NAME" "bash" "-c" "chmod 600 /home/hnn_user/.ssh/authorized_keys")
   convert_COMMAND_to_escaped_array
   output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
@@ -1144,6 +1417,7 @@ function get_xquartz_port {
 
   let __timeout=30
   while [[ $__timeout -gt 0 ]]; do
+    log_header_message "Getting running Xquartz processes... "
     __command="pgrep Xquartz"
     __pid=$(output_run_command "$__command")
     if [[ $? -eq 0 ]]; then
@@ -1155,10 +1429,12 @@ function get_xquartz_port {
       __xquartz_display=$(ps $__pid|grep $__pid|sed 's/.*\(\:[0-9]\{1,\}\).*/\1/')
       __display_int=$(echo $__xquartz_display|sed 's/\:\([0-9]\{1,\}\)/\1/')
       if [[ -e "/tmp/.X11-unix/X${__display_int}" ]]; then
+        echo "done" >> "$LOGFILE"
         echo "Started XQuartz on DISPLAY $__xquartz_display" >> "$LOGFILE"
         break
       fi
     fi
+    echo "done" >> "$LOGFILE"
     sleep 1
     (( __timeout-- ))
   done
@@ -1189,7 +1465,7 @@ function start_xquartz {
   re='^[0-9]+$'
   __port=$(get_xquartz_port)
   if [[ $? -ne 0 ]]; then
-    exit $?
+    exit 2
   elif ! [[ $__port =~ $re ]] ; then
     echo "bad xquartz port number \"$__port\"" >> "$LOGFILE"
     false
@@ -1247,13 +1523,14 @@ function docker_pull {
   check_var OS
   check_var HNN_DOCKER_IMAGE
   check_var TRAVIS_TESTING
+  check_var CONTAINER_TYPE
 
   local __command
   local __docker_container
   local __last_used_image
   local __docker_image
 
-  if [[ "$OS" == "windows" ]] || [[ "$OS" == "wsl" ]]; then
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     __docker_image="${HNN_DOCKER_IMAGE}:win64"
   else
     __docker_image="${HNN_DOCKER_IMAGE}"
@@ -1314,15 +1591,15 @@ function retry_docker_pull {
   fi
 }
 
-function docker_run_print {
+function docker_run_fail {
   # no arguments
   # will run the appropriate docker command
   # to leave a running containers
   check_var TRAVIS_TESTING
   check_var LOGFILE
-  check_var RETRY
   check_var OS
   check_var USE_SSH
+  check_var CONTAINER_TYPE
 
   local __timeout
   local __started
@@ -1332,24 +1609,15 @@ function docker_run_print {
   local __arg
   local __send_args
   local __docker_image
+  local __home
+  local __hnn_out
+  local __container_xauthority
 
   __timeout=20
 
-  if [[ $TRAVIS_TESTING -eq 1 ]]; then
-    find_existing_container_print
-    if [[ $? -eq "0" ]]; then
-      print_header_message "Removing old container... "
-      remove_container_fail
-    fi
-  elif [[ $RETRY -eq 1 ]]; then
-    echo "Removing old container might resolve failure. Verification required." | tee -a "$LOGFILE"
-    prompt_remove_container_fail
-    echo -n "(retry) " | tee -a "$LOGFILE"
-    RETRY=0
-  fi
-  print_header_message "Starting HNN container... "
+  print_header_message "Creating HNN container... "
 
-  if [[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]; then
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     # Interesting that HOME still gets turned into a windows path. Easy to avoid
     # by passing the HOME variable under a new name HOME_UNIX
     export HOME_UNIX="${HOME}"
@@ -1358,67 +1626,52 @@ function docker_run_print {
     __docker_image="${HNN_DOCKER_IMAGE}"
   fi
 
-  if [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" =~ "linux" ]]; then
-      # Importantly, the volume containing the current directory is bind mounted into
-      # the container and seen as /home/hnn_user/hnn_source_code, which enables tests
-      # inside the container to use code which has not yet been merged and been built
-      # as part of a container on Docker Hub.
-      COMMAND=(20 "${docker_cmd}" "run" "-d" \
-               "-p" "22" \
-               "-v" "/tmp/.X11-unix:/tmp/.X11-unix" \
-               "-v" "$(pwd):/home/hnn_user/hnn_source_code" \
-               "-v" "$HOME/hnn_out:$HOME/hnn_out" \
-               "--env" "XAUTHORITY=/tmp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-               "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  elif [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" =~ "windows" ]]; then
-      HNN_OUT=$(cygpath -w "$HOME/hnn_out")
-      COMMAND=(16 "${docker_cmd}" "run" "-d" \
-              "-p" "22" \
-              "-v" "$HNN_OUT:$HNN_OUT" \
-              "--env" "XAUTHORITY=/c/windows/temp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-              "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  elif [[ $TRAVIS_TESTING -eq 1 ]] && [[ "$OS" == "wsl" ]]; then
-      # we can't access the wsl directory, so don't create a bind-mounted volume
-      COMMAND=(14 "${docker_cmd}" "run" "-d" \
-              "-p" "22" \
-              "--env" "XAUTHORITY=/c/windows/temp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-              "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  elif [[ $TRAVIS_TESTING -eq 1 ]]; then
-      # This binds port 22 in the container (for sshd) to 5000 on the host, which on docker toolbox
-      # is a VM. We can then configure the VM with docker-machine to allow connections to port 5000 from
-      # the base OS. Also connect port 6000 to allow for xforwarding of the xserver.
-      COMMAND=(18 "${docker_cmd}" "run" "-d" \
-               "-p" "6000:6000" "-p" "5000:22" \
-               "-v" "$HOME/hnn_out:$HOME/hnn_out" \
-               "--env" "XAUTHORITY=/tmp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-               "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  elif [[ "$OS" =~ "linux" ]]; then
-      COMMAND=(18 "${docker_cmd}" "run" "-d" \
+  # exceptions for windows containers
+  __hnn_out="$SYSTEM_USER_DIR/hnn_out"
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    COMMAND=(3 "cygpath.exe" "-w" "$__hnn_out")
+    convert_COMMAND_to_escaped_array
+    __hnn_out=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      cleanup 2
+    fi
+  fi
+
+  __container_xauthority="/tmp/.Xauthority"
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    __container_xauthority="/c/home/hnn_user/.Xauthority"
+  fi
+
+  if [[ "$OS" == "mac" ]] && [[ $TRAVIS_TESTING -eq 1 ]]; then
+    # Workarounds for qemu docker-machine driver that doesn't support port forwarding and volume
+    # mounts properly.
+    # This binds port 22 in the container (for sshd) to 5000 on the host, which on docker toolbox
+    # is a VM. We can then configure the VM with docker-machine to allow connections to port 5000 from
+    # the base OS. Also connect port 6000 to allow for xforwarding of the xserver.
+    COMMAND=(14 "${docker_cmd}" "run" "-d" \
+              "-p" "6000:6000" "-p" "5000:22" \
+              "--env" "XAUTHORITY=$__container_xauthority" "--env" "SYSTEM_USER_DIR=$SYSTEM_USER_DIR" \
+              "--name" "$HNN_CONTAINER_NAME" "$__docker_image")
+  elif [[ "$OS" == "linux" ]]; then
+    COMMAND=(16 "${docker_cmd}" "run" "-d" \
               "-p" "22" \
               "-v" "/tmp/.X11-unix:/tmp/.X11-unix" \
-              "-v" "$HOME/hnn_out:$HOME/hnn_out" \
-              "--env" "XAUTHORITY=/tmp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-              "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  elif [[ "$OS" == "wsl" ]]; then
-      # we can't access the wsl directory, so don't create a bind-mounted volume
-      COMMAND=(14 "${docker_cmd}" "run" "-d" \
-              "-p" "22" \
-              "--env" "XAUTHORITY=/tmp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-              "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
-  else
-      COMMAND=(16 "${docker_cmd}" "run" "-d" \
-              "-p" "22" \
-              "-v" "$HOME/hnn_out:$HOME/hnn_out" \
-              "--env" "XAUTHORITY=/tmp/.Xauthority" "--env" "SYSTEM_USER_DIR=$HOME" \
-              "--name" "$HNN_CONTAINER_NAME" "$__docker_image" "sleep" "infinity")
+              "-v" "$__hnn_out:$__hnn_out" \
+              "--env" "XAUTHORITY=$__container_xauthority" "--env" "SYSTEM_USER_DIR=$SYSTEM_USER_DIR" \
+              "--name" "$HNN_CONTAINER_NAME" "$__docker_image")
+  else # windows and mac (TRAVIS_TESTING=0)
+    COMMAND=(14 "${docker_cmd}" "run" "-d" \
+            "-p" "22" \
+            "-v" "$__hnn_out:$__hnn_out" \
+            "--env" "XAUTHORITY=$__container_xauthority" "--env" "SYSTEM_USER_DIR=$SYSTEM_USER_DIR" \
+            "--name" "$HNN_CONTAINER_NAME" "$__docker_image")
   fi
 
   convert_COMMAND_to_escaped_array
   MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   if [[ $? -ne 0 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
-    false
-    return
+    cleanup 2
   fi
 
   # make sure "docker ps | grep HNN_CONTAINER_NAME" succeeeds
@@ -1426,15 +1679,9 @@ function docker_run_print {
   if [[ ! "$__started" =~ "1" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     echo "Waited for $__timeout seconds for container to start" >> "$LOGFILE"
-    false
-    return
+    cleanup 2
   else
     echo "done" | tee -a "$LOGFILE"
-  fi
-
-  # copy ssh auth files for TRAVIS_TESTING=1
-  if [[ $USE_SSH -eq 1 ]]; then
-    copy_ssh_files_to_running_container_fail
   fi
 }
 
@@ -1470,38 +1717,36 @@ function generate_xauth_keys_fail {
   fail_on_bad_exit $?
 }
 
-function get_xauth_keys {
+function get_host_xauth_keys {
   check_var LOGFILE
   check_var xauth_cmd
   check_var XAUTHORITY
   check_var DISPLAY
+  check_var DEBUG
 
   local __output
+  local __suppress_output
+  local __keys
   local __command_status
 
-  # don't use output_run_command_arguments because we don't want to log keys
-  # to log file
-  echo -e "\n  ** Command: \"${xauth_cmd}\" -f \"$XAUTHORITY\" nlist $DISPLAY" >> "$LOGFILE"
-  echo -n "  ** Stderr: " >> "$LOGFILE"
-
-  if [[ "$OS" =~ "windows" ]]; then
-    __output=$("${xauth_cmd}" -f "$XAUTHORITY" nlist $DISPLAY 2>> "$LOGFILE")
+  if [[ $DEBUG -eq 1 ]]; then
+    __suppress_output=0
   else
-    __output=$("${xauth_cmd}" -f "$XAUTHORITY" nlist $DISPLAY 2>> "$LOGFILE")
+    # don't display the keys in the log file
+    __suppress_output=1
   fi
+
+  log_header_message "Retrieving host xauth keys... "
+  COMMAND=(6 "${xauth_cmd}" "-f" "$XAUTHORITY" "-ni" "nlist" "$DISPLAY")
+  convert_COMMAND_to_escaped_array
+  __keys=$(SUPPRESS_OUTPUT=$__suppress_output output_run_command_arguments "${ESCAPED_COMMAND[@]}")
   __command_status=$?
-
-  # don't print keys in log
-  if [ -n "$__output" ]; then
-    echo "  ** Stdout: ** suppresed **" >> "$LOGFILE"
+  if [[ $__command_status -ne 0 ]]; then
+    echo "*failed*" >> "$LOGFILE"
+    exit $__command_status
   else
-    echo "  ** Stdout: " >> "$LOGFILE"
-  fi
-  echo "$__output"
-  if [[ $__command_status -eq 0 ]]; then
-    true
-  else
-    false
+    echo "done" >> "$LOGFILE"
+    echo "$__keys"
   fi
 }
 
@@ -1513,13 +1758,13 @@ function check_xauth_keys_print {
   local __command_status
 
   print_header_message "Checking for X11 authentication keys... "
-  __output=$(get_xauth_keys)
+  __output=$(get_host_xauth_keys)
   __command_status=$?
+  echo >> "$LOGFILE"
   if [[ $__command_status -ne 0 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     exit $__command_status
-  fi
-  if [[ -z "$__output" ]]; then
+  elif [[ -z "$__output" ]]; then
     echo "no valid keys" | tee -a "$LOGFILE"
     false
   else
@@ -1590,6 +1835,8 @@ function get_display_for_gui {
   # no arguments
   # set DISPLAY environment variable for the appropriate OS and/or testing environment
   check_var DOCKER_TOOLBOX
+  check_var CONTAINER_TYPE
+  check_var TRAVIS_TESTING
 
   local __display
   local __port
@@ -1601,23 +1848,37 @@ function get_display_for_gui {
   fi
 
   # set DISPLAY for GUI
-  if [[ "$OS" =~ "linux" ]]; then
-    # linux can use direct port
-    if [[ $TRAVIS_TESTING -eq 1 ]]; then
-      [[ $DISPLAY ]] && __display=$DISPLAY || __display=":$__port"
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    log_header_message "Getting IP for DISPLAY from container... "
+    COMMAND=(6 "$docker_cmd" "exec" "$HNN_CONTAINER_NAME" "bash" "-c" "ipconfig.exe | grep 'Default Gateway'| sed -e 's/^.*:[ \t]*\(.*\)/\1/'")
+    convert_COMMAND_to_escaped_array
+    __ip=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+    if [[ $? -ne 0 ]]; then
+      echo "*failed*" >> "$LOGFILE"
+      exit 2
     else
-      __display=":$__port"
+      echo "done" >> "$LOGFILE"
     fi
+    __display="$__ip:$__port"
   else
-    if [[ $TRAVIS_TESTING -eq 1 ]]; then
-      # qemu driver
-      __display="10.0.2.2:$__port"
-    elif [[ $DOCKER_TOOLBOX -eq 1 ]]; then
-      # virtualbox driver
-      __display="192.168.99.1:$__port"
+    if [[ "$OS" =~ "linux" ]]; then
+      # linux can use direct port
+      if [[ $TRAVIS_TESTING -eq 1 ]]; then
+        [[ $DISPLAY ]] && __display=$DISPLAY || __display=":$__port"
+      else
+        __display=":$__port"
+      fi
     else
-      # docker desktop
-      __display="host.docker.internal:$__port"
+      if [[ $TRAVIS_TESTING -eq 1 ]]; then
+        # qemu driver
+        __display="10.0.2.2:$__port"
+      elif [[ $DOCKER_TOOLBOX -eq 1 ]]; then
+        # virtualbox driver
+        __display="192.168.99.1:$__port"
+      else
+        # docker desktop
+        __display="host.docker.internal:$__port"
+      fi
     fi
   fi
 
@@ -1625,21 +1886,37 @@ function get_display_for_gui {
 }
 
 
-function get_host_xauth_key {
+function get_valid_host_xauth_key {
   # no arguments
   # retrieves xauth key from host
-  check_var LOGFILE
   check_var DISPLAY
   check_var xauth_cmd
+  check_var XAUTHORITY
+  check_var DEBUG
 
+  local __keys
   local __key
+  local __command_status
 
-  echo -e "\n  ** Command: xauth -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print \$NF}'" >> "$LOGFILE"
-  __key=$("${xauth_cmd}" -ni nlist $DISPLAY | grep '^fff' | head -1 | awk '{print $NF}' 2>> "$LOGFILE")
+  __keys=$(get_host_xauth_keys)
+  __command_status=$?
   if [[ $? -ne 0 ]]; then
-    return 1
+    return $__command_status
   else
-    echo $__key
+    log_header_message "Validating host xauth keys... "
+    __key="$(echo $__keys | grep 'ffff' | head -1 | awk '{print $NF}')"
+    if [[ -z "$__key" ]]; then
+      # no output means no valid keys
+      echo "*failed*" >> "$LOGFILE"
+      echo -e "  ** Error: no valid key **" >> "$LOGFILE"
+      return 1
+    else
+      echo "done" >> "$LOGFILE"
+      if [[ $DEBUG -eq 1 ]]; then
+        echo "Valid key: =START=$__key=END=" >> "$LOGFILE"
+      fi
+      echo "$__key"
+    fi
   fi
 }
 
@@ -1649,26 +1926,54 @@ function get_container_xauth_key {
 
   check_args "$@" $# 1
 
-  check_var LOGFILE
   check_var docker_cmd
   check_var HNN_CONTAINER_NAME
+  check_var DEBUG
 
+  local __keys
   local __key
   local __user
   local __display
+  local __suppress_output
+  local __command_status
   __user="$1"
   __display=$(get_display_for_gui)
   if [[ $? -ne 0 ]]; then
-    cleanup $?
+    cleanup 2
   fi
 
-  echo -e "\n  ** Command: \"$docker_cmd\" exec -u \"$__user\" \"$HNN_CONTAINER_NAME\" bash -c \"timeout 5 xauth -ni nlist \"$__display\" | grep '^ffff' | head -1 | awk '{print \$NF}'\"" >> "$LOGFILE"
-  echo -n "  ** Stderr: " >> "$LOGFILE"
-  __key=$("$docker_cmd" exec -u "$__user" "$HNN_CONTAINER_NAME" bash -c "timeout 5 xauth -ni nlist "$__display" | grep '^ffff' | head -1 | awk '{print \$NF}'" 2>> "$LOGFILE")
-  if [[ $? -ne 0 ]]; then
-    return $?
+  log_header_message "Retrieving container xauth keys... "
+  COMMAND=(8 "$docker_cmd" exec "-u" "$__user" "$HNN_CONTAINER_NAME" "bash" "-c" "timeout 5 xauth -ni nlist $__display")
+  convert_COMMAND_to_escaped_array
+  # don't display the keys in the log file
+  if [[ $DEBUG -eq 1 ]]; then
+    __suppress_output=0
   else
-    echo $__key
+    __suppress_output=1
+  fi
+  __keys=$(SUPPRESS_OUTPUT=$__suppress_output output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+  __command_status=$?
+  if [[ $__command_status -ne 0 ]]; then
+    echo "*failed*" >> "$LOGFILE"
+    exit $__command_status
+  else
+    echo "done" >> "$LOGFILE"
+
+    log_header_message "Validating container xauth keys... "
+    __key="$(echo $__keys | grep 'ffff' | head -1 | awk '{print $NF}')"
+    if [[ -z "$__key" ]]; then
+      # no output means no valid keys
+      echo "*failed*" >> "$LOGFILE"
+      echo -e "  ** Error: no valid key **" >> "$LOGFILE"
+      return 1
+    else
+      echo "done" >> "$LOGFILE"
+    fi
+
+    if [[ $DEBUG -eq 1 ]]; then
+      echo "Valid key: =START=$__key=END=" >> "$LOGFILE"
+    fi
+    echo "$__key"
   fi
 }
 
@@ -1678,44 +1983,42 @@ function check_container_xauth_print {
 
   check_var LOGFILE
   check_var RETRY
+  check_var CONTAINER_TYPE
 
   local __user
+  local __command_status
   local __host_key
-  __user=$1
-  __host_key=$(get_host_xauth_key)
-  if [[ $? -ne 0 ]]; then
-    exit $?
-  elif [[ -z $__host_key ]]; then
-    echo $__host_key
-    # no output means no valid keys
-    echo -e "  ** Error: no valid key **" >> "$LOGFILE"
-    return 1
-  fi
+  local __key
 
-  if [[ $TRAVIS_TESTING -eq 1 ]] && ([[ "$OS" =~ "windows" ]] || [[ "$OS" == "wsl" ]]); then
-    # always return success because we can't run xauth within container
-    return 0
+  __user=$1
+  __host_key=$(get_valid_host_xauth_key)
+  __command_status=$?
+  if [[ $__command_status -ne 0 ]]; then
+    cleanup 2
   fi
 
   if [[ $RETRY -eq 1 ]]; then
     echo -n "(retry) " | tee -a "$LOGFILE"
     RETRY=0
   fi
-  print_header_message "Checking that xauth key in container matches... "
-  __key=$(get_container_xauth_key $1)
+
+  if [[ "$CONTAINER_TYPE" == "windows" ]]; then
+    __key=$(get_container_xauth_key "hnn_user")
+  else
+    __key=$(get_container_xauth_key $1)
+  fi
   __command_status=$?
+
+
+  print_header_message "Checking that xauth key in container matches... "
   if [[ $__command_status -ne 0 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     echo -e " ** Error: could not retrieve keys from container **" >> "$LOGFILE"
-    exit $__command_status
-  elif [[ -z $__key ]]; then
-    # no output means no valid keys
-    echo "*failed*" | tee -a "$LOGFILE"
-    echo -e " ** Error: no valid key **" >> "$LOGFILE"
     return 1
   elif [[ "$__host_key" == "$__key" ]]; then
     echo "done" | tee -a "$LOGFILE"
   else
+    echo "*$__host_key* != *$__key*" >> "$LOGFILE"
     echo "*failed*" | tee -a "$LOGFILE"
     echo -e "  ** Error: key mismatch **" >> "$LOGFILE"
     return 1
@@ -1758,7 +2061,6 @@ function setup_xauthority_in_container_fail {
     # make sure that xauth works in container now
     check_container_xauth_print "$__user"
     if [[ $? -ne 0 ]]; then
-      echo "*failed*" | tee -a "$LOGFILE"
       cleanup 2
     fi
   fi
@@ -1799,13 +2101,13 @@ function check_xquartz_listening {
 
   [[ $OS ]] || export OS=$(get_os)
   if [[ $? -ne 0 ]]; then
-    cleanup $?
+    cleanup 2
   fi
 
   # before assuming port 0, check if xquartz is already running
   __current_port=$(get_xquartz_port)
   if [[ $? -ne 0 ]]; then
-    exit $?
+    exit 2
   elif [[ -z $__current_port ]]; then
     __current_port="0"
   fi
@@ -1819,7 +2121,7 @@ function check_xquartz_listening {
     fi
     __current_port=$(restart_xquartz_fail)
     if [[ $? -ne 0 ]]; then
-      exit $?
+      exit 2
     fi
     sleep 1
     (( __retry++ ))
@@ -1927,18 +2229,18 @@ function generate_ssh_auth_keys_fail {
     cleanup 2
   fi
 
-  echo -e "\n  ** Command: { echo -n 'command=\"/home/hnn_user/start_hnn.sh\" '; cat \"$SSH_PUBKEY\"; } > \"$SSH_AUTHKEYS\"" >> "$LOGFILE"
-  echo -n "  ** Stderr: " >> "$LOGFILE"
-  { echo -n 'command="/home/hnn_user/start_hnn.sh" '; cat "$SSH_PUBKEY"; } > "$SSH_AUTHKEYS" 2>> "$LOGFILE"
+  COMMAND=(3 "chmod" "600" "$SSH_PRIVKEY")
+  convert_COMMAND_to_escaped_array
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   if [[ $? -ne "0" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     cleanup 2
   fi
   echo >> "$LOGFILE"
 
-  COMMAND=(3 "chmod" "600" "$SSH_AUTHKEYS")
-  convert_COMMAND_to_escaped_array
-  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  echo -e "\n  ** Command: { echo -n 'command=\"/home/hnn_user/start_hnn.sh\" '; cat \"$SSH_PUBKEY\"; } > \"$SSH_AUTHKEYS\"" >> "$LOGFILE"
+  echo -n "  ** Stderr: " >> "$LOGFILE"
+  { echo -n 'command="/home/hnn_user/start_hnn.sh" '; cat "$SSH_PUBKEY"; } > "$SSH_AUTHKEYS" 2>> "$LOGFILE"
   if [[ $? -ne "0" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     cleanup 2
@@ -2007,16 +2309,56 @@ function check_docker_working_print {
   COMMAND=(4 "timeout" "5" "$docker_cmd" version)
   convert_COMMAND_to_escaped_array
   __output=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
-  if [[ ! -z $__output ]] && [[ $? -ne "0" ]]; then
+  if [[ $? -ne 0 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     false
-  elif [[ $? -eq "124" ]]; then
+  elif [[ -z "$__output" ]]; then
+    echo "*failed*" | tee -a "$LOGFILE"
+    false
+  elif [[ $? -eq 124 ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
     echo "Error: timed out connecting to Docker. Please check Docker install" | tee -a "$LOGFILE"
     false
   else
     echo "done" | tee -a "$LOGFILE"
   fi
+}
+
+function get_docker_container_type {
+  check_var LOGFILE
+  check_var docker_cmd
+
+  local __output
+
+  print_header_message "Checking Docker container type... "
+  COMMAND=(4 "timeout" "5" "$docker_cmd" info)
+  convert_COMMAND_to_escaped_array
+  __output=$(output_run_command_arguments "${ESCAPED_COMMAND[@]}")
+  if [[ $? -ne 0 ]]; then
+    echo "*failed*" | tee -a "$LOGFILE"
+    cleanup 2
+  elif [[ -z "$__output" ]]; then
+    echo "*failed*" | tee -a "$LOGFILE"
+    cleanup 2
+  elif [[ $? -eq 124 ]]; then
+    echo "*failed*" | tee -a "$LOGFILE"
+    echo "Error: timed out connecting to Docker. Please check Docker install" | tee -a "$LOGFILE"
+    cleanup 2
+  else
+    if [[ "$(echo $__output | grep "Storage Driver:")" =~ "windowsfilter" ]]; then
+      CONTAINER_TYPE="windows"
+    else
+      CONTAINER_TYPE="linux"
+    fi
+    echo "$CONTAINER_TYPE" | tee -a "$LOGFILE"
+  fi
+
+  if [[ "$CONTAINER_TYPE" == "windows" ]] && [[ "$OS" == "wsl" ]]; then
+    echo "** Windows containers not supported in WSL. Use Linux containers. **" | tee -a "$LOGFILE"
+    cleanup 1
+  fi
+
+  export CONTAINER_TYPE
 }
 
 function remove_hnn_image_fail {
@@ -2045,13 +2387,29 @@ function remove_hnn_image_fail {
 
 function check_vcxsrv_running_print {
   check_var LOGFILE
+  check_var TRAVIS_TESTING
 
   print_header_message_short "Checking if VcXsrv is running... "
-  export VCXSRV_PID=$(tasklist | grep vcxsrv | awk '{print $2}' 2> /dev/null)
+  if [[ "$OS" == "wsl" ]]; then
+    TASKS=$(powershell.exe -c '& tasklist')
+    if [[ $? -ne 0 ]]; then
+      echo "*failed*" | tee -a "$LOGFILE"
+      cleanup 2
+    fi
+    export VCXSRV_PID=$(echo "$TASKS"| grep vcxsrv | awk '{print $2}' 2> /dev/null)
+  else
+    export VCXSRV_PID=$(tasklist | grep vcxsrv | awk '{print $2}' 2> /dev/null)
+  fi
+
   if [ -n "${VCXSRV_PID}" ]; then
     echo -e "\nVcXsrv running with PID $VCXSRV_PID" >> "$LOGFILE"
     echo "yes" | tee -a "$LOGFILE"
-    echo "WARNING: continuing with existing VcXsrv process. You many need to stop it and let this script start VcXsrv for the GUI to display"
+    if [[ $TRAVIS_TESTING -eq 1 ]]; then
+      echo -e "\nError: Travis expects that VcXsrv will be started every time"
+      cleanup 1
+    else
+      echo "WARNING: continuing with existing VcXsrv process. You many need to stop it and let this script start VcXsrv for the GUI to display"
+    fi
   else
     echo "no" | tee -a "$LOGFILE"
     export VCXSRV_PID=
@@ -2078,7 +2436,7 @@ function find_command_suggested_path {
   __program="$1"
   __path="$2"
 
-  if [[ "$OS" =~ "windows" ]]; then
+  if [[ "$OS" == "windows" ]] || [[ "$OS" == "wsl" ]]; then
     __executable_name="$__program.exe"
   else
     __executable_name="$__program"
