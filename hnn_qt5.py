@@ -3384,7 +3384,7 @@ class HNNGUI (QMainWindow):
     traceback.print_exception(exc_type, exc_value, enriched_tb)
     msgBox = QMessageBox(self)
     msgBox.information(self, "Exception", "WARNING: an exception occurred! Details can be "
-                      "found in hnn_docker.log or the console output. We would "
+                      "found in hnn-docker.log (or the console output). We would "
                       "greatly appreciate reporting this issue to our development "
                       "team: <a href=https://github.com/jonescompneurolab/hnn/issues>"
                       "https://github.com/jonescompneurolab/hnn/issues</a>")

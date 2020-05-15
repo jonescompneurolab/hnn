@@ -10,8 +10,9 @@
   cleanup 1
 }
 
-[[ $LOGFILE ]] || export LOGFILE="$(pwd)/hnn_docker.log"
-source scripts/docker_functions.sh
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+[[ $LOGFILE ]] || export LOGFILE="$DIR/hnn-docker.log"
+source "$DIR/docker_functions.sh"
 
 set_globals
 if [[ $? -ne 0 ]]; then

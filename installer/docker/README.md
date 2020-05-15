@@ -47,7 +47,7 @@ docker build --tag jonescompneurolab/hnn:win64 -f installer/windows/Dockerfile i
 
 ## Starting HNN container
 
-The container is designed to be run from the `hnn_docker.sh` script, but in general, the following scheme will work for Linux/mac:
+The container is designed to be run from the `hnn-docker.sh` script, but in general, the following scheme will work for Linux/mac:
 
 ```bash
 docker run -d -v "$HOME/hnn_out":"$HOME/hnn_out" --env XAUTHORITY=/tmp/.Xauthority --env SYSTEM_USER_DIR="$HOME" --name hnn_container jonescompneurolab/hnn
@@ -57,7 +57,7 @@ This will start the container in the background. In order to start the HNN GUI, 
 
 ## Running HNN with Docker
 
-We recommend using the `hnn_docker.sh` script which includes checks for directory permissions, creating the necessary files, and adding the appropriate options for each host OS. The commands below give an outline of the process.
+We recommend using the `hnn-docker.sh` script which includes checks for directory permissions, creating the necessary files, and adding the appropriate options for each host OS. The commands below give an outline of the process.
 
 Using SSH can be controlled by the environment variable USE_SSH
 

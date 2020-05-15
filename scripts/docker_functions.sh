@@ -109,9 +109,11 @@ function set_globals {
   ESC_STR="%^%"
   VCXSRV_PID=
 
-  SSH_PRIVKEY="$(pwd)/installer/docker/id_rsa_hnn"
-  SSH_PUBKEY="$(pwd)/installer/docker/id_rsa_hnn.pub"
-  SSH_AUTHKEYS="$(pwd)/installer/docker/authorized_keys"
+  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+  SSH_PRIVKEY="$SCRIPT_DIR/hnn_ssh_files/id_rsa_hnn"
+  SSH_PUBKEY="$SCRIPT_DIR/hnn_ssh_files/id_rsa_hnn.pub"
+  SSH_AUTHKEYS="$SCRIPT_DIR/hnn_ssh_files/authorized_keys"
 
   export USE_SSH UPGRADE STOP START RETRY UNINSTALL HNN_DOCKER_IMAGE HNN_CONTAINER_NAME
   export SYSTEM_USER_DIR ALREADY_RUNNING SSHD_STARTED NEW_XAUTH_KEYS ESC_STR VCXSRV_PID
@@ -184,7 +186,7 @@ function cleanup {
   fi
 
   if [[ $__failed -eq "0" ]]; then
-    echo "Script hnn_docker.sh finished successfully" | tee -a "$LOGFILE"
+    echo "Script hnn-docker.sh finished successfully" | tee -a "$LOGFILE"
     exit 0
   elif [[ $__failed -eq "1" ]]; then
     echo "Error: Script cannot continue" | tee -a "$LOGFILE"
@@ -813,8 +815,14 @@ function check_hnn_out_perms_host {
   # no arguments
   check_var LOGFILE
   check_var HOME
+  check_var SCRIPT_DIR
 
-  installer/docker/check_hnn_out_perms.sh
+  if [[ -f "$SCRIPT_DIR/check_hnn_out_perms.sh" ]] ;then
+    "$SCRIPT_DIR/check_hnn_out_perms.sh"
+  elif [[ -f "$SCRIPT_DIR/../installer/docker/check_hnn_out_perms.sh" ]] ;then
+    "$SCRIPT_DIR/../installer/docker/check_hnn_out_perms.sh"
+  fi
+
   if [[ $? -ne 0 ]]; then
     return 1
   fi
@@ -2221,6 +2229,18 @@ function generate_ssh_auth_keys_fail {
   check_var SSH_AUTHKEYS
 
   print_header_message "Setting up SSH authentication files... "
+  if [[ ! -d "$SCRIPT_DIR/hnn_ssh_files" ]]; then
+    log_header_message "Creating SSH keys directory... "
+    COMMAND=(2 "mkdir" "$SCRIPT_DIR/hnn_ssh_files")
+    convert_COMMAND_to_escaped_array
+    output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+    if [[ $? -ne "0" ]]; then
+      echo "*failed*" | tee -a "$LOGFILE"
+      cleanup 2
+    else
+      echo "done" >> "$LOGFILE"
+    fi
+  fi
   echo -e "\n  ** Command: echo -e \"\n\" | ssh-keygen -f $SSH_PRIVKEY -t rsa -N ''" >> "$LOGFILE"
   echo -n "  ** Output: " >> "$LOGFILE"
   echo -e "\n" | ssh-keygen -f "$SSH_PRIVKEY" -t rsa -N '' >> "$LOGFILE" 2>&1

@@ -31,7 +31,7 @@ function wait_for_pid {
 }
 
 function script_fail {
-  echo -ne "\n******* install script failed. output from log below  *******\n"
+  echo -ne "\n******* install script failed. output from $LOGFILE below  *******\n"
   cat "$LOGFILE"
   exit 2
 }

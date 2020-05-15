@@ -4,7 +4,7 @@ export TRAVIS_TESTING=1
 
 source "$DIR/docker_functions.sh"
 source "$DIR/utils.sh"
-export LOGFILE="hnn_docker.log"
+export LOGFILE="hnn-docker.log"
 set_globals
 
 function cleanup {
@@ -29,4 +29,5 @@ export -f cleanup
 
 cd "$DIR/../"
 export PATH=$PATH:/C/tools/msys64/mingw64/bin
-USE_SSH=0 ./hnn_docker.sh start || script_fail
+tar -xf hnn-install.tar.gz
+USE_SSH=0 ./hnn-install/hnn-docker.sh start || script_fail

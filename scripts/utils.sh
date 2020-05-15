@@ -52,7 +52,7 @@ function wait_for_pid {
 function script_fail {
   check_var LOGFILE
 
-  echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
+  echo -ne "\n*******  script failed. output from $LOGFILE below  *******\n"
   cat "$LOGFILE"
   exit 2
 }

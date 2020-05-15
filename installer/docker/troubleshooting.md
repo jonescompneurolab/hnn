@@ -2,7 +2,7 @@
 
 Common problems that one might encounter running the HNN docker container are listed below. Some of the links below go to an external site (e.g. MetaCell). If you encounter an issue not listed below, please [open an issue](https://github.com/jonescompneurolab/hnn/issues) on GitHub, including the output with the failed command and any other error messages.
 
-Make sure to check the log hnn_docker.log for more verbose error messages that will hint at which of the sections to go to below.
+Make sure to check the log hnn-docker.log for more verbose error messages that will hint at which of the sections to go to below.
 
 * [Failed to start HNN (No GUI)](#xdisplay)
 * [Starting HNN fails with 'Drive has not been shared'](#shared)
@@ -15,10 +15,10 @@ Output from `./docker_hnn.sh start`:
 
 ```none
 Starting HNN... failed
-Please see hnn_docker.log for more details
+Please see hnn-docker.log for more details
 ```
 
-Check the contents of `hnn_docker.log`. Most likely, they will be something similar to below:
+Check the contents of `hnn-docker.log`. Most likely, they will be something similar to below:
 
 ```none
 Creating hnn_container ... done
@@ -59,13 +59,13 @@ Troubleshooting steps diverge for each operating system.
         xhost +local:docker
         ```
 
-If issues persist, we'd greatly appreciate it if you would report the issue on our [GitHub Issues](https://github.com/jonescompneurolab/hnn/issues). Please include output from hnn_docker.log and the above commands
+If issues persist, we'd greatly appreciate it if you would report the issue on our [GitHub Issues](https://github.com/jonescompneurolab/hnn/issues). Please include output from hnn-docker.log and the above commands
 
 <a name="shared"/>
 
-## Starting HNN fails with 'Drive has not been shared' in hnn_docker.log
+## Starting HNN fails with 'Drive has not been shared' in hnn-docker.log
 
-In `hnn_docker.log`:
+In `hnn-docker.log`:
 
 ```node
 Creating hnn_container ... error

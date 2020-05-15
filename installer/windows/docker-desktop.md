@@ -28,7 +28,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 ## Prerequisite: VcXsrv
 
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download) (click [here](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133) for the direct download link for version 64.1.20.1.4)
-2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder. If you choose a different folder the `hnn_docker.sh` script will not be able to launch it automatically.
+2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder. If you choose a different folder the `hnn-docker.sh` script will not be able to launch it automatically.
 
 ## Prerequisite: Docker Desktop
 
@@ -68,10 +68,10 @@ There are two related requirements needed for Docker to be able to run HNN in a 
     cd hnn
     ```
 
-3. Start the Docker container using the `hnn_docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
+3. Start the Docker container using the `hnn-docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
 
     ```bash
-    ./hnn_docker.sh -u start
+    ./scripts/hnn-docker.sh -u start
     ```
 
     * If a prompt appears from the lower-right and ask you to share the drive, click 'Share'. If you miss this on the first time, the script will hang on "Starting HNN..." and eventually fail. Rerun the script to see the prompt again.
@@ -83,10 +83,10 @@ There are two related requirements needed for Docker to be able to run HNN in a 
     * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 5. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
     * A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
-6. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
+6. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./scripts/hnn-docker.sh stop`.
 
     ```bash
-    ./hnn_docker.sh stop
+    ./scripts/hnn-docker.sh stop
     ```
 
 ## Upgrading to a new version of HNN
@@ -94,18 +94,18 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 To just pull the latest docker image from Docker Hub:
 
 ```bash
-./hnn_docker.sh upgrade
+./scripts/hnn-docker.sh upgrade
 ```
 
 Instead to upgrade and start the newest GUI:
 
 ```bash
-./hnn_docker.sh -u start
+./scripts/hnn-docker.sh -u start
 ```
 
 ## Editing files within HNN container
 
-You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./hnn_docker.sh  start` in one terminal window to start hnn in the background and then run [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) in another terminal window:
+You may want run commands or edit files within the container. To access a command shell in the container, start the container using `./scripts/hnn-docker.sh  start` in one terminal window to start hnn in the background and then run [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec/) in another terminal window:
 
 ```none
 $ winpty docker exec -ti hnn_container bash
@@ -119,7 +119,7 @@ If you'd like to be able to copy files from the host OS without using the shared
 If you want to remove the container and 1.6 GB HNN image, run the following commands from a terminal window.
 
 ```bash
-./hnn_docker.sh uninstall
+./scripts/hnn-docker.sh uninstall
 ```
 
 You can then remove Docker Desktop from "Uninstall a program" in the Control Panel.
