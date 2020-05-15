@@ -1,12 +1,12 @@
 #!/bin/bash
-set -xe
+set -e
 
 export TRAVIS_TESTING=1
 
 source scripts/utils.sh
 export -f sha256sum
 
-export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:master"
+export DOCKER_IMAGE_NAME="jonescompneurolab/hnn:latest"
 export BASE_QEMU_OPTS="--disable-cocoa --disable-curses --disable-vnc --disable-vde \
                         --disable-pie --disable-libusb --disable-hax --disable-kvm \
                         --disable-debug-info --disable-docs --disable-nettle \
@@ -175,17 +175,17 @@ start_download "$FILENAME" "$URL" &
 NRN_PID=$!
 
 if [[ $HOMEBREW_QEMU -eq 1 ]] || [[ $BUILD_QEMU -eq 1 ]]; then
-echo "Waiting for qemu build to finish"
-NAME="building qemu"
-wait_for_pid "${MAKE_PID}" "$NAME"
+    echo "Waiting for qemu build to finish"
+    NAME="building qemu"
+    wait_for_pid "${MAKE_PID}" "$NAME"
 
-make install
-command cd ${TRAVIS_BUILD_DIR}
+    make install
+    command cd ${TRAVIS_BUILD_DIR}
 fi
 
 # create default VM with docker-machine
 echo "Starting qemu VM..."
-docker-machine -D create --driver qemu --qemu-cache-mode unsafe --qemu-cpu-count 2 default &
+docker-machine -D create --driver qemu --qemu-cache-mode unsafe --qemu-cpu-count 2 default &> machine.log &
 export MACHINE_PID=$!
 
 curl -Lo "$HOME/download-frozen-image-v2.sh" https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
@@ -211,7 +211,17 @@ conda install -y -n hnn -c conda-forge nlopt
 pip download flake8 pytest pytest-cov coverage coveralls mne
 
 echo "Waiting for VM to start..."
-wait $MACHINE_PID
+wait $MACHINE_PID || COMMAND_STATUS=$?
+if [[ $COMMAND_STATUS -ne 0 ]]; then
+    echo -e "\n********** Docker machine failed with status $COMMAND_STATUS. Log below *************\n"
+    cat machine.log
+    if [ -f /tmp/qemu.log ]; then
+        echo -e "\n********** QEMU log *************\n"
+        cat /tmp/qemu.log
+    fi
+    echo "Trying to start VM again..."
+    docker-machine -D create --driver qemu --qemu-cache-mode unsafe --qemu-cpu-count 2 default
+fi
 echo "VM running docker is up"
 
 # set up environment variables to use docker within VM
@@ -223,8 +233,9 @@ NAME="downloading HNN docker image"
 wait_for_pid "${IMAGE_PID}" "$NAME"
 echo "Loading downloaded image into docker"
 (tar -cC "$HOME/docker_image" . | docker load && \
-docker tag jonescompneurolab/hnn:master jonescompneurolab/hnn:latest && \
 touch $HOME/docker_image_loaded) &
+
+# docker tag jonescompneurolab/hnn:latest jonescompneurolab/hnn:latest && \
 
 # hack so that NEURON install doesn't take forever
 sudo kill -9 $NRN_INSTALL_PID && wait $NRN_INSTALL_PID || {
