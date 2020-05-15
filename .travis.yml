@@ -2,10 +2,56 @@ language: c
 
 matrix:
   include:
+      # OSX
+      - os: osx
+        name: "MacOS sierra"
+        osx_image: xcode9.2
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - HOMEBREW_QEMU=1
+          - HOMEBREW_SDKROOT=
+
+      - os: osx
+        name: "MacOS el capitan"
+        osx_image: xcode8
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - BREW_UNTAP=1
+          - HOMEBREW_QEMU=1
+          - HOMEBREW_SDKROOT=
+
+      - os: osx
+        name: "MacOS mojave"
+        osx_image: xcode11.3
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+
+      - os: osx
+        name: "MacOS high sierra"
+        osx_image: xcode10.1
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+          - HOMEBREW_NO_AUTO_UPDATE=1
+          - BUILD_QEMU=1
+
+      # Windows
+      - os: windows
+        name: "Windows"
+        env:
+          - PYTHON_VERSION=3.7
+          - NEURON_VERSION=7.7
+
       # Linux
       - os: linux
-        dist: disco
-        name: "Ubuntu disco"
+        dist: xenial
+        name: "Ubuntu xenial"
         env:
           - NEURON_VERSION=7.7
         services:
@@ -30,8 +76,8 @@ matrix:
             - xvfb
 
       - os: linux
-        dist: xenial
-        name: "Ubuntu xenial"
+        dist: disco
+        name: "Ubuntu disco"
         env:
           - NEURON_VERSION=7.7
         services:
@@ -42,51 +88,6 @@ matrix:
           packages:
             - xvfb
 
-      # OSX
-      - os: osx
-        name: "MacOS mojave"
-        osx_image: xcode11.3
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-
-      - os: osx
-        name: "MacOS high sierra"
-        osx_image: xcode10.1
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - BUILD_QEMU=1
-
-      - os: osx
-        name: "MacOS sierra"
-        osx_image: xcode9.2
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - HOMEBREW_QEMU=1
-          - HOMEBREW_SDKROOT=
-
-      - os: osx
-        name: "MacOS el capitan"
-        osx_image: xcode8
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-          - HOMEBREW_NO_AUTO_UPDATE=1
-          - BREW_UNTAP=1
-          - HOMEBREW_QEMU=1
-          - HOMEBREW_SDKROOT=
-
-      # Windows
-      - os: windows
-        name: "Windows"
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
 
 before_install:
   - set -e  # error on any command failure
