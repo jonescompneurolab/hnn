@@ -76,7 +76,7 @@ powershell -command "(New-Object System.Net.WebClient).DownloadFile('https://git
     rm -f msmpisetup.exe
 
 echo "Running HNN Windows install script..."
-powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn.ps1
+powershell.exe -ExecutionPolicy Bypass -File ./installer/windows/hnn-windows.ps1
 # add miniconda python to the path
 export PATH=$PATH:$HOME/Miniconda3/Scripts
 export PATH=$HOME/Miniconda3/envs/hnn/:$PATH

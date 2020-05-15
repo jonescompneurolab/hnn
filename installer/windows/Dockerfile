@@ -28,8 +28,8 @@ COPY installer/docker/hnn_envs /home/hnn_user
 COPY installer/docker/start_hnn.sh /home/hnn_user
 COPY installer/docker/check_hnn_out_perms.sh /home/hnn_user
 
-ADD installer/windows/hnn.ps1 /home/hnn_user/Downloads/
-RUN powershell -executionpolicy bypass -File "C:\home\hnn_user\Downloads\hnn.ps1" && \
+ADD installer/windows/hnn-windows.ps1 /home/hnn_user/Downloads/
+RUN powershell -executionpolicy bypass -File "C:\home\hnn_user\Downloads\hnn-windows.ps1" && \
     powershell -Command "$env:PATH = 'C:\home\hnn_user\AppData\Local\Programs\Git\bin;' + $env:PATH + \
 ';"C:\Program Files\VcXsrv";C:\home\hnn_user\Miniconda3\Scripts;C:\home\hnn_user\Miniconda3\envs\hnn;' + \
 'C:\home\hnn_user\Miniconda3\envs\hnn\Scripts;C:\home\hnn_user\Miniconda3\envs\hnn\Library\bin' ; \

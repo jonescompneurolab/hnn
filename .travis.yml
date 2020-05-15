@@ -175,7 +175,7 @@ before_install:
       export PATH=/usr/bin:/usr/local/bin:$PATH
 
       echo "Starting Ubuntu install script"
-      installer/ubuntu/installer.sh
+      installer/ubuntu/hnn-ubuntu.sh
 
       NLOPT_LIB=$(ls -d $HOME/.local/lib/python*/site-packages)
       echo $NLOPT_LIB

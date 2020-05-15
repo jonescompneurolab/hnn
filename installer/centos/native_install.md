@@ -5,15 +5,15 @@ The script below assumes that it can update OS packages for python and prerequis
 - CentOS 7: [centos7-installer.sh](centos7-installer.sh)
 
   ```bash
-  chmod +x ./centos7-installer.sh
-  ./centos7-installer.sh
+  chmod +x ./hnn-centos7.sh
+  ./hnn-centos7.sh
   ```
 
 - CentOS 6 (no longer maintained): [centos6-installer.sh](centos6-installer.sh)
 
   ```bash
-  chmod +x ./centos6-installer.sh
-  ./centos6-installer.sh
+  chmod +x ./hnn-centos6.sh
+  ./hnn-centos6.sh
   ```
 
 ## Troubleshooting

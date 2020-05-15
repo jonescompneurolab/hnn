@@ -2,7 +2,7 @@
 
 This method will run HNN without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. However, there is a possibility that differences in the base environment may require additional troubleshooting. Thus, it is best suited for advanced users, and we recommend the [Docker-based install instructions](README.md).
 
-With this method, a [PowerShell install script](hnn.ps1) will manage downloading all prerequisites, including Python (Anaconda), NEURON, and Git for Windows.
+With this method, a [PowerShell install script](hnn-windows.ps1) will manage downloading all prerequisites, including Python (Anaconda), NEURON, and Git for Windows.
 
 ## Requirements
 
@@ -20,19 +20,19 @@ The PowerShell script used below will create a new directory called "hnn" in the
 
     ```powershell
     cd hnn
-    powershell.exe -ExecutionPolicy Bypass -File .\installer\windows\hnn.ps1
+    powershell.exe -ExecutionPolicy Bypass -File .\installer\windows\hnn-windows.ps1
     ```
 
     OR to download and run the script from a url:
 
     ```powershell
-    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))"
+    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn-windows.ps1'))"
     ```
 
     OR from a powershell prompt:
 
     ```powershell
-    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn.ps1'))
+    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn-windows.ps1'))
     ```
 
    - There will be a permission prompt to install Microsoft MPI and a couple of terminal windows will

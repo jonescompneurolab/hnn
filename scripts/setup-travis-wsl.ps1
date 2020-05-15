@@ -23,10 +23,10 @@ Write-Host "Configuring Ubuntu WSL..."
 & .\Ubuntu\Ubuntu1804.exe config --default-user hnn_user
 
 # remove windows newlines
-& wsl -- bash -ec "dos2unix /home/hnn_user/hnn/scripts/* /home/hnn_user/hnn/installer/ubuntu/installer.sh /home/hnn_user/hnn/installer/docker/hnn_envs"
+& wsl -- bash -ec "dos2unix /home/hnn_user/hnn/scripts/* /home/hnn_user/hnn/installer/ubuntu/hnn-ubuntu.sh /home/hnn_user/hnn/installer/docker/hnn_envs"
 
 Write-Host "Installing HNN in Ubuntu WSL..."
-& wsl -- bash -ec "cd /home/hnn_user/hnn && source scripts/utils.sh && export LOGFILE=ubuntu_install.log && TRAVIS_TESTING=1 installer/ubuntu/installer.sh || script_fail"
+& wsl -- bash -ec "cd /home/hnn_user/hnn && source scripts/utils.sh && export LOGFILE=ubuntu_install.log && TRAVIS_TESTING=1 installer/ubuntu/hnn-ubuntu.sh || script_fail"
 
 if (!$?) {
     exit 1
