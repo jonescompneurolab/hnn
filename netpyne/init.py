@@ -24,7 +24,7 @@ cfgFile = '../param/ERPYes100Trials.param'      # ERP
 
 # Import simConfig and set parameters from file
 cfg, netParams = sim.readCmdLineArgs()
-cfg = setCfgFromFile(cfgFile, cfg)#, exclude = ['prng_seedcore_input_prox', 'prng_seedcore_input_dist'])
+cfg = setCfgFromFile(cfgFile, cfg)#, exclude = ['prng_seedcore_input_prox', 'prng_seedcore_input_dist']) # exclude parameters modified in batch.py
 
 from netParams import netParams
 

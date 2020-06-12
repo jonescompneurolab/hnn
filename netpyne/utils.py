@@ -32,5 +32,6 @@ def setCfgFromFile (fn, cfg, exclude = []):
     for k, v in d.items():
         if k not in exclude:
             setattr(cfg, k, v)
-    cfg.duration = cfg.tstop
+        if 'duration' not in exclude:
+            cfg.duration = cfg.tstop
     return cfg
