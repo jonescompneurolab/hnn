@@ -22,17 +22,11 @@ This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network
 Advantages of the NetPyNE version include:
 
 1. Standardized clean model definition using a declarative language
-
 2. Easier to modify and extend (e.g. add a population, change connectivity, )
-
 3. Built-in visualization/analysis plots: connectivity, spike statistics, Granger causality, ...
-
 4. Record and plot LFP and CSD (raw signal, spectrogram, ...)
-
 5. Use NetPyNE GUI to modify/visualize model
-
 6. Automated parameter optimization/exploration (eg on HPCs via SLURM)
-
 7. Export to NeuroML and SONATA formats for sharing
 
 
@@ -42,7 +36,7 @@ Dependencies
 * numpy
 * scipy
 * matplotlib
-* NetPyNE: installation instructions here: https://http://www.netpyne.org/install.html
+* NetPyNE: installation instructions here: http://www.netpyne.org/install.html#install-the-development-version-of-netpyne-via-github-and-pip
 * NEURON: installation instructions here: https://neuron.yale.edu/neuron/
 
 
@@ -53,13 +47,19 @@ We recommend the `Anaconda Python distribution <https://www.continuum.io/downloa
 
 	$ conda install numpy matplotlib scipy
 
-Additionally, you would need NEURON which is available here: `https://neuron.yale.edu/neuron/ <https://neuron.yale.edu/neuron/>`_. It can also be installed via pip now::
+Additionally, you will need NEURON which is available here: `https://neuron.yale.edu/neuron/ <https://neuron.yale.edu/neuron/>`_. It can also be installed via pip now::
 
 	$ pip install neuron
 
-To obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
+You will then need to install the development version of NetPyNE:
 
-	$ git clone --single-branch -branch netpyne https://github.com/jonescompneurolab/hnn.git 
+    $ git clone https://github.com/Neurosim-lab/netpyne.git
+    $ cd netpyne 
+    $ pip install -e .
+
+Finally, to obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
+
+	$ git clone --single-branch --branch netpyne https://github.com/jonescompneurolab/hnn.git 
 
 To check if everything worked fine, you can do::
 
