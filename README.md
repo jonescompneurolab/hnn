@@ -9,28 +9,52 @@ biophysics generating the primary electric currents underlying such data, so sim
 are directly comparable to source localized data (nano-Ampere-meters); this enables precise
 tuning of model parameters to match characteristics of recorded signals.
  
-We are integrating the circuit-level modeling with the minimum-norm-estimate (MNE) source
-localization software (https://martinos.org/mne/stable/index.html), so researchers can compute
-MEG/EEG source estimates and test hypotheses on
-the circuit origin of their data in one software package. Our goal is to design HNN to be useful
-to researchers with no formal computational neural modeling or coding experience.
-
 For more information visit [https://hnn.brown.edu](https://hnn.brown.edu) . There, we describe the use of HNN in studying the
 circuit-level origin of some of the most commonly measured MEG/EEG and ECoG signal: event related
 potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 
-# Installation
 
-Please follow the links on our [installation page](installer) to find instructions for your operating system.
+hnn-netpyne
+========
 
-# Questions
+This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of `HNN repository <https://github.com/jonescompneurolab/hnn>`_. 
 
-For questions, comments/feedback, or troubleshooting information please contact
-us at hnneurosolver@gmail.com, and review our user forum at
-[https://www.neuron.yale.edu/phpBB/viewforum.php?f=46](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46) .
+Dependencies
+============
 
-# Citations
+* numpy
+* scipy
+* matplotlib
+* NetPyNE: installation instructions here: 
+* NEURON: installation instructions here: https://neuron.yale.edu/neuron/
 
-To cite our software please use the following document object identifier:
- [![DOI](https://zenodo.org/badge/128077928.svg)](https://zenodo.org/badge/latestdoi/128077928)
+
+Installation
+============
+
+We recommend the `Anaconda Python distribution <https://www.continuum.io/downloads>`_. To install ``hnn-core``, you first need to install its dependencies::
+
+	$ conda install numpy matplotlib scipy
+
+Additionally, you would need NEURON which is available here: `https://neuron.yale.edu/neuron/ <https://neuron.yale.edu/neuron/>`_. It can also be installed via pip now::
+
+	$ pip install neuron
+
+To obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
+
+	$ git clone --single-branch -branch netpyne https://github.com/jonescompneurolab/hnn.git 
+
+To check if everything worked fine, you can do::
+
+    $ cd hnn-netpyne
+	$ python -i init.py
+
+which should run the simulation and produce some plots.
+
+
+Bug reports
+===========
+
+Use the `github issue tracker <https://github.com/jonescompneurolab/hnn/issues>`_ to report bugs.
+
 
