@@ -17,7 +17,7 @@ potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 hnn-netpyne
 ========
 
-This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of the HNN repository (https://github.com/jonescompneurolab/hnn>).
+This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of the HNN repository (https://github.com/jonescompneurolab/hnn).
 
 Advantages of the NetPyNE version include:
 
