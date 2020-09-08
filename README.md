@@ -17,7 +17,7 @@ potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 hnn-netpyne
 ========
 
-This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of `HNN repository <https://github.com/jonescompneurolab/hnn>`_. 
+This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of `HNN repository <https://github.com/jonescompneurolab/hnn>`_ . 
 
 Advantages of the NetPyNE version include:
 
@@ -63,7 +63,7 @@ To obtain the latest version of the hnn-netpyne code you will need to clone the 
 
 To check if everything worked fine, you can do::
 
-    $ cd hnn-netpyne
+    $ cd hnn/hnn-netpyne
     $ nrnivmodl ../mod
 	$ python -i init.py
 
