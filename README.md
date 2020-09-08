@@ -36,9 +36,8 @@ Dependencies
 * numpy
 * scipy
 * matplotlib
-* NetPyNE: installation instructions here: http://www.netpyne.org/install.html#install-the-development-version-of-netpyne-via-github-and-pip
-* NEURON: installation instructions here: https://neuron.yale.edu/neuron/
-
+* NetPyNE
+* NEURON
 
 Installation
 ============
@@ -51,9 +50,9 @@ Additionally, you will need NEURON which is available here: `https://neuron.yale
 
 	$ pip install neuron
 
-You will then need to install the development version of NetPyNE:
+You will then need to install the 'dipole' branch of NetPyNE (this branch will soon be merged into the master branch of NetPyNE):
 
-    $ git clone https://github.com/Neurosim-lab/netpyne.git
+    $ git clone --single-branch --branch dipole https://github.com/Neurosim-lab/netpyne.git
     $ cd netpyne 
     $ pip install -e .
 
@@ -74,11 +73,12 @@ Usage
 
 The NetPyNE model is inside the */hnn-netpyne* folder, containing just 6 files:
 
-- *init.py*: file to run a single simulation  
+- *init.py*: code to run a single simulation  
 - *batch.py*: code to run multiple simulations for parameter exploration/optimization
+- *cfg.py*: simulation configuration options
 - *cellParams.py*: cell parameters 
 - *netParams.py*: network parameters
-- *cfg.py*: simulation configuration options
+- *utils.py*: utility functions 
 
 You can select what set of parameters (.param file) to run by modifying init.py, e.g. replace *cfgFile='../param/ERPYes100Trials.param'* with *cfgFile='../param/AlphaAndBeta.param'* . This will allow you to replicate the different HNN tutorials. 
 
