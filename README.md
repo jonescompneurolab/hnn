@@ -19,13 +19,30 @@ hnn-netpyne
 
 This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of `HNN repository <https://github.com/jonescompneurolab/hnn>`_. 
 
+Advantages of the NetPyNE version include:
+
+1. Standardized clean model definition using a declarative language
+
+2. Easier to modify and extend (e.g. add a population, change connectivity, )
+
+3. Built-in visualization/analysis plots: connectivity, spike statistics, Granger causality, ...
+
+4. Record and plot LFP and CSD (raw signal, spectrogram, ...)
+
+5. Use NetPyNE GUI to modify/visualize model
+
+6. Automated parameter optimization/exploration (eg on HPCs via SLURM)
+
+7. Export to NeuroML and SONATA formats for sharing
+
+
 Dependencies
 ============
 
 * numpy
 * scipy
 * matplotlib
-* NetPyNE: installation instructions here: 
+* NetPyNE: installation instructions here: https://http://www.netpyne.org/install.html
 * NEURON: installation instructions here: https://neuron.yale.edu/neuron/
 
 
@@ -47,9 +64,23 @@ To obtain the latest version of the hnn-netpyne code you will need to clone the 
 To check if everything worked fine, you can do::
 
     $ cd hnn-netpyne
+    $ nrnivmodl ../mod
 	$ python -i init.py
 
 which should run the simulation and produce some plots.
+
+Usage
+============
+
+The NetPyNE model is inside the */hnn-netpyne* folder, containing just 6 files:
+
+- *init.py*: file to run a single simulation  
+- *batch.py*: code to run multiple simulations for parameter exploration/optimization
+- *cellParams.py*: cell parameters 
+- *netParams.py*: network parameters
+- *cfg.py*: simulation configuration options
+
+You can select what set of parameters (.param file) to run by modifying init.py, e.g. replace *cfgFile='../param/ERPYes100Trials.param'* with *cfgFile='../param/AlphaAndBeta.param'* . This will allow you to replicate the different HNN tutorials. 
 
 
 Bug reports
