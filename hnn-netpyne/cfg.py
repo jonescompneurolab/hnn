@@ -86,7 +86,7 @@ cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 80}  # change freq
 
 cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80} # change freq to 40 for alpha&beta tut
 
-cfg.analysis['plotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+cfg.analysis['iplotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
