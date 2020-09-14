@@ -775,7 +775,7 @@ if cfg.poissonInputs:
     # Poisson inputs -> L2 Pyr
     netParams.popParams['extPoisson_L2Pyr'] = {
         'cellModel': 'VecStim',
-        'numCells': 1,
+        'numCells': cellsPerPop['L2Pyr'],
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -783,7 +783,7 @@ if cfg.poissonInputs:
         'spikePattern': {
                 'type': 'poisson',
                 'start': getattr(cfg, 't0_pois'),
-                'interval': getattr(cfg, 'T_pois'),
+                'stop': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L2Pyr_Pois_lamtha')}}
 
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
@@ -803,6 +803,7 @@ if cfg.poissonInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
+            'connList': conn1to1Pyr,
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -810,7 +811,7 @@ if cfg.poissonInputs:
     # Poisson inputs -> L5 Pyr
     netParams.popParams['extPoisson_L5Pyr'] = {
         'cellModel': 'VecStim',
-        'numCells': 1,
+        'numCells': cellsPerPop['L5Pyr'],
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -818,7 +819,7 @@ if cfg.poissonInputs:
         'spikePattern': {
                 'type': 'poisson',
                 'start': getattr(cfg, 't0_pois'),
-                'interval': getattr(cfg, 'T_pois'),
+                'stop': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L5Pyr_Pois_lamtha')}}
 
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
@@ -838,6 +839,7 @@ if cfg.poissonInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
+            'connList': conn1to1Pyr,
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique']}
 
@@ -845,7 +847,7 @@ if cfg.poissonInputs:
     # Poisson inputs -> L2 Basket
     netParams.popParams['extPoisson_L2Basket'] = {
         'cellModel': 'VecStim',
-        'numCells': 1,
+        'numCells': cellsPerPop['L2Basket'],
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -853,7 +855,7 @@ if cfg.poissonInputs:
         'spikePattern': {
                 'type': 'poisson',
                 'start': getattr(cfg, 't0_pois'),
-                'interval': getattr(cfg, 'T_pois'),
+                'stop': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L2Basket_Pois_lamtha')}}
 
     synParamsList = [{'synMech': 'AMPA',
@@ -873,6 +875,7 @@ if cfg.poissonInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
+            'connList': conn1to1Basket,
             'synsPerConn': 1,
             'sec': ['soma']}
 
@@ -880,7 +883,7 @@ if cfg.poissonInputs:
     # Poisson inputs -> L5 Basket
     netParams.popParams['extPoisson_L5Basket'] = {
         'cellModel': 'VecStim',
-        'numCells': 1,
+        'numCells': cellsPerPop['L5Basket'],
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
@@ -888,7 +891,7 @@ if cfg.poissonInputs:
         'spikePattern': {
                 'type': 'poisson',
                 'start': getattr(cfg, 't0_pois'),
-                'interval': getattr(cfg, 'T_pois'),
+                'stop': getattr(cfg, 'T_pois'),
                 'frequency': getattr(cfg, 'L5Basket_Pois_lamtha')}}
 
     synParamsList = [{'synMech': 'AMPA',
@@ -908,6 +911,7 @@ if cfg.poissonInputs:
             'synMech': synParams['synMech'],
             'weight': weightDistFunc.format(**synParams),
             'delay': delayDistFunc.format(**synParams),
+            'connList': conn1to1Basket,
             'synsPerConn': 1,
             'sec': ['soma']}
 

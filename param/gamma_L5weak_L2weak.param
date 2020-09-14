@@ -13,7 +13,7 @@ dipole_smooth_win: 0.0
 save_vsoma: 0
 prng_seedcore_input_prox: 0
 prng_seedcore_input_dist: 0
-prng_seedcore_extpois: -1
+prng_seedcore_extpois: 0
 prng_seedcore_extgauss: 0
 prng_seedcore_evprox_1: 0
 prng_seedcore_evdist_1: 0
