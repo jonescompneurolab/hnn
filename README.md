@@ -52,9 +52,7 @@ Additionally, you will need NEURON which is available here: `https://neuron.yale
 
 You will then need to install the 'dipole' branch of NetPyNE (this branch will soon be merged into the master branch of NetPyNE):
 
-    $ git clone --single-branch --branch dipole https://github.com/Neurosim-lab/netpyne.git
-    $ cd netpyne 
-    $ pip install -e .
+    $ pip install netpyne
 
 Finally, to obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
 
