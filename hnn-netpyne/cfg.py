@@ -48,7 +48,7 @@ cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
 cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]  
 cfg.recordStims = False  
 cfg.recordStep = 0.025
-cfg.recordDipoles = True
+cfg.recordDipoles = {'L2': ['L2Pyr'], 'L5': ['L5Pyr']}
 
 # cfg.recordLFP = [[50, 50, 50], [50, 1300, 50]]
 

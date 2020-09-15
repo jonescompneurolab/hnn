@@ -31,4 +31,4 @@ cfg = setCfgFromFile(cfgFile, cfg)#, exclude = ['prng_seedcore_input_prox', 'prn
 from netParams import netParams
 
 # Create, simulate and analyze model
-sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)   #
+sim.createSimulateAnalyze(simConfig = cfg, netParams = netParams)  
