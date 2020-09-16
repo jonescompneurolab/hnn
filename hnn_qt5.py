@@ -18,6 +18,8 @@ from copy import deepcopy
 from time import time, sleep
 from conf import dconf
 import conf
+from run import simulate
+
 import numpy as np
 from math import ceil, isclose
 import spikefn
@@ -70,21 +72,21 @@ testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 param_fname = os.path.splitext(os.path.basename(paramf))
 basedir = os.path.join(dconf['datdir'], param_fname[0])
 
-# get default number of cores
-defncore = 0
-hyperthreading=False
+def get_defncore():
+  """ get default number of cores """
 
-try:
-  defncore = len(os.sched_getaffinity(0))
-except AttributeError:
-  physical_cores = cpu_count(logical=False)
-  logical_cores = multiprocessing.cpu_count()
+  try:
+    defncore = len(os.sched_getaffinity(0))
+  except AttributeError:
+    defncore = cpu_count(logical=False)
 
-  if logical_cores is not None and logical_cores > physical_cores:
-    hyperthreading=True
-    defncore = logical_cores
-  else:
-    defncore = physical_cores
+  if defncore is None or defncore == 0:
+    # in case psutil is not supported (e.g. BSD)
+    defncore = multiprocessing.cpu_count()
+
+  return defncore
+
+defncore = get_defncore()
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
@@ -519,7 +521,6 @@ class RunSimThread (QThread):
     self.c = c
     self.d = d
     self.killed = False
-    self.proc = None
     self.ntrial = ntrial
     self.ncore = ncore
     self.waitsimwin = waitsimwin
@@ -542,7 +543,7 @@ class RunSimThread (QThread):
 
     self.lock = Lock()
 
-    self.params = read_params(paramf)
+    self.params = read_params(self.paramf)
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -586,22 +587,7 @@ class RunSimThread (QThread):
 
 
   def killproc (self):
-    if self.proc is None:
-      # any nrniv processes found are not part of current sim
-      return
-
     if debug: print('Thread killing sim. . .')
-
-    # try the nice way to stop the mpiexec proc
-    self.proc.terminate()
-
-    retries = 0
-    while self.proc.poll() is None and retries < 5:
-      # mpiexec still running
-      self.proc.kill()
-      if self.proc.poll() is None:
-        sleep(1)
-      retries += 1
 
     # make absolute sure all nrniv procs have been killed
     kill_and_check_nrniv_procs()
@@ -609,34 +595,6 @@ class RunSimThread (QThread):
     self.lock.acquire()
     self.killed = True
     self.lock.release()
-
-  def spawn_sim (self, simlength, banner=False):
-    global hyperthreading
-    import simdat
-
-
-    if isWindows() or not hyperthreading:
-      mpicmd = 'mpiexec -np '
-    else:
-      mpicmd = 'mpiexec --use-hwthread-cpus -np '
-
-    if banner:
-      nrniv_cmd = ' nrniv -python -mpi '
-    else:
-      nrniv_cmd = ' nrniv -python -mpi -nobanner '
-
-    if self.onNSG:
-      cmd = 'python nsgr.py ' + self.paramf + ' ' + str(self.ntrial) + ' 710.0'
-    elif not simlength is None:
-      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + self.paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
-    else:
-      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + self.paramf + ' ntrial ' + str(self.ntrial)
-    cmdargs = shlex.split(cmd,posix="win" not in sys.platform) # https://github.com/maebert/jrnl/issues/348
-    if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
-    if prtime:
-      self.proc = Popen(cmdargs,cwd=os.getcwd())
-    else: 
-      self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd(),universal_newlines=True)
 
   def get_proc_stream (self, stream, print_to_console=False):
     try:
@@ -656,63 +614,52 @@ class RunSimThread (QThread):
   # run sim command via mpi, then delete the temp file.
   def runsim (self, is_opt=False, banner=True, simlength=None):
     import simdat
+    global defncore
 
-    global defncore, hyperthreading
     self.lock.acquire()
     self.killed = False
     self.lock.release()
 
-    self.spawn_sim(simlength, banner=banner)
-    retried = False
-
-    #cstart = time()
     while True:
-      status = self.proc.poll()
-      if not status is None:
-        if status == 0:
-          # success, use same number of cores next time
-          defncore = self.ncore
-          break
-        elif status == 1 and not retried:
-          self.ncore = ceil(self.ncore/2)
-          txt = "INFO: Failed starting mpiexec, retrying with %d cores" % self.ncore
+      if self.ncore == 0:
+        raise RuntimeError("No cores available for simulation")
+
+      try:
+        simulate(self.params, self.ncore)
+      except RuntimeError:
+        if self.ncore == 1:
+          # can't reduce ncore any more
+          txt = "Simulation failed to start"
           print(txt)
           self.updatewaitsimwin(txt)
-          self.spawn_sim(simlength, banner=banner)
-          retried = True
-        else:
-          txt = "Simulation exited with return code %d. Stderr from console:"%status
-          print(txt)
-          self.updatewaitsimwin(txt)
-          self.get_proc_stream(self.proc.stderr, print_to_console=True)
           kill_and_check_nrniv_procs()
           raise RuntimeError
 
-      self.get_proc_stream(self.proc.stdout, print_to_console=False)
+        self.ncore = ceil(self.ncore/2)
+        txt = "INFO: Failed starting simulation, retrying with %d cores" % self.ncore
+        print(txt)
+        self.updatewaitsimwin(txt)
 
-      # check if proc was killed
-      self.lock.acquire()
-      if self.killed:
-        self.lock.release()
-        # exit using RuntimeError
-        raise RuntimeError
-      else:
-        self.lock.release()
+      # success
+      defncore = self.ncore
+      break
 
-      sleep(1)
+    # check if proc was killed
+    self.lock.acquire()
+    if self.killed:
+      self.lock.release()
+      # exit using RuntimeError
+      raise RuntimeError
+    else:
+      self.lock.release()
 
-    #cend = time()
-    #rtime = cend - cstart
-    #if debug: print('sim finished in %.3f s'%rtime)
-
-    # TODO: fix exception raising for updatesimdat
     try:
-      simdat.updatedat(self.params)
-    except ValueError:
-      print("Warning: failed to load simulation results for %s" % self.paramf)
+      updatedat(self.params)
+    except IOError:
+      print('WARN: could not read simulation output for %s' % self.params['sim_prefix'])
 
-    if not is_opt and 'dpl' in simdat.ddat:
-      simdat.updatelsimdat(self.paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    if not is_opt:
+      simdat.updatelsimdat(self.paramf, simdat.ddat['dpl']) # update lsimdat and its current sim index
 
 
   def optmodel (self):
@@ -4043,8 +3990,6 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
-    if paramf and self.params is None:
-      self.params = read_params(paramf)
     self.initSimCanvas(gRow=gRow, reInit=False)
     gRow += 2
 
@@ -4119,6 +4064,10 @@ class HNNGUI (QMainWindow):
     if reInit == True:
       self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
       self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
+
+    # if just initialized or after clearSimulationData, self.params will be empty
+    if paramf and self.params is None:
+      self.params = read_params(paramf)
 
     self.m = SIMCanvas(paramf, self.params, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
     # this is the Navigation widget
