@@ -56,7 +56,7 @@ def extractpsd (dat, fmax=120.0):
   tstop = tvec[-1]
   prm = {'f_max_spec':fmax,'dt':dt,'tstop':tstop}
   for col in range(1,dat.shape[1],1):
-    ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+    ms = MorletSpec(tvec,dat[:,col],None,p_dict=prm)
     lpsd.append(np.mean(ms.TFR,axis=1))
   return ms.f, np.array(lpsd)
 

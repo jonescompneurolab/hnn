@@ -48,10 +48,10 @@ def extractspec (dat, fmax=40.0):
 
   if dat.shape[1] > 2:
     for col in range(1,dat.shape[1],1):
-      ms = MorletSpec(tvec,dat[:,col],None,None,prm)
+      ms = MorletSpec(tvec,dat[:,col],None,p_dict=prm)
       lspec.append(ms)
   else:
-    ms = MorletSpec(tvec,dat[:,1],None,None,prm)
+    ms = MorletSpec(tvec,dat[:,1],None,p_dict=prm)
     lspec.append(ms)
 
   ntrial = len(lspec)
@@ -61,7 +61,7 @@ def extractspec (dat, fmax=40.0):
   else:
     avgdipole = dat[:,1]
 
-  avgspec = MorletSpec(tvec,avgdipole,None,None,prm) # !!should fix to average of individual spectrograms!!
+  avgspec = MorletSpec(tvec,avgdipole,None,p_dict=prm) # !!should fix to average of individual spectrograms!!
 
   ltfr = [ms.TFR for ms in lspec]
   npspec = np.array(ltfr)

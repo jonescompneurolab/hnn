@@ -111,7 +111,8 @@ try:
   print('Extracting Wavelet spectrogram(s).')
   for i in range(maxlfp+1):
     for trial in range(ntrial):
-      ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1],None,None,waveprm,minwavet)
+      ddat['spec'][(trial,i)] = MorletSpec(tvec, ddat['lfp'][(trial,i)][:,1], None,
+                                           p_dict=waveprm, tmin=minwavet)
   if ntrial > 1:
     if debug: print('here')
     davglfp = {}; davgspec = {}

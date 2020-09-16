@@ -23,7 +23,7 @@ from conf import dconf
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():
-    def __init__(self, tvec, tsvec, fparam, f_max=None, p_dict=None, tmin = 50.0, f_min = 1.):
+    def __init__(self, tvec, tsvec, f_max=None, p_dict=None, tmin = 50.0, f_min = 1.):
         # Save variable portion of fdata_spec as identifying attribute
         # self.name = fdata_spec
 
@@ -31,18 +31,14 @@ class MorletSpec():
         self.tvec = tvec
         self.tsvec = tsvec
 
-        # function is called this way because paramrw.read() returns 2 outputs
-        if p_dict is None:
-          self.p_dict = paramrw.read(fparam)[1]
-        else:
-          self.p_dict = p_dict
-
         self.f_min = f_min
+
+        self.params = p_dict
 
         # maximum frequency of analysis
         # Add 1 to ensure analysis is inclusive of maximum frequency
         if not f_max:
-            self.f_max = self.p_dict['f_max_spec'] + 1
+            self.f_max = self.params['f_max_spec'] + 1
         else:
             self.f_max = f_max + 1
 
@@ -50,13 +46,13 @@ class MorletSpec():
         self.tmin = tmin
 
         # truncate these vectors appropriately based on tmin
-        if self.p_dict['tstop'] > self.tmin:
+        if self.params['tstop'] > self.tmin:
             # must be done in this order! timeseries first!
             self.tsvec = self.tsvec[self.tvec >= self.tmin]
             self.tvec = self.tvec[self.tvec >= self.tmin]
 
         # Check that tstop is greater than tmin
-        if self.p_dict['tstop'] > self.tmin:
+        if self.params['tstop'] > self.tmin:
             # Array of frequencies over which to sort
             self.f = np.arange(self.f_min, self.f_max)
 
@@ -64,7 +60,7 @@ class MorletSpec():
             self.width = 7.
 
             # Calculate sampling frequency
-            self.fs = 1000. / self.p_dict['dt']
+            self.fs = 1000. / self.params['dt']
 
             # Generate Spec data
             self.TFR = self.__traces2TFR()
@@ -82,7 +78,7 @@ class MorletSpec():
     # plots spec to axis
     def plot_to_ax(self, ax_spec, dt):
         # pc = ax.imshow(self.TFR, extent=[xmin, xmax, self.freqvec[-1], self.freqvec[0]], aspect='auto', origin='upper')
-        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper', cmap=plt.get_cmap(self.p_dict['spec_cmap']))
+        pc = ax_spec.imshow(self.TFR, aspect='auto', origin='upper', cmap=plt.get_cmap(self.params['spec_cmap']))
 
         return pc
 
@@ -107,7 +103,7 @@ class MorletSpec():
         # range should probably be 0 to len(self.S_trans)
         # shift tvec to reflect change
         # this is in ms
-        self.t = 1000. * np.arange(1, len(self.S_trans)+1) / self.fs + self.tmin - self.p_dict['dt']
+        self.t = 1000. * np.arange(1, len(self.S_trans)+1) / self.fs + self.tmin - self.params['dt']
 
         # preallocation
         B = np.zeros((len(self.f), len(self.S_trans)))
@@ -871,9 +867,12 @@ def generate_missing_spec(ddata, f_max=40):
 def spec_current_kernel(fparam, fts, fspec, f_max):
     I_syn = currentfn.SynapticCurrent(fts)
 
+    # TODO: replace with function that reads justs params
+    params = paramrw.read(fparam)[1]
+
     # Generate spec results
-    spec_L2 = MorletSpec(I_syn.t, I_syn.I_soma_L2Pyr, fparam, f_max)
-    spec_L5 = MorletSpec(I_syn.t, I_syn.I_soma_L5Pyr, fparam, f_max)
+    spec_L2 = MorletSpec(I_syn.t, I_syn.I_soma_L2Pyr, f_max, p_dict=params)
+    spec_L5 = MorletSpec(I_syn.t, I_syn.I_soma_L5Pyr, f_max, p_dict=params)
 
     # Save spec data
     np.savez_compressed(fspec, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR)
@@ -884,21 +883,23 @@ def spec_dpl_kernel(fparam, fts, fspec, f_max):
     dpl = dipolefn.Dipole(fts)
     dpl.units = 'nAm'
 
+    # TODO: replace with function that reads justs params
+    params = paramrw.read(fparam)[1]
+
     # Do the conversion prior to generating these spec
     # dpl.convert_fAm_to_nAm()
 
     # Generate various spec results
-    spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], fparam, f_max)
-    spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], fparam, f_max)
-    spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], fparam, f_max)
+    spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], f_max, p_dict=params)
+    spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], f_max, p_dict=params)
+    spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], f_max, p_dict=params)
 
     # Get max spectral power data
     # for now, only doing this for agg
     max_agg = spec_agg.max()
 
     # Generate periodogram resutls
-    p_dict = paramrw.read(fparam)[1]
-    pgram = Welch(dpl.t, dpl.dpl['agg'], p_dict['dt'])
+    pgram = Welch(dpl.t, dpl.dpl['agg'], params['dt'])
 
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
