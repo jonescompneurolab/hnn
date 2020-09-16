@@ -129,7 +129,10 @@ apt-get download \
   openmpi-bin lsof libfontconfig1 libxext6 libx11-xcb1 libxcb-glx0 \
   libxkbcommon-x11-0 	libgl1-mesa-glx \
   libc6-dev libtinfo-dev libncurses5-dev \
-  libx11-dev libreadline-dev &> "$LOGFILE" &
+  libx11-dev libreadline-dev \
+  libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
+  libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
+  libxcb-xinerama0 &> "$LOGFILE" &
 APT_DOWNLOAD=$!
 
 # Install NEURON
@@ -202,7 +205,10 @@ sudo -E apt-get install --no-install-recommends -y \
         libxkbcommon-x11-0 	libgl1-mesa-glx \
         libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev \
         libc6-dev libtinfo-dev libncurses5-dev \
-        libx11-dev libreadline-dev &> "$LOGFILE"
+        libx11-dev libreadline-dev \
+        libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
+        libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
+        libxcb-xinerama0 libxcb-xfixes0 &> "$LOGFILE"
 
 # Clean up a little
 echo "Cleaning up..." | tee -a "$LOGFILE"

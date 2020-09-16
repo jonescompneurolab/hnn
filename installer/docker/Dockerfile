@@ -14,6 +14,9 @@ RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         libfontconfig libxext6 libx11-xcb1 libxcb-glx0 \
+        libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
+        libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
+        libxcb-xinerama0 \
         libegl1 && \
     apt-get clean
 
