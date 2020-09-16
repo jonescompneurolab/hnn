@@ -447,7 +447,7 @@ def runsim ():
   if pcID == 0:
     if debug: print("Simulation run time: %4.4f s" % (time.time()-t0))
     if debug: print("Simulation directory is: %s" % ddir.dsim)
-    if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(doutf['file_param']):
+    if paramrw.find_param(doutf['file_param'],'save_spec_data') or usingOngoingInputs(p):
       runanalysis(p, doutf['file_param'], doutf['file_dpl_norm'], doutf['file_spec']) # run spectral analysis
     if paramrw.find_param(doutf['file_param'],'save_figs'):
       savefigs(ddir,p,p_exp) # save output figures

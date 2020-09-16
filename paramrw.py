@@ -11,6 +11,8 @@ import itertools as it
 # from cartesian import cartesian
 from params_default import get_params_default
 
+from hnn_core import read_params
+
 # get dict of ':' separated params from fn; ignore lines starting with #
 def quickreadprm (fn):
   d = {}
@@ -54,20 +56,26 @@ def quickgetprm (fn,k,ty):
   return ty(d[k])
 
 # check if using ongoing inputs
-def usingOngoingInputs (d, lty = ['_prox', '_dist']):
-  if type(d)==str: d = quickreadprm(d)
-  tstop = float(d['tstop'])
+def usingOngoingInputs (params, lty = ['_prox', '_dist']):
+  if params is None:
+    return False
+
+  try:
+    tstop = float(params['tstop'])
+  except KeyError:
+    return False
+
   dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
   try:
     for postfix in lty:
-      if float(d['t0_input'+postfix])<= tstop and \
-         float(d['tstop_input'+postfix])>=float(d['t0_input'+postfix]) and \
-         float(d['f_input'+postfix])>0.:
+      if float(params['t0_input'+postfix])<= tstop and \
+         float(params['tstop_input'+postfix])>=float(params['t0_input'+postfix]) and \
+         float(params['f_input'+postfix])>0.:
         for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
                   'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
                   'weight_inh_ampa','weight_inh_nmda']:
-          if float(d[dpref[postfix]+k])>0.:
-            #print('usingOngoingInputs:',d[dpref[postfix]+k])
+          if float(params[dpref[postfix]+k])>0.:
+            # print('usingOngoingInputs:',params[dpref[postfix]+k])
             return True
   except: 
     return False
@@ -75,22 +83,28 @@ def usingOngoingInputs (d, lty = ['_prox', '_dist']):
 
 # return number of evoked inputs (proximal, distal)
 # using dictionary d (or if d is a string, first load the dictionary from filename d)
-def countEvokedInputs (d):
-  if type(d) == str: d = quickreadprm(d)
+def countEvokedInputs (params):
   nprox = ndist = 0
-  for k,v in d.items():
-    if k.startswith('t_'):
-      if k.count('evprox') > 0:
-        nprox += 1
-      elif k.count('evdist') > 0:
-        ndist += 1
+  if params is not None:
+    for k,v in params.items():
+      if k.startswith('t_'):
+        if k.count('evprox') > 0:
+          nprox += 1
+        elif k.count('evdist') > 0:
+          ndist += 1
   return nprox, ndist
 
 # check if using any evoked inputs 
-def usingEvokedInputs (d, lsuffty = ['_evprox_', '_evdist_']):
-  if type(d) == str: d = quickreadprm(d)
-  nprox,ndist = countEvokedInputs(d)
-  tstop = float(d['tstop']) 
+def usingEvokedInputs (params, lsuffty = ['_evprox_', '_evdist_']):
+  nprox,ndist = countEvokedInputs(params)
+  if nprox == 0 and ndist == 0:
+    return False
+
+  try:
+    tstop = float(params['tstop'])
+  except KeyError:
+    return False
+
   lsuff = []
   if '_evprox_' in lsuffty:
     for i in range(1,nprox+1,1): lsuff.append('_evprox_'+str(i))
@@ -98,34 +112,45 @@ def usingEvokedInputs (d, lsuffty = ['_evprox_', '_evdist_']):
     for i in range(1,ndist+1,1): lsuff.append('_evdist_'+str(i))
   for suff in lsuff:
     k = 't' + suff
-    if k not in d: continue
-    if float(d[k]) > tstop: continue
+    if k not in params: continue
+    if float(params[k]) > tstop: continue
     k = 'gbar' + suff
-    for k1 in d.keys():
+    for k1 in params.keys():
       if k1.startswith(k):
-        if float(d[k1]) > 0.0: return True
+        if float(params[k1]) > 0.0: return True
   return False
 
 # check if using any poisson inputs 
-def usingPoissonInputs (d):
-  if type(d)==str: d = quickreadprm(d)
-  tstop = float(d['tstop'])
-  if 't0_pois' in d and 'T_pois' in d:
-    t0_pois = float(d['t0_pois'])
-    if t0_pois > tstop: return False
-    T_pois = float(d['T_pois'])
-    if t0_pois > T_pois and T_pois != -1.0:
-      return False
+def usingPoissonInputs (params):
+  if params is None:
+    return False
+
+  try:
+    tstop = float(params['tstop'])
+
+    if 't0_pois' in params and 'T_pois' in params:
+      t0_pois = float(params['t0_pois'])
+      if t0_pois > tstop: return False
+      T_pois = float(params['T_pois'])
+      if t0_pois > T_pois and T_pois != -1.0:
+        return False
+  except KeyError:
+    return False
+
   for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
     for sy in ['ampa','nmda']:
       k = cty+'_Pois_A_weight_'+sy
-      if k in d:
-        if float(d[k]) != 0.0: return True
+      if k in params:
+        if float(params[k]) != 0.0:
+          return True
+
   return False
 
 # check if using any tonic (IClamp) inputs 
 def usingTonicInputs (d):
-  if type(d)==str: d = quickreadprm(d)
+  if d is None:
+    return False
+
   tstop = float(d['tstop'])
   for cty in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
     k = 'Itonic_A_' + cty + '_soma'
@@ -148,6 +173,7 @@ class ExpParams():
     def __init__ (self, f_psim, debug=False):
 
         self.debug = debug
+        self.paramf = f_psim
 
         self.expmt_group_params = []
 
@@ -185,7 +211,7 @@ class ExpParams():
                 p_sim[param] = val_list[i]
 
         # go through the expmt group-based params
-        for param, val in self.p_group[expmt_group].items():
+        for param, val in read_params(self.paramf).items():
             p_sim[param] = val
 
         # add alpha distributions. A bit hack-y

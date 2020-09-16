@@ -22,8 +22,8 @@ import numpy as np
 from math import ceil, isclose
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
-from paramrw import chunk_evinputs, get_inputs, trans_input, find_param, validate_param_file
+from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
+from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
@@ -31,6 +31,8 @@ from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
 from threading import Lock
 import traceback
 from collections import namedtuple
+
+from hnn_core import read_params
 
 prtime = False
 
@@ -512,7 +514,7 @@ def bringwintotop (win):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,d,ntrial,ncore,waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
+  def __init__ (self,c,d,ntrial,ncore,waitsimwin,paramf,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
     QThread.__init__(self)
     self.c = c
     self.d = d
@@ -521,6 +523,7 @@ class RunSimThread (QThread):
     self.ntrial = ntrial
     self.ncore = ncore
     self.waitsimwin = waitsimwin
+    self.paramf = paramf
     self.opt = opt
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
@@ -538,6 +541,8 @@ class RunSimThread (QThread):
       self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
     self.lock = Lock()
+
+    self.params = read_params(paramf)
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -606,7 +611,7 @@ class RunSimThread (QThread):
     self.lock.release()
 
   def spawn_sim (self, simlength, banner=False):
-    global paramf, hyperthreading
+    global hyperthreading
     import simdat
 
 
@@ -621,11 +626,11 @@ class RunSimThread (QThread):
       nrniv_cmd = ' nrniv -python -mpi -nobanner '
 
     if self.onNSG:
-      cmd = 'python nsgr.py ' + paramf + ' ' + str(self.ntrial) + ' 710.0'
+      cmd = 'python nsgr.py ' + self.paramf + ' ' + str(self.ntrial) + ' 710.0'
     elif not simlength is None:
-      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
+      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + self.paramf + ' ntrial ' + str(self.ntrial) + ' simlength ' + str(simlength)
     else:
-      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + paramf + ' ntrial ' + str(self.ntrial)
+      cmd = mpicmd + str(self.ncore) + nrniv_cmd + simf + ' ' + self.paramf + ' ntrial ' + str(self.ntrial)
     cmdargs = shlex.split(cmd,posix="win" not in sys.platform) # https://github.com/maebert/jrnl/issues/348
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
@@ -652,7 +657,7 @@ class RunSimThread (QThread):
   def runsim (self, is_opt=False, banner=True, simlength=None):
     import simdat
 
-    global defncore, paramf, hyperthreading
+    global defncore, hyperthreading
     self.lock.acquire()
     self.killed = False
     self.lock.release()
@@ -700,13 +705,14 @@ class RunSimThread (QThread):
     #rtime = cend - cstart
     #if debug: print('sim finished in %.3f s'%rtime)
 
+    # TODO: fix exception raising for updatesimdat
     try:
-      simdat.updatedat(paramf)
+      simdat.updatedat(self.params)
     except ValueError:
-      print("Warning: failed to load simulation results for %s" % paramf)
+      print("Warning: failed to load simulation results for %s" % self.paramf)
 
     if not is_opt and 'dpl' in simdat.ddat:
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      simdat.updatelsimdat(self.paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
 
 
   def optmodel (self):
@@ -716,7 +722,7 @@ class RunSimThread (QThread):
     need_initial_ddat = False
 
     # initialize RNG with seed from config
-    seed = int(find_param(paramf,'prng_seedcore_opt'))
+    seed = self.params['prng_seedcore_opt']
     nlopt.srand(seed)
 
     # initial_ddat stores the initial fit (from "Run Simulation").
@@ -731,7 +737,7 @@ class RunSimThread (QThread):
 
     # save initial parameters file
     param_out = os.path.join(basedir,'before_opt.param')
-    shutil.copyfile(paramf, param_out)
+    shutil.copyfile(self.paramf, param_out)
 
     self.updatewaitsimwin('Optimizing model. . .')
 
@@ -771,7 +777,7 @@ class RunSimThread (QThread):
       if need_initial_ddat:
         simdat.initial_ddat = deepcopy(simdat.ddat)
 
-      simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with best from this step
+      simdat.updateoptdat(self.paramf,simdat.ddat['dpl']) # update optdat with best from this step
 
       # put best opt results into GUI and save to param file
       push_values = OrderedDict()
@@ -786,8 +792,8 @@ class RunSimThread (QThread):
 
     # one final sim with the best parameters to update display
     self.runsim(is_opt=True, banner=False)
-    simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
-    simdat.updateoptdat(paramf,simdat.ddat['dpl']) # update optdat with the final best
+    simdat.updatelsimdat(self.paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+    simdat.updateoptdat(self.paramf,simdat.ddat['dpl']) # update optdat with the final best
 
     # re-enable all the range sliders
     self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
@@ -798,7 +804,7 @@ class RunSimThread (QThread):
 
   def runOptStep (self, step):
     import simdat
-    global basedir, paramf
+    global basedir
 
     self.optsim = 0
     self.minopterr = 1e9
@@ -867,7 +873,7 @@ class RunSimThread (QThread):
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
       # save copy param file
-      param_fname = os.path.basename(paramf)
+      param_fname = os.path.basename(self.paramf)
       curr_paramf = os.path.join(basedir, param_fname)
 
       # save params numbered by optsim
@@ -3106,10 +3112,12 @@ class BaseParamDialog (QDialog):
     self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin,
                     self.proxparamwin, self.distparamwin, self.evparamwin,
                     self.poisparamwin, self.tonicparamwin, self.optparamwin]
-    self.updateDispParam()
+    self.params = self.updateDispParam()
     self.parent = parent
 
   def updateDispParam (self):
+    global paramf
+
     # now update the GUI components to reflect the param file selected
     try:
       validate_param_file(paramf)
@@ -3117,15 +3125,18 @@ class BaseParamDialog (QDialog):
       QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % paramf)
       return
 
-    din = quickreadprm(paramf)
+    params = read_params(paramf)
 
-    if usingEvokedInputs(din): # default for evoked is to show average dipole
+    if usingEvokedInputs(params): # default for evoked is to show average dipole
       conf.dconf['drawavgdpl'] = True
-    elif usingOngoingInputs(din): # default for ongoing is NOT to show average dipole
+    elif usingOngoingInputs(params): # default for ongoing is NOT to show average dipole
       conf.dconf['drawavgdpl'] = False
 
-    for dlg in self.lsubwin: dlg.setfromdin(din) # update to values from file
-    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0]) # update simulation name
+    for dlg in self.lsubwin: dlg.setfromdin(params) # update to values from file
+    self.qle.setText(params['sim_prefix']) # update simulation name
+
+    # return the param dict for use by caller
+    return params
 
   def setrunparam (self): bringwintotop(self.runparamwin)
   def setcellparam (self): bringwintotop(self.cellparamwin)
@@ -3332,7 +3343,7 @@ class HNNGUI (QMainWindow):
   # main HNN GUI class
   def __init__ (self):
     # initialize the main HNN GUI
-    global paramf, basedir
+
     super().__init__()   
     self.runningsim = False
     self.runthread = None
@@ -3343,6 +3354,7 @@ class HNNGUI (QMainWindow):
     self.schemwin = SchematicDialog(self)
     self.m = self.toolbar = None
     self.baseparamwin = BaseParamDialog(self, self.startoptmodel)
+    self.params = None
     self.optMode = False
     self.initUI()
     self.visnetwin = VisnetDialog(self)
@@ -3439,7 +3451,7 @@ class HNNGUI (QMainWindow):
       return
 
     # now update the GUI components to reflect the param file selected
-    self.baseparamwin.updateDispParam()
+    self.params = self.baseparamwin.updateDispParam()
     self.initSimCanvas() # recreate canvas
     # self.m.plot() # replot data
     self.setWindowTitle(paramf)
@@ -3644,7 +3656,7 @@ class HNNGUI (QMainWindow):
     except:
       pass
     # now update the GUI components to reflect the param file selected
-    self.baseparamwin.updateDispParam()
+    self.params = self.baseparamwin.updateDispParam()
     self.initSimCanvas() # recreate canvas
     self.setWindowTitle(fn)
 
@@ -3702,10 +3714,13 @@ class HNNGUI (QMainWindow):
 
   def clearSimulationData (self):
     # clear the simulation data
-    global paramf
     import simdat
+
+    global paramf, basedir
     paramf = '' # set paramf to empty so no data gets loaded
     basedir = None
+
+    self.params = None
     simdat.ddat = {} # clear data in simdat.ddat
     simdat.lsimdat = []
     simdat.lsimidx = 0
@@ -4002,6 +4017,9 @@ class HNNGUI (QMainWindow):
   def initUI (self):
     # initialize the user interface (UI)
 
+    # default paramf
+    global paramf
+
     self.initMenu()
     self.statusBar()
 
@@ -4025,6 +4043,8 @@ class HNNGUI (QMainWindow):
 
     gRow += 1
 
+    if paramf and self.params is None:
+      self.params = read_params(paramf)
     self.initSimCanvas(gRow=gRow, reInit=False)
     gRow += 2
 
@@ -4093,15 +4113,14 @@ class HNNGUI (QMainWindow):
 
   def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
     # initialize the simulation canvas, loading any required data
-
+    global paramf
     gCol = 0
 
     if reInit == True:
       self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
       self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
 
-    if debug: print('paramf in initSimCanvas:',paramf)
-    self.m = SIMCanvas(paramf, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
+    self.m = SIMCanvas(paramf, self.params, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
@@ -4167,6 +4186,8 @@ class HNNGUI (QMainWindow):
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
+    global paramf
+
     # make sure params saved and ok to run
     if not self.baseparamwin.saveparams():
       return
@@ -4185,7 +4206,7 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Optimizing model. . .")
 
-    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
+    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, paramf, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -4209,7 +4230,7 @@ class HNNGUI (QMainWindow):
     else:
       self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
+    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,paramf,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()

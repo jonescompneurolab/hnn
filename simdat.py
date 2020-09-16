@@ -10,7 +10,7 @@ from math import ceil
 from conf import dconf
 import conf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm, countEvokedInputs, ExpParams
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, countEvokedInputs, ExpParams
 from scipy import signal
 from gutils import getscreengeom
 
@@ -71,11 +71,11 @@ def readdpltrials (basedir,ntrial):
 
   return ldpl
 
-def getinputfiles (paramf):
+def getinputfiles (sim_prefix):
   # get a dictionary of input files based on simulation parameter file paramf
   global dfile,basedir
   dfile = {}
-  basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+  basedir = os.path.join(dconf['datdir'], sim_prefix)
   # print('basedir:',basedir)
   dfile['dpl'] = os.path.join(basedir,'dpl.txt')
   dfile['spec'] = os.path.join(basedir,'rawspec.npz')
@@ -97,12 +97,11 @@ def readtxt (fn, silent=False):
 
   return contents
 
-def updatedat (paramf):
+def updatedat (params):
   # update data dictionary (ddat) from the param file
 
   global basedir
-  if debug: print('paramf:',paramf)
-  getinputfiles(paramf)
+  getinputfiles(params['sim_prefix'])
 
   for k in ['dpl','spk']:
     if k in ddat:
@@ -115,23 +114,12 @@ def updatedat (paramf):
   if not 'dpl' in ddat or not 'spk' in ddat:
     raise ValueError
 
-  ddat['dpltrials'] = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+  ddat['dpltrials'] = readdpltrials(basedir,params['N_trials'])
 
   if os.path.isfile(dfile['spec']):
     ddat['spec'] = np.load(dfile['spec'])
   else:
     ddat['spec'] = None
-
-def getscalefctr (paramf):
-  # get dipole scaling factor parameter value from paramf file
-  try:
-    xx = quickgetprm(paramf,'dipole_scalefctr',float)
-    if type(xx) == float: return xx
-  except:
-    pass
-  if 'dipole_scalefctr' in dconf:
-    return dconf['dipole_scalefctr']
-  return 30e3
 
 def drawraster ():
   # draw raster to standalone matplotlib figure - for debugging (not used in main HNN GUI)
@@ -253,7 +241,7 @@ class SIMCanvas (FigureCanvas):
   # matplotlib/pyqt-compatible canvas for drawing simulation & external data
   # based on https://pythonspot.com/en/pyqt5-matplotlib/
 
-  def __init__ (self, paramf, parent=None, width=5, height=4, dpi=40, optMode=False, title='Simulation Viewer'):
+  def __init__ (self, paramf, params, parent=None, width=5, height=4, dpi=40, optMode=False, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
 
     self.title = title
@@ -265,6 +253,7 @@ class SIMCanvas (FigureCanvas):
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
     self.paramf = paramf
+    self.params = params
     self.initaxes()
     self.G = gridspec.GridSpec(10,1)
 
@@ -288,8 +277,11 @@ class SIMCanvas (FigureCanvas):
     extinputs = None
     plot_distribs = False
 
-    sim_tstop = quickgetprm(self.paramf,'tstop',float)
-    sim_dt = quickgetprm(self.paramf,'dt',float)
+    if self.params is None:
+      raise ValueError("No valid params found")
+
+    sim_tstop = self.params['tstop']
+    sim_dt = self.params['tstop']
     num_step = ceil(sim_tstop / sim_dt) + 1
     times = np.linspace(0, sim_tstop, num_step)
 
@@ -392,35 +384,14 @@ class SIMCanvas (FigureCanvas):
       if ax:
         ax.cla()
 
-
-  def getNTrials (self):
-    # get the number of trials
-    N_trials = 1
-    try:
-      xx = quickgetprm(self.paramf,'N_trials',int)
-      if type(xx) == int: N_trials = xx
-    except:
-      pass
-    return N_trials
-
-  def getNPyr (self):
-    # get the number of pyramidal neurons used in the simulation
-    try:
-      x = quickgetprm(self.paramf,'N_pyr_x',int)
-      y = quickgetprm(self.paramf,'N_pyr_y',int)
-      if type(x)==int and type(y)==int:
-        return int(x * y * 2)
-    except:
-      return 0
-
   def getInputDistrib (self):
     import scipy.stats as stats
 
     dinput = {'evprox': [], 'evdist': [], 'prox': [], 'dist': [], 'pois': []}
     try:
-      sim_tstop = quickgetprm(self.paramf,'tstop',float)
-      sim_dt = quickgetprm(self.paramf,'dt',float)
-    except FileNotFoundError:
+      sim_tstop = self.params['tstop']
+      sim_dt = self.params['dt']
+    except KeyError:
       return dinput
 
     num_step = ceil(sim_tstop / sim_dt) + 1
@@ -436,15 +407,19 @@ class SIMCanvas (FigureCanvas):
 
   def getEVInputTimes (self):
     # get the evoked input times
-    nprox, ndist = countEvokedInputs(self.paramf)
+
+    if self.params is None:
+      raise ValueError("No valid params found")
+
+    nprox, ndist = countEvokedInputs(self.params)
     ltprox, ltdist = [], []
     for i in range(nprox):
-      input_mu = quickgetprm(self.paramf,'t_evprox_' + str(i+1), float)
-      input_sigma = quickgetprm(self.paramf,'sigma_t_evprox_' + str(i+1), float)
+      input_mu = self.params['t_evprox_' + str(i+1)]
+      input_sigma = self.params['sigma_t_evprox_' + str(i+1)]
       ltprox.append((input_mu, input_sigma))
     for i in range(ndist):
-      input_mu = quickgetprm(self.paramf,'t_evdist_' + str(i+1), float)
-      input_sigma = quickgetprm(self.paramf,'sigma_t_evdist_' + str(i+1), float)
+      input_mu = self.params['t_evdist_' + str(i+1)]
+      input_sigma = self.params['sigma_t_evdist_' + str(i+1)]
       ltdist.append((input_mu, input_sigma))
     return ltprox, ltdist
 
@@ -464,17 +439,14 @@ class SIMCanvas (FigureCanvas):
     dinty = {'Evoked':False,'Ongoing':False,'Poisson':False,'Tonic':False,'EvokedDist':False,\
              'EvokedProx':False,'OngoingDist':False,'OngoingProx':False}
 
-    try:
-      dinty['Evoked'] = usingEvokedInputs(self.paramf)
-      dinty['EvokedDist'] = usingEvokedInputs(self.paramf, lsuffty = ['_evdist_'])
-      dinty['EvokedProx'] = usingEvokedInputs(self.paramf, lsuffty = ['_evprox_'])
-      dinty['Ongoing'] = usingOngoingInputs(self.paramf)
-      dinty['OngoingDist'] = usingOngoingInputs(self.paramf, lty = ['_dist'])
-      dinty['OngoingProx'] = usingOngoingInputs(self.paramf, lty = ['_prox'])
-      dinty['Poisson'] = usingPoissonInputs(self.paramf)
-      dinty['Tonic'] = usingTonicInputs(self.paramf)
-    except FileNotFoundError:
-      pass
+    dinty['Evoked'] = usingEvokedInputs(self.params)
+    dinty['EvokedDist'] = usingEvokedInputs(self.params, lsuffty = ['_evdist_'])
+    dinty['EvokedProx'] = usingEvokedInputs(self.params, lsuffty = ['_evprox_'])
+    dinty['Ongoing'] = usingOngoingInputs(self.params)
+    dinty['OngoingDist'] = usingOngoingInputs(self.params, lty = ['_dist'])
+    dinty['OngoingProx'] = usingOngoingInputs(self.params, lty = ['_prox'])
+    dinty['Poisson'] = usingPoissonInputs(self.params)
+    dinty['Tonic'] = usingTonicInputs(self.params)
 
     return dinty
 
@@ -595,11 +567,12 @@ class SIMCanvas (FigureCanvas):
   def plotsimdat (self):
     # plot the simulation data
 
+    failed_loading = False
     self.gRow = 0
     bottom = 0.0
 
     only_create_axes = False
-    if not os.path.isfile(self.paramf):
+    if self.params is None:
       only_create_axes = True
       DrawSpec = False
       xl = (0.0, 1.0)
@@ -609,22 +582,20 @@ class SIMCanvas (FigureCanvas):
 
       # try loading data. ignore failures
       try:
-        updatedat(self.paramf)
-        loaded_dat = True
-      except ValueError:
-        loaded_dat = False
-        pass
+        updatedat(self.params)
+      except IOError:
+        failed_loading = True
 
-      xl = (0.0, quickgetprm(self.paramf,'tstop',float))
+      xl = (0.0, self.params['tstop'])
       if dinty['Ongoing'] or dinty['Evoked'] or dinty['Poisson']:
         xo = self.plotinputhist(xl, dinty)
         if xo:
           self.gRow = xo[1]
 
       # whether to draw the specgram - should draw if user saved it or have ongoing, poisson, or tonic inputs
-      DrawSpec = loaded_dat and \
+      DrawSpec = (not failed_loading) and \
                 'spec' in ddat and \
-                (find_param(dfile['outparam'],'save_spec_data') or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic'])
+                (self.params['save_spec_data'] or dinty['Ongoing'] or dinty['Poisson'] or dinty['Tonic'])
 
     if DrawSpec: # dipole axis takes fewer rows if also drawing specgram
       self.axdipole = self.figure.add_subplot(self.G[self.gRow:5,0]) # dipole
@@ -641,11 +612,13 @@ class SIMCanvas (FigureCanvas):
     if w < 2800: left = 0.1
     self.figure.subplots_adjust(left=left,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
-    if only_create_axes:
+    if failed_loading or only_create_axes:
       return
 
     try:
-      updatedat(self.paramf)
+      updatedat(self.params)
+    except IOError:
+      return
     except ValueError:
       if 'dpl' not in ddat:
         # failed to load dipole data, nothing more to plot
@@ -666,9 +639,6 @@ class SIMCanvas (FigureCanvas):
     sampr = 1e3/dt # dipole sampling rate
     sidx, eidx = int(sampr*xl[0]/1e3), int(sampr*xl[1]/1e3) # use these indices to find dipole min,max
 
-    N_trials = self.getNTrials()
-    if debug: print('simdat: N_trials:',N_trials)
-
     yl = [0,0]
     yl[0] = min(yl[0],np.amin(ddat['dpl'][sidx:eidx,1]))
     yl[1] = max(yl[1],np.amax(ddat['dpl'][sidx:eidx,1]))
@@ -680,13 +650,13 @@ class SIMCanvas (FigureCanvas):
         if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
         self.axdipole.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
 
-      if N_trials>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+      if self.params['N_trials']>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           self.axdipole.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=self.gui.linewidth)
           yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
-      if conf.dconf['drawavgdpl'] or N_trials <= 1:
+      if conf.dconf['drawavgdpl'] or self.params['N_trials'] <= 1:
         # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
         self.axdipole.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+1)
@@ -707,8 +677,17 @@ class SIMCanvas (FigureCanvas):
         yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
         yl[1] = max(yl[1],initial_ddat['dpl'][sidx:eidx,1].max())
 
-    scalefctr = getscalefctr(self.paramf)
-    NEstPyr = int(self.getNPyr() * scalefctr)
+    scalefctr = float(self.params['dipole_scalefctr'])
+
+    # get the number of pyramidal neurons used in the simulation
+    try:
+      x = self.params['N_pyr_x']
+      y = self.params['N_pyr_y']
+      num_pyr = int(x * y * 2)
+    except KeyError:
+      num_pyr = 0
+
+    NEstPyr = int(num_pyr * scalefctr)
 
     if NEstPyr > 0:
       self.axdipole.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells',fontsize=dconf['fontsize'])
