@@ -69,6 +69,7 @@ def extractspec (dat, fmax=40.0):
 
   return ms.f, lspec, avgdipole, avgspec
 
+# TODO: can we import this from simdat instead?
 def loaddat (fname):
   try:
     if fname.endswith('.txt'):
@@ -81,7 +82,7 @@ def loaddat (fname):
       #simdat.updatedat(paramf)
       #return paramf,simdat.ddat
       if ntrial > 1:
-        ddat = readdpltrials(basedir,quickgetprm(paramf,'N_trials',int))
+        ddat = readdpltrials(basedir)
         #print('read dpl trials',ddat[0].shape)
         dout = np.zeros((ddat[0].shape[0],1+ntrial))
         #print('set dout shape',dout.shape)

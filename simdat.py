@@ -56,18 +56,21 @@ def rmse (a1, a2):
   if debug: print('len1:',len1,'len2:',len2,'ty1:',type(a1),'ty2:',type(a2))
   return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
 
-def readdpltrials (basedir,ntrial):
+def readdpltrials(basedir):
   # read dipole data files for individual trials
-  if debug: print('in readdpltrials',basedir,ntrial)
+  if debug: print('in readdpltrials',basedir)
   ldpl = []
-  for i in range(ntrial):
-    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
-    if not os.path.exists(fn): break
-    ldpl.append(readtxt(fn))
-    if debug: print('loaded ', fn)
 
-  if len(ldpl) < ntrial and ntrial > 1:
-    print("Warning: only read data for %d trials" % len(ldpl))
+  i = 0
+  while True:
+    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
+    if not os.path.exists(fn):
+      break
+
+    ldpl.append(np.loadtxt(fn))
+
+    # try reading another trial
+    i += 1
 
   return ldpl
 
@@ -114,7 +117,7 @@ def updatedat (params):
   if not 'dpl' in ddat or not 'spk' in ddat:
     raise ValueError
 
-  ddat['dpltrials'] = readdpltrials(basedir,params['N_trials'])
+  ddat['dpltrials'] = readdpltrials(basedir)
 
   if os.path.isfile(dfile['spec']):
     ddat['spec'] = np.load(dfile['spec'])

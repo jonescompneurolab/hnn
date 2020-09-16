@@ -41,7 +41,7 @@ for i in range(len(sys.argv)):
 basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
 
 ddat = {}
-ddat['dpltrials'] = readdpltrials(basedir,ntrial)
+ddat['dpltrials'] = readdpltrials(basedir)
 try:
   ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
 except:
