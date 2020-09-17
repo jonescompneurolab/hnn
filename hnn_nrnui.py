@@ -1,3 +1,5 @@
+# DEPRECATE
+
 import logging
 from neuron import h
 
@@ -6,7 +8,6 @@ from neuron_ui import neuron_utils
 from neuron_ui import neuron_geometries_utils
 
 import params_default
-from paramrw import quickreadprm
 from conf import fcfg,dconf
 from simdat import *
 

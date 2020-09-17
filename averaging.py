@@ -1,3 +1,5 @@
+# DEPRECATE
+
 # averaging.py - routine to perform averaging
 #
 # v 1.10.0-py35

@@ -88,6 +88,17 @@ def get_defncore():
 
 defncore = get_defncore()
 
+def _add_missing_frames(tb):
+  fake_tb = namedtuple(
+      'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
+  )
+  result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
+  frame = tb.tb_frame.f_back
+  while frame:
+      result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
+      frame = frame.f_back
+  return result
+
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
@@ -530,6 +541,8 @@ class RunSimThread (QThread):
     self.mainwin = mainwin
     self.onNSG = onNSG
 
+    sys.excepthook = self.excepthook
+
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
 
@@ -544,6 +557,21 @@ class RunSimThread (QThread):
     self.lock = Lock()
 
     self.params = read_params(self.paramf)
+
+
+  def excepthook(self, exc_type, exc_value, exc_tb):
+    enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
+    # Note: sys.__excepthook__(...) would not work here.
+    # We need to use print_exception(...):
+    traceback.print_exception(exc_type, exc_value, enriched_tb, file=sys.stderr, chain=False)
+    msgBox = QMessageBox(self)
+    msgBox.information(self, "Exception", "WARNING: an exception occurred! Details can be "
+                      "found in the console output or (if using Docker) in hnn_docker.log. We would "
+                      "greatly appreciate reporting this issue to our development "
+                      "team: <a href=https://github.com/jonescompneurolab/hnn/issues>"
+                      "https://github.com/jonescompneurolab/hnn/issues</a>")
+
+
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -653,10 +681,7 @@ class RunSimThread (QThread):
     else:
       self.lock.release()
 
-    try:
-      updatedat(self.params)
-    except IOError:
-      print('WARN: could not read simulation output for %s' % self.params['sim_prefix'])
+    updatedat(self.params)
 
     if not is_opt:
       simdat.updatelsimdat(self.paramf, simdat.ddat['dpl']) # update lsimdat and its current sim index
@@ -3045,6 +3070,7 @@ class BaseParamDialog (QDialog):
   def __init__ (self, parent, optrun_func):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
+    self.params = {'sim_prefix': ''}
     self.initUI()
     self.runparamwin = RunParamDialog(self)
     self.cellparamwin = CellParamDialog(self)
@@ -3096,7 +3122,7 @@ class BaseParamDialog (QDialog):
   def settonicparam (self): bringwintotop(self.tonicparamwin)
 
   def initUI (self):
-
+    global params
     grid = QGridLayout()
     grid.setSpacing(10)
 
@@ -3108,7 +3134,7 @@ class BaseParamDialog (QDialog):
     self.lbl.setToolTip('Simulation Name used to save parameter file and simulation data')
     grid.addWidget(self.lbl, row, 0)
     self.qle = QLineEdit(self)
-    self.qle.setText(paramf.split(os.path.sep)[-1].split('.param')[0])
+    self.qle.setText(self.params['sim_prefix'])
     grid.addWidget(self.qle, row, 1)
     row+=1
 
@@ -3292,6 +3318,8 @@ class HNNGUI (QMainWindow):
     # initialize the main HNN GUI
 
     super().__init__()   
+    sys.excepthook = self.excepthook
+
     self.runningsim = False
     self.runthread = None
     self.fontsize = dconf['fontsize']
@@ -3323,28 +3351,16 @@ class HNNGUI (QMainWindow):
     else:
       self.statusBar().showMessage("Loaded %s"%default_param)
     # successful initialization, catch all further exceptions
-    sys.excepthook = self.excepthook
-
-  def _add_missing_frames(self, tb):
-    fake_tb = namedtuple(
-        'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
-    )
-    result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
-    frame = tb.tb_frame.f_back
-    while frame:
-        result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
-        frame = frame.f_back
-    return result
 
   def excepthook(self, exc_type, exc_value, exc_tb):
-    enriched_tb = self._add_missing_frames(exc_tb) if exc_tb else exc_tb
+    enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
     # Note: sys.__excepthook__(...) would not work here.
     # We need to use print_exception(...):
     traceback.print_exception(exc_type, exc_value, enriched_tb)
     msgBox = QMessageBox(self)
     msgBox.information(self, "Exception", "WARNING: an exception occurred! "
                       "Details can be found in the console output. Please "
-                      "include this output when opening an issue og GitHub: "
+                      "include this output when opening an issue on GitHub: "
                       "<a href=https://github.com/jonescompneurolab/hnn/issues>"
                       "https://github.com/jonescompneurolab/hnn/issues</a>")
 

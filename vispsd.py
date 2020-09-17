@@ -15,14 +15,14 @@ from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
-from neuron import h
-from run import net
 import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil, sqrt
 from specfn import MorletSpec
 from conf import dconf
+
+from hnn_core import read_params
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: dconf['fontsize'] = 10
@@ -33,9 +33,10 @@ for i in range(len(sys.argv)):
     specpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+    params = read_params(paramf)
+    ntrial = params['N_trials']
         
-basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
 print('basedir:',basedir)
 
 ddat = {}
@@ -171,12 +172,14 @@ class PSDCanvas (FigureCanvas):
     self.lextdatobj.append(ax.legend(handles=self.lpatch))
 
   def plot (self):
+    global params
+
     #self.clearaxes()
     #plt.close(self.figure)
     if self.index == 0:      
       self.lax = self.drawpsd(ddat['spec'],self.figure, self.G, ltextra='All Trials')
     else:
-      specpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'rawspec_'+str(self.index)+'.npz') 
+      specpathtrial = os.path.join(dconf['datdir'], params['sim_prefix'],'rawspec_'+str(self.index)+'.npz') 
       if 'spec'+str(self.index) not in ddat:
         ddat['spec'+str(self.index)] = np.load(specpath)
       self.lax=self.drawpsd(ddat['spec'+str(self.index)],self.figure, self.G, ltextra='Trial '+str(self.index));

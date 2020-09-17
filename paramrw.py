@@ -13,20 +13,8 @@ from params_default import get_params_default
 
 from hnn_core import read_params
 
-# get dict of ':' separated params from fn; ignore lines starting with #
-def quickreadprm (fn):
-  d = {}
-  with open(fn,'r') as fp:
-    ln = fp.readlines()
-    for l in ln:
-      s = l.strip()
-      if s.startswith('#'): continue
-      sp = s.split(':')
-      if len(sp) > 1:
-        d[sp[0].strip()]=str(sp[1]).strip()
-  return d
-
 def validate_param_file (fn):
+    # DEPRECATE - should validate file when opening for the first time (hnn-core)
     try:
         fp = open(fn, 'r')
     except OSError:
@@ -49,11 +37,6 @@ def validate_param_file (fn):
     if not 'tstop' in d:
         print("ERROR: parameter file not valid. Could not find 'tstop'")
         raise ValueError
-
-# get dict of ':' separated params from fn; ignore lines starting with #
-def quickgetprm (fn,k,ty):
-  d = quickreadprm(fn)
-  return ty(d[k])
 
 # check if using ongoing inputs
 def usingOngoingInputs (params, lty = ['_prox', '_dist']):
@@ -170,6 +153,8 @@ def usingTonicInputs (d):
 
 # class controlling multiple simulation files (.param)
 class ExpParams():
+    # DEPRECATE
+    # need to add 'spec_cmap' to hnn-core
     def __init__ (self, f_psim, debug=False):
 
         self.debug = debug
@@ -478,10 +463,8 @@ class ExpParams():
 
         return key_dict
 
-# reads params from a generated txt file and returns gid dict and p dict 
-def read (fparam):
+def read_gids_param (fparam):
     lines = fio.clean_lines(fparam)
-    p = {}
     gid_dict = {}
     for line in lines:
         if line.startswith('#'): continue
@@ -495,26 +478,11 @@ def read (fparam):
                 gid_dict[key] = np.arange(ind_start, ind_end)
             else:
                 gid_dict[key] = np.array([])
-        else:
-            try:
-                p[key] = float(val)
-            except ValueError:
-                p[key] = str(val)
-    return gid_dict, p
+
+    return gid_dict
 
 # write the params to a filename
-def write(fparam, p, gid_list):
-  """ now sorting
-  """
-  # sort the items in the dict by key
-  # p_sorted = [item for item in p.items()]
-  p_keys = [key for key, val in p.items()]
-  p_sorted = [(key, p[key]) for key in p_keys]
-  # for some reason this is now crashing in python/mpi
-  # specifically, lambda sorting in place?
-  # p_sorted = [item for item in p.items()]
-  # p_sorted.sort(key=lambda x: x[0])
-  # open the file for writing
+def write_gids_param(fparam, gid_list):
   with open(fparam, 'w') as f:
     pstring = '%26s: '
     # write the gid info first
@@ -525,39 +493,21 @@ def write(fparam, p, gid_list):
       else:
         f.write('[]')
       f.write('\n')
-    # do the params in p_sorted
-    for param in p_sorted:
-      key, val = param
-      f.write(pstring % key)
-      if key.startswith('N_'):
-        f.write('%i\n' % val)
-      else:
-        f.write(str(val)+'\n')
-
-# Searches f_param for any match of p
-def find_param(fparam, param_key):
-    _, p = read(fparam)
-
-    try:
-        return p[param_key]
-
-    except KeyError:
-        return "There is no key by the name %s" % param_key
 
 # reads the simgroup name from fparam
 def read_sim_prefix(fparam):
-    lines = fio.clean_lines(fparam)
-    param_list = [line for line in lines if line.split(': ')[0].startswith('sim_prefix')]
+    # DEPRECATE
+    params = read_params(fparam)
 
-    # Assume we found something ...
-    if param_list:
-        return param_list[0].split(" ")[1]
-    else:
+    try:
+        return params['sim_prefix']
+    except KeyError:
         print("No sim_prefix found")
         return 0
 
 # Finds the experiments list from the simulation param file (.param)
 def read_expmt_groups(fparam):
+    # DEPRECATE
     lines = fio.clean_lines(fparam)
     lines = [line for line in lines if line.split(': ')[0] == 'expmt_groups']
 
@@ -569,6 +519,7 @@ def read_expmt_groups(fparam):
 
 # qnd function to add feeds if they are sensible
 def feed_validate(p_ext, d, tstop):
+    # DEPRECATE
     """ whips into shape ones that are not
         could be properly made into a meaningful class.
     """
@@ -606,6 +557,7 @@ def feed_validate(p_ext, d, tstop):
 
 #
 def checkevokedsynkeys (p, nprox, ndist):
+  # DEPRECATE
   # make sure ampa,nmda gbar values are in the param dict for evoked inputs(for backwards compatibility)
   lctprox = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # evoked distal target cell types
   lctdist = ['L2Pyr','L5Pyr','L2Basket'] # evoked proximal target cell types
@@ -622,6 +574,7 @@ def checkevokedsynkeys (p, nprox, ndist):
 
 #
 def checkpoissynkeys (p):
+  # DEPRECATE
   # make sure ampa,nmda gbar values are in the param dict for Poisson inputs (for backwards compatibility)
   lct = ['L2Pyr','L5Pyr','L2Basket','L5Basket'] # target cell types
   lsy = ['ampa','nmda'] # synapse types used in Poisson inputs
@@ -634,6 +587,7 @@ def checkpoissynkeys (p):
 
 # creates the external feed params based on individual simulation params p
 def create_pext (p, tstop):
+    # DEPRECATE
     # indexable py list of param dicts for parallel
     # turn off individual feeds by commenting out relevant line here.
     # always valid, no matter the length
@@ -777,6 +731,7 @@ def create_pext (p, tstop):
 # brittle in that the match string needs to be correct to find all the changed params
 # is redundant with(?) get_key_types() dynamic keys information
 def changed_vars(fparam):
+    # DEPRECATE
     # Strip empty lines and comments
     lines = fio.clean_lines(fparam)
     lines = [line for line in lines if line[0] != '#']
@@ -805,6 +760,7 @@ def changed_vars(fparam):
 # if any match, updates the (key, value) pair of d1 to match that of d2
 # not real happy with variable names, but will have to do for now
 def compare_dictionaries(d1, d2):
+    # DEPRECATE
     # iterate over intersection of key sets (i.e. any common keys)
     for key in d1.keys() and d2.keys():
         # update d1 to have same (key, value) pair as d2
@@ -814,6 +770,7 @@ def compare_dictionaries(d1, d2):
 
 # get diff on 2 dictionaries
 def diffdict (d1, d2, verbose=True):
+  # DEPRECATE
   print('d1,d2 num keys - ', len(d1.keys()), len(d2.keys()))
   for k in d1.keys():
     if not k in d2:
@@ -827,6 +784,7 @@ def diffdict (d1, d2, verbose=True):
         print('d1[',k,']=',d1[k],' d2[',k,']=',d2[k])
 
 def consolidate_chunks(input_dict):
+    # MOVE to hnn-core
     # get a list of sorted chunks
     sorted_inputs = sorted(input_dict.items(), key=lambda x: x[1]['user_start'])
 
@@ -859,6 +817,7 @@ def consolidate_chunks(input_dict):
     return consolidated_chunks
 
 def combine_chunks(input_chunks):
+    # MOVE to hnn-core
     # Used for creating the opt params of the last step with all inputs
 
     final_chunk = {'inputs': [],
@@ -879,6 +838,7 @@ def combine_chunks(input_chunks):
     return final_chunk
 
 def chunk_evinputs(opt_params, sim_tstop, sim_dt):
+    # MOVE to hnn-core
     """
     Take dictionary (opt_params) sorted by input and
     return a sorted list of dictionaries describing
@@ -974,6 +934,7 @@ def chunk_evinputs(opt_params, sim_tstop, sim_dt):
     return chunk_list
 
 def get_inputs (params):
+    # MOVE
     import re
     input_list = []
 
@@ -987,6 +948,7 @@ def get_inputs (params):
     return input_list
 
 def trans_input (input_var):
+    # MOVE
     import re
 
     input_str = input_var
@@ -998,9 +960,4 @@ def trans_input (input_var):
             input_str = 'Distal ' + input_match.group(2)
 
     return input_str
-# debug test function
-if __name__ == '__main__':
-  fparam = 'param/debug.param'
-  p = ExpParams(fparam,debug=True)
-  # print(find_param(fparam, 'WhoDat')) # ?
 

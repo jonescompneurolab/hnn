@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtWidgets import QMenu, QSizePolicy
+from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -13,6 +13,9 @@ import spikefn
 from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, countEvokedInputs, ExpParams
 from scipy import signal
 from gutils import getscreengeom
+import traceback
+
+from hnn_core import read_spikes
 
 # dconf has settings from hnn.cfg
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
@@ -86,17 +89,15 @@ def getinputfiles (sim_prefix):
   dfile['outparam'] = os.path.join(basedir,'param.txt')
   return dfile
 
-def readtxt (fn, silent=False):
+def readtxt (fn):
   contents = []
 
   try:
     contents = np.loadtxt(fn)
   except OSError:
-    if not silent:
-      print('Warning: could not read file:', fn)
+    print('Warning: could not read file:', fn)
   except ValueError:
-    if not silent:
-      print('Warning: error reading data from:', fn)
+    print('Warning: error reading data from:', fn)
 
   return contents
 
@@ -109,13 +110,18 @@ def updatedat (params):
   for k in ['dpl','spk']:
     if k in ddat:
       del ddat[k]
-    silent = not os.path.exists(basedir)
-    ddat[k] = readtxt(dfile[k], silent)
-    if len(ddat[k]) == 0:
-      del ddat[k]
+  
+  if os.path.exists(basedir):
+    ddat['dpl'] = readtxt(dfile['dpl'])
+    if len(ddat['dpl']) == 0:
+      del ddat['dpl']
+      print('WARN: could not read dipole data for simulation %s' %params['sim_prefix'])
 
-  if not 'dpl' in ddat or not 'spk' in ddat:
-    raise ValueError
+    try:
+      spikes = read_spikes(dfile['spk'])
+      ddat['spk'] = np.r_[spikes.times, spikes.gids].T
+    except ValueError:
+      ddat['spk'] = readtxt(dfile['spk'])
 
   ddat['dpltrials'] = readdpltrials(basedir)
 
@@ -289,7 +295,7 @@ class SIMCanvas (FigureCanvas):
     times = np.linspace(0, sim_tstop, num_step)
 
     try:
-      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'])
+      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'], self.params)
       extinputs.add_delay_times()
       dinput = extinputs.inputs
     except ValueError:
@@ -570,10 +576,10 @@ class SIMCanvas (FigureCanvas):
   def plotsimdat (self):
     # plot the simulation data
 
-    failed_loading = False
     self.gRow = 0
     bottom = 0.0
 
+    failed_loading = False
     only_create_axes = False
     if self.params is None:
       only_create_axes = True
@@ -583,10 +589,8 @@ class SIMCanvas (FigureCanvas):
       # setup the figure axis for drawing the dipole signal
       dinty = self.getInputs()
 
-      # try loading data. ignore failures
-      try:
-        updatedat(self.params)
-      except IOError:
+      updatedat(self.params)
+      if 'dpl' not in ddat:
         failed_loading = True
 
       xl = (0.0, self.params['tstop'])
@@ -617,15 +621,6 @@ class SIMCanvas (FigureCanvas):
 
     if failed_loading or only_create_axes:
       return
-
-    try:
-      updatedat(self.params)
-    except IOError:
-      return
-    except ValueError:
-      if 'dpl' not in ddat:
-        # failed to load dipole data, nothing more to plot
-        return
 
     ds = None
     xl = (0,ddat['dpl'][-1,0])

@@ -1,3 +1,5 @@
+# DEPRECATE
+
 # pspec.py - Very long plotting methods having to do with spec.
 #
 # v 1.10.0-py35

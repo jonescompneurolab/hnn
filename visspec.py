@@ -20,7 +20,8 @@ from conf import dconf
 import simdat
 from simdat import readdpltrials
 import paramrw
-from paramrw import quickgetprm
+
+from hnn_core import read_params
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
@@ -30,9 +31,10 @@ for i in range(len(sys.argv)):
     specpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+    params = read_params(paramf)
+    ntrial =  params['N_trials']
 
-basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
 #print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
         
 # assumes column 0 is time, rest of columns are time-series
@@ -69,7 +71,6 @@ def extractspec (dat, fmax=40.0):
 
   return ms.f, lspec, avgdipole, avgspec
 
-# TODO: can we import this from simdat instead?
 def loaddat (fname):
   try:
     if fname.endswith('.txt'):
@@ -77,10 +78,9 @@ def loaddat (fname):
       print('Loaded data in ' + fname + '. Extracting Spectrograms.')
       return dat
     elif fname.endswith('.param'):
-      ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
-      #simdat.updatedat(paramf)
-      #return paramf,simdat.ddat
+      ntrial = params['N_trials']
+      basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
+
       if ntrial > 1:
         ddat = readdpltrials(basedir)
         #print('read dpl trials',ddat[0].shape)
@@ -249,7 +249,7 @@ class SpecViewGUI (DataViewGUI):
     self.dat = dat
     try:
       try:
-        fmax = quickgetprm(paramf,'f_max_spec',float)
+        fmax = params['f_max_spec']
       except:
         fmax = 40.
       f, lspec, avgdipole, avgspec = extractspec(dat,fmax=fmax)

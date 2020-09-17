@@ -9,10 +9,10 @@
 import os
 import sys
 import time
-import shutil
+import json
 import numpy as np
 # Cells are defined in other files
-from  paramrw import usingOngoingInputs
+from  paramrw import usingOngoingInputs, write_gids_param
 import specfn as specfn
 #import pickle
 import datetime
@@ -24,7 +24,7 @@ from L5_basket import L5Basket
 
 import os.path as op
 
-from hnn_core import simulate_dipole, read_params, Network, MPIBackend
+from hnn_core import simulate_dipole, read_params, Network, MPIBackend, read_spikes
 from hnn_core.dipole import average_dipoles
 
 dconf = readconf()
@@ -111,21 +111,54 @@ def simulate (params, n_core):
   with MPIBackend(n_procs=n_core, mpi_cmd='mpiexec'):
     dpls = simulate_dipole(net, params['N_trials'])
 
-  if len(dpls) > 1:
+  ntrial = len(dpls)
+  # save average dipole from individual trials in a single file
+  if ntrial > 1:
     avg_dpl = average_dipoles(dpls)
+  elif ntrial == 1:
+    avg_dpl = dpls[0]
   else:
-    avg_dpl = dpls
+    raise RuntimeError("No dipole(s) rertuned from simulation")
+
+  # TODO: rawdpl in hnn-core
+  avg_dpl.write(os.path.join(ddir, 'dpl.txt'))
 
   # HNN workflow requires some files to be written to disk. This sets up the directory for all output files
   ddir = setupsimdir(params)
 
   # now write the files
+  params.write(os.path.join(ddir, params['sim_prefix'] + '.json'))
+
+  # TODO: Can below be removed if spk.txt is new hnn-core format with 3 columns (including spike type)?
+  write_gids_param(getfname(ddir,'param'), net.gid_dict)
+
+  # save spikes by trial
   net.spikes.write(os.path.join(ddir, 'spk_%d.txt'))
 
-  # TODO: the gid_dict is needed forsome plotting functions. Can this be removed if spk.txt
-  # is new hnn-core format with 3 columns (including spike type)?
-  # write_gid_dict(os.path.join(ddir,'gid_dict.txt'), net.gid_dict)
+  # save spikes from the individual trials in a single file
+  fout = os.path.join(ddir,'spk.txt')
+  with open(fout, 'w') as fspkout:
+    for trial_idx in range(len(net.spikes.times)):
+      for spike_idx in range(len(net.spikes.times[trial_idx])):
+        fspkout.write('{:.3f}\t{}\t{}\n'.format(
+                      net.spikes.times[trial_idx][spike_idx],
+                      int(net.spikes.gids[trial_idx][spike_idx]),
+                      net.spikes.types[trial_idx][spike_idx]))
 
+  # save average spectrogram from individual trials in a single file
+  lf = [os.path.join(ddir,'rawspec_'+str(i)+'.npz') for i in range(ntrial)]
+  dspecin = {}
+  dout = {}
+  try:
+    for f in lf: dspecin[f] = np.load(f)
+  except:
+    return None
+  for k in ['t_L5', 'f_L5', 't_L2', 'f_L2', 'time', 'freq']: dout[k] = dspecin[lf[0]][k]
+  for k in ['TFR', 'TFR_L5', 'TFR_L2']: dout[k] = np.mean(np.array([dspecin[f][k] for f in lf]),axis=0)
+  with open(os.path.join(ddir,'rawspec.npz'), 'wb') as fdpl:
+    np.savez_compressed(fdpl,t_L5=dout['t_L5'],f_L5=dout['f_L5'],t_L2=dout['t_L2'],f_L2=dout['f_L2'],time=dout['time'],freq=dout['freq'],TFR=dout['TFR'],TFR_L5=dout['TFR_L5'],TFR_L2=dout['TFR_L2'])
+
+  # save dipole for each trial and perform spectral analysis
   for trial_idx, dpl in enumerate(dpls):
     file_dipole =  getfname(ddir,'normdpl', trial_idx, params['N_trials'])
     dpl.write(file_dipole)
@@ -141,19 +174,20 @@ def simulate (params, n_core):
     # TODO: save_vsoma is coded to work in parallel, so it should be moved to
     # hnn_core.parallel_backends
     # if p['save_vsoma']:
-    #   save_vsoma()()
+    #   save_vsoma()
 
     if params['save_spec_data'] or usingOngoingInputs(params):
-      specfn = getfname(ddir, 'rawspec', trial_idx, params['N_trials'])
       spec_opts = {'type': 'dpl_laminar',
                     'f_max': params['f_max_spec'],
                     'save_data': 0,
                     'runtype': 'parallel',
                   }
-      specfn.analysis_simp(spec_opts, params, dpl, specfn) # run the spectral analysis
 
-  # NOTE: the savefigs functionality is quite complicated and rewriting from scratch in hnn-core is probably
-  # a much better option that allows deprecating the large amount of legacy code
+      # run the spectral analysis
+      specfn.analysis_simp(spec_opts, params, dpl,
+                           getfname(ddir, 'rawspec', trial_idx, params['N_trials']))
 
-  # if params['save_figs']:
-  #   savefigs(params) # save output figures
+    # NOTE: the savefigs functionality is quite complicated and rewriting from scratch in hnn-core is probably
+    # a much better option that allows deprecating the large amount of legacy code
+    # if params['save_figs']:
+    #   savefigs(params) # save output figures

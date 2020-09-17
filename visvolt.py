@@ -14,12 +14,12 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
-from neuron import h
-from run import net
 import paramrw
 import pickle
 from conf import dconf
 from gutils import getmplDPI
+
+from hnn_core import read_params
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: dconf['fontsize'] = 10
@@ -37,16 +37,17 @@ maxperty = 10 # how many cells of a type to draw
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    tstop = paramrw.quickgetprm(paramf,'tstop',float)
-    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-    outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
+    params = read_params(paramf)
+    tstop = params['tstop']
+    ntrial = params['N_trials']
+    outparamf = os.path.join(dconf['datdir'],params['sim_prefix'],'param.txt')
   elif sys.argv[i] == 'maxperty':
     maxperty = int(sys.argv[i])
 
 if ntrial <= 1:
-  voltpath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma.pkl') 
+  voltpath = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma.pkl')
 else:
-  voltpath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_1.pkl') 
+  voltpath = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma_1.pkl')
 
 class VoltCanvas (FigureCanvas):
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Voltage Viewer'):
@@ -107,6 +108,8 @@ class VoltCanvas (FigureCanvas):
     return lax
 
   def plot (self):
+    global params
+
     if self.index == 0:
       if ntrial == 1:
         dvolt = pickle.load(open(voltpath,'rb'))
@@ -114,7 +117,7 @@ class VoltCanvas (FigureCanvas):
         dvolt = pickle.load(open(voltpath,'rb'))
       self.lax = self.drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
     else:
-      voltpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'vsoma_'+str(self.index)+'.pkl') 
+      voltpathtrial = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma_'+str(self.index)+'.pkl')
       dvolttrial = pickle.load(open(voltpathtrial,'rb'))
       self.lax=self.drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
     self.draw()

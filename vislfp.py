@@ -15,14 +15,14 @@ from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
-from neuron import h
-from run import net
 import paramrw
 from filt import boxfilt, hammfilt, lowpass
 import spikefn
 from math import ceil
 from conf import dconf
 from specfn import MorletSpec
+
+from hnn_core import read_params
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
@@ -34,12 +34,13 @@ for i in range(len(sys.argv)):
     lfppath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    scalefctr = paramrw.find_param(paramf,'dipole_scalefctr')
+    params = read_params(paramf)
+    scalefctr = params['dipole_scalefctr']
     if type(scalefctr)!=float and type(scalefctr)!=int: scalefctr=30e3
-    tstop = paramrw.find_param(paramf,'tstop')
-    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
+    tstop = params['tstop']
+    ntrial = params['N_trials']
         
-basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
 
 ddat = {}; tvec = None; dspec = None
 
