@@ -16,7 +16,6 @@ from neuron import h as nrn
 
 import fileio as fio
 import currentfn
-import dipolefn
 import spikefn
 import axes_create as ac
 from conf import dconf
@@ -216,6 +215,8 @@ class PhaseLock():
         Might be a newer version in fieldtrip
     """
     def __init__(self, tsarray1, tsarray2, fparam, f_max=60.):
+        raise DeprecationWarning
+
         # Save time-series arrays as self variables
         # ohhhh. Do not use 1-indexed keys of a dict!
         self.ts = {
@@ -825,6 +826,8 @@ def spec_max(ddata, expmt_group, layer='agg'):
 
 # common function to generate spec if it appears to be missing
 def generate_missing_spec(ddata, f_max=40):
+    raise DeprecationWarning
+
     # just check first expmt_group
     expmt_group = ddata.expmt_groups[0]
 
@@ -865,6 +868,8 @@ def generate_missing_spec(ddata, f_max=40):
 # Kernel for spec analysis of current data
 # necessary for parallelization
 def spec_current_kernel(fparam, fts, fspec, f_max):
+    raise DeprecationWarning
+
     I_syn = currentfn.SynapticCurrent(fts)
 
     # TODO: replace with function that reads justs params
@@ -879,32 +884,27 @@ def spec_current_kernel(fparam, fts, fspec, f_max):
 
 # Kernel for spec analysis of dipole data
 # necessary for parallelization
-def spec_dpl_kernel(fparam, fts, fspec, f_max):
-    dpl = dipolefn.Dipole(fts)
-    dpl.units = 'nAm'
-
-    # TODO: replace with function that reads justs params
-    params = paramrw.read(fparam)[1]
+def spec_dpl_kernel(params, dpl, fspec, f_max):
 
     # Do the conversion prior to generating these spec
     # dpl.convert_fAm_to_nAm()
 
     # Generate various spec results
-    spec_agg = MorletSpec(dpl.t, dpl.dpl['agg'], f_max, p_dict=params)
-    spec_L2 = MorletSpec(dpl.t, dpl.dpl['L2'], f_max, p_dict=params)
-    spec_L5 = MorletSpec(dpl.t, dpl.dpl['L5'], f_max, p_dict=params)
+    spec_agg = MorletSpec(dpl.times, dpl.data['agg'], f_max, p_dict=params)
+    spec_L2 = MorletSpec(dpl.times, dpl.data['L2'], f_max, p_dict=params)
+    spec_L5 = MorletSpec(dpl.times, dpl.data['L5'], f_max, p_dict=params)
 
     # Get max spectral power data
     # for now, only doing this for agg
     max_agg = spec_agg.max()
 
     # Generate periodogram resutls
-    pgram = Welch(dpl.t, dpl.dpl['agg'], params['dt'])
+    pgram = Welch(dpl.times, dpl.data['agg'], params['dt'])
 
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f, TFR=spec_agg.TFR, max_agg=max_agg, t_L2=spec_L2.t, f_L2=spec_L2.f, TFR_L2=spec_L2.TFR, t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR, pgram_p=pgram.P, pgram_f=pgram.f)
 
-def analysis_simp (opts, fparam, fdpl, fspec):
+def analysis_simp (opts, params, fdpl, fspec):
   opts_run = {'type': 'dpl_laminar',
               'f_max': 100.,
               'save_data': 0,
@@ -913,7 +913,7 @@ def analysis_simp (opts, fparam, fdpl, fspec):
   if opts:
     for key, val in opts.items():
       if key in opts_run.keys(): opts_run[key] = val
-  spec_dpl_kernel(fparam, fdpl, fspec, opts_run['f_max'])
+  spec_dpl_kernel(params, fdpl, fspec, opts_run['f_max'])
 
 # Does spec analysis for all files in simulation directory
 # ddata comes from fileio
@@ -1094,6 +1094,8 @@ def pfreqpwr_with_hist(file_name, freqpwr_result, f_spk, gid_dict, p_dict, key_t
     f.close()
 
 def pmaxpwr(file_name, results_list, fparam_list):
+    raise DeprecationWarning
+
     f = ac.FigStd()
     f.ax0.hold(True)
 
