@@ -16,14 +16,14 @@ else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
 # GUI for viewing data from individual/all trials
 class DataViewGUI (QMainWindow):
-  def __init__ (self, CanvasType, paramf, ntrial,title):
+  def __init__ (self, CanvasType, params, title):
     super().__init__()        
     self.fontsize = dconf['fontsize']
     self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.CanvasType = CanvasType
-    self.paramf = paramf
-    self.ntrial = ntrial
+    self.ntrial = params['N_trials']
+    self.params = params
     self.title = title
     self.initUI()
 
@@ -86,7 +86,7 @@ class DataViewGUI (QMainWindow):
       self.m = self.toolbar = None
     except:
       pass
-    self.m = self.CanvasType(self.paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
+    self.m = self.CanvasType(self.params, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
@@ -107,7 +107,7 @@ class DataViewGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle(self.title + ' - ' + self.paramf)
+    self.setWindowTitle(self.title + ' - ' + os.path.join(dconf['datdir'], self.params['sim_prefix'] + '.param'))
     self.grid = grid = QGridLayout()
     self.index = 0
     self.initCanvas()
@@ -119,7 +119,7 @@ class DataViewGUI (QMainWindow):
     # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
-    self.setCentralWidget(widget);
+    self.setCentralWidget(widget)
 
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass

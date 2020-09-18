@@ -10,7 +10,7 @@ from math import ceil
 from conf import dconf
 import conf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, countEvokedInputs, ExpParams
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, countEvokedInputs
 from scipy import signal
 from gutils import getscreengeom
 import traceback
@@ -696,16 +696,9 @@ class SIMCanvas (FigureCanvas):
     if DrawSpec: #
       if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
 
-      p_exp = ExpParams(self.paramf, debug=debug)
-      if len(p_exp.expmt_groups) > 0:
-        expmt_group = p_exp.expmt_groups[0]
-      else:
-        expmt_group = None
-      p = p_exp.return_pdict(expmt_group, 0)
-
       gRow = 6
       self.axspec = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
-      cax = self.axspec.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap(p['spec_cmap']))
+      cax = self.axspec.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap(self.params['spec_cmap']))
       self.axspec.set_ylabel('Frequency (Hz)',fontsize=dconf['fontsize'])
       self.axspec.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
       self.axspec.set_xlim(xl)

@@ -23,8 +23,7 @@ from run import simulate
 import numpy as np
 from math import ceil, isclose
 import spikefn
-import params_default
-from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
+from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
@@ -2649,7 +2648,7 @@ class RunParamDialog (DictDialog):
     self.addtransvar('NumCores','Number Cores')
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
-    self.spec_map_cb = None
+    self.spec_cmap_cb = None
 
     self.cmaps = ['jet',
                   'viridis',
@@ -2658,20 +2657,11 @@ class RunParamDialog (DictDialog):
                   'magma',
                   'cividis']
 
-    # get default spec_cmap
-    p_exp = ExpParams(paramf, 0)
-    if len(p_exp.expmt_groups) > 0:
-      expmt_group = p_exp.expmt_groups[0]
-    else:
-      expmt_group = None
-    p = p_exp.return_pdict(expmt_group, 0)
-    self.spec_cmap = p['spec_cmap']
-
-    self.spec_map_cb = QComboBox()
+    self.spec_cmap_cb = QComboBox()
     for cmap in self.cmaps:
-      self.spec_map_cb.addItem(cmap)
-    self.spec_map_cb.currentIndexChanged.connect(self.selectionchange)
-    self.ltabs[1].layout.addRow(self.transvar('spec_cmap'),self.spec_map_cb)
+      self.spec_cmap_cb.addItem(cmap)
+    self.spec_cmap_cb.currentIndexChanged.connect(self.selectionchange)
+    self.ltabs[1].layout.addRow(self.transvar('spec_cmap'),self.spec_cmap_cb)
 
   def getntrial (self):
     ntrial = int(self.dqline['N_trials'].text().strip())
@@ -2694,12 +2684,21 @@ class RunParamDialog (DictDialog):
 
     # number of cores may have changed if the configured number failed
     self.dqextra['NumCores'].setText(str(defncore))
+
+    # update ordered dict of QLineEdit objects with new parameters
     for k,v in din.items():
       if k in self.dqline:
         self.dqline[k].setText(str(v).strip())
       elif k == 'spec_cmap':
         self.spec_cmap = v
-        self.spec_map_cb.setCurrentIndex(self.cmaps.index(self.spec_cmap))
+
+    # for spec_cmap we want the user to be able to change (e.g. 'viridis'), but the
+    # default is 'jet' to be consistent with prior publications on HNN
+    if 'spec_cmap' not in din:
+      self.spec_cmap = 'jet'
+
+    # update the spec_cmap dropdown menu
+    self.spec_cmap_cb.setCurrentIndex(self.cmaps.index(self.spec_cmap))
 
   def __str__ (self):
     s = ''
@@ -3126,7 +3125,6 @@ class BaseParamDialog (QDialog):
   def settonicparam (self): bringwintotop(self.tonicparamwin)
 
   def initUI (self):
-    global params
     grid = QGridLayout()
     grid.setSpacing(10)
 
@@ -3516,7 +3514,6 @@ class HNNGUI (QMainWindow):
 
   def showSomaVPlot (self): 
     # start the somatic voltage visualization process (separate window)
-    global basedir
     if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
       smsg='In order to view somatic voltages you must first rerun the simulation with saving somatic voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Somatic Voltages, enter a 1 and then rerun the simulation.'
       msg = QMessageBox()
@@ -3526,28 +3523,22 @@ class HNNGUI (QMainWindow):
       msg.setStandardButtons(QMessageBox.Ok)      
       msg.exec_()
     else:
-      lcmd = [getPyComm(), 'visvolt.py',paramf]
+      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      lcmd = [getPyComm(), 'visvolt.py',outparamf]
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
-    global basedir
-    lcmd = [getPyComm(), 'vispsd.py',paramf]
+    outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+    lcmd = [getPyComm(), 'vispsd.py',outparamf]
     if debug: print('vispsd cmd:',lcmd)
-    Popen(lcmd) # nonblocking
-
-  def showLFPPlot (self):
-    # start the LFP visualization process (separate window)
-    global basedir
-    lcmd = [getPyComm(), 'vislfp.py',paramf]
-    if debug: print('vislfp cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
     # start the spectrogram visualization process (separate window)
-    global basedir
-    lcmd = [getPyComm(), 'visspec.py',paramf]
+    outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+    lcmd = [getPyComm(), 'visspec.py',outparamf]
     if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
@@ -3557,7 +3548,8 @@ class HNNGUI (QMainWindow):
 
     spikefile = os.path.join(basedir,'spk.txt')
     if os.path.isfile(spikefile):
-      lcmd = [getPyComm(), 'visrast.py',paramf,spikefile]
+      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      lcmd = [getPyComm(), 'visrast.py',outparamf,spikefile]
     else:
       QMessageBox.information(self, "HNN", "WARNING: no spiking data at %s" % spikefile)
       return
@@ -3572,7 +3564,8 @@ class HNNGUI (QMainWindow):
 
     dipole_file = os.path.join(basedir,'dpl.txt')
     if os.path.isfile(dipole_file):
-      lcmd = [getPyComm(), 'visdipole.py',paramf,dipole_file]
+      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      lcmd = [getPyComm(), 'visdipole.py',outparamf,dipole_file]
     else:
       QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
       return

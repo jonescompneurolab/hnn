@@ -25,18 +25,6 @@ from hnn_core import read_params
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 
-ntrial = 1; paramf = ''
-for i in range(len(sys.argv)):
-  if sys.argv[i].endswith('.txt'):
-    specpath = sys.argv[i]
-  elif sys.argv[i].endswith('.param'):
-    paramf = sys.argv[i]
-    params = read_params(paramf)
-    ntrial =  params['N_trials']
-
-basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
-#print('basedir:',basedir,'paramf:',paramf,'ntrial:',ntrial)
-        
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=40.0):
   global ntrial
@@ -71,40 +59,38 @@ def extractspec (dat, fmax=40.0):
 
   return ms.f, lspec, avgdipole, avgspec
 
-def loaddat (fname):
-  try:
-    if fname.endswith('.txt'):
-      dat = np.loadtxt(fname)
-      print('Loaded data in ' + fname + '. Extracting Spectrograms.')
-      return dat
-    elif fname.endswith('.param'):
-      ntrial = params['N_trials']
-      basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
+def loaddat_txt (fname):
+    dat = np.loadtxt(fname)
+    print('Loaded data in ' + fname + '. Extracting Spectrograms.')
+    return dat
 
-      if ntrial > 1:
-        ddat = readdpltrials(basedir)
-        #print('read dpl trials',ddat[0].shape)
-        dout = np.zeros((ddat[0].shape[0],1+ntrial))
-        #print('set dout shape',dout.shape)
-        dout[:,0] = ddat[0][:,0]
-        for i in range(ntrial):
-          dout[:,i+1] = ddat[i][:,1]
-        return dout
-      else:
-        ddat = np.loadtxt(os.path.join(basedir,'dpl.txt'))
-        #print('ddat.shape:',ddat.shape)
-        dout = np.zeros((ddat.shape[0],2))
-        #print('dout.shape:',dout.shape)
-        dout[:,0] = ddat[:,0]
-        dout[:,1] = ddat[:,1]
-        return dout
-  except:
-    print('Could not load data in ' + fname)
-    return None
+def loaddat (sim_prefix, ntrial):
+  basedir = os.path.join(dconf['datdir'], sim_prefix)
+  if ntrial > 1:
+    ddat = readdpltrials(basedir)
+    #print('read dpl trials',ddat[0].shape)
+    dout = np.zeros((ddat[0].shape[0],1+ntrial))
+    #print('set dout shape',dout.shape)
+    dout[:,0] = ddat[0][:,0]
+    for i in range(ntrial):
+      dout[:,i+1] = ddat[i][:,1]
+    return dout
+  else:
+    ddat = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+    #print('ddat.shape:',ddat.shape)
+    dout = np.zeros((ddat.shape[0],2))
+    #print('dout.shape:',dout.shape)
+    dout[:,0] = ddat[:,0]
+    dout[:,1] = ddat[:,1]
+    return dout
+  # except:
+  #   print('Could not load data in ' + fname)
+  #   return None
   return None
 
 class SpecCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Spectrogram Viewer'):
+  def __init__ (self, parama, index, parent=None, width=12, height=10, dpi=120, title='Spectrogram Viewer'):
+
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
@@ -112,7 +98,7 @@ class SpecCanvas (FigureCanvas):
     self.index = index
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
-    self.paramf = paramf
+    self.params = params
     self.invertedhistax = False
     self.G = gridspec.GridSpec(10,1)
     self.dat = []
@@ -121,32 +107,29 @@ class SpecCanvas (FigureCanvas):
     self.avgdipole = []
     self.avgspec = []
 
-    # get spec_cmap
-    p_exp = paramrw.ExpParams(self.paramf, 0)
-    if len(p_exp.expmt_groups) > 0:
-      expmt_group = p_exp.expmt_groups[0]
+    if 'spec_cmap' in self.params:
+      self.spec_cmap = self.params['spec_cmap']
     else:
-      expmt_group = None
-    p = p_exp.return_pdict(expmt_group, 0)
-    self.spec_cmap = p['spec_cmap']
+      # default to jet, but allow user to change in param file
+      self.spec_cmap = 'jet'
 
     self.plot()
 
   def clearaxes (self):
-    try:
-      for ax in self.lax:
-        ax.set_yticks([])
-        ax.cla()
-    except:
-      pass
+    # try:
+    for ax in self.lax:
+      ax.set_yticks([])
+      ax.cla()
+    # except:
+    #   pass
 
   def clearlextdatobj (self):
     if hasattr(self,'lextdatobj'):
       for o in self.lextdatobj:
-        try:
-          o.set_visible(False)
-        except:
-          o[0].set_visible(False)
+        # try:
+        o.set_visible(False)
+        # except:
+        #   o[0].set_visible(False)
       del self.lextdatobj
 
   def drawspec (self, dat, lspec, sdx, avgdipole, avgspec, fig, G, ltextra=''):
@@ -159,8 +142,8 @@ class SpecCanvas (FigureCanvas):
     ax = fig.add_subplot(gdx)
     lax = [ax]
     tvec = dat[:,0]
-    dt = tvec[1] - tvec[0]
-    tstop = tvec[-1]
+    # dt = tvec[1] - tvec[0]
+    # tstop = tvec[-1]
 
     if sdx == 0:
       for i in range(1,dat.shape[1],1):
@@ -187,7 +170,7 @@ class SpecCanvas (FigureCanvas):
 
     ax.set_xlim(tvec[0],tvec[-1])
     ax.set_xlabel('Time (ms)')
-    ax.set_ylabel('Frequency (Hz)');
+    ax.set_ylabel('Frequency (Hz)')
 
     lax.append(ax)
 
@@ -201,18 +184,17 @@ class SpecCanvas (FigureCanvas):
     self.draw()
 
 class SpecViewGUI (DataViewGUI):
-  def __init__ (self,CanvasType,paramf,ntrial,title):
+  def __init__ (self,CanvasType,params,title):
     self.lF = [] # frequencies associated with external data spec
     self.lextspec = [] # external data spec
-    self.lextfiles = [] # external data files
+    # self.lextfiles = [] # external data files
     self.dat = None
     self.avgdipole = []
     self.avgspec = []
-    super(SpecViewGUI,self).__init__(CanvasType,paramf,ntrial,title)
+    self.params = params
+    super(SpecViewGUI,self).__init__(CanvasType,self.params,title)
     self.addLoadDataActions()
-    #print('paramf:',paramf)
-    if len(paramf):
-      self.loadDisplayData(paramf)
+    self.loadDisplayData(params)
 
     if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
       print("Exiting gracefully with TRAVIS_TESTING=1")
@@ -240,53 +222,51 @@ class SpecViewGUI (DataViewGUI):
     self.fileMenu.addAction(loadDataFile)
     self.fileMenu.addAction(clearDataFileAct)
 
-  def loadDisplayData (self, fname=None):
-    if fname is None or fname is False:
+  def loadDisplayData (self, params=None):
+    if params is None or params is False:
       fname = QFileDialog.getOpenFileName(self, 'Open .param or .txt file', 'data')
       fname = os.path.abspath(fname[0])
-    if not fname: return
-    dat = loaddat(fname)
+      dat = loaddat_txt(fname)
+    else:
+      dat = loaddat(self.params['sim_prefix'], self.params['N_trials'])
     self.dat = dat
-    try:
-      try:
-        fmax = params['f_max_spec']
-      except:
-        fmax = 40.
-      f, lspec, avgdipole, avgspec = extractspec(dat,fmax=fmax)
-      self.ntrial = len(lspec)
-      self.updateCB()
-      self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms from ' + fname)
-      self.lextspec = lspec
-      self.lextfiles.append(fname)
-      self.avgdipole = avgdipole
-      self.avgspec = avgspec
-      self.lF.append(f)
-    except:
-      self.printStat('Could not extract Spectrograms from ' + fname)
 
-    try:
-      if len(self.lextspec) > 0:
-        self.printStat('Plotting Spectrograms.')
-        self.m.lextspec = self.lextspec
-        self.m.dat = self.dat
-        self.m.avgspec = self.avgspec
-        self.m.avgdipole = self.avgdipole
-        self.m.plot()
-        self.m.draw() # make sure new lines show up in plot
-        self.printStat('')
-    except:
-      self.printStat('Could not plot data from ' + fname)    
+    fmax = self.params['f_max_spec']
+
+    f, lspec, avgdipole, avgspec = extractspec(dat,fmax=fmax)
+    self.ntrial = len(lspec)
+    self.updateCB()
+    self.printStat('Extracted ' + str(len(lspec)) + ' spectrograms for ' + self.params['sim_prefix'])
+    self.lextspec = lspec
+    # self.lextfiles.append(fname)
+    self.avgdipole = avgdipole
+    self.avgspec = avgspec
+    self.lF.append(f)
+
+    if len(self.lextspec) > 0:
+      self.printStat('Plotting Spectrograms.')
+      self.m.lextspec = self.lextspec
+      self.m.dat = self.dat
+      self.m.avgspec = self.avgspec
+      self.m.avgdipole = self.avgdipole
+      self.m.plot()
+      self.m.draw() # make sure new lines show up in plot
+      self.printStat('')
 
   def clearDataFile (self):
     self.m.clearlextdatobj()
     self.lextspec = []
-    self.lextfiles = []
     self.lF = []
     self.m.draw()
 
 
 if __name__ == '__main__':
+  for i in range(len(sys.argv)):
+    if sys.argv[i].endswith('.param'):
+      paramf = sys.argv[i]
+      params = read_params(paramf)
+
   app = QApplication(sys.argv)
-  ex = SpecViewGUI(SpecCanvas,paramf,ntrial,'Spectrogram Viewer')
+  ex = SpecViewGUI(SpecCanvas,params,'Spectrogram Viewer')
   sys.exit(app.exec_())  
   

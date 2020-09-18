@@ -12,7 +12,8 @@ import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-import pylab as plt, convolve
+import pylab as plt
+from pylab import convolve
 from numpy import hamming
 import matplotlib.gridspec as gridspec
 import paramrw

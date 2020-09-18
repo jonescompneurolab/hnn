@@ -64,6 +64,7 @@ class MorletSpec():
 
     # externally callable save function
     def save(self, fdata_spec):
+        raise DeprecationWarning
         write(fdata_spec, self.timevec, self.freqvec, self.TFR)
 
     # plots spec to axis
@@ -146,6 +147,7 @@ class MorletSpec():
             A sinusoid with these characterisitics is then subtracted from the signal.
             s: signal
         """
+        raise DeprecationWarning
         fNoise = 50.
         tv = np.arange(0,len(s)) / self.fs
 
@@ -204,6 +206,8 @@ class MorletSpec():
 # functions on the aggregate spec data
 class Spec():
     def __init__(self, fspec, spec_cmap='jet', dtype='dpl'):
+        raise DeprecationWarning
+
         # save dtype
         self.dtype = dtype
 
@@ -529,15 +533,15 @@ def read(fdata_spec, type='dpl'):
 
 # Kernel for spec analysis of dipole data
 # necessary for parallelization
-def spec_dpl_kernel(params, dpl, fspec, f_max):
+def spec_dpl_kernel(params, dpl, fspec, opts):
 
     # Do the conversion prior to generating these spec
     # dpl.convert_fAm_to_nAm()
 
     # Generate various spec results
-    spec_agg = MorletSpec(dpl.times, dpl.data['agg'], f_max, p_dict=params)
-    spec_L2 = MorletSpec(dpl.times, dpl.data['L2'], f_max, p_dict=params)
-    spec_L5 = MorletSpec(dpl.times, dpl.data['L5'], f_max, p_dict=params)
+    spec_agg = MorletSpec(dpl.times, dpl.data['agg'], opts['f_max'], p_dict=params)
+    spec_L2 = MorletSpec(dpl.times, dpl.data['L2'], opts['f_max'], p_dict=params)
+    spec_L5 = MorletSpec(dpl.times, dpl.data['L5'], opts['f_max'], p_dict=params)
 
     # Get max spectral power data
     # for now, only doing this for agg
@@ -558,4 +562,4 @@ def analysis_simp (opts, params, fdpl, fspec):
   if opts:
     for key, val in opts.items():
       if key in opts_run.keys(): opts_run[key] = val
-  spec_dpl_kernel(params, fdpl, fspec, opts_run['f_max'])
+  spec_dpl_kernel(params, fdpl, fspec, opts_run)
