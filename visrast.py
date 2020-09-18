@@ -12,10 +12,10 @@ import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-import pylab as plt
+import pylab as plt, convolve
+from numpy import hamming
 import matplotlib.gridspec as gridspec
 import paramrw
-from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
 from conf import dconf
@@ -59,6 +59,18 @@ binsz = 5.0
 smoothsz = 0 # no smoothing
 
 bDrawHist = True # whether to draw histograms (spike counts per time)
+
+# box filter
+def boxfilt (x, winsz):
+  win = [1.0/winsz for i in range(int(winsz))]
+  return convolve(x,win,'same')
+
+# convolve with a hamming window
+def hammfilt (x, winsz):
+  win = hamming(winsz)
+  win /= sum(win)
+  return convolve(x,win,'same')
+
 
 # adjust input gids for display purposes
 def adjustinputgid (extinputs, gid):

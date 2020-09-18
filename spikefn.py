@@ -4,7 +4,6 @@
 # rev 2016-05-01 (SL: minor)
 # last major: (SL: toward python3)
 
-import fileio as fio
 import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
@@ -232,15 +231,6 @@ class ExtInputs (Spikes):
     if self.p_dict['input_dist_A_delay_L2'] == self.p_dict['input_dist_A_delay_L5']:
       self.inputs['dist'] += self.p_dict['input_dist_A_delay_L2']
 
-  def get_envelope (self, tvec, feed='dist', bins=150):
-    h_range = (tvec[0], tvec[-1])
-    hist, edges = np.histogram(self.inputs[feed], bins=bins, range=h_range)
-    centers = edges[0:bins] + np.diff(edges) / 2.
-    num = len(tvec)
-    env, t = sps.resample(hist, num, t=centers)
-    self.inputs['env'] = env
-    self.inputs['t'] = t
-
   # extinput is either 'dist' or 'prox'
   def plot_hist (self, ax, extinput, tvec, bins='auto', xlim=None, color='green', hty='bar',lw=4):
     if bins is 'auto':
@@ -255,17 +245,6 @@ class ExtInputs (Spikes):
     else:
       hist = None
     return hist
-
-# filters spike dict s_dict for keys that start with str_startswith
-def filter_spike_dict (s_dict, str_startswith):
-  """ easy enough to modify for future conditions
-      just fix associated functions
-  """
-  s_filt = {}
-  for key, val in s_dict.items():
-    if key.startswith(str_startswith):
-      s_filt[key] = val
-  return s_filt
 
 # weird bin counting function
 def bin_count(bins_per_second, tinterval): return bins_per_second * tinterval / 1000.
@@ -371,43 +350,6 @@ def get_markerstyle(key):
   elif 'basket' in key:
     markerstyle += 'r|'
   return markerstyle
-
-# spike_png plots spikes based on input dict
-def spike_png(a, s_dict):
-  # new spikepng function:
-  # receive lists of cell spikes and the gid dict for now
-  # parse spikes file by cell type
-  # output all cell spikes
-  # get the length of s - new way
-  N_total = 0
-  for key in s_dict.keys(): N_total += s_dict[key].N_cells
-  # 2 added to this in order to pad the y_ticks off the x axis and top
-  # e_ticks starts at 1 for padding
-  # i_ticks ends at -1 for padding
-  y_ticks = np.linspace(0, 1, N_total + 2)
-  # Turn the hold on
-  a.hold(True)
-  # define start point
-  tick_start = 1
-  # sort the keys by alpha: consistency in names will lead to consistent behavior here
-  # reverse=True because _basket comes before _pyramidal, and the spikes plot bottom up
-  key_list = [key for key in s_dict.keys()]
-  key_list.sort(reverse=True)
-  # for key in s_dict.keys():
-  for key in key_list:
-    # print key, s_dict[key].spike_list
-    s_dict[key].tick_marks = y_ticks[tick_start:tick_start+s_dict[key].N_cells]
-    tick_start += s_dict[key].N_cells
-    markerstyle = get_markerstyle(key)
-    # There must be congruency between lines in spike_list and the number of ticks
-    i = 0
-    for spk_cell in s_dict[key].spike_list:
-      # a.plot(np.array([451.6]), e_ticks[i] * np.ones(1), 'k.', markersize=2.5)
-      # print len(s_dict[key].tick_marks), len(spk_cell)
-      a.plot(spk_cell, s_dict[key].tick_marks[i] * np.ones(len(spk_cell)), markerstyle, markeredgewidth=1, markersize=1.5)
-      i += 1
-  a.set_ylim([0, 1])
-  a.grid()
 
 # Add synaptic delays to alpha input times if applicable:
 def add_delay_times(s_dict, p_dict):

@@ -15,10 +15,7 @@ from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
-import paramrw
-from filt import boxfilt, hammfilt
-import spikefn
-from math import ceil, sqrt
+from math import sqrt
 from specfn import MorletSpec
 from conf import dconf
 

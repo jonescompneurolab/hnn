@@ -15,12 +15,7 @@ import numpy as np
 from  paramrw import usingOngoingInputs, write_gids_param
 import specfn as specfn
 #import pickle
-import datetime
 from conf import readconf
-from L5_pyramidal import L5Pyr
-from L2_pyramidal import L2Pyr
-from L2_basket import L2Basket
-from L5_basket import L5Basket
 
 import os.path as op
 

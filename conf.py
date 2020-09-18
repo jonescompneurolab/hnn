@@ -3,7 +3,6 @@ import io
 import pickle
 import os
 import sys
-from fileio import safemkdir
 from collections import OrderedDict
 
 try:
@@ -37,6 +36,18 @@ dt = Simulation timestep - shorter timesteps mean more accuracy but longer runti
 [opt]
 decay_multiplier = 1.6
 """
+
+# make dir, catch exceptions
+def safemkdir (dn):
+  try:
+    os.mkdir(dn)
+  except FileExistsError:
+    pass
+  except OSError:
+    print('ERR: incorrect permissions for creating', dn)
+    raise
+
+  return True
 
 # parameter used for optimization
 class param:

@@ -14,7 +14,6 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
-import paramrw
 import pickle
 from conf import dconf
 from gutils import getmplDPI

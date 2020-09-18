@@ -16,9 +16,7 @@ import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 import paramrw
-from filt import boxfilt, hammfilt
 import spikefn
-from math import ceil
 from simdat import readdpltrials
 from conf import dconf
 
