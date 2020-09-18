@@ -14,14 +14,14 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
-from neuron import h
-from run import net
 import paramrw
 from filt import boxfilt, hammfilt
 import spikefn
 from math import ceil
 from conf import dconf
 from gutils import getmplDPI
+
+from hnn_core import read_params, read_spikes
 
 #plt.rcParams['lines.markersize'] = 15
 plt.rcParams['lines.linewidth'] = 1
@@ -42,19 +42,18 @@ for i in range(len(sys.argv)):
     spkpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
-    tstop = paramrw.quickgetprm(paramf,'tstop',float)
-    ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
-    EvokedInputs = paramrw.usingEvokedInputs(paramf)
-    OngoingInputs = paramrw.usingOngoingInputs(paramf)
-    PoissonInputs = paramrw.usingPoissonInputs(paramf)
-    outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
+    params = read_params(paramf)
+    tstop = params['tstop']
+    ntrial = params['N_trials']
+    EvokedInputs = paramrw.usingEvokedInputs(params)
+    OngoingInputs = paramrw.usingOngoingInputs(params)
+    PoissonInputs = paramrw.usingPoissonInputs(params)
+    outparamf = os.path.join(dconf['datdir'],params['sim_prefix'],'param.txt')
 
-extinputs = spikefn.ExtInputs(spkpath, outparamf)
+extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
 extinputs.add_delay_times()
 
 alldat = {}
-
-ncell = len(net.cells)
 
 binsz = 5.0
 smoothsz = 0 # no smoothing
@@ -73,9 +72,17 @@ def adjustinputgid (extinputs, gid):
     return 3
   return gid
 
+def gid_to_type(extinputs, gid):
+  for gidtype, gids in extinputs.gid_dict.items():
+      if gid in gids:
+          return gidtype
+
 def getdspk (fn):
   ddat = {}
   try:
+    spikes = read_spikes(fn)
+    ddat['spk'] = np.r_[spikes.times, spikes.gids].T
+  except ValueError:
     ddat['spk'] = np.loadtxt(fn)
   except:
     print('Could not load',fn)
@@ -85,7 +92,7 @@ def getdspk (fn):
   for ty in dclr.keys(): dhist[ty] = []
   haveinputs = False
   for (t,gid) in ddat['spk']:
-    ty = net.gid_to_type(gid)
+    ty = gid_to_type(extinputs,gid)
     if ty in dclr:
       dspk['Cell'][0].append(t)
       dspk['Cell'][1].append(gid)
@@ -166,6 +173,10 @@ def drawrast (dspk, fig, G, sz=8):
         axp.set_ylabel('Poisson Input')
 
     else: # local circuit neuron spiking
+      ncell = len(extinputs.gid_dict['L2_pyramidal']) + \
+              len(extinputs.gid_dict['L2_basket']) + \
+              len(extinputs.gid_dict['L5_pyramidal']) + \
+              len(extinputs.gid_dict['L5_basket'])
 
       endrow = -1
       if bDrawHist: endrow = -4
@@ -207,12 +218,12 @@ class SpikeCanvas (FigureCanvas):
       pass
 
   def loadspk (self,idx):
-    global haveinputs,extinputs
+    global haveinputs,extinputs,params
     if idx in alldat: return
     alldat[idx] = {}
     if idx == 0:
       try:
-        extinputs = spikefn.ExtInputs(spkpath, outparamf)
+        extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
       except ValueError:
         print("Error: could not load spike timings from %s" % spkpath)
         return
@@ -223,10 +234,10 @@ class SpikeCanvas (FigureCanvas):
       alldat[idx]['dhist'] = dhist
       alldat[idx]['extinputs'] = extinputs
     else:
-      spkpathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'spk_'+str(self.index-1)+'.txt') 
+      spkpathtrial = os.path.join(dconf['datdir'], params['sim_prefix'], 'spk_'+str(self.index-1)+'.txt')
       dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
       try:
-        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf)
+        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf, params)
       except ValueError:
         print("Error: could not load spike timings from %s" % spkpath)
         return
