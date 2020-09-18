@@ -459,7 +459,7 @@ class Communicate (QObject):
   commsig = pyqtSignal()
 
 class DoneSignal (QObject):
-  finishSim = pyqtSignal(bool, bool)
+  finishSim = pyqtSignal(bool, str)
 
 # for signaling - passing text
 class TextSignal (QObject):
@@ -541,7 +541,9 @@ class RunSimThread (QThread):
     self.mainwin = mainwin
     self.onNSG = onNSG
 
-    sys.excepthook = self.excepthook
+    # it would be ideal to display a dialog box, but we have to get that event back to the main window
+    # the next best thing is to print to the console and not crash the application
+    sys.excepthook = traceback.print_exception
 
     self.txtComm = TextSignal()
     self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
@@ -557,21 +559,6 @@ class RunSimThread (QThread):
     self.lock = Lock()
 
     self.params = read_params(self.paramf)
-
-
-  def excepthook(self, exc_type, exc_value, exc_tb):
-    enriched_tb = _add_missing_frames(exc_tb) if exc_tb else exc_tb
-    # Note: sys.__excepthook__(...) would not work here.
-    # We need to use print_exception(...):
-    traceback.print_exception(exc_type, exc_value, enriched_tb, file=sys.stderr, chain=False)
-    msgBox = QMessageBox(self)
-    msgBox.information(self, "Exception", "WARNING: an exception occurred! Details can be "
-                      "found in the console output or (if using Docker) in hnn_docker.log. We would "
-                      "greatly appreciate reporting this issue to our development "
-                      "team: <a href=https://github.com/jonescompneurolab/hnn/issues>"
-                      "https://github.com/jonescompneurolab/hnn/issues</a>")
-
-
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -594,13 +581,13 @@ class RunSimThread (QThread):
     self.wait()
 
   def run (self):
-    failed=False
+    msg=''
 
     if self.opt and self.baseparamwin is not None:
       try:
         self.optmodel() # run optimization
-      except RuntimeError:
-        failed = True
+      except RuntimeError as e:
+        msg = str(e)
         self.baseparamwin.optparamwin.toggleEnableUserFields(self.cur_step, enable=True)
         self.baseparamwin.optparamwin.clear_initial_opt_ranges()
         self.baseparamwin.optparamwin.optimization_running = False
@@ -608,10 +595,10 @@ class RunSimThread (QThread):
       try:
         self.runsim() # run simulation
         self.updatedispparam() # update params in all windows (optimization)
-      except RuntimeError:
-        failed = True
+      except RuntimeError as e:
+        msg = str(e)
 
-    self.d.finishSim.emit(self.opt, failed) # send the finish signal
+    self.d.finishSim.emit(self.opt, msg) # send the finish signal
 
 
   def killproc (self):
@@ -654,33 +641,40 @@ class RunSimThread (QThread):
 
       try:
         simulate(self.params, self.ncore)
-      except RuntimeError:
+        # success, make default ncore
+        defncore = self.ncore
+        break
+      except RuntimeError as e:
         if self.ncore == 1:
           # can't reduce ncore any more
-          txt = "Simulation failed to start"
-          print(txt)
-          self.updatewaitsimwin(txt)
+          print(str(e))
+          self.updatewaitsimwin(str(e))
           kill_and_check_nrniv_procs()
-          raise RuntimeError
-
-        self.ncore = ceil(self.ncore/2)
-        txt = "INFO: Failed starting simulation, retrying with %d cores" % self.ncore
-        print(txt)
+          raise RuntimeError("Simulation failed to start")
+      except:
+        # if it's something else we still want to print the error and then
+        # handle it like a RuntimeError instead of crashing the whole application
+        txt = traceback.format_exc()
+        sys.stderr.write(txt)
         self.updatewaitsimwin(txt)
+        # pop up dialog pop
+        raise RuntimeError("Unknown error")
 
-      # success
-      defncore = self.ncore
-      break
+      # check if proc was killed before retrying with fewer cores
+      self.lock.acquire()
+      if self.killed:
+        self.lock.release()
+        # exit using RuntimeError
+        raise RuntimeError("Terminated")
+      else:
+        self.lock.release()
 
-    # check if proc was killed
-    self.lock.acquire()
-    if self.killed:
-      self.lock.release()
-      # exit using RuntimeError
-      raise RuntimeError
-    else:
-      self.lock.release()
+      self.ncore = ceil(self.ncore/2)
+      txt = "INFO: Failed starting simulation, retrying with %d cores" % self.ncore
+      print(txt)
+      self.updatewaitsimwin(txt)
 
+    # should have good data written to files at this point
     updatedat(self.params)
 
     if not is_opt:
@@ -2679,9 +2673,19 @@ class RunParamDialog (DictDialog):
     self.spec_map_cb.currentIndexChanged.connect(self.selectionchange)
     self.ltabs[1].layout.addRow(self.transvar('spec_cmap'),self.spec_map_cb)
 
-  def getntrial (self): return int(self.dqline['N_trials'].text().strip())
+  def getntrial (self):
+    ntrial = int(self.dqline['N_trials'].text().strip())
+    if ntrial < 1:
+      self.dqline['N_trials'].setText(str(1))
+      ntrial = 1
+    return ntrial
 
-  def getncore (self): return int(self.dqextra['NumCores'].text().strip())
+  def getncore (self):
+    ncore = int(self.dqextra['NumCores'].text().strip())
+    if ncore < 1:
+      self.dqline['NumCores'].setText(str(1))
+      ncore = 1
+    return ncore
 
   def setfromdin (self,din):
     global defncore
@@ -4209,7 +4213,7 @@ class HNNGUI (QMainWindow):
 
     bringwintotop(self.waitsimwin)
 
-  def done (self, optMode, failed):
+  def done (self, optMode, except_msg):
     # called when the simulation completes running
     if debug: print('done')
     self.runningsim = False
@@ -4221,8 +4225,11 @@ class HNNGUI (QMainWindow):
     # self.m.plot()
     global basedir
     self.setcursors(Qt.ArrowCursor)
-    if failed:
-      msg = "Failed "
+
+    failed=False
+    if len(except_msg) > 0:
+      failed = True
+      msg = "%s: Failed " % except_msg
     else:
       msg = "Finished "
 
@@ -4234,7 +4241,10 @@ class HNNGUI (QMainWindow):
     else:
       msg += "running sim "
 
-    QMessageBox.information(self, "Done!", msg + "using " + paramf + '. Saved data/figures in: ' + basedir)
+    if failed:
+      QMessageBox.information(self, "Failed!", msg + "using " + paramf + '. Check simulation log or console for error messages')
+    else:
+      QMessageBox.information(self, "Done!", msg + "using " + paramf + '. Saved data/figures in: ' + basedir)
     self.setWindowTitle(paramf)
     self.populateSimCB() # populate the combobox
 
