@@ -12,6 +12,8 @@ import itertools as it
 import os
 import paramrw
 
+from hnn_core import read_spikes
+
 # meant as a class for ONE cell type
 class Spikes():
   def __init__ (self, s_all, ranges):
@@ -60,38 +62,45 @@ class Spikes():
 # Class to handle extinput event times
 class ExtInputs (Spikes):
   # class for external inputs - extracts gids and times
-  def __init__ (self, fspk, fparam, evoked=False):
-    # load gid and param dicts
+  def __init__ (self, fspk, fgids, params, evoked=False):
+
+    self.p_dict = params
     try:
-      self.gid_dict, self.p_dict = paramrw.read(fparam)
-    except OSError:
+      self.gid_dict = paramrw.read_gids_param(fgids)
+    except FileNotFoundError:
       raise ValueError
+
+    if 'common' in self.gid_dict:
+      extinput_key = 'common'
+    else:
+      extinput_key = 'extinput'
+
     self.evoked = evoked
+
     # parse evoked prox and dist input gids from gid_dict
-    # print('getting evokedinput gids')
     self.gid_evprox, self.gid_evdist = self.__get_evokedinput_gids()
-    # print('got evokedinput gids')
+
     # parse ongoing prox and dist input gids from gid_dict
-    self.gid_prox, self.gid_dist = self.__get_extinput_gids()
+    self.gid_prox, self.gid_dist = self.__get_extinput_gids(extinput_key)
     # poisson input gids
     #print('getting pois input gids')
     self.gid_pois = self.__get_poisinput_gids()
     # self.inputs is dict of input times with keys 'prox' and 'dist'
     self.inputs = self.__get_extinput_times(fspk)
 
-  def __get_extinput_gids (self):
+  def __get_extinput_gids (self, extinput_key):
     # Determine if both feeds exist in this sim
     # If they do, self.gid_dict['extinput'] has length 2
     # If so, first gid is guaraneteed to be prox feed, second to be dist feed
-    if len(self.gid_dict['extinput']) == 2:
-      return self.gid_dict['extinput']
+    if len(self.gid_dict[extinput_key]) == 2:
+      return self.gid_dict[extinput_key]
     # Otherwise, only one feed exists in this sim
     # Must use param file to figure out which one...
-    elif len(self.gid_dict['extinput']) > 0:
+    elif len(self.gid_dict[extinput_key]) > 0:
       if self.p_dict['t0_input_prox'] < self.p_dict['tstop']:
-        return self.gid_dict['extinput'][0], None
+        return self.gid_dict[extinput_key][0], None
       elif self.p_dict['t0_input_dist'] < self.p_dict['tstop']:
-        return None, self.gid_dict['extinput'][0]
+        return None, self.gid_dict[extinput_key][0]
     else:
       return None, None
 
@@ -153,7 +162,15 @@ class ExtInputs (Spikes):
 
   def __get_extinput_times (self, fspk):
     # load all spike times from file
-    s_all = np.loadtxt(open(fspk, 'rb'))
+    s_all = []
+    try:
+      spikes = read_spikes(fspk)
+      s_all = np.r_[spikes.times, spikes.gids].T
+    except ValueError:
+      s_all = np.loadtxt(open(fspk, 'rb'))
+    except OSError:
+      print('Warning: could not read file:', fspk)
+
     if len(s_all) == 0:
       # couldn't read spike times
       raise ValueError
@@ -229,7 +246,7 @@ class ExtInputs (Spikes):
     if bins is 'auto':
         bins = hist_bin_opt(self.inputs[extinput], 1)
     if not xlim:
-      xlim = (0., p_dict['tstop'])
+      xlim = (0., self.p_dict['tstop'])
     if len(self.inputs[extinput]):
       #print("plot_hist bins:",bins,type(bins))
       hist = ax.hist(self.inputs[extinput], bins, range=xlim, color=color, label=extinput, histtype=hty,linewidth=lw)
@@ -289,6 +306,8 @@ def hist_bin_opt(x, N_trials):
 
 # "purely" from files, this is the new way to replace the old way
 def spikes_from_file(fparam, fspikes):
+  raise DeprecationWarning
+
   gid_dict, _ = paramrw.read(fparam)
   # cell list - requires cell to start with L2/L5
   src_list = []
