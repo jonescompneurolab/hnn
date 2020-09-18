@@ -211,7 +211,7 @@ L5Basket_Pois_A_weight_ampa: 0.0
 L5Basket_Pois_A_weight_nmda: 0.0
 L5Basket_Pois_lamtha: 0.0
 t0_pois: 0.0
-T_pois: -1
+T_pois: 710.0
 Itonic_A_L2Pyr_soma: 0.0
 Itonic_t0_L2Pyr_soma: 0.0
 Itonic_T_L2Pyr_soma: -1.0
