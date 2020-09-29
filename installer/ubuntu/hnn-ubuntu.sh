@@ -2,7 +2,6 @@
 
 set -e
 
-[[ ${NEURON_VERSION} ]] || NEURON_VERSION=7.7
 [[ "$LOGFILE" ]] || LOGFILE="ubuntu_install.log"
 
 function start_download {
@@ -72,12 +71,6 @@ echo "Waiting for package download to finish..."
 NAME="downloading python packages"
 wait_for_pid "${APT_DOWNLOAD}" "$NAME"
 
-echo "Downloading NEURON..."
-URL="https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.$(uname -p)-linux.deb"
-FILENAME="/tmp/nrn.deb"
-start_download "$FILENAME" "$URL" > /dev/null &
-NEURON_DOWNLOAD=$!
-
 echo "Updating OS python packages..." | tee -a "$LOGFILE"
 if [[ "${PYTHON_VERSION}" =~ "3.7" ]] && [[ "$DISTRIB" =~ "bionic" ]]; then
   sudo -E apt-get install --no-install-recommends -y python3.7 python3-pip python3.7-tk python3.7-dev &> "$LOGFILE" && \
@@ -103,7 +96,7 @@ fi
 echo "Using python: $PYTHON" | tee -a "$LOGFILE"
 
 echo "Downloading python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP download matplotlib PyOpenGL \
+$PIP download NEURON matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE" &
 PIP_PID=$!
 
@@ -117,12 +110,8 @@ NAME="downloading python packages for HNN "
 wait_for_pid "${PIP_PID}" "$NAME"
 
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP install --no-cache-dir --user matplotlib PyOpenGL \
+$PIP install --no-cache-dir --user NEURON matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
-
-echo "Waiting for NEURON download to finish..."
-NAME="downloading NEURON package"
-wait_for_pid "${NEURON_DOWNLOAD}" "$NAME"
 
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"
 apt-get download \
@@ -134,12 +123,6 @@ apt-get download \
   libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
   libxcb-xinerama0 &> "$LOGFILE" &
 APT_DOWNLOAD=$!
-
-# Install NEURON
-echo "Installing NEURON $NEURON_VERSION precompiled package..." | tee -a "$LOGFILE"
-(sudo -E dpkg -i /tmp/nrn.deb &> "$LOGFILE" && \
-    rm -f /tmp/nrn.deb &> "$LOGFILE" ) &
-NEURON_PID=$!
 
 # save dir installing hnn to
 startdir=$(pwd)
@@ -167,9 +150,6 @@ else
   fi
 fi
 
-echo "Waiting for NEURON install to finish..."
-NAME="installing NEURON"
-wait_for_pid "${NEURON_PID}" "$NAME"
 
 if [[ $TRAVIS_TESTING -ne 1 ]]; then
   echo "Building HNN..." | tee -a "$LOGFILE"
