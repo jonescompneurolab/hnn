@@ -93,10 +93,10 @@ elif which python &> /dev/null; then
   export PYTHON=$(which python)
   PIP=pip
 fi
-echo "Using python: $PYTHON" | tee -a "$LOGFILE"
+echo "Using python: $PYTHON with pip: $PIP" | tee -a "$LOGFILE"
 
 echo "Downloading python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP download NEURON matplotlib PyOpenGL \
+$PIP download matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE" &
 PIP_PID=$!
 
@@ -109,8 +109,10 @@ echo "Waiting for python packages for HNN downloads to finish..."
 NAME="downloading python packages for HNN "
 wait_for_pid "${PIP_PID}" "$NAME"
 
+$PIP install --no-cache-dir NEURON
+
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP install --no-cache-dir --user NEURON matplotlib PyOpenGL \
+$PIP install --no-cache-dir --user matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
 
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"
@@ -150,19 +152,13 @@ else
   fi
 fi
 
-
-if [[ $TRAVIS_TESTING -ne 1 ]]; then
-  echo "Building HNN..." | tee -a "$LOGFILE"
-  make -j4 &> "$LOGFILE"
-  MAKE_PID=$!
-fi
+echo "Building HNN..." | tee -a "$LOGFILE"
+make -j4 &> "$LOGFILE"
+MAKE_PID=$!
 
 # create the global session variables
 echo '# these lines define global session variables for HNN' >> ~/.bashrc
 echo "export PATH=\$PATH:\"$source_code_dir\"" >> ~/.bashrc
-if [[ "${PYTHON_VERSION}" =~ "3.6" ]] && [[ "${PYTHON_VERSION}" =~ "3.7" ]]; then
-  echo "export PYTHONPATH=/usr/local/nrn/lib/python" >> ~/.bashrc
-fi
 
 if [[ -d "$HOME/Desktop" ]]; then
   {

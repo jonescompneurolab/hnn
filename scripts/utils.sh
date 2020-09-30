@@ -1,5 +1,11 @@
-function sha256sum {
-    shasum -a 256 "$@"
+
+function check_var {
+  if [[ ! -n $(eval echo \$$1) ]]; then
+    echo -e "\n=====================" | tee -a "$LOGFILE"
+    echo "Error: ${FUNCNAME[1]} (L:${BASH_LINENO[1]}) expects $1 to be set" | tee -a "$LOGFILE"
+    echo "*failed*" | tee -a "$LOGFILE"
+    cleanup 1
+  fi
 }
 
 function cleanup {
@@ -52,23 +58,7 @@ function wait_for_pid {
 function script_fail {
   check_var LOGFILE
 
-  echo -ne "\n*******  hnn_docker.sh failed. output from hnn_docker.log below  *******\n"
+  echo -ne "\n*******  script failure. see output below  *******\n"
   cat "$LOGFILE"
   exit 2
 }
-
-function download_docker_image {
-  let __max=5
-  let __retry=1
-  while [[ $__retry -le $__max ]]; do
-    echo "Downloading $1 (try $__retry/$__max)"
-    "$HOME/download-frozen-image-v2.sh" "$HOME/docker_image" "$1" && break
-    (( __retry++ ))
-  done
-
-  if [[ $__retry -gt $__max ]]; then
-    echo "Error: failed to download $1."
-    exit 1
-  fi
-}
-

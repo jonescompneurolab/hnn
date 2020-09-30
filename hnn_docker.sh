@@ -1,5 +1,12 @@
 #!/bin/bash
 
+
+echo "===================================================================="
+echo "This script will be deprecated in the near future. Please switch"
+echo "to a supported installation method. See below for a list:"
+echo "https://hnn.brown.edu/index.php/installation-instructions"
+echo "===================================================================="
+
 [[ $TRAVIS_TESTING ]] || TRAVIS_TESTING=0
 [[ $VERBOSE ]] || VERBOSE=0
 [[ $DEBUG ]] || DEBUG=0

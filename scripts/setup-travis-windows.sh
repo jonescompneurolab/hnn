@@ -6,32 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # we use wait_for_pid and start_download from utils.sh
 source "$DIR/utils.sh"
 
-# we use find_program_print and retry_docker_pull from docker_functions.sh
-source "$DIR/docker_functions.sh"
-
 [[ $LOGFILE ]] || LOGFILE="hnn_travis.log"
-# docker_functions.sh expects some globals to be set
-set_globals
-
-# override the cleanup function in docker_functions.sh to not quit
-function cleanup {
-    check_var LOGFILE
-
-    local __failed
-
-    __failed=$1
-
-    echo -e "\n=====================" >> "$LOGFILE"
-    echo "cleanup() called from: ${FUNCNAME[1]} (L:${BASH_LINENO[0]})" >> "$LOGFILE"
-
-    if [[ $__failed -ne "0" ]]; then
-    echo -e "\n======================================"
-    echo "Error: Please see log output for more details"
-    cat "$LOGFILE"
-    return $__failed
-    fi
-}
-export -f cleanup
 
 echo "Installing Ubuntu WSL..."
 powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup-travis-wsl.ps1 &
@@ -86,11 +61,6 @@ export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
 echo "Installing msys2 with choco..."
 choco upgrade --no-progress -y msys2 &> /dev/null
 
-# start the docker pull in the background
-echo "Starting to pull the docker image..."
-find_program_print docker
-((retry_docker_pull > /dev/null || script_fail) && touch $HOME/docker_image_loaded ) &
-
 echo "Downloading VcXsrv..."
 URL="https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.8.1/vcxsrv-64.1.20.8.1.installer.exe"
 FILENAME="$HOME/vcxsrv-64.1.20.8.1.installer.exe"
@@ -100,7 +70,7 @@ echo "Installing VcXsrv..."
 cmd //c "$HOME/vcxsrv-64.1.20.8.1.installer.exe /S"
 
 # get opengl32.dll from mesa
-# this is needed to be able to start vcxsrv for docker tests
+# this is needed to be able to start vcxsrv
 export msys2='cmd //C RefreshEnv.cmd '
 export msys2+='& set MSYS=winsymlinks:nativestrict '
 export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
@@ -112,7 +82,7 @@ echo "Downloading python test packages..."
 pip download flake8 pytest pytest-cov coverage coveralls mne
 
 echo "Downloading python test packages in WSL (command may fail)..."
-wsl -- pip download flake8 pytest pytest-cov coverage coveralls mne || true
+wsl -- pip download NEURON flake8 pytest pytest-cov coverage coveralls mne || true
 
 echo "Waiting for WSL install to finish..."
 NAME="installing WSL"

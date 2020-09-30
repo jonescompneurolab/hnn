@@ -2,17 +2,13 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export TRAVIS_TESTING=1
-
-source "$DIR/../installer/docker/hnn_envs"
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
 
 echo "Testing GUI on WSL..."
 cd $DIR/../
+
 export DISPLAY=:0
 python3 hnn.py
-
-echo "Building HNN in WSL..."
-make clean
-make -j2
 
 echo "Running Python tests in WSL..."
 py.test tests/
