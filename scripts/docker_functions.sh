@@ -2077,7 +2077,7 @@ function set_local_display_from_port {
   # no arguments
   # set DISPLAY for local actions (e.g. generating xauth keys)
   if [[ "$OS" =~ "windows" ]]; then
-    DISPLAY="localhost:$__port"
+    DISPLAY="127.0.0.1:$__port"
   elif [[ "$OS" =~ "mac" ]]; then
     DISPLAY=":$__port"
   else
