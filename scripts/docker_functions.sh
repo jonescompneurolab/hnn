@@ -1131,7 +1131,7 @@ function copy_xauthority_file_fail {
   print_header_message_short "Copying Xauthority file into container... "
   COMMAND=(4 "$docker_cmd" "cp" "$__xauthority_path" "$HNN_CONTAINER_NAME:$__container_xauthority_path")
   convert_COMMAND_to_escaped_array
-  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
   if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     start_container_silent
@@ -1191,7 +1191,7 @@ function copy_hnn_source_fail {
   print_header_message_short "Copying hnn_source_code into container... "
   COMMAND=(4 "$docker_cmd" "cp" "$__current_directory" "$HNN_CONTAINER_NAME:/home/hnn_user/hnn_source_code/")
   convert_COMMAND_to_escaped_array
-  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
   if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     start_container_silent
@@ -1254,7 +1254,7 @@ function copy_hnn_out_fail {
   print_header_message_short "Copying hnn_out into container... "
   COMMAND=(4 "$docker_cmd" "cp" "$__hnn_out_contents" "$HNN_CONTAINER_NAME:$__hnn_out")
   convert_COMMAND_to_escaped_array
-  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
   if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     start_container_silent
@@ -1325,13 +1325,13 @@ function copy_ssh_files_to_container_fail {
   print_header_message_short "Copying authorized_keys file into container... "
   COMMAND=(4 "$docker_cmd" "cp" "$__authkeys" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/authorized_keys")
   convert_COMMAND_to_escaped_array
-  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
 
   print_header_message_short "Copying known_hosts file into container... "
   COMMAND=(4 "$docker_cmd" "cp" "$__pubkey" "$HNN_CONTAINER_NAME:/home/hnn_user/.ssh/known_hosts")
   convert_COMMAND_to_escaped_array
-  MSYS_NO_PATHCONV=1 output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
+  output_run_command_arguments "${ESCAPED_COMMAND[@]}" &> /dev/null
   fail_on_bad_exit $?
   if [[ "$CONTAINER_TYPE" == "windows" ]]; then
     start_container_silent
