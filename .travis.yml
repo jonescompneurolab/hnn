@@ -154,15 +154,8 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       make -j2
     fi
-  - |
-    pip install flake8 pytest pytest-cov coverage coveralls mne &
-    PIP_PID=$!
-    if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
-      wsl -- bash -c pip install flake8 pytest pytest-cov coverage coveralls mne
-    fi
-    echo "Waiting for pip installation to finish..."
-    NAME="installing python test prerequisites"
-    wait_for_pid "${PIP_PID}" "$NAME"
+  - | # testing packages
+    pip install flake8 pytest pytest-cov coverage coveralls mne
 
 script:
   - | # Check that the GUI starts on host OS

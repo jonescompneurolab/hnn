@@ -81,9 +81,6 @@ $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa
 echo "Downloading python test packages..."
 pip download flake8 pytest pytest-cov coverage coveralls mne
 
-echo "Downloading python test packages in WSL (command may fail)..."
-wsl -- pip download NEURON flake8 pytest pytest-cov coverage coveralls mne || true
-
 echo "Waiting for WSL install to finish..."
 NAME="installing WSL"
 wait_for_pid "${WSL_PID}" "$NAME" || script_fail

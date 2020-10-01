@@ -11,8 +11,5 @@ cd $DIR/../
 export DISPLAY=:0
 python3 hnn.py
 
-echo "Running Python tests in WSL..."
-py.test tests/
-
 echo "Testing MPI in WSL..."
 mpiexec -np 2 nrniv -mpi -python run.py
