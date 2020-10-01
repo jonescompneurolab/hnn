@@ -111,6 +111,11 @@ wait_for_pid "${PIP_PID}" "$NAME"
 
 $PIP install --no-cache-dir NEURON
 
+# WSL may not have nrnivmodl in PATH
+if ! which nrnivmodl &> /dev/null; then
+  export PATH="$PATH:$HOME/.local/bin"
+fi
+
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
 $PIP install --no-cache-dir --user matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
