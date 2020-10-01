@@ -14,6 +14,9 @@ RUN groupadd hnn_group && useradd -m -b /home/ -g hnn_group hnn_user && \
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         libfontconfig libxext6 libx11-xcb1 libxcb-glx0 \
+        libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
+        libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
+        libxcb-xinerama0 \
         libegl1 && \
     apt-get clean
 
@@ -81,16 +84,13 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version=$VCS_TAG
 
 # install NEURON
-ARG NEURON_VERSION="7.7"
-ADD https://neuron.yale.edu/ftp/neuron/versions/v${NEURON_VERSION}/nrn-${NEURON_VERSION}.x86_64-linux.deb /tmp/nrn.deb
-RUN sudo dpkg -i /tmp/nrn.deb && \
-    sudo rm -f /tmp/nrn.deb
+RUN sudo pip install NEURON
 
 # install HNN
 RUN sudo apt-get update && \
     sudo apt-get install --no-install-recommends -y \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
-        libx11-dev libreadline-dev && \
+        libx11-dev libreadline-dev g++ && \
     git clone ${SOURCE_REPO} \
       --depth 1 --single-branch --branch $SOURCE_BRANCH \
       $HOME/hnn_source_code && \
@@ -98,7 +98,7 @@ RUN sudo apt-get update && \
     make && \
     sudo apt-get -y remove --purge \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
-        libx11-dev libreadline-dev && \
+        libx11-dev libreadline-dev g++ && \
     sudo apt-get autoremove -y --purge && \
     sudo apt-get clean
 
