@@ -11,13 +11,12 @@ start_download "$FILENAME" "$URL"
 
 echo "Installing miniconda..."
 chmod +x "$HOME/miniconda.sh"
-"$HOME/miniconda.sh" -b -p "${HOME}/miniconda"
-export PATH=${HOME}/miniconda/bin:$PATH
+"$HOME/miniconda.sh" -b -p "${HOME}/Miniconda3"
+export PATH=${HOME}/Miniconda3/bin:$PATH
 
 # create conda environment
 conda create -n hnn --yes python=${PYTHON_VERSION} pip openmpi scipy numpy matplotlib pyqtgraph pyopengl psutil
 source activate hnn && echo "activated conda HNN environment"
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/envs/hnn/lib
 
 # conda is faster to install nlopt
 conda install -y -n hnn -c conda-forge nlopt
