@@ -275,6 +275,11 @@ class SpikeGUI (QMainWindow):
     super().__init__()        
     self.initUI()
 
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      print("Exiting gracefully with TRAVIS_TESTING=1")
+      qApp.quit()
+      exit(0)
+
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
     exitAction.setShortcut('Ctrl+Q')

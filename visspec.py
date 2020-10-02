@@ -213,6 +213,11 @@ class SpecViewGUI (DataViewGUI):
     if len(paramf):
       self.loadDisplayData(paramf)
 
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      print("Exiting gracefully with TRAVIS_TESTING=1")
+      qApp.quit()
+      exit(0)
+
   def initCanvas (self):
     super(SpecViewGUI,self).initCanvas()
     self.m.lextspec = self.lextspec

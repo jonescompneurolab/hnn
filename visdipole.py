@@ -131,7 +131,7 @@ class DipoleCanvas (FigureCanvas):
     self.draw()
 
   if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
-    print("Exciting gracefully with TRAVIS_TESTING=1")
+    print("Exiting gracefully with TRAVIS_TESTING=1")
     qApp.quit()
     exit(0)
 
