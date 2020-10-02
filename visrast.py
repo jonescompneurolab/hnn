@@ -49,11 +49,7 @@ for i in range(len(sys.argv)):
     PoissonInputs = paramrw.usingPoissonInputs(paramf)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
-try:
-  extinputs = spikefn.ExtInputs(spkpath, outparamf)
-except ValueError:
-  print("Error: could not load spike timings from %s" % spkpath)
-
+extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
 
 alldat = {}
