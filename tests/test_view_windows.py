@@ -25,6 +25,12 @@ def view_window(code_fname, paramf, data_fname=None):
     if not data_fname is None:
         cmd += ' ' + data_fname
 
+    # Windows will fail to load the correct Qt plugin when launched with nrniv. This is a temporary
+    # fix until separate windows are no longer launched as different processes.
+    basedir = os.path.expanduser('~')
+    plugin_dir = op.join(basedir, 'Miniconda3', 'envs', 'hnn', 'Library', 'plugins', 'platforms')
+    os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_dir
+
     # Split the command into shell arguments for passing to Popen
     cmdargs = shlex.split(cmd, posix="win" not in sys.platform)
 
