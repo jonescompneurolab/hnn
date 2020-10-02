@@ -171,3 +171,6 @@ script:
       wsl -- bash -e //home/hnn_user/hnn/scripts/run-travis-wsl.sh
       stop_vcxsrv || script_fail
     fi
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

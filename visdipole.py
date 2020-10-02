@@ -130,6 +130,11 @@ class DipoleCanvas (FigureCanvas):
     self.drawdipole(self.figure)
     self.draw()
 
+  if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+    print("Exciting gracefully with TRAVIS_TESTING=1")
+    qApp.quit()
+    exit(0)
+
 if __name__ == '__main__':
   app = QApplication(sys.argv)
   ex = DataViewGUI(DipoleCanvas,paramf,ntrial,'Dipole Viewer')
