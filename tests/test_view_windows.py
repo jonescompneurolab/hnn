@@ -16,8 +16,14 @@ def fetch_file(fname):
         _fetch_file(data_url, fname)
 
 
-def view_window(cmd):
+def view_window(code_fname, paramf, data_fname=None):
     """Test to check that viewer displays without error"""
+
+    nrniv_str = 'nrniv -python -nobanner'
+    cmd = nrniv_str + ' ' + sys.executable + ' ' + code_fname + ' ' + \
+          paramf
+    if not data_fname is None:
+        cmd += ' ' + data_fname
 
     # Split the command into shell arguments for passing to Popen
     cmdargs = shlex.split(cmd, posix="win" not in sys.platform)
@@ -34,50 +40,25 @@ def view_window(cmd):
     if proc.returncode != 0:
         raise RuntimeError("Running command %s failed" % cmd)
 
-
 def test_view_rast():
-    if 'SYSTEM_USER_DIR' in os.environ:
-        basedir = os.environ['SYSTEM_USER_DIR']
-    else:
-        basedir = os.path.expanduser('~')
-
-    fetch_file('spk.txt')
-    ntrials = 3
-    for trial_idx in range(ntrials):
-        fetch_file('spk_%d.txt' % trial_idx)
-
-    spike_file = os.path.join(basedir, 'spk.txt')
+    fname = 'spk.txt'
+    fetch_file(fname)
     paramf = op.join('param', 'default.param')
-    cmd = sys.executable + ' visrast.py ' + paramf + ' ' + spike_file
-
-    view_window(cmd)
+    view_window('visrast.py', paramf, fname)
 
 
 def test_view_dipole():
-    if 'SYSTEM_USER_DIR' in os.environ:
-        basedir = os.environ['SYSTEM_USER_DIR']
-    else:
-        basedir = os.path.expanduser('~')
-
-    fetch_file('dpl.txt')
-    ntrials = 3
-    for trial_idx in range(ntrials):
-        fetch_file('dpl_%d.txt' % trial_idx)
-
-    dipole_file = os.path.join(basedir, 'dpl.txt')
+    fname = 'dpl.txt'
+    fetch_file(fname)
     paramf = op.join('param', 'default.param')
-    cmd = sys.executable + ' visdipole.py ' + paramf + ' ' + dipole_file
-
-    view_window(cmd)
+    view_window('visdipole.py', paramf, fname)
 
 
 def test_view_psd():
     paramf = op.join('param', 'default.param')
-    cmd = sys.executable + ' vispsd.py ' + paramf
-    view_window(cmd)
+    view_window('vispsd.py', paramf)
 
 
 def test_view_spec():
     paramf = op.join('param', 'default.param')
-    cmd = sys.executable + ' visspec.py ' + paramf
-    view_window(cmd)
+    view_window('visspec.py', paramf)
