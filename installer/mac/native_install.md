@@ -12,27 +12,11 @@ This method will run HNN without using virtualization, meaning the GUI may feel 
     curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-pre.sh" | bash
     ```
 
-## Prerequisite 1: XQuartz
-
-1. Download the installer image (version 2.7.11 tested): https://www.xquartz.org/
-2. Open the .dmg image and run XQuartz.pkg within the image, granting privileges when requested.
-3. Start the XQuartz.app by searching for XQuartz in Spotlight (upper right search icon). An "X" icon will appear in the taskbar along with a terminal. We will not use this window because it is difficult to copy and paste into it, so you can close it by clicking on the red x in the upper left corner.
-
-   - Alternatively steps 2 and 3 can be run from the terminal app (enter your user password when prompted after the `sudo` command):
-
-     ```bash
-     hdiutil attach ~/Downloads/XQuartz-2.7.11.dmg
-     sudo installer -pkg /Volumes/XQuartz-2.7.11/XQuartz.pkg -target /
-     hdiutil detach /Volumes/XQuartz-2.7.11
-     rm ~/Downloads/XQuartz-2.7.11.dmg
-     open /Applications/Utilities/XQuartz.app
-     ```
-
 ## Opening a terminal window
 
 1. Open up macOS's terminal.app by searching for terminal in Spotlight (upper right search icon). We will use this terminal for running the commands below.
 
-## Prerequisite 2: Xcode Command Line Tools
+## Prerequisite 1: Xcode Command Line Tools
 
 The Xcode Command Line Tools package includes utilities for compiling code from the terminal (gcc, make, etc.). This is needed for compiling mod files in NEURON.
 
@@ -49,7 +33,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
   <img src="install_pngs/xcode_tools.png" width="400" />
 
-## Prerequisite 3: NEURON
+## Prerequisite 2: NEURON
 
 1. Download the NEURON macOS installer from [neuron.yale.edu](https://neuron.yale.edu/neuron/download/precompiled-installers). Then run the .pkg installer.
 
@@ -75,7 +59,7 @@ curl -O https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.x86_64-osx.pkg
 sudo installer -pkg /tmp/nrn-7.7.x86_64-osx.pkg -allowUntrusted -target /
 ```
 
-## Prerequisite 4: Miniconda (Python 3)
+## Prerequisite 3: Miniconda (Python 3)
 
 1. Run the commands below from a terminal window (as a regular user). This will create a python environment isolated from other installations on the system. You could use homebrew `brew install python3` if you wish (has been tested with HNN), but this guide will cover the miniconda version.
 

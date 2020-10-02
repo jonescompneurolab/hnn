@@ -24,7 +24,6 @@ It is necessary to turn off Hyper-V for using HNN with Docker Toolbox. You may f
 ## Prerequisite: VcXsrv (XLaunch)
 
 1. Download the installer from [https://sourceforge.net/projects/vcxsrv/files/latest/download](https://sourceforge.net/projects/vcxsrv/files/latest/download)
-   * Here's the link to the [direct download of version 64.1.20.1.4](https://downloads.sourceforge.net/project/vcxsrv/vcxsrv/1.20.1.4/vcxsrv-64.1.20.1.4.installer.exe?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fvcxsrv%2Ffiles%2Fvcxsrv%2F1.20.1.4%2Fvcxsrv-64.1.20.1.4.installer.exe%2Fdownload%3Fuse_mirror%3Dversaweb%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fvcxsrv%252Ffiles%252Flatest%252Fdownload&ts=1550243133)
 2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder. If you choose a different folder the `hnn_docker.sh` script will not be able to launch it automatically.
 
 ## Prerequisite: Docker Toolbox
@@ -187,7 +186,33 @@ If you'd like to be able to copy files from the host OS without using the shared
 
 ## Troubleshooting
 
+### VcXsrv
+
+Make sure VcXsrv has been updated to at least 1.20.6.0. The instructions used to give a link for 1.20.1.4 which will cause the errors below:
+
+`hnn_docker.sh` would fail:
+
+```bash
+Starting VcXsrv... done
+Checking for xauth... found
+Checking for X11 authentication keys... *failed*
+```
+
+`hnn_docker.log` contains:
+
+```bash
+Retrieving host xauth keys...
+
+  ** Command: /c/Program Files/VcXsrv/xauth.exe -f /c/Users/user/.Xauthority -ni nlist localhost:0
+  ** Stderr: C:\Program Files\VcXsrv\xauth.exe: (argv):1:  bad display name "localhost:0" in "nlist" command
+*failed*
+```
+
+### Docker
+
 For errors related to Docker, please see the [Docker troubleshooting section](../docker/troubleshooting.md)
+
+### Other
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
 
