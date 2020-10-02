@@ -21,14 +21,16 @@ def view_window(code_fname, paramf, data_fname=None):
 
     nrniv_str = 'nrniv -python -nobanner'
     cmd = nrniv_str + ' ' + sys.executable + ' ' + code_fname + ' ' + \
-          paramf
-    if not data_fname is None:
+        paramf
+    if data_fname is not None:
         cmd += ' ' + data_fname
 
-    # Windows will fail to load the correct Qt plugin when launched with nrniv. This is a temporary
-    # fix until separate windows are no longer launched as different processes.
+    # Windows will fail to load the correct Qt plugin when launched with nrniv
+    # This is a temporary fix until separate windows are no longer launched
+    # as different processes
     basedir = os.path.expanduser('~')
-    plugin_dir = op.join(basedir, 'Miniconda3', 'envs', 'hnn', 'Library', 'plugins', 'platforms')
+    plugin_dir = op.join(basedir, 'Miniconda3', 'envs', 'hnn', 'Library',
+                         'plugins', 'platforms')
     os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_dir
 
     # Split the command into shell arguments for passing to Popen
@@ -45,6 +47,7 @@ def view_window(code_fname, paramf, data_fname=None):
 
     if proc.returncode != 0:
         raise RuntimeError("Running command %s failed" % cmd)
+
 
 def test_view_rast():
     fname = 'spk.txt'
