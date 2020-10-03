@@ -21,8 +21,6 @@ from hnn_core import read_spikes
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 
-debug = dconf['debug']
-
 ddat = {} # current simulation data
 dfile = {} # data file information for current simulation
 
@@ -56,12 +54,10 @@ def rmse (a1, a2):
   # return root mean squared error between a1, a2; assumes same lengths, sampling rates
   len1,len2 = len(a1),len(a2)
   sz = min(len1,len2)
-  if debug: print('len1:',len1,'len2:',len2,'ty1:',type(a1),'ty2:',type(a2))
   return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
 
 def readdpltrials(basedir):
   # read dipole data files for individual trials
-  if debug: print('in readdpltrials',basedir)
   ldpl = []
 
   i = 0
@@ -147,7 +143,7 @@ def calcerr (ddat, tstop, tstart=0.0):
   # calculates RMSE error from ddat dictionary
   NSig = errtot = 0.0; lerr = []
   ddat['errtot']=None; ddat['lerr']=None
-  for fn,dat in ddat['dextdata'].items():
+  for _, dat in ddat['dextdata'].items():
     shp = dat.shape
 
     exp_times = dat[:,0]
@@ -199,7 +195,7 @@ def weighted_rmse(ddat, tstop, weights, tstart=0.0):
   # calculates RMSE error from ddat dictionary
   NSig = errtot = 0.0; lerr = []
   ddat['werrtot']=None; ddat['lerr']=None
-  for fn,dat in ddat['dextdata'].items():
+  for _, dat in ddat['dextdata'].items():
     shp = dat.shape
     exp_times = dat[:,0]
     sim_times = ddat['dpl'][:,0]
@@ -280,10 +276,11 @@ class SIMCanvas (FigureCanvas):
     # initialize the axes
     self.axdist = self.axprox = self.axdipole = self.axspec = self.axpois = None
 
-  def plotinputhist (self, xl, dinty):
+  def plotinputhist(self, xl, dinty):
     """ plot input histograms
         xl = x axis limits
-        dinty = dict of input types used, determines how many/which axes created/displayed
+        dinty = dict of input types used,
+                determines how many/which axes created/displayed
     """
 
     extinputs = None
@@ -298,7 +295,8 @@ class SIMCanvas (FigureCanvas):
     times = np.linspace(0, sim_tstop, num_step)
 
     try:
-      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'], self.params)
+      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'],
+                                    self.params)
       extinputs.add_delay_times()
       dinput = extinputs.inputs
     except ValueError:
@@ -306,89 +304,97 @@ class SIMCanvas (FigureCanvas):
       plot_distribs = True
 
     if len(dinput['dist']) <= 0 and len(dinput['prox']) <= 0 and \
-        len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0 and \
-        len(dinput['pois']) <= 0:
-      if debug: print('all hists 0!')
+      len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0 and \
+      len(dinput['pois']) <= 0:
       return False
 
-    self.hist=hist={x:None for x in ['feed_dist','feed_prox','feed_evdist','feed_evprox','feed_pois']}
+    self.hist = {'feed_dist': None,
+                 'feed_prox': None,
+                 'feed_evdist': None,
+                 'feed_evprox': None,
+                 'feed_pois': None}
 
-    hasPois = len(dinput['pois']) > 0 and dinty['Poisson'] # this ensures synaptic weight > 0
-
+    # dinty ensures synaptic weight > 0
+    hasPois = len(dinput['pois']) > 0 and dinty['Poisson']
     gRow = 0
-    self.axdist = self.axprox = self.axpois = None # axis objects
+    self.axdist = self.axprox = self.axpois = None  # axis objects
 
     # check poisson inputs, create subplot
     if hasPois:
-      self.axpois = self.figure.add_subplot(self.G[gRow,0])
+      self.axpois = self.figure.add_subplot(self.G[gRow, 0])
       gRow += 1
 
     # check distal inputs, create subplot
     if (len(dinput['dist']) > 0 and dinty['OngoingDist']) or \
        (len(dinput['evdist']) > 0 and dinty['EvokedDist']):
-      self.axdist = self.figure.add_subplot(self.G[gRow,0])
-      gRow+=1
+      self.axdist = self.figure.add_subplot(self.G[gRow, 0])
+      gRow += 1
 
     # check proximal inputs, create subplot
     if (len(dinput['prox']) > 0 and dinty['OngoingProx']) or \
        (len(dinput['evprox']) > 0 and dinty['EvokedProx']):
-      self.axprox = self.figure.add_subplot(self.G[gRow,0])
-      gRow+=1
-
+      self.axprox = self.figure.add_subplot(self.G[gRow, 0])
+      gRow += 1
 
     # check input types provided in simulation
-    if extinputs is not None and self.hassimdata(): # only valid param.txt file after sim was run
-      if debug:
-        print(len(dinput['dist']),len(dinput['prox']),len(dinput['evdist']),len(dinput['evprox']),len(dinput['pois']))
+    if extinputs is not None and self.hassimdata():
+      if hasPois:
+        extinputs.plot_hist(self.axpois, 'pois', times, 'auto', xl, color='k',
+                            hty='step', lw=self.gui.linewidth+1)
 
-      if hasPois: # any Poisson inputs?
-        extinputs.plot_hist(self.axpois,'pois',times,'auto',xl,color='k',hty='step',lw=self.gui.linewidth+1)
+      # dinty condition ensures synaptic weight > 0
+      if len(dinput['dist']) > 0 and dinty['OngoingDist']:
+        extinputs.plot_hist(self.axdist, 'dist', times, 'auto', xl, color='g',
+                            lw=self.gui.linewidth+1)
 
-      if len(dinput['dist']) > 0 and dinty['OngoingDist']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axdist,'dist',times,'auto',xl,color='g',lw=self.gui.linewidth+1)
+      if len(dinput['prox']) > 0 and dinty['OngoingProx']:
+        extinputs.plot_hist(self.axprox, 'prox', times, 'auto', xl, color='r',
+                            lw=self.gui.linewidth+1)
 
-      if len(dinput['prox']) > 0 and dinty['OngoingProx']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axprox,'prox',times,'auto',xl,color='r',lw=self.gui.linewidth+1)
+      if len(dinput['evdist']) > 0 and dinty['EvokedDist']:
+        extinputs.plot_hist(self.axdist, 'evdist', times, 'auto', xl,
+                            color='g', hty='step', lw=self.gui.linewidth+1)
 
-      if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axdist,'evdist',times,'auto',xl,color='g',hty='step',lw=self.gui.linewidth+1)
-
-      if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
-        extinputs.plot_hist(self.axprox,'evprox',times,'auto',xl,color='r',hty='step',lw=self.gui.linewidth+1)
+      if len(dinput['evprox']) > 0 and dinty['EvokedProx']:
+        extinputs.plot_hist(self.axprox, 'evprox', times, 'auto', xl,
+                            color='r', hty='step', lw=self.gui.linewidth+1)
     elif plot_distribs:
-      if len(dinput['evprox']) > 0 and dinty['EvokedProx']: # dinty condition ensures synaptic weight > 0
+      if len(dinput['evprox']) > 0 and dinty['EvokedProx']:
         prox_tot = np.zeros(len(dinput['evprox'][0][0]))
         for prox in dinput['evprox']:
           prox_tot += prox[1]
-        plot = self.axprox.plot(dinput['evprox'][0][0],prox_tot,color='r',lw=self.gui.linewidth,label='evprox distribution')
-        self.axprox.set_xlim(dinput['evprox'][0][0][0],dinput['evprox'][0][0][-1])
-      if len(dinput['evdist']) > 0 and dinty['EvokedDist']: # dinty condition ensures synaptic weight > 0
+        self.axprox.plot(dinput['evprox'][0][0], prox_tot, color='r',
+                         lw=self.gui.linewidth, label='evprox distribution')
+        self.axprox.set_xlim(dinput['evprox'][0][0][0],
+                             dinput['evprox'][0][0][-1])
+      if len(dinput['evdist']) > 0 and dinty['EvokedDist']:
         dist_tot = np.zeros(len(dinput['evdist'][0][0]))
         for dist in dinput['evdist']:
           dist_tot += dist[1]
-        plot = self.axdist.plot(dinput['evdist'][0][0],dist_tot,color='g',lw=self.gui.linewidth,label='evdist distribution')
-        self.axprox.set_xlim(dinput['evdist'][0][0][0],dinput['evdist'][0][0][-1])
+        self.axdist.plot(dinput['evdist'][0][0], dist_tot, color='g',
+                         lw=self.gui.linewidth, label='evdist distribution')
+        self.axprox.set_xlim(dinput['evdist'][0][0][0],
+                             dinput['evdist'][0][0][-1])
 
     ymax = 0
     for ax in [self.axpois, self.axdist, self.axprox]:
-      if not ax is None:
+      if ax is not None:
         if ax.get_ylim()[1] > ymax:
           ymax = ax.get_ylim()[1]
 
     if ymax == 0:
-      if debug: print('all hists None!')
       return False
     else:
       for ax in [self.axpois, self.axdist, self.axprox]:
-        if not ax is None:
-          ax.set_ylim(0,ymax)
+        if ax is not None:
+          ax.set_ylim(0, ymax)
       if self.axdist:
         self.axdist.invert_yaxis()
-      for ax in [self.axpois,self.axdist,self.axprox]:
+      for ax in [self.axpois, self.axdist, self.axprox]:
         if ax:
           ax.set_xlim(xl)
           ax.legend(loc=1)  # legend in upper right
-      return True,gRow
+      return True, gRow
 
   def clearaxes (self):
     # clear the figures axes
@@ -499,7 +505,7 @@ class SIMCanvas (FigureCanvas):
       yl = self.axdipole.get_ylim()
 
     cmap=plt.get_cmap('nipy_spectral')
-    csm = plt.cm.ScalarMappable(cmap=cmap);
+    csm = plt.cm.ScalarMappable(cmap=cmap)
     csm.set_clim((0,100))
 
     self.clearlextdatobj() # clear annotation objects
@@ -614,7 +620,7 @@ class SIMCanvas (FigureCanvas):
     self.axdipole.set_xlim(xl)
 
     left = 0.08
-    w,h=getscreengeom()
+    w, _ = getscreengeom()
     if w < 2800: left = 0.1
     self.figure.subplots_adjust(left=left,right=0.99,bottom=bottom,top=0.99,hspace=0.1,wspace=0.1) # reduce padding
 
@@ -644,7 +650,6 @@ class SIMCanvas (FigureCanvas):
       # skip for optimization
       for lsim in lsimdat: # plot average dipoles from prior simulations
         olddpl = lsim['dpl']
-        if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
         self.axdipole.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
 
       if self.params['N_trials']>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
@@ -691,18 +696,16 @@ class SIMCanvas (FigureCanvas):
       self.axdipole.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n',fontsize=dconf['fontsize'])
     self.axdipole.set_xlim(xl); self.axdipole.set_ylim(yl)
 
-    if DrawSpec: #
-      if debug: print('ylim is : ', np.amin(ddat['dpl'][sidx:eidx,1]),np.amax(ddat['dpl'][sidx:eidx,1]))
-
+    if DrawSpec:
       gRow = 6
-      self.axspec = self.figure.add_subplot(self.G[gRow:10,0]); # specgram
+      self.axspec = self.figure.add_subplot(self.G[gRow:10,0])  # specgram
       cax = self.axspec.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap(self.params['spec_cmap']))
       self.axspec.set_ylabel('Frequency (Hz)',fontsize=dconf['fontsize'])
       self.axspec.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
       self.axspec.set_xlim(xl)
       self.axspec.set_ylim(ds['freq'][-1],ds['freq'][0])
       cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
-      cb = plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
+      plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
     else:
       self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
 

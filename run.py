@@ -73,8 +73,7 @@ def get_fname(sim_dir, key, trial=0, ntrial=1):
                  'figspec': ('spec', '.png'),
                  'figspk': ('spk', '.png'),
                  'param': ('param', '.txt'),
-                 'vsoma': ('vsoma', '.pkl'),
-                 'lfp': ('lfp', '.txt')}
+                 'vsoma': ('vsoma', '.pkl')}
 
     if ntrial == 1 or key == 'param':
         # param file currently identical for all trials
@@ -252,7 +251,7 @@ def simulate(params, n_procs=None):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
+  def __init__ (self,c,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None):
     QThread.__init__(self)
     self.c = c
     self.d = d
@@ -264,7 +263,6 @@ class RunSimThread (QThread):
     self.opt = opt
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
-    self.onNSG = onNSG
     self.paramfn = os.path.join(_get_output_dir(), 'param', self.params['sim_prefix'] + '.param')
 
 

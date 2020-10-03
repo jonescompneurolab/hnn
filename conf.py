@@ -15,10 +15,6 @@ def_config = """
 [run]
 dorun = 1
 doquit = 1
-debug = 0
-testlfp = 0
-testlaminarlfp = 0
-nsgrun = 0
 [paths]
 paramindir = param
 homeout = 1
@@ -153,7 +149,7 @@ def readconf (fn="hnn.cfg",nohomeout=False):
         dbase = os.path.join(os.path.expanduser('~'),'hnn_out') # user home directory
       if not safemkdir(dbase): sys.exit(1) # check existence of base hnn output dir
     else: # cwd for output
-      dbase = os.getcwd() # use os.getcwd instead for better compatability with NSG
+      dbase = os.getcwd()
 
   d['dbase'] = dbase
   d['datdir'] = os.path.join(dbase,'data') # data output directory
@@ -166,10 +162,6 @@ def readconf (fn="hnn.cfg",nohomeout=False):
 
   d['dorun'] = confint("run","dorun",1)
   d['doquit'] = confint("run","doquit",1)
-  d['debug'] = confint("run","debug",0)
-  d['testlfp'] = confint("run","testlfp",0)
-  d['testlaminarlfp'] = confint("run","testlaminarlfp",0)
-  d['nsgrun'] = confint("run","nsgrun",0)
 
   d['drawindivdpl'] = confint("draw","drawindivdpl",1)
   d['drawavgdpl'] = confint("draw","drawavgdpl",0)

@@ -69,8 +69,6 @@ parseargs()
 
 simf = dconf['simf']
 paramf = dconf['paramf']
-debug = dconf['debug']
-testLFP = dconf['testlfp'] or dconf['testlaminarlfp']
 param_fname = os.path.splitext(os.path.basename(paramf))
 basedir = os.path.join(dconf['datdir'], param_fname[0])
 
@@ -103,8 +101,6 @@ def _add_missing_frames(tb):
 
 if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
 else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
-
-if debug: print('getPyComm:',getPyComm())
 
 hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -750,7 +746,6 @@ class SynGainParamDialog (QDialog):
     oldval = float(self.netparamwin.dqline[k].text().strip())
     newval = oldval * fctr
     self.netparamwin.dqline[k].setText(str(newval))
-    if debug: print('scaling ',k,' by', fctr, 'from ',oldval,'to ',newval,'=',oldval*fctr)
     return newval
 
   def isE (self,ty): return ty.count('Pyr') > 0
@@ -760,7 +755,6 @@ class SynGainParamDialog (QDialog):
     for k in self.dqle.keys(): self.dqle[k].setText('1.0')
 
   def scalegains (self):
-    if debug: print('scaling synaptic gains')
     for _, k in enumerate(self.dqle.keys()):
       fctr = float(self.dqle[k].text().strip())
       if fctr < 0.:
@@ -768,7 +762,6 @@ class SynGainParamDialog (QDialog):
         self.dqle[k].setText(str(fctr))
       elif fctr == 1.0:
         continue
-      if debug: print(k,fctr)
       for k2 in self.netparamwin.dqline.keys():
         l = k2.split('_')
         ty1,ty2 = l[1],l[2]
@@ -2811,7 +2804,6 @@ class BaseParamDialog (QDialog):
     return oktosave
 
   def updatesaveparams (self, dtest):
-    if debug: print('BaseParamDialog updatesaveparams: dtest=',dtest)
     # update parameter values in GUI (so user can see and so GUI will save these param values)
     for win in self.lsubwin: win.setfromdin(dtest)
     # save parameters - do not ask if can over-write the param file
@@ -3094,21 +3086,18 @@ class HNNGUI (QMainWindow):
     else:
       outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
       lcmd = [getPyComm(), 'visvolt.py',outparamf]
-      if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
     outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
     lcmd = [getPyComm(), 'vispsd.py',outparamf]
-    if debug: print('vispsd cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
     # start the spectrogram visualization process (separate window)
     outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
     lcmd = [getPyComm(), 'visspec.py',outparamf]
-    if debug: print('visspec cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showRasterPlot (self):
@@ -3124,7 +3113,6 @@ class HNNGUI (QMainWindow):
       return
 
     if dconf['drawindivrast']: lcmd.append('indiv')
-    if debug: print('visrast cmd:',lcmd)
     Popen(lcmd) # nonblocking
 
   def showDipolePlot (self):
@@ -3139,7 +3127,6 @@ class HNNGUI (QMainWindow):
       QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
       return
 
-    if debug: print('visdipole cmd:',lcmd)
     Popen(lcmd) # nonblocking    
 
   def showwaitsimwin (self):
@@ -3311,11 +3298,6 @@ class HNNGUI (QMainWindow):
     runSimAct.setStatusTip('Run simulation')
     runSimAct.triggered.connect(self.controlsim)
 
-    runSimNSGAct = QAction('Run simulation on NSG', self)
-    runSimNSGAct.setShortcut('Ctrl+N')
-    runSimNSGAct.setStatusTip('Run simulation on Neuroscience Gateway Portal (requires NSG account and internet connection).')
-    runSimNSGAct.triggered.connect(self.controlNSGsim)
-
     self.menubar = self.menuBar()
     fileMenu = self.menubar.addMenu('&File')
     self.menubar.setNativeMenuBar(False)
@@ -3372,12 +3354,6 @@ class HNNGUI (QMainWindow):
     viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
 
-    if testLFP:
-      viewLFPAction = QAction('View Simulation LFPs',self)
-      viewLFPAction.setStatusTip('View LFP')
-      viewLFPAction.triggered.connect(self.showLFPPlot)
-      viewMenu.addAction(viewLFPAction)
-
     viewSpecAction = QAction('View Spectrograms',self)
     viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data')
     viewSpecAction.triggered.connect(self.showSpecPlot)
@@ -3413,7 +3389,6 @@ class HNNGUI (QMainWindow):
     setParmAct.triggered.connect(self.setparams)
     simMenu.addAction(setParmAct)
     simMenu.addAction(runSimAct)    
-    if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
     setOptParamAct = QAction('Configure Optimization', self)
     setOptParamAct.setShortcut('Ctrl+O')
     setOptParamAct.setStatusTip('Set parameters for evoked input optimization')
@@ -3620,9 +3595,7 @@ class HNNGUI (QMainWindow):
     # load simulation when activating simulation combobox
     global paramf,basedir
     import simdat
-    if debug: print('onActivateSimCB',s,paramf,self.cbsim.currentIndex(),simdat.lsimidx)
     if self.cbsim.currentIndex() != simdat.lsimidx:
-      if debug: print('Loading',s)
       paramf = s
       param_fname = os.path.splitext(os.path.basename(paramf))
       basedir = os.path.join(dconf['datdir'], param_fname[0])
@@ -3631,7 +3604,6 @@ class HNNGUI (QMainWindow):
 
   def populateSimCB (self):
     # populate the simulation combobox
-    if debug: print('populateSimCB')
     global paramf
     self.cbsim.clear()
     import simdat
@@ -3698,13 +3670,6 @@ class HNNGUI (QMainWindow):
       self.optMode = False
       self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore())
 
-  def controlNSGsim (self):
-    # control simulation on NSG
-    if self.runningsim:
-      self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
-    else:
-      self.startsim(self.baseparamwin.runparamwin.getntrial(),self.baseparamwin.runparamwin.getncore(),True)
-
   def stopsim (self):
     # stop the simulation
     if self.runningsim:
@@ -3734,12 +3699,11 @@ class HNNGUI (QMainWindow):
     self.setcursors(Qt.WaitCursor)
     print('Starting model optimization. . .')
 
-    if debug: print('in optmodel')
     self.runningsim = True
 
     self.statusBar().showMessage("Optimizing model. . .")
 
-    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, self.params, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
+    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, self.params, opt=True, baseparamwin=self.baseparamwin, mainwin=self)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3749,7 +3713,7 @@ class HNNGUI (QMainWindow):
     self.qbtn.setEnabled(False)
     bringwintotop(self.waitsimwin)
 
-  def startsim (self, ntrial, ncore, onNSG=False):
+  def startsim (self, ntrial, ncore):
     global paramf
 
     # start the simulation
@@ -3762,12 +3726,9 @@ class HNNGUI (QMainWindow):
     print('Starting simulation (%d cores). . .'%ncore)
     self.runningsim = True
 
-    if onNSG:
-      self.statusBar().showMessage("Running simulation on Neuroscience Gateway Portal. . .")
-    else:
-      self.statusBar().showMessage("Running simulation. . .")
+    self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,self.params,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
+    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,self.params,opt=False,baseparamwin=None,mainwin=None)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3783,7 +3744,6 @@ class HNNGUI (QMainWindow):
 
   def done (self, optMode, except_msg):
     # called when the simulation completes running
-    if debug: print('done')
     self.runningsim = False
     self.waitsimwin.hide()
     self.statusBar().showMessage("")
