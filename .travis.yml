@@ -163,7 +163,7 @@ script:
     $PYTHON hnn.py
   - | # Run py.test that includes running a simulation and verifying results
     echo "Running Python tests on host OS..."
-    py.test tests/
+    py.test --cov=. tests/
   - | # Test WSL-based version on windows (needs VcXsrv)
     if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
       find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \
