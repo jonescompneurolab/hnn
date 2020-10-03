@@ -167,8 +167,11 @@ class ExtInputs (Spikes):
       s_all = np.r_[spikes.times, spikes.gids].T
     except ValueError:
       s_all = np.loadtxt(open(fspk, 'rb'))
+    except IndexError:
+      # incorrect dimensions (bad spike file)
+      print('Warning: bad data in spike file:', fspk)
     except OSError:
-      print('Warning: could not read file:', fspk)
+      print('Warning: could not read spike file:', fspk)
 
     if len(s_all) == 0:
       # couldn't read spike times

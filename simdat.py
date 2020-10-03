@@ -122,6 +122,9 @@ def updatedat (params):
       ddat['spk'] = np.r_[spikes.times, spikes.gids].T
     except ValueError:
       ddat['spk'] = readtxt(dfile['spk'])
+    except IndexError:
+      # incorrect dimensions (bad spike file)
+      ddat['spk'] = None
 
   ddat['dpltrials'] = readdpltrials(basedir)
 
