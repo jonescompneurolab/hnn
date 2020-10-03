@@ -49,11 +49,7 @@ for i in range(len(sys.argv)):
     PoissonInputs = paramrw.usingPoissonInputs(paramf)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
 
-try:
-  extinputs = spikefn.ExtInputs(spkpath, outparamf)
-except ValueError:
-  print("Error: could not load spike timings from %s" % spkpath)
-
+extinputs = spikefn.ExtInputs(spkpath, outparamf)
 extinputs.add_delay_times()
 
 alldat = {}
@@ -274,6 +270,11 @@ class SpikeGUI (QMainWindow):
     global dfile, ddat, paramf
     super().__init__()        
     self.initUI()
+
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      print("Exiting gracefully with TRAVIS_TESTING=1")
+      qApp.quit()
+      exit(0)
 
   def initMenu (self):
     exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        

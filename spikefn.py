@@ -153,14 +153,7 @@ class ExtInputs (Spikes):
 
   def __get_extinput_times (self, fspk):
     # load all spike times from file
-    s_all = []
-    try:
-      s_all = np.loadtxt(open(fspk, 'rb'))
-    except OSError:
-      print('Warning: could not read file:', fspk)
-    except ValueError:
-      print('Warning: error reading data from:', fspk)
-
+    s_all = np.loadtxt(open(fspk, 'rb'))
     if len(s_all) == 0:
       # couldn't read spike times
       raise ValueError

@@ -20,14 +20,15 @@ def test_hnn():
     paramf = op.join('param', 'default.param')
 
     nrniv_str = 'nrniv -python -nobanner'
-    cmd = nrniv_str + ' ' + sys.executable + ' run.py ' + paramf + ' ntrial ' + str(ntrials)
+    cmd = nrniv_str + ' ' + sys.executable + ' run.py ' + paramf \
+        + ' ntrial ' + str(ntrials)
 
     # Split the command into shell arguments for passing to Popen
     cmdargs = shlex.split(cmd, posix="win" not in sys.platform)
 
     # Start the simulation
     proc = Popen(cmdargs, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    cwd=os.getcwd(), universal_newlines=True)
+                 cwd=os.getcwd(), universal_newlines=True)
     out, err = proc.communicate()
 
     # print all messages (including error messages)
@@ -44,7 +45,7 @@ def test_hnn():
 
         data_dir = ('https://raw.githubusercontent.com/jonescompneurolab/'
                     'hnn/test_data/')
-        for data_type in [ 'dpl', 'rawdpl', 'i']:
+        for data_type in ['dpl', 'rawdpl', 'i']:
             sys.stdout.write("%s..." % data_type)
 
             fname = "%s_%d.txt" % (data_type, trial)

@@ -193,6 +193,11 @@ class PSDViewGUI (DataViewGUI):
     self.lextpsd = [] # external data psd
     self.lextfiles = [] # external data files
 
+    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
+      print("Exiting gracefully with TRAVIS_TESTING=1")
+      qApp.quit()
+      exit(0)
+
   def addLoadDataActions (self):
     loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file.', self)
     loadDataFile.setShortcut('Ctrl+D')
