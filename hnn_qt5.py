@@ -1,41 +1,44 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-import sys, os
+"""Classes for creating the main HNN GUI"""
+
+# Authors: Sam Neymotin <samnemo@gmail.com>
+#          Blake Caldwell <blake_caldwell@brown.edu>
+#          Shane Lee
+
+# Python builtins
+import sys
+import os
+import multiprocessing
+from subprocess import Popen, PIPE
+import shlex, shutil
+from collections import namedtuple, OrderedDict
+from copy import deepcopy
+from time import time, sleep
+import numpy as np
+from math import ceil, isclose
+import traceback
+from psutil import cpu_count
+
+# External libraries
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
 from PyQt5.QtWidgets import QCheckBox, QTextEdit, QInputDialog, QSpacerItem, QFrame, QSplitter
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QColor, QPainter, QFont, QPen
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot, Qt, QSize
+from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, Qt, QSize
 from PyQt5.QtCore import QMetaObject, QUrl
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-import multiprocessing
-from subprocess import Popen, PIPE
-import shlex, shutil
-from collections import OrderedDict
-from copy import deepcopy
-from time import time, sleep
-from conf import dconf
-import conf
-from run import simulate
+from hnn_core import read_params
 
-import numpy as np
-from math import ceil, isclose
+# HNN modules
 import spikefn
 from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs
 from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file, write_legacy_paramf
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
-import nlopt
-from psutil import cpu_count, wait_procs, process_iter, NoSuchProcess
-from threading import Lock
-import traceback
-from collections import namedtuple
-
-from hnn_core import read_params
-
-prtime = False
+from conf import dconf
+import conf
+from run import RunSimThread
 
 def isWindows ():
   # are we on windows? or linux/mac ?
@@ -400,7 +403,7 @@ class QRangeSlider(QWidget, Ui_Form):
         return scale(xpos, (0, self.width()), (self.min(), self.max()))
 
     def _handleMoveSplitter(self, xpos, index):
-        hw = self._splitter.handleWidth()
+        self._splitter.handleWidth()
         def _lockWidth(widget):
             width = widget.size().width()
             widget.setMinimumWidth(width)
@@ -413,8 +416,6 @@ class QRangeSlider(QWidget, Ui_Form):
             _lockWidth(self._tail)
             if v >= self.end():
                 return
-            offset = -20
-            w = xpos + offset
             self._setStart(v)
             self.rangeValuesChanged.emit(self.label, v, self.end())
         elif index == self._SPLIT_END:
@@ -424,8 +425,6 @@ class QRangeSlider(QWidget, Ui_Form):
             _lockWidth(self._head)
             if v <= self.start():
                 return
-            offset = -40
-            w = self.width() - xpos + offset
             self._setEnd(v)
             self.rangeValuesChanged.emit(self.label, self.start(), v)
         _unlockWidth(self._tail)
@@ -460,56 +459,10 @@ class Communicate (QObject):
 class DoneSignal (QObject):
   finishSim = pyqtSignal(bool, str)
 
-# for signaling - passing text
-class TextSignal (QObject):
-  tsig = pyqtSignal(str)
-
-# for signaling - updating GUI & param file during optimization
-class ParamSignal (QObject):
-  psig = pyqtSignal(OrderedDict)
-
-class CanvSignal (QObject):
-  csig = pyqtSignal(bool, bool)
-
 def bringwintobot (win):
   #win.show()
   #win.lower()
   win.hide()
-
-def kill_list_of_procs(procs):
-  # try terminate first
-  for p in procs:
-    try:
-      p.terminate()
-    except NoSuchProcess:
-      pass
-  gone, alive = wait_procs(procs, timeout=3)
-
-  # now try kill
-  for p in alive:
-    p.kill()
-  gone, alive = wait_procs(procs, timeout=3)
-
-  return alive
-
-
-def get_nrniv_procs_running():
-  ls = []
-  name = 'nrniv'
-  for p in process_iter(attrs=["name", "exe", "cmdline"]):
-      if name == p.info['name'] or \
-              p.info['exe'] and os.path.basename(p.info['exe']) == name or \
-              p.info['cmdline'] and p.info['cmdline'][0] == name:
-          ls.append(p)
-  return ls
-
-def kill_and_check_nrniv_procs():
-  procs = get_nrniv_procs_running()
-  if len(procs) > 0:
-    running = kill_list_of_procs(procs)
-    if len(running) > 0:
-      pids = [ str(proc.pid) for proc in running ]
-      print("ERROR: failed to kill nrniv process(es) %s" % ','.join(pids))
 
 def bringwintotop (win):
   # bring a pyqt5 window to the top (parents still stay behind children)
@@ -523,399 +476,6 @@ def bringwintotop (win):
   #win.activateWindow()
   #win.raise_()
   #win.show() 
-
-# based on https://nikolak.com/pyqt-threading-tutorial/
-class RunSimThread (QThread):
-  def __init__ (self,c,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
-    QThread.__init__(self)
-    self.c = c
-    self.d = d
-    self.killed = False
-    self.ntrial = ntrial
-    self.ncore = ncore
-    self.waitsimwin = waitsimwin
-    self.params = params
-    self.opt = opt
-    self.baseparamwin = baseparamwin
-    self.mainwin = mainwin
-    self.onNSG = onNSG
-    self.paramfn = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
-
-
-    # it would be ideal to display a dialog box, but we have to get that event back to the main window
-    # the next best thing is to print to the console and not crash the application
-    sys.excepthook = traceback.print_exception
-
-    self.txtComm = TextSignal()
-    self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
-
-    self.prmComm = ParamSignal()
-    if self.baseparamwin is not None:
-      self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
-
-    self.canvComm = CanvSignal()
-    if self.mainwin is not None:
-      self.canvComm.csig.connect(self.mainwin.initSimCanvas)
-
-    self.lock = Lock()
-
-  def updatewaitsimwin (self, txt):
-    # print('RunSimThread updatewaitsimwin, txt=',txt)
-    self.txtComm.tsig.emit(txt)
-
-  def updatebaseparamwin (self, d):
-    self.prmComm.psig.emit(d)
-
-  def updatedispparam (self):
-    self.c.commsig.emit()
-
-  def updatedrawerr (self):
-    self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
-
-  def stop (self):
-    self.killproc()
-
-  def __del__ (self):
-    self.quit()
-    self.wait()
-
-  def run (self):
-    msg=''
-
-    if self.opt and self.baseparamwin is not None:
-      try:
-        self.optmodel() # run optimization
-      except RuntimeError as e:
-        msg = str(e)
-        self.baseparamwin.optparamwin.toggleEnableUserFields(self.cur_step, enable=True)
-        self.baseparamwin.optparamwin.clear_initial_opt_ranges()
-        self.baseparamwin.optparamwin.optimization_running = False
-    else:
-      try:
-        self.runsim() # run simulation
-        self.updatedispparam() # update params in all windows (optimization)
-      except RuntimeError as e:
-        msg = str(e)
-
-    self.d.finishSim.emit(self.opt, msg) # send the finish signal
-
-
-  def killproc (self):
-    if debug: print('Thread killing sim. . .')
-
-    # make absolute sure all nrniv procs have been killed
-    kill_and_check_nrniv_procs()
-
-    self.lock.acquire()
-    self.killed = True
-    self.lock.release()
-
-  def get_proc_stream (self, stream, print_to_console=False):
-    try:
-      for line in iter(stream.readline, ""):
-        if print_to_console:
-          print(line.strip())
-        try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
-          self.updatewaitsimwin(line.strip()) # sends a pyqtsignal to waitsimwin, which updates its textedit
-        except:
-          if debug: print('RunSimThread updatewaitsimwin exception...')
-          pass # catch exception in case anything else goes wrong
-    except ValueError:
-      # if process is killed and stream.readline() gives I/O error
-      pass
-    stream.close()
-
-  # run sim command via mpi, then delete the temp file.
-  def runsim (self, is_opt=False, banner=True, simlength=None):
-    import simdat
-    global defncore
-
-    self.lock.acquire()
-    self.killed = False
-    self.lock.release()
-
-    while True:
-      if self.ncore == 0:
-        raise RuntimeError("No cores available for simulation")
-
-      try:
-        simulate(self.params, dconf['datdir'], self.ncore)
-        # success, make default ncore
-        defncore = self.ncore
-        break
-      except RuntimeError as e:
-        if self.ncore == 1:
-          # can't reduce ncore any more
-          print(str(e))
-          self.updatewaitsimwin(str(e))
-          kill_and_check_nrniv_procs()
-          raise RuntimeError("Simulation failed to start")
-      except:
-        # if it's something else we still want to print the error and then
-        # handle it like a RuntimeError instead of crashing the whole application
-        txt = traceback.format_exc()
-        sys.stderr.write(txt)
-        self.updatewaitsimwin(txt)
-        # pop up dialog pop
-        raise RuntimeError("Unknown error")
-
-      # check if proc was killed before retrying with fewer cores
-      self.lock.acquire()
-      if self.killed:
-        self.lock.release()
-        # exit using RuntimeError
-        raise RuntimeError("Terminated")
-      else:
-        self.lock.release()
-
-      self.ncore = ceil(self.ncore/2)
-      txt = "INFO: Failed starting simulation, retrying with %d cores" % self.ncore
-      print(txt)
-      self.updatewaitsimwin(txt)
-
-    # should have good data written to files at this point
-    updatedat(self.params)
-
-    if not is_opt:
-      # update lsimdat and its current sim index
-      simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
-
-  def optmodel (self):
-    import simdat
-
-    global basedir
-
-    need_initial_ddat = False
-
-    # initialize RNG with seed from config
-    seed = self.params['prng_seedcore_opt']
-    nlopt.srand(seed)
-
-    # initial_ddat stores the initial fit (from "Run Simulation").
-    # To be displayed in final dipole plot as black dashed line.
-    if len(simdat.ddat) > 0:
-      simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
-      simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
-    else:
-      need_initial_ddat = True
-
-    self.baseparamwin.optparamwin.populate_initial_opt_ranges()
-
-    # save initial parameters file
-    param_out = os.path.join(basedir,'before_opt.param')
-    write_legacy_paramf(param_out, self.params)
-
-    self.updatewaitsimwin('Optimizing model. . .')
-
-    self.last_step = False
-    self.first_step = True
-    num_steps = self.baseparamwin.optparamwin.get_num_chunks()
-    for step in range(num_steps):
-      self.cur_step = step
-      if step == num_steps - 1:
-        self.last_step = True
-
-      # disable range sliders for each step once that step has begun
-      self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=False)
-
-      self.step_ranges = self.baseparamwin.optparamwin.get_chunk_ranges(step)
-      self.step_sims = self.baseparamwin.optparamwin.get_sims_for_chunk(step)
-
-      if self.step_sims == 0:
-        txt = "Skipping optimization step %d (0 simulations)"%(step+1)
-        self.updatewaitsimwin(txt)
-        continue
-
-      if len(self.step_ranges) == 0:
-        txt = "Skipping optimization step %d (0 parameters)"%(step+1)
-        self.updatewaitsimwin(txt)
-        continue
-
-      txt = "Starting optimization step %d/%d" % (step + 1, num_steps)
-      self.updatewaitsimwin(txt)
-      self.runOptStep(step)
-
-      if 'dpl' in self.best_ddat:
-        simdat.ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
-      if 'errtot' in self.best_ddat:
-        simdat.ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
-
-      if need_initial_ddat:
-        simdat.initial_ddat = deepcopy(simdat.ddat)
-
-      # update optdat with best from this step
-      simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
-
-      # put best opt results into GUI and save to param file
-      push_values = OrderedDict()
-      for param_name in self.step_ranges.keys():
-        push_values[param_name] = self.step_ranges[param_name]['final']
-      self.updatebaseparamwin(push_values)
-      self.baseparamwin.optparamwin.push_chunk_ranges(step,push_values)
-
-      sleep(1)
-
-      self.first_step = False
-
-    # one final sim with the best parameters to update display
-    self.runsim(is_opt=True, banner=False)
-
-    # update lsimdat and its current sim index
-    simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
-
-    # update optdat with the final best
-    simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
-
-    # re-enable all the range sliders
-    self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
-
-    self.baseparamwin.optparamwin.clear_initial_opt_ranges()
-    self.baseparamwin.optparamwin.optimization_running = False
-
-
-  def runOptStep (self, step):
-    import simdat
-    global basedir
-
-    self.optsim = 0
-    self.minopterr = 1e9
-    self.stepminopterr = self.minopterr
-    self.best_ddat = {}
-    self.opt_start = self.baseparamwin.optparamwin.get_chunk_start(step)
-    self.opt_end = self.baseparamwin.optparamwin.get_chunk_end(step)
-    self.opt_weights = self.baseparamwin.optparamwin.get_chunk_weights(step)
-    def optrun (new_params, grad=0):
-      txt = "Optimization step %d, simulation %d" % (step + 1,
-                                                     self.optsim + 1)
-      self.updatewaitsimwin(txt)
-      print(txt)
-
-      dtest = OrderedDict() # parameter values to test      
-      for param_name, test_value in zip(self.step_ranges.keys(), new_params): # set parameters
-        if test_value >= self.step_ranges[param_name]['minval'] and \
-           test_value <= self.step_ranges[param_name]['maxval']:
-          if debug:
-            print('optrun prm:', self.step_ranges[param_name]['initial'],
-                                 self.step_ranges[param_name]['minval'],
-                                 self.step_ranges[param_name]['maxval'],
-                                 test_value)
-          dtest[param_name] = test_value
-        else:
-          # This test is not strictly necessary with COBYLA, but in case the algorithm
-          # is changed at some point in the future
-          print('INFO: optimization chose %.3f for %s outside of [%.3f-%.3f].'
-                % (test_value, param_name,
-                   self.step_ranges[param_name]['minval'],
-                   self.step_ranges[param_name]['maxval']))
-          return 1e9 # invalid param value -> large error
-
-      # put new param values into GUI and save params to file
-      self.updatebaseparamwin(dtest)
-      sleep(1)
-
-      # run the simulation, but stop early if possible
-      self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
-
-      # calculate wRMSE for all steps
-      simdat.weighted_rmse(simdat.ddat,
-                           self.opt_end,
-                           self.opt_weights,
-                           tstart=self.opt_start)
-      err = simdat.ddat['werrtot']
-
-      if self.last_step:
-        # weighted RMSE with weights of all 1's is the same as
-        # regular RMSE
-        simdat.ddat['errtot'] = simdat.ddat['werrtot']
-        txt = "RMSE = %f"%err
-      else:
-        # calculate regular RMSE for displaying on plot
-        simdat.calcerr(simdat.ddat,
-                      self.opt_end,
-                      tstart=self.opt_start)
-
-        txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
-
-      print(txt)
-      self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
-
-      fnoptinf = os.path.join(basedir,'optinf.txt')
-      with open(fnoptinf,'a') as fpopt:
-        fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
-
-      # save params numbered by optsim
-      param_out = os.path.join(basedir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
-      write_legacy_paramf(param_out, self.params)
-
-      if err < self.stepminopterr:
-        self.updatewaitsimwin("new best with RMSE %f"%err)
-
-        self.stepminopterr = err
-        # save best param file
-        param_out = os.path.join(basedir,'step_%d_best.param'%self.cur_step)
-        write_legacy_paramf(param_out, self.params)
-        if 'dpl' in simdat.ddat:
-          self.best_ddat['dpl'] = simdat.ddat['dpl']
-        if 'errtot' in simdat.ddat:
-          self.best_ddat['errtot'] = simdat.ddat['errtot']
-
-      if self.optsim == 0 and not self.first_step:
-        # Update plots for the first simulation only of this step (best results from last round)
-        # Skip the first step because there are no optimization results to show yet.
-        self.updatedrawerr() # send event to draw updated error (asynchronously)
-
-      self.optsim += 1
-
-      return err # return error
-
-    def optimize(params_input, evals, algorithm):
-        opt_params = []
-        lb = []
-        ub = []
-
-        for param_name in params_input.keys():
-            upper = params_input[param_name]['maxval']
-            lower = params_input[param_name]['minval']
-            if upper == lower:
-              continue
-
-            ub.append(upper)
-            lb.append(lower)
-            opt_params.append(params_input[param_name]['initial'])
-
-        if algorithm == nlopt.G_MLSL_LDS or algorithm == nlopt.G_MLSL:
-            # In case these mixed mode (global + local) algorithms are used in the future
-            local_opt = nlopt.opt(nlopt.LN_COBYLA, num_params)
-            opt.set_local_optimizer(local_opt)
-
-        opt.set_lower_bounds(lb)
-        opt.set_upper_bounds(ub)
-        opt.set_min_objective(optrun)
-        opt.set_xtol_rel(1e-4)
-        opt.set_maxeval(evals)
-        opt_results = opt.optimize(opt_params)
-
-        return opt_results
-
-    txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
-                                                self.opt_end)
-    self.updatewaitsimwin(txt)
-
-    num_params = len(self.step_ranges)
-    algorithm = nlopt.LN_COBYLA
-    opt = nlopt.opt(algorithm, num_params)
-    opt_results = optimize(self.step_ranges, self.step_sims, algorithm)
-
-    # update opt params for the next round
-    for var_name, new_value in zip(self.step_ranges, opt_results):
-        old_value = self.step_ranges[var_name]['initial']
-
-        # only change the parameter value if it changed significantly
-        if not isclose(old_value, new_value, abs_tol=1e-9):
-          self.step_ranges[var_name]['final'] = new_value
-        else:
-          self.step_ranges[var_name]['final'] = \
-            self.step_ranges[var_name]['initial']
 
 # look up resource adjusted for screen resolution
 def lookupresource (fn):
@@ -991,7 +551,9 @@ class DictDialog (QDialog):
     self.dtransvar[k] = strans
     self.dtransvar[strans] = k
 
-  def initExtra (self): self.dqextra = OrderedDict() # extra items not written to param file
+  def initExtra (self):
+    # extra items not written to param file
+    self.dqextra = {}
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -1003,7 +565,8 @@ class DictDialog (QDialog):
     self.ltabs = []
     self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
 
-    for i in range(len(self.ldict)): self.ltabs.append(QWidget())
+    for _ in range(len(self.ldict)):
+      self.ltabs.append(QWidget())
 
     self.tabs.resize(575,200) 
 
@@ -1013,7 +576,7 @@ class DictDialog (QDialog):
       tab.layout = QFormLayout()
       tab.setLayout(tab.layout)
 
-    self.dqline = OrderedDict() # QLineEdits dict; key is model variable
+    self.dqline = {} # QLineEdits dict; key is model variable
     for d,tab in zip(self.ldict, self.ltabs):
       for k,v in d.items():
         self.dqline[k] = QLineEdit(self)
@@ -1198,7 +761,7 @@ class SynGainParamDialog (QDialog):
 
   def scalegains (self):
     if debug: print('scaling synaptic gains')
-    for i,k in enumerate(self.dqle.keys()):
+    for _, k in enumerate(self.dqle.keys()):
       fctr = float(self.dqle[k].text().strip())
       if fctr < 0.:
         fctr = 0.
@@ -1224,7 +787,7 @@ class SynGainParamDialog (QDialog):
     grid = QGridLayout()
     grid.setSpacing(10)
 
-    self.dqle = OrderedDict()
+    self.dqle = {}
     for row,k in enumerate(['E -> E', 'E -> I', 'I -> E', 'I -> I']):
       lbl = QLabel(self)
       lbl.setText(k)
@@ -1309,7 +872,7 @@ class PoissonInputParamDialog (DictDialog):
 
   def initd (self):
 
-    self.dL2,self.dL5 = OrderedDict(),OrderedDict()
+    self.dL2,self.dL5 = {},{}
     ld = [self.dL2,self.dL5]
 
     for i,lyr in enumerate(['L2','L5']):
@@ -1345,7 +908,7 @@ class EvokedInputParamDialog (QDialog):
     super(EvokedInputParamDialog, self).__init__(parent)
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
-    self.dqline = OrderedDict()
+    self.dqline = {}
     self.dtransvar = {} # for translating model variable name to more human-readable form
     self.initUI()
     self.setfromdin(din)
@@ -1511,7 +1074,8 @@ class EvokedInputParamDialog (QDialog):
   def allOff (self): self.lines2val('gbar',0.0)
 
   def removeAllInputs (self):
-    for i in range(len(self.ltabs)): self.removeCurrentInput()
+    for _ in range(len(self.ltabs)):
+      self.removeCurrentInput()
     self.nprox = self.ndist = 0
 
   def IsProx (self,idx):
@@ -1714,21 +1278,21 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     self.ld = [] # list of dictionaries for proximal/distal inputs
     self.dtab_idx = {} # for translating input names to tab indices
     self.dtab_names = {} # for translating tab indices to input names
-    self.dparams = OrderedDict()  # actual values
-    self.dqline = OrderedDict() # not used, prevents failure in removeInput
+    self.dparams = {}  # actual values
+    self.dqline = {} # not used, prevents failure in removeInput
 
     # these store values used in grid
-    self.dqchkbox = OrderedDict()  # optimize
-    self.dqparam_name = OrderedDict()  # parameter name
-    self.dqinitial_label = OrderedDict()  # initial
-    self.dqopt_label = OrderedDict()  # optimtized
-    self.dqdiff_label = OrderedDict() # delta
-    self.dqrange_multiplier = OrderedDict() # user-defined multiplier
-    self.dqrange_mode = OrderedDict() # range mode (stdev, %, absolute)
-    self.dqrange_slider = OrderedDict() # slider
-    self.dqrange_label = OrderedDict() # defined range
-    self.dqrange_max = OrderedDict()
-    self.dqrange_min = OrderedDict()
+    self.dqchkbox = {}  # optimize
+    self.dqparam_name = {}  # parameter name
+    self.dqinitial_label = {}  # initial
+    self.dqopt_label = {}  # optimtized
+    self.dqdiff_label = {} # delta
+    self.dqrange_multiplier = {} # user-defined multiplier
+    self.dqrange_mode = {} # range mode (stdev, %, absolute)
+    self.dqrange_slider = {} # slider
+    self.dqrange_label = {} # defined range
+    self.dqrange_max = {}
+    self.dqrange_min = {}
 
     self.chunk_list = []
     self.lqnumsim = []
@@ -3330,7 +2894,7 @@ class HNNGUI (QMainWindow):
     self.fontsize = dconf['fontsize']
     self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
-    self.dextdata = OrderedDict() # external data
+    self.dextdata = {} # external data
     self.schemwin = SchematicDialog(self)
     self.m = self.toolbar = None
     self.baseparamwin = BaseParamDialog(self, self.startoptmodel)
@@ -3479,7 +3043,7 @@ class HNNGUI (QMainWindow):
     # clear external dipole data
     import simdat
     self.m.clearlextdatobj()
-    self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
+    self.dextdata = simdat.ddat['dextdata'] = {}
     self.toggleEnableOptimization(False)
     self.m.plot()  # recreate canvas
     self.m.draw()
@@ -3705,7 +3269,7 @@ class HNNGUI (QMainWindow):
     import simdat
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
-    self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
+    self.dextdata = simdat.ddat['dextdata'] = {}
     self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
