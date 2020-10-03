@@ -30,27 +30,27 @@ lsimdat = [] # list of simulation data
 lsimidx = 0 # index into lsimdat
 
 initial_ddat = {}
-optdat = [] # list of optimization data
+optdat = [] # single optimization run
 
-def updatelsimdat(paramf,dpl):
+def updatelsimdat(paramf, params, dpl):
   # update lsimdat with paramf and dipole dpl
   # but if the specific sim already run put dipole at that location in list
-  global lsimdat,lsimidx
-  # while len(lsimdat)>0 and lsimidx!=len(lsimdat)-1: lsimdat.pop() # redos popped
-  found = False
-  for i,l in enumerate(lsimdat):
-    if l[0] == paramf:
-      lsimdat[i][1] = dpl
-      found = True
-      break
-  if not found: lsimdat.append([paramf,dpl]) # if not found, append to end of the list
-  lsimidx = len(lsimdat) - 1 # current simulation index
+  global lsimdat, lsimidx
 
+  for idx, sim in enumerate(lsimdat):
+    if paramf in sim['paramfn']:
+      lsimdat[idx]['params'] = params
+      lsimdat[idx]['dpl'] = dpl
+      lsimidx = idx
+      return
 
-def updateoptdat(paramf,dpl):
+  lsimdat.append({'paramfn': paramf, 'params': params, 'dpl': dpl})  # if not found, append to end of the list
+  lsimidx = len(lsimdat) - 1
+
+def updateoptdat(paramfn, params, dpl):
   global optdat
 
-  optdat.append([paramf,dpl])
+  optdat = {'paramfn': paramfn, 'params': params, 'dpl': dpl}
 
 def rmse (a1, a2):
   # return root mean squared error between a1, a2; assumes same lengths, sampling rates
@@ -270,7 +270,7 @@ class SIMCanvas (FigureCanvas):
     self.optMode = optMode
     if not optMode:
       initial_ddat = {}
-      optdat = []
+      optdat = {}
     self.plot()
 
   def initaxes (self):
@@ -548,10 +548,6 @@ class SIMCanvas (FigureCanvas):
     # check if any simulation data available in ddat dictionary
     return 'dpl' in ddat
 
-  def hasinitoptdata (self):
-    # check if any simulation data available in ddat dictionary
-    return 'dpl' in initial_ddat
-
   def clearlextdatobj (self):
     # clear list of external data objects
     for o in self.lextdatobj:
@@ -644,7 +640,7 @@ class SIMCanvas (FigureCanvas):
     if not self.optMode:
       # skip for optimization
       for lsim in lsimdat: # plot average dipoles from prior simulations
-        olddpl = lsim[1]
+        olddpl = lsim['dpl']
         if debug: print('olddpl has shape ',olddpl.shape,len(olddpl[:,0]),len(olddpl[:,1]))
         self.axdipole.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
 
@@ -661,15 +657,14 @@ class SIMCanvas (FigureCanvas):
         yl[0] = min(yl[0],ddat['dpl'][sidx:eidx,1].min())
         yl[1] = max(yl[1],ddat['dpl'][sidx:eidx,1].max())
     else:
-      for idx, opt in enumerate(optdat):
-        optdpl = opt[1]
-        if idx == len(optdat) - 1:
-          # only show the last optimization
-          self.axdipole.plot(optdpl[:,0],optdpl[:,1],'k',color='gray',linewidth=self.gui.linewidth+1)
-          yl[0] = min(yl[0],optdpl[sidx:eidx,1].min())
-          yl[1] = max(yl[1],optdpl[sidx:eidx,1].max())
+      if 'dpl' in optdat:
+        # show optimized dipole as gray line
+        optdpl = optdat['dpl']
+        self.axdipole.plot(optdpl[:,0],optdpl[:,1],'k',color='gray',linewidth=self.gui.linewidth+1)
+        yl[0] = min(yl[0],optdpl[sidx:eidx,1].min())
+        yl[1] = max(yl[1],optdpl[sidx:eidx,1].max())
 
-      if self.hasinitoptdata():
+      if 'dpl' in initial_ddat:
         # show initial dipole in dotted black line
         self.axdipole.plot(initial_ddat['dpl'][:,0],initial_ddat['dpl'][:,1],'--',color='black',linewidth=self.gui.linewidth)
         yl[0] = min(yl[0],initial_ddat['dpl'][sidx:eidx,1].min())
