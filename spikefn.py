@@ -283,55 +283,6 @@ def hist_bin_opt(x, N_trials):
   bin_opt = bin_opt_list[0]
   return bin_opt
 
-# "purely" from files, this is the new way to replace the old way
-def spikes_from_file(fparam, fspikes):
-  raise DeprecationWarning
-
-  gid_dict, _ = paramrw.read(fparam)
-  # cell list - requires cell to start with L2/L5
-  src_list = []
-  src_extinput_list = []
-  src_unique_list = []
-  # fill in 2 lists from the keys
-  for key in gid_dict.keys():
-    if key.startswith('L2_') or key.startswith('L5_'):
-      src_list.append(key)
-    elif key == 'extinput':
-      src_extinput_list.append(key)
-    else:
-      src_unique_list.append(key)
-  # check to see if there are spikes in here, otherwise return an empty array
-  if os.stat(fspikes).st_size:
-    s = np.loadtxt(open(fspikes, 'rb'))
-  else:
-    s = np.array([], dtype='float64')
-  # get the skeleton s_dict from the cell_list
-  s_dict = dict.fromkeys(src_list)
-  # iterate through just the src keys
-  for key in s_dict.keys():
-    # sort of a hack to separate extgauss
-    s_dict[key] = Spikes(s, gid_dict[key])
-    # figure out its extgauss feed
-    newkey_gauss = 'extgauss_' + key
-    s_dict[newkey_gauss] = split_extrand(s, gid_dict, key, 'extgauss')
-    # figure out its extpois feed
-    newkey_pois = 'extpois_' + key
-    s_dict[newkey_pois] = split_extrand(s, gid_dict, key, 'extpois')
-  # do the keys in unique list
-  for key in src_unique_list: s_dict[key] = Spikes(s, gid_dict[key])
-  # Deal with alpha feeds (extinputs)
-  # order guaranteed by order of inputs in p_ext in paramrw
-  # and by details of gid creation in class_net
-  # A little kludgy to deal with the fact that one might not exist
-  if len(gid_dict['extinput']) > 1:
-    s_dict['alpha_feed_prox'] = Spikes(s, [gid_dict['extinput'][0]])
-    s_dict['alpha_feed_dist'] = Spikes(s, [gid_dict['extinput'][1]])
-  else:
-    # not sure why this is done here
-    # handle the extinput: this is a LIST!
-    s_dict['extinput'] = [Spikes(s, [gid]) for gid in gid_dict['extinput']]
-  return s_dict
-
 # from the supplied key name, return a marker style
 def get_markerstyle(key):
   markerstyle = ''
