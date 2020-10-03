@@ -173,10 +173,28 @@ def read_gids_param (fparam):
     return gid_dict
 
 # write the params to a filename
+def write_legacy_paramf(fparam, p):
+  """ now sorting
+  """
+
+  p_keys = [key for key, val in p.items()]
+  p_sorted = [(key, p[key]) for key in p_keys]
+  with open(fparam, 'w') as f:
+    pstring = '%26s: '
+    # do the params in p_sorted
+    for param in p_sorted:
+      key, val = param
+      f.write(pstring % key)
+      if key.startswith('N_'):
+        f.write('%i\n' % val)
+      else:
+        f.write(str(val)+'\n')
+
+
 def write_gids_param(fparam, gid_list):
   with open(fparam, 'w') as f:
     pstring = '%26s: '
-    # write the gid info first
+    # write the gid info
     for key in gid_list.keys():
       f.write(pstring % key)
       if len(gid_list[key]):
