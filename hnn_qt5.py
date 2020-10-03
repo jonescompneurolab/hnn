@@ -24,7 +24,7 @@ import numpy as np
 from math import ceil, isclose
 import spikefn
 from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs
-from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file
+from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file, write_legacy_paramf
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
 import nlopt
@@ -526,7 +526,7 @@ def bringwintotop (win):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,d,ntrial,ncore,waitsimwin,paramf,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
+  def __init__ (self,c,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None,onNSG=False):
     QThread.__init__(self)
     self.c = c
     self.d = d
@@ -534,11 +534,13 @@ class RunSimThread (QThread):
     self.ntrial = ntrial
     self.ncore = ncore
     self.waitsimwin = waitsimwin
-    self.paramf = paramf
+    self.params = params
     self.opt = opt
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
     self.onNSG = onNSG
+    self.paramfn = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+
 
     # it would be ideal to display a dialog box, but we have to get that event back to the main window
     # the next best thing is to print to the console and not crash the application
@@ -556,8 +558,6 @@ class RunSimThread (QThread):
       self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
     self.lock = Lock()
-
-    self.params = read_params(self.paramf)
 
   def updatewaitsimwin (self, txt):
     # print('RunSimThread updatewaitsimwin, txt=',txt)
@@ -677,13 +677,14 @@ class RunSimThread (QThread):
     updatedat(self.params)
 
     if not is_opt:
-      simdat.updatelsimdat(self.paramf, simdat.ddat['dpl']) # update lsimdat and its current sim index
-
+      # update lsimdat and its current sim index
+      simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
 
   def optmodel (self):
     import simdat
 
     global basedir
+
     need_initial_ddat = False
 
     # initialize RNG with seed from config
@@ -702,7 +703,7 @@ class RunSimThread (QThread):
 
     # save initial parameters file
     param_out = os.path.join(basedir,'before_opt.param')
-    shutil.copyfile(self.paramf, param_out)
+    write_legacy_paramf(param_out, self.params)
 
     self.updatewaitsimwin('Optimizing model. . .')
 
@@ -742,7 +743,8 @@ class RunSimThread (QThread):
       if need_initial_ddat:
         simdat.initial_ddat = deepcopy(simdat.ddat)
 
-      simdat.updateoptdat(self.paramf,simdat.ddat['dpl']) # update optdat with best from this step
+      # update optdat with best from this step
+      simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
 
       # put best opt results into GUI and save to param file
       push_values = OrderedDict()
@@ -757,8 +759,12 @@ class RunSimThread (QThread):
 
     # one final sim with the best parameters to update display
     self.runsim(is_opt=True, banner=False)
-    simdat.updatelsimdat(self.paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
-    simdat.updateoptdat(self.paramf,simdat.ddat['dpl']) # update optdat with the final best
+
+    # update lsimdat and its current sim index
+    simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
+
+    # update optdat with the final best
+    simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
 
     # re-enable all the range sliders
     self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
@@ -837,20 +843,17 @@ class RunSimThread (QThread):
       with open(fnoptinf,'a') as fpopt:
         fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
 
-      # save copy param file
-      param_fname = os.path.basename(self.paramf)
-      curr_paramf = os.path.join(basedir, param_fname)
-
       # save params numbered by optsim
       param_out = os.path.join(basedir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
-      shutil.copyfile(curr_paramf, param_out)
+      write_legacy_paramf(param_out, self.params)
 
       if err < self.stepminopterr:
         self.updatewaitsimwin("new best with RMSE %f"%err)
 
         self.stepminopterr = err
         # save best param file
-        shutil.copyfile(curr_paramf, os.path.join(basedir,'step_%d_best.param'%self.cur_step)) # convenience, save best here
+        param_out = os.path.join(basedir,'step_%d_best.param'%self.cur_step)
+        write_legacy_paramf(param_out, self.params)
         if 'dpl' in simdat.ddat:
           self.best_ddat['dpl'] = simdat.ddat['dpl']
         if 'errtot' in simdat.ddat:
@@ -3423,7 +3426,9 @@ class HNNGUI (QMainWindow):
     # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
     import simdat
     if 'dpl' in simdat.ddat:
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      # update lsimdat and its current sim index
+      simdat.updatelsimdat(paramf, self.params, simdat.ddat['dpl'])
+
     self.populateSimCB() # populate the combobox
 
     if len(self.dextdata) > 0:
@@ -3620,57 +3625,57 @@ class HNNGUI (QMainWindow):
     self.initSimCanvas() # recreate canvas
     self.setWindowTitle(fn)
 
-  def removeSim (self):
-    # remove the currently selected simulation
-    global paramf,basedir
+  def updateSelectedSim(self, sim_idx):
+    """Update the sim shown in the ComboBox and update globals"""
     import simdat
-    if debug: print('removeSim',paramf,simdat.lsimidx)
-    if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
-      cidx = self.cbsim.currentIndex() # 
-      a = simdat.lsimdat[:cidx]
-      b = simdat.lsimdat[cidx+1:]
-      c = [x for x in a]
-      for x in b: c.append(x)
-      simdat.lsimdat = c
-      self.cbsim.removeItem(cidx)
-      simdat.lsimidx = max(0,len(simdat.lsimdat) - 1)
-      if len(simdat.lsimdat) > 0:
-        paramf = simdat.lsimdat[simdat.lsimidx][0]
-        param_fname = os.path.splitext(os.path.basename(paramf))
-        basedir = os.path.join(dconf['datdir'], param_fname[0])
-        if debug: print('new paramf:',paramf,simdat.lsimidx)
-        self.updateDatCanv(paramf)
-        self.cbsim.setCurrentIndex(simdat.lsimidx)
-      else:
-        self.clearSimulations()
 
-  def prevSim (self):
-    # go to previous simulation 
-    global paramf,basedir
+    global paramf, basedir
+
+    # update globals
+    simdat.lsimidx = sim_idx
+    paramf = simdat.lsimdat[sim_idx]['paramfn']
+    split_fname = os.path.splitext(os.path.basename(paramf))
+    basedir = os.path.join(dconf['datdir'], split_fname[0])
+
+    # update GUI
+    self.updateDatCanv(paramf)
+    self.cbsim.setCurrentIndex(simdat.lsimidx)
+
+  def removeSim(self):
+    """Remove the currently selected simulation"""
     import simdat
-    if debug: print('prevSim',paramf,simdat.lsimidx)
-    if len(simdat.lsimdat) > 0 and simdat.lsimidx > 0:
-      simdat.lsimidx -= 1
-      paramf = simdat.lsimdat[simdat.lsimidx][0]
-      param_fname = os.path.splitext(os.path.basename(paramf))
-      basedir = os.path.join(dconf['datdir'], param_fname[0])
-      if debug: print('new paramf:',paramf,simdat.lsimidx)
-      self.updateDatCanv(paramf)
-      self.cbsim.setCurrentIndex(simdat.lsimidx)
+
+    cidx = self.cbsim.currentIndex()
+    self.cbsim.removeItem(cidx)
+    del simdat.lsimdat[cidx]
+
+    # go to last entry
+    new_simidx = self.cbsim.count() - 1
+    if new_simidx < 0:
+      simdat.lsimidx = 0
+      self.clearSimulations()
+    else:
+      self.updateSelectedSim(new_simidx)
+
+  def prevSim(self):
+    """Go to previous simulation"""
+
+    new_simidx = self.cbsim.currentIndex() - 1
+    if new_simidx < 0:
+      print("There is no previous simulation")
+      return
+    else:
+      self.updateSelectedSim(new_simidx)
 
   def nextSim (self):
     # go to next simulation
-    global paramf,basedir
-    import simdat
-    if debug: print('nextSim',paramf,simdat.lsimidx)
-    if len(simdat.lsimdat) > 0 and simdat.lsimidx + 1 < len(simdat.lsimdat):
-      simdat.lsimidx += 1
-      paramf = simdat.lsimdat[simdat.lsimidx][0]
-      param_fname = os.path.splitext(os.path.basename(paramf))
-      basedir = os.path.join(dconf['datdir'], param_fname[0])
-      if debug: print('new paramf:',paramf,simdat.lsimidx)
-      self.updateDatCanv(paramf)
-      self.cbsim.setCurrentIndex(simdat.lsimidx)
+
+    if self.cbsim.currentIndex() + 2 > self.cbsim.count():
+      print("There is no next simulation")
+      return
+    else:
+      new_simidx = self.cbsim.currentIndex() + 1
+      self.updateSelectedSim(new_simidx)
 
   def clearSimulationData (self):
     # clear the simulation data
@@ -4009,7 +4014,8 @@ class HNNGUI (QMainWindow):
     # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
     import simdat
     if 'dpl' in simdat.ddat:
-      simdat.updatelsimdat(paramf,simdat.ddat['dpl']) # update lsimdat and its current sim index
+      # update lsimdat and its current sim index
+      simdat.updatelsimdat(paramf, self.params, simdat.ddat['dpl'])
 
     self.cbsim = QComboBox(self)
     self.populateSimCB() # populate the combobox
@@ -4065,8 +4071,9 @@ class HNNGUI (QMainWindow):
     global paramf
     self.cbsim.clear()
     import simdat
-    for l in simdat.lsimdat:
-      self.cbsim.addItem(l[0])
+    for sim in simdat.lsimdat:
+      sim_paramfn = sim['paramfn']
+      self.cbsim.addItem(sim_paramfn)
     self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
@@ -4168,7 +4175,7 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Optimizing model. . .")
 
-    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, paramf, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
+    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, self.params, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -4179,8 +4186,12 @@ class HNNGUI (QMainWindow):
     bringwintotop(self.waitsimwin)
 
   def startsim (self, ntrial, ncore, onNSG=False):
+    global paramf
+
     # start the simulation
     if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
+
+    self.params = read_params(paramf)
 
     self.setcursors(Qt.WaitCursor)
 
@@ -4192,7 +4203,7 @@ class HNNGUI (QMainWindow):
     else:
       self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,paramf,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
+    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,self.params,opt=False,baseparamwin=None,mainwin=None,onNSG=onNSG)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
