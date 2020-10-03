@@ -5,10 +5,21 @@
 # last major: (SL: cleanup of self.p_all)
 
 import re
+import os
 import numpy as np
 import itertools as it
 
 from hnn_core import read_params
+
+def get_output_dir():
+    """Return the base directory for storing output files"""
+
+    try:
+        base_dir = os.environ["SYSTEM_USER_DIR"]
+    except KeyError:
+        base_dir = os.path.expanduser('~')
+
+    return os.path.join(base_dir, 'hnn_out')
 
 # Cleans input files
 def clean_lines (file):
@@ -16,30 +27,6 @@ def clean_lines (file):
     lines = (line.rstrip() for line in f_in)
     lines = [line for line in lines if line]
   return lines
-
-def validate_param_file (fn):
-    try:
-        fp = open(fn, 'r')
-    except OSError:
-        print("ERROR: could not open/read file")
-        raise ValueError
-
-    d = {}
-    with fp:
-        try:
-            ln = fp.readlines()
-        except UnicodeDecodeError:
-            print("ERROR: bad file format")
-            raise ValueError
-        for l in ln:
-            s = l.strip()
-            if s.startswith('#'): continue
-            sp = s.split(':')
-            if len(sp) > 1:
-                d[sp[0].strip()]=str(sp[1]).strip()
-    if not 'tstop' in d:
-        print("ERROR: parameter file not valid. Could not find 'tstop'")
-        raise ValueError
 
 # check if using ongoing inputs
 def usingOngoingInputs (params, lty = ['_prox', '_dist']):

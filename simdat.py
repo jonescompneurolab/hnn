@@ -7,19 +7,18 @@ import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 import numpy as np
 from math import ceil
-from conf import dconf
-import conf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, countEvokedInputs
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs
+from paramrw import usingTonicInputs, countEvokedInputs, get_output_dir
 from scipy import signal
 from gutils import getscreengeom
 import traceback
 
 from hnn_core import read_spikes
 
-# dconf has settings from hnn.cfg
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
+drawindivdpl = 1
+drawavgdpl = 1
+fontsize = plt.rcParams['font.size'] = 10
 
 ddat = {} # current simulation data
 dfile = {} # data file information for current simulation
@@ -56,13 +55,13 @@ def rmse (a1, a2):
   sz = min(len1,len2)
   return np.sqrt(((a1[0:sz] - a2[0:sz]) ** 2).mean())
 
-def readdpltrials(basedir):
+def readdpltrials(sim_dir):
   # read dipole data files for individual trials
   ldpl = []
 
   i = 0
   while True:
-    fn = os.path.join(basedir,'dpl_'+str(i)+'.txt')
+    fn = os.path.join(sim_dir, 'dpl_' + str(i) + '.txt')
     if not os.path.exists(fn):
       break
 
@@ -75,14 +74,14 @@ def readdpltrials(basedir):
 
 def getinputfiles (sim_prefix):
   # get a dictionary of input files based on simulation parameter file paramf
-  global dfile,basedir
+  global dfile
   dfile = {}
-  basedir = os.path.join(dconf['datdir'], sim_prefix)
-  # print('basedir:',basedir)
-  dfile['dpl'] = os.path.join(basedir,'dpl.txt')
-  dfile['spec'] = os.path.join(basedir,'rawspec.npz')
-  dfile['spk'] = os.path.join(basedir,'spk.txt')
-  dfile['outparam'] = os.path.join(basedir,'param.txt')
+  data_dir = os.path.join(get_output_dir(), 'data')
+  sim_dir = os.path.join(data_dir, sim_prefix)
+  dfile['dpl'] = os.path.join(sim_dir,'dpl.txt')
+  dfile['spec'] = os.path.join(sim_dir,'rawspec.npz')
+  dfile['spk'] = os.path.join(sim_dir,'spk.txt')
+  dfile['outparam'] = os.path.join(sim_dir,'param.txt')
   return dfile
 
 def readtxt (fn):
@@ -100,14 +99,15 @@ def readtxt (fn):
 def updatedat (params):
   # update data dictionary (ddat) from the param file
 
-  global basedir
+  data_dir = os.path.join(get_output_dir(), 'data')
+  sim_dir = os.path.join(data_dir, params['sim_prefix'])
   getinputfiles(params['sim_prefix'])
 
   for k in ['dpl','spk']:
     if k in ddat:
       del ddat[k]
   
-  if os.path.exists(basedir):
+  if os.path.exists(sim_dir):
     ddat['dpl'] = readtxt(dfile['dpl'])
     if len(ddat['dpl']) == 0:
       del ddat['dpl']
@@ -122,22 +122,12 @@ def updatedat (params):
       # incorrect dimensions (bad spike file)
       ddat['spk'] = None
 
-  ddat['dpltrials'] = readdpltrials(basedir)
+  ddat['dpltrials'] = readdpltrials(sim_dir)
 
   if os.path.isfile(dfile['spec']):
     ddat['spec'] = np.load(dfile['spec'])
   else:
     ddat['spec'] = None
-
-def drawraster ():
-  # draw raster to standalone matplotlib figure - for debugging (not used in main HNN GUI)
-  if 'spk' in ddat:
-    # print('spk shape:',ddat['spk'].shape)
-    plt.ion()
-    plt.figure()
-    for pair in ddat['spk']:
-      plt.plot([pair[0]],[pair[1]],'ko',markersize=10)
-    plt.xlabel('Time (ms)',fontsize=dconf['fontsize']); plt.ylabel('ID',fontsize=dconf['fontsize'])
 
 def calcerr (ddat, tstop, tstart=0.0):
   # calculates RMSE error from ddat dictionary
@@ -249,7 +239,7 @@ class SIMCanvas (FigureCanvas):
   # matplotlib/pyqt-compatible canvas for drawing simulation & external data
   # based on https://pythonspot.com/en/pyqt5-matplotlib/
 
-  def __init__ (self, paramf, params, parent=None, width=5, height=4, dpi=40, optMode=False, title='Simulation Viewer'):
+  def __init__ (self, params, parent=None, width=5, height=4, dpi=40, optMode=False, title='Simulation Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
 
     self.title = title
@@ -260,7 +250,6 @@ class SIMCanvas (FigureCanvas):
     self.gui = parent
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
-    self.paramf = paramf
     self.params = params
     self.initaxes()
     self.G = gridspec.GridSpec(10,1)
@@ -475,6 +464,8 @@ class SIMCanvas (FigureCanvas):
     return self.clridx
 
   def plotextdat (self, recalcErr=True):
+    global fontsize
+
     if not 'dextdata' in ddat or len(ddat['dextdata']) == 0:
       return
 
@@ -548,10 +539,11 @@ class SIMCanvas (FigureCanvas):
         self.annot_avg = self.axdipole.annotate(txt,xy=(0,0),xytext=(0.005,0.005),textcoords='axes fraction',color=clr,fontweight='bold')
 
     if not hassimdata: # need axis labels
-      self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
-      self.axdipole.set_ylabel('Dipole (nAm)',fontsize=dconf['fontsize'])
+      self.axdipole.set_xlabel('Time (ms)', fontsize=fontsize)
+      self.axdipole.set_ylabel('Dipole (nAm)', fontsize=fontsize)
       myxl = self.axdipole.get_xlim()
-      if myxl[0] < 0.0: self.axdipole.set_xlim((0.0,myxl[1]+myxl[0]))
+      if myxl[0] < 0.0:
+        self.axdipole.set_xlim((0.0, myxl[1] + myxl[0]))
 
   def hassimdata (self):
     # check if any simulation data available in ddat dictionary
@@ -579,7 +571,9 @@ class SIMCanvas (FigureCanvas):
       del self.annot_avg
 
   def plotsimdat (self):
-    # plot the simulation data
+    """plot the simulation data"""
+
+    global drawindivdpl, drawavgdpl, fontsize
 
     self.gRow = 0
     bottom = 0.0
@@ -652,13 +646,13 @@ class SIMCanvas (FigureCanvas):
         olddpl = lsim['dpl']
         self.axdipole.plot(olddpl[:,0],olddpl[:,1],'--',color='black',linewidth=self.gui.linewidth)
 
-      if self.params['N_trials']>1 and dconf['drawindivdpl'] and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
+      if self.params['N_trials']>1 and drawindivdpl and len(ddat['dpltrials']) > 0: # plot dipoles from individual trials
         for dpltrial in ddat['dpltrials']:
           self.axdipole.plot(dpltrial[:,0],dpltrial[:,1],color='gray',linewidth=self.gui.linewidth)
           yl[0] = min(yl[0],dpltrial[sidx:eidx,1].min())
           yl[1] = max(yl[1],dpltrial[sidx:eidx,1].max())
 
-      if conf.dconf['drawavgdpl'] or self.params['N_trials'] <= 1:
+      if drawavgdpl or self.params['N_trials'] <= 1:
         # this is the average dipole (across trials)
         # it's also the ONLY dipole when running a single trial
         self.axdipole.plot(ddat['dpl'][:,0],ddat['dpl'][:,1],'k',linewidth=self.gui.linewidth+1)
@@ -691,23 +685,34 @@ class SIMCanvas (FigureCanvas):
     NEstPyr = int(num_pyr * scalefctr)
 
     if NEstPyr > 0:
-      self.axdipole.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\nFrom Estimated '+str(NEstPyr)+' Cells',fontsize=dconf['fontsize'])
+      self.axdipole.set_ylabel(r'Dipole (nAm $\times$ ' + \
+                                 str(scalefctr) + \
+                                 ')\nFrom Estimated ' + \
+                                 str(NEstPyr) + ' Cells',
+                               fontsize=fontsize)
     else:
-      self.axdipole.set_ylabel(r'Dipole (nAm $\times$ '+str(scalefctr)+')\n',fontsize=dconf['fontsize'])
+      self.axdipole.set_ylabel(r'Dipole (nAm $\times$ ' + \
+                                 str(scalefctr) + \
+                                 ')\n', fontsize=fontsize)
     self.axdipole.set_xlim(xl); self.axdipole.set_ylim(yl)
 
     if DrawSpec:
       gRow = 6
-      self.axspec = self.figure.add_subplot(self.G[gRow:10,0])  # specgram
-      cax = self.axspec.imshow(ds['TFR'],extent=(ds['time'][0],ds['time'][-1],ds['freq'][-1],ds['freq'][0]),aspect='auto',origin='upper',cmap=plt.get_cmap(self.params['spec_cmap']))
-      self.axspec.set_ylabel('Frequency (Hz)',fontsize=dconf['fontsize'])
-      self.axspec.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
+      self.axspec = self.figure.add_subplot(self.G[gRow:10,0])
+      cax = self.axspec.imshow(ds['TFR'], extent=(ds['time'][0],
+                                                  ds['time'][-1],
+                                                  ds['freq'][-1],
+                                                  ds['freq'][0]),
+                               aspect='auto', origin='upper',
+                               cmap=plt.get_cmap(self.params['spec_cmap']))
+      self.axspec.set_ylabel('Frequency (Hz)', fontsize=fontsize)
+      self.axspec.set_xlabel('Time (ms)', fontsize=fontsize)
       self.axspec.set_xlim(xl)
-      self.axspec.set_ylim(ds['freq'][-1],ds['freq'][0])
+      self.axspec.set_ylim(ds['freq'][-1], ds['freq'][0])
       cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
       plt.colorbar(cax, cax = cbaxes, orientation='horizontal') # horizontal to save space
     else:
-      self.axdipole.set_xlabel('Time (ms)',fontsize=dconf['fontsize'])
+      self.axdipole.set_xlabel('Time (ms)', fontsize=fontsize)
 
   def plotarrows (self):
     # run after scales have been updated

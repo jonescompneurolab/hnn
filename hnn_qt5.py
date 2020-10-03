@@ -33,12 +33,17 @@ from hnn_core import read_params
 # HNN modules
 import spikefn
 from paramrw import usingOngoingInputs, countEvokedInputs, usingEvokedInputs
-from paramrw import chunk_evinputs, get_inputs, trans_input, validate_param_file, write_legacy_paramf
+from paramrw import chunk_evinputs, get_inputs, trans_input
+from paramrw import write_legacy_paramf, get_output_dir
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
-from conf import dconf
-import conf
-from run import RunSimThread
+from run import RunSimThread, ParamSignal
+
+# TODO: These globals should be made configurable via the GUI
+decay_multiplier = 1.6
+drawindivrast = 0
+drawavgdpl = 0
+fontsize = plt.rcParams['font.size'] = 10
 
 def isWindows ():
   # are we on windows? or linux/mac ?
@@ -54,40 +59,6 @@ def getPyComm ():
     return 'python'
   return 'python3'
 
-def parseargs ():
-  for i in range(len(sys.argv)):
-    if sys.argv[i] == '-dataf' and i + 1 < len(sys.argv):
-      print('-dataf is ', sys.argv[i+1])
-      conf.dconf['dataf'] = dconf['dataf'] = sys.argv[i+1]
-      i += 1
-    elif sys.argv[i] == '-paramf' and i + 1 < len(sys.argv):
-      print('-paramf is ', sys.argv[i+1])
-      conf.dconf['paramf'] = dconf['paramf'] = sys.argv[i+1]
-      i += 1
-
-parseargs()
-
-simf = dconf['simf']
-paramf = dconf['paramf']
-param_fname = os.path.splitext(os.path.basename(paramf))
-basedir = os.path.join(dconf['datdir'], param_fname[0])
-
-def get_defncore():
-  """ get default number of cores """
-
-  try:
-    defncore = len(os.sched_getaffinity(0))
-  except AttributeError:
-    defncore = cpu_count(logical=False)
-
-  if defncore is None or defncore == 0:
-    # in case psutil is not supported (e.g. BSD)
-    defncore = multiprocessing.cpu_count()
-
-  return defncore
-
-defncore = get_defncore()
-
 def _add_missing_frames(tb):
   fake_tb = namedtuple(
       'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
@@ -99,10 +70,19 @@ def _add_missing_frames(tb):
       frame = frame.f_back
   return result
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
+def _get_defncore():
+  """get default number of cores """
 
-hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+  try:
+    defncore = len(os.sched_getaffinity(0))
+  except AttributeError:
+    defncore = cpu_count(logical=False)
+
+  if defncore is None or defncore == 0:
+    # in case psutil is not supported (e.g. BSD)
+    defncore = multiprocessing.cpu_count()
+
+  return defncore
 
 DEFAULT_CSS = """
 QRangeSlider * {
@@ -449,9 +429,6 @@ class MyLineEdit(QLineEdit):
             self.textModified.emit(self._label)
 
 # for signaling
-class Communicate (QObject):
-  commsig = pyqtSignal()
-
 class DoneSignal (QObject):
   finishSim = pyqtSignal(bool, str)
 
@@ -506,14 +483,15 @@ class DictDialog (QDialog):
     self.initUI()
     self.initExtra()
     self.setfromdin(din) # set values from input dictionary
-    self.addtips()
+    # self.addtips()
 
-  def addtips (self):
-    for ktip in dconf.keys():
-      if ktip in self.dqline:
-        self.dqline[ktip].setToolTip(dconf[ktip])
-      elif ktip in self.dqextra:
-        self.dqextra[ktip].setToolTip(dconf[ktip])
+  # TODO: add back tooltips
+  # def addtips (self):
+  #   for ktip in dconf.keys():
+  #     if ktip in self.dqline:
+  #       self.dqline[ktip].setToolTip(dconf[ktip])
+  #     elif ktip in self.dqextra:
+  #       self.dqextra[ktip].setToolTip(dconf[ktip])
 
   def __str__ (self):
     s = ''
@@ -906,10 +884,11 @@ class EvokedInputParamDialog (QDialog):
     self.initUI()
     self.setfromdin(din)
 
-  def addtips (self):
-    for ktip in dconf.keys():
-      if ktip in self.dqline:
-        self.dqline[ktip].setToolTip(dconf[ktip])
+  # TODO: add back tooltips
+  # def addtips (self):
+  #   for ktip in dconf.keys():
+  #     if ktip in self.dqline:
+  #       self.dqline[ktip].setToolTip(dconf[ktip])
 
   def transvar (self,k):
     if k in self.dtransvar: return self.dtransvar[k]
@@ -1057,7 +1036,7 @@ class EvokedInputParamDialog (QDialog):
 
     self.addRemoveInputButton()
     self.addHideButton()
-    self.addtips()
+    # self.addtips()
 
   def lines2val (self,ksearch,val):
     for k in self.dqline.keys():
@@ -1240,7 +1219,7 @@ class EvokedInputParamDialog (QDialog):
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
-    self.addtips()
+    # self.addtips()
 
   def addDist (self):
     self.ndist += 1
@@ -1261,7 +1240,7 @@ class EvokedInputParamDialog (QDialog):
     #print('index to', len(self.ltabs)-1)
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
-    self.addtips()
+    # self.addtips()
 
 class OptEvokedInputParamDialog (EvokedInputParamDialog):
 
@@ -1939,6 +1918,8 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
     return timing_sigma
 
   def createOptParams(self):
+    global decay_multiplier
+
     self.opt_params = {}
 
     # iterate through tabs. data is contained in grid layout
@@ -1962,7 +1943,7 @@ class OptEvokedInputParamDialog (EvokedInputParamDialog):
       self.opt_params[tab_name] = {'ranges': {},
                                   'mean' : value,
                                   'sigma': timing_sigma,
-                                  'decay_multiplier': dconf['decay_multiplier']}
+                                  'decay_multiplier': decay_multiplier}
 
       timing_bound = timing_sigma * range_multiplier
       self.opt_params[tab_name]['user_start'] = max(0, value - timing_bound)
@@ -2200,11 +2181,10 @@ class RunParamDialog (DictDialog):
     self.parent.updatesaveparams({})
 
   def initExtra (self):
-    global defncore, paramf
-
     DictDialog.initExtra(self)
     self.dqextra['NumCores'] = QLineEdit(self)
-    self.dqextra['NumCores'].setText(str(defncore))
+    self.defncore = _get_defncore()
+    self.dqextra['NumCores'].setText(str(self.defncore))
     self.addtransvar('NumCores','Number Cores')
     self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
@@ -2238,12 +2218,10 @@ class RunParamDialog (DictDialog):
     return ncore
 
   def setfromdin (self,din):
-    global defncore
-
     if not din: return
 
     # number of cores may have changed if the configured number failed
-    self.dqextra['NumCores'].setText(str(defncore))
+    self.dqextra['NumCores'].setText(str(self.defncore))
 
     # update ordered dict of QLineEdit objects with new parameters
     for k,v in din.items():
@@ -2630,11 +2608,9 @@ class SchematicDialog (QDialog):
 
 class BaseParamDialog (QDialog):
   # base widget for specifying params (contains buttons to create other widgets
-  def __init__ (self, parent, optrun_func):
+  def __init__ (self, parent, paramfn, optrun_func):
     super(BaseParamDialog, self).__init__(parent)
     self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
-    self.params = {'sim_prefix': ''}
-    self.initUI()
     self.runparamwin = RunParamDialog(self)
     self.cellparamwin = CellParamDialog(self)
     self.netparamwin = NetworkParamDialog(self)    
@@ -2648,31 +2624,37 @@ class BaseParamDialog (QDialog):
     self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin,
                     self.proxparamwin, self.distparamwin, self.evparamwin,
                     self.poisparamwin, self.tonicparamwin, self.optparamwin]
-    self.params = self.updateDispParam()
+    self.paramfn = paramfn
     self.parent = parent
 
-  def updateDispParam (self):
-    global paramf
+    self.params = read_params(self.paramfn)
+    self.initUI()  # requires self.params
+    self.updateDispParam(self.params)
 
-    # now update the GUI components to reflect the param file selected
-    try:
-      validate_param_file(paramf)
-    except ValueError:
-      QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % paramf)
-      return
+  def updateDispParam(self, params=None):
+    global drawavgdpl
 
-    params = read_params(paramf)
+    if params is None:
+      try:
+        params = read_params(self.paramfn)
+      except ValueError:
+        QMessageBox.information(self, "HNN", "WARNING: could not"
+                                "retrieve parameters from %s" %
+                                self.paramfn)
+        return
 
-    if usingEvokedInputs(params): # default for evoked is to show average dipole
-      conf.dconf['drawavgdpl'] = True
-    elif usingOngoingInputs(params): # default for ongoing is NOT to show average dipole
-      conf.dconf['drawavgdpl'] = False
+    self.params = params
 
-    for dlg in self.lsubwin: dlg.setfromdin(params) # update to values from file
-    self.qle.setText(params['sim_prefix']) # update simulation name
+    if usingEvokedInputs(self.params):
+       # default for evoked is to show average dipole
+      drawavgdpl = True
+    elif usingOngoingInputs(self.params):
+      # default for ongoing is NOT to show average dipole
+      drawavgdpl = False
 
-    # return the param dict for use by caller
-    return params
+    for dlg in self.lsubwin:
+      dlg.setfromdin(self.params) # update to values from file
+    self.qle.setText(self.params['sim_prefix']) # update simulation name
 
   def setrunparam (self): bringwintotop(self.runparamwin)
   def setcellparam (self): bringwintotop(self.cellparamwin)
@@ -2779,8 +2761,8 @@ class BaseParamDialog (QDialog):
     self.setWindowTitle('Set Parameters')    
 
   def saveparams (self, checkok = True):
-    global paramf,basedir
-    tmpf = os.path.join(dconf['paramoutdir'],self.qle.text() + '.param')
+    tmpf = os.path.join(get_output_dir(), 'param',
+                        self.qle.text() + '.param')
     oktosave = True
     if os.path.isfile(tmpf) and checkok:
       self.show()
@@ -2797,9 +2779,10 @@ class BaseParamDialog (QDialog):
       with open(tmpf,'w') as fp:
         fp.write(str(self))
 
-      paramf = dconf['paramf'] = tmpf # update paramf
-      basedir = os.path.join(dconf['datdir'], self.qle.text())
-      os.makedirs(basedir, exist_ok=True)
+      self.paramfn = tmpf
+      data_dir = os.path.join(get_output_dir(), 'data')
+      sim_dir = os.path.join(data_dir, self.params['sim_prefix'])
+      os.makedirs(sim_dir, exist_ok=True)
 
     return oktosave
 
@@ -2881,16 +2864,20 @@ class HNNGUI (QMainWindow):
     super().__init__()   
     sys.excepthook = self.excepthook
 
+    global fontsize
+
+    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+
     self.runningsim = False
     self.runthread = None
-    self.fontsize = dconf['fontsize']
+    self.fontsize = fontsize
     self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.dextdata = {} # external data
     self.schemwin = SchematicDialog(self)
     self.m = self.toolbar = None
-    self.baseparamwin = BaseParamDialog(self, self.startoptmodel)
-    self.params = None
+    paramfn = os.path.join(hnn_root_dir, 'param', 'default.param')
+    self.baseparamwin = BaseParamDialog(self, paramfn, self.startoptmodel)
     self.optMode = False
     self.initUI()
     self.visnetwin = VisnetDialog(self)
@@ -2898,7 +2885,7 @@ class HNNGUI (QMainWindow):
     self.erselectdistal = EvokedOrRhythmicDialog(self, True, self.baseparamwin.evparamwin, self.baseparamwin.distparamwin)
     self.erselectprox = EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin, self.baseparamwin.proxparamwin)
     self.waitsimwin = WaitSimDialog(self)
-    default_param = os.path.join(dconf['dbase'],'data','default')
+    default_param = os.path.join(get_output_dir(), 'data', 'default')
     first_load = not (os.path.exists(default_param))
 
     if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
@@ -2933,9 +2920,11 @@ class HNNGUI (QMainWindow):
 
   def changeFontSize (self):
     # bring up window to change font sizes
+    global fontsize
+
     i, ok = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if ok:
-      self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.fontsize = plt.rcParams['font.size'] = fontsize = i
       self.redraw()
 
   def changeLineWidth (self):
@@ -2954,36 +2943,43 @@ class HNNGUI (QMainWindow):
     
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
-    global paramf,basedir
+
+    import simdat
+
+    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+
     qfd = QFileDialog()
-    qfd.setHistory([os.path.join(dconf['dbase'],'param'), os.path.join(hnn_root_dir,'param')])
+    qfd.setHistory([os.path.join(get_output_dir(), 'param'),
+                    os.path.join(hnn_root_dir, 'param')])
     fn = qfd.getOpenFileName(self, 'Open param file',
-                                     os.path.join(hnn_root_dir,'param'),
-                                     "Param files (*.param)")
+                             os.path.join(hnn_root_dir,'param'),
+                             "Param files (*.param)")
     if len(fn) > 0 and fn[0] == '':
       # no file selected in dialog
       return
 
-    paramf = os.path.abspath(fn[0]) # to make sure have right path separators on Windows OS
-    param_fname = os.path.splitext(os.path.basename(paramf))
-    basedir = os.path.join(dconf['datdir'], param_fname[0])
+    tmpfn = os.path.abspath(fn[0])
 
     try:
-      validate_param_file(paramf)
+      params = read_params(tmpfn)
     except ValueError:
-      QMessageBox.information(self, "HNN", "WARNING: could not retrieve parameters from %s" % fn[0])
+      QMessageBox.information(self, "HNN", "WARNING: could not"
+                              "retrieve parameters from %s" %
+                              tmpfn)
       return
 
+    self.baseparamwin.paramfn = tmpfn
+
     # now update the GUI components to reflect the param file selected
-    self.params = self.baseparamwin.updateDispParam()
+    self.baseparamwin.updateDispParam(params)
     self.initSimCanvas() # recreate canvas
     # self.m.plot() # replot data
-    self.setWindowTitle(paramf)
+    self.setWindowTitle(self.baseparamwin.paramfn)
+
     # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
-    import simdat
     if 'dpl' in simdat.ddat:
       # update lsimdat and its current sim index
-      simdat.updatelsimdat(paramf, self.params, simdat.ddat['dpl'])
+      simdat.updatelsimdat(self.baseparamwin.paramfn, self.baseparamwin.params, simdat.ddat['dpl'])
 
     self.populateSimCB() # populate the combobox
 
@@ -2992,9 +2988,8 @@ class HNNGUI (QMainWindow):
 
   def loadDataFile (self, fn):
     # load a dipole data file
-    global paramf
-
     import simdat
+
     try:
       self.dextdata[fn] = np.loadtxt(fn)
     except ValueError:
@@ -3014,14 +3009,17 @@ class HNNGUI (QMainWindow):
     self.m.plot()
     self.m.draw() # make sure new lines show up in plot
 
-    if paramf:
+    if self.baseparamwin.paramfn:
       self.toggleEnableOptimization(True)
     return True
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
+    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+
     qfd = QFileDialog()
-    qfd.setHistory([os.path.join(dconf['dbase'],'data'), os.path.join(hnn_root_dir,'data')])
+    qfd.setHistory([os.path.join(get_output_dir, 'data'),
+                   os.path.join(hnn_root_dir, 'data')])
     fn = qfd.getOpenFileName(self, 'Open data file',
                                     os.path.join(hnn_root_dir,'data'),
                                     "Data files (*.txt)")
@@ -3034,6 +3032,7 @@ class HNNGUI (QMainWindow):
   def clearDataFile (self):
     # clear external dipole data
     import simdat
+
     self.m.clearlextdatobj()
     self.dextdata = simdat.ddat['dextdata'] = {}
     self.toggleEnableOptimization(False)
@@ -3084,44 +3083,59 @@ class HNNGUI (QMainWindow):
       msg.setStandardButtons(QMessageBox.Ok)      
       msg.exec_()
     else:
-      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
+      outparamf = os.path.join(outdir,
+                               self.baseparamwin.params['sim_prefix'] +
+                               '.param')
       lcmd = [getPyComm(), 'visvolt.py',outparamf]
       Popen(lcmd) # nonblocking
 
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
-    outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+    outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
+    outparamf = os.path.join(outdir,
+                             self.baseparamwin.params['sim_prefix'] +
+                             '.param')
     lcmd = [getPyComm(), 'vispsd.py',outparamf]
     Popen(lcmd) # nonblocking
 
   def showSpecPlot (self):
     # start the spectrogram visualization process (separate window)
-    outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+    outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
+    outparamf = os.path.join(outdir,
+                             self.baseparamwin.params['sim_prefix'] +
+                             '.param')
     lcmd = [getPyComm(), 'visspec.py',outparamf]
     Popen(lcmd) # nonblocking
 
   def showRasterPlot (self):
     # start the raster plot visualization process (separate window)
-    global basedir
+    global drawindivrast
 
-    spikefile = os.path.join(basedir,'spk.txt')
+    outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
+    spikefile = os.path.join(outdir,'spk.txt')
     if os.path.isfile(spikefile):
-      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      outparamf = os.path.join(outdir,
+                               self.baseparamwin.params['sim_prefix'] +
+                               '.param')
       lcmd = [getPyComm(), 'visrast.py',outparamf,spikefile]
     else:
       QMessageBox.information(self, "HNN", "WARNING: no spiking data at %s" % spikefile)
       return
 
-    if dconf['drawindivrast']: lcmd.append('indiv')
+    if drawindivrast:
+      lcmd.append('indiv')
     Popen(lcmd) # nonblocking
 
   def showDipolePlot (self):
     # start the dipole visualization process (separate window)
-    global basedir
 
-    dipole_file = os.path.join(basedir,'dpl.txt')
+    outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
+    dipole_file = os.path.join(outdir,'dpl.txt')
     if os.path.isfile(dipole_file):
-      outparamf = os.path.join(dconf['paramoutdir'], self.params['sim_prefix'] + '.param')
+      outparamf = os.path.join(outdir,
+                               self.baseparamwin.params['sim_prefix'] +
+                               '.param')
       lcmd = [getPyComm(), 'visdipole.py',outparamf,dipole_file]
     else:
       QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
@@ -3135,7 +3149,9 @@ class HNNGUI (QMainWindow):
 
   def togAvgDpl (self):
     # toggle drawing of the average (across trials) dipole
-    conf.dconf['drawavgdpl'] = not conf.dconf['drawavgdpl']
+    global drawavgdpl
+
+    drawavgdpl = not drawavgdpl
     self.m.plot()
     self.m.draw()
 
@@ -3165,31 +3181,38 @@ class HNNGUI (QMainWindow):
         maxh = win.height()
       if cury >= sh: cury = cury = 0
 
-  def updateDatCanv (self,fn):
+  def updateDatCanv(self, params):
     # update the simulation data and canvas
     try:
-      getinputfiles(fn) # reset input data - if already exists
+      getinputfiles(self.baseparamwin.paramfn) # reset input data - if already exists
     except:
       pass
+
     # now update the GUI components to reflect the param file selected
-    self.params = self.baseparamwin.updateDispParam()
+    self.baseparamwin.updateDispParam(params)
     self.initSimCanvas() # recreate canvas
-    self.setWindowTitle(fn)
+    self.setWindowTitle(self.baseparamwin.paramfn)
 
   def updateSelectedSim(self, sim_idx):
     """Update the sim shown in the ComboBox and update globals"""
     import simdat
 
-    global paramf, basedir
-
     # update globals
     simdat.lsimidx = sim_idx
-    paramf = simdat.lsimdat[sim_idx]['paramfn']
-    split_fname = os.path.splitext(os.path.basename(paramf))
-    basedir = os.path.join(dconf['datdir'], split_fname[0])
+    paramfn = simdat.lsimdat[sim_idx]['paramfn']
+
+    try:
+      params = read_params(paramfn)
+    except ValueError:
+      QMessageBox.information(self, "HNN", "WARNING: could not"
+                              "retrieve parameters from %s" %
+                              paramfn)
+      return
+
+    self.baseparamwin.paramfn = paramfn
 
     # update GUI
-    self.updateDatCanv(paramf)
+    self.updateDatCanv(params)
     self.cbsim.setCurrentIndex(simdat.lsimidx)
 
   def removeSim(self):
@@ -3232,11 +3255,8 @@ class HNNGUI (QMainWindow):
     # clear the simulation data
     import simdat
 
-    global paramf, basedir
-    paramf = '' # set paramf to empty so no data gets loaded
-    basedir = None
-
-    self.params = None
+    self.baseparamwin.params = None
+    self.baseparamwin.paramfn = None
     simdat.ddat = {} # clear data in simdat.ddat
     simdat.lsimdat = []
     simdat.lsimidx = 0
@@ -3521,9 +3541,6 @@ class HNNGUI (QMainWindow):
   def initUI (self):
     # initialize the user interface (UI)
 
-    # default paramf
-    global paramf
-
     self.initMenu()
     self.statusBar()
 
@@ -3535,7 +3552,7 @@ class HNNGUI (QMainWindow):
     self.baseparamwin.move(new_x, new_y)
     self.baseparamwin.evparamwin.move(new_x+50, new_y+50)
     self.baseparamwin.optparamwin.move(new_x+100, new_y+100)
-    self.setWindowTitle(paramf)
+    self.setWindowTitle(self.baseparamwin.paramfn)
     QToolTip.setFont(QFont('SansSerif', 10))        
 
     self.grid = grid = QGridLayout()
@@ -3554,7 +3571,9 @@ class HNNGUI (QMainWindow):
     import simdat
     if 'dpl' in simdat.ddat:
       # update lsimdat and its current sim index
-      simdat.updatelsimdat(paramf, self.params, simdat.ddat['dpl'])
+      simdat.updatelsimdat(self.baseparamwin.paramfn,
+                           self.baseparamwin.params,
+                           simdat.ddat['dpl'])
 
     self.cbsim = QComboBox(self)
     self.populateSimCB() # populate the combobox
@@ -3574,8 +3593,8 @@ class HNNGUI (QMainWindow):
     widget.setLayout(grid)
     self.setCentralWidget(widget)
 
-    self.c = Communicate()
-    self.c.commsig.connect(self.baseparamwin.updateDispParam)
+    self.p = ParamSignal()
+    self.p.psig.connect(self.baseparamwin.updateDispParam)
 
     self.d = DoneSignal()
     self.d.finishSim.connect(self.done)
@@ -3585,26 +3604,27 @@ class HNNGUI (QMainWindow):
 
     self.schemwin.show() # so it's underneath main window
 
-    if 'dataf' in dconf:
-      if os.path.isfile(dconf['dataf']):
-        self.loadDataFile(dconf['dataf'])
-
     self.show()
 
-  def onActivateSimCB (self, s):
+  def onActivateSimCB (self, paramfn):
     # load simulation when activating simulation combobox
-    global paramf,basedir
     import simdat
+
     if self.cbsim.currentIndex() != simdat.lsimidx:
-      paramf = s
-      param_fname = os.path.splitext(os.path.basename(paramf))
-      basedir = os.path.join(dconf['datdir'], param_fname[0])
+      try:
+        params = read_params(paramfn)
+      except ValueError:
+        QMessageBox.information(self, "HNN", "WARNING: could not"
+                                "retrieve parameters from %s" %
+                                paramfn)
+        return
+      self.baseparamwin.paramfn = paramfn
+
       simdat.lsimidx = self.cbsim.currentIndex()
-      self.updateDatCanv(paramf)
+      self.updateDatCanv(params)
 
   def populateSimCB (self):
     # populate the simulation combobox
-    global paramf
     self.cbsim.clear()
     import simdat
     for sim in simdat.lsimdat:
@@ -3614,18 +3634,23 @@ class HNNGUI (QMainWindow):
 
   def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
     # initialize the simulation canvas, loading any required data
-    global paramf
     gCol = 0
 
     if reInit == True:
       self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
       self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
 
-    # if just initialized or after clearSimulationData, self.params will be empty
-    if paramf and self.params is None:
-      self.params = read_params(paramf)
+    # if just initialized or after clearSimulationData
+    if self.baseparamwin.paramfn and self.baseparamwin.params is None:
+      try:
+        self.baseparamwin.params = read_params(self.baseparamwin.paramfn)
+      except ValueError:
+        QMessageBox.information(self, "HNN", "WARNING: could not"
+                                "retrieve parameters from %s" %
+                                self.baseparamwin.paramfn)
+        return
 
-    self.m = SIMCanvas(paramf, self.params, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode) # also loads data
+    self.m = SIMCanvas(self.baseparamwin.params, parent = self, width=10, height=1, dpi=getmplDPI(), optMode=optMode)
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
@@ -3684,8 +3709,6 @@ class HNNGUI (QMainWindow):
       self.setcursors(Qt.ArrowCursor)
 
   def optmodel (self, ntrial, ncore):
-    global paramf
-
     # make sure params saved and ok to run
     if not self.baseparamwin.saveparams():
       return
@@ -3703,7 +3726,7 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Optimizing model. . .")
 
-    self.runthread = RunSimThread(self.c, self.d, ntrial, ncore, self.waitsimwin, self.params, opt=True, baseparamwin=self.baseparamwin, mainwin=self)
+    self.runthread = RunSimThread(self.p, self.d, ntrial, ncore, self.waitsimwin, self.baseparamwin.params, opt=True, baseparamwin=self.baseparamwin, mainwin=self)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3714,12 +3737,18 @@ class HNNGUI (QMainWindow):
     bringwintotop(self.waitsimwin)
 
   def startsim (self, ntrial, ncore):
-    global paramf
-
     # start the simulation
-    if not self.baseparamwin.saveparams(): return # make sure params saved and ok to run
+    if not self.baseparamwin.saveparams(self.baseparamwin.paramfn):
+      return # make sure params saved and ok to run
 
-    self.params = read_params(paramf)
+    # reread the params to get anything new
+    try:
+      params = read_params(self.baseparamwin.paramfn)
+    except ValueError:
+      QMessageBox.information(self, "HNN", "WARNING: could not"
+                              "retrieve parameters from %s" %
+                              self.baseparamwin.paramfn)
+      return
 
     self.setcursors(Qt.WaitCursor)
 
@@ -3728,7 +3757,9 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Running simulation. . .")
 
-    self.runthread=RunSimThread(self.c,self.d,ntrial,ncore,self.waitsimwin,self.params,opt=False,baseparamwin=None,mainwin=None)
+    self.runthread = RunSimThread(self.p, self.d, ntrial, ncore,
+                                  self.waitsimwin, params, opt=False,
+                                  baseparamwin=None, mainwin=None)
 
     # We have all the events we need connected we can start the thread
     self.runthread.start()
@@ -3751,7 +3782,6 @@ class HNNGUI (QMainWindow):
     self.qbtn.setEnabled(True)
     self.initSimCanvas(optMode=optMode) # recreate canvas (plots too) to avoid incorrect axes
     # self.m.plot()
-    global basedir
     self.setcursors(Qt.ArrowCursor)
 
     failed=False
@@ -3770,10 +3800,12 @@ class HNNGUI (QMainWindow):
       msg += "running sim "
 
     if failed:
-      QMessageBox.information(self, "Failed!", msg + "using " + paramf + '. Check simulation log or console for error messages')
+      QMessageBox.information(self, "Failed!", msg + "using " + self.baseparamwin.paramfn + '. Check simulation log or console for error messages')
     else:
-      QMessageBox.information(self, "Done!", msg + "using " + paramf + '. Saved data/figures in: ' + basedir)
-    self.setWindowTitle(paramf)
+      data_dir = os.path.join(get_output_dir(), 'data')
+      sim_dir = os.path.join(data_dir, self.baseparamwin.params['sim_prefix'])
+      QMessageBox.information(self, "Done!", msg + "using " + self.baseparamwin.paramfn + '. Saved data/figures in: ' + sim_dir)
+    self.setWindowTitle(self.baseparamwin.paramfn)
     self.populateSimCB() # populate the combobox
 
 if __name__ == '__main__':    

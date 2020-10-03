@@ -23,18 +23,7 @@ from psutil import wait_procs, process_iter, NoSuchProcess
 from paramrw import usingOngoingInputs, write_gids_param
 import specfn
 import simdat
-from paramrw import write_legacy_paramf
-
-
-def _get_output_dir():
-    """Return the base directory for storing output files"""
-
-    try:
-        base_dir = os.environ["SYSTEM_USER_DIR"]
-    except KeyError:
-        base_dir = os.path.expanduser('~')
-
-    return op.join(base_dir, 'hnn_out')
+from paramrw import write_legacy_paramf, get_output_dir
 
 
 def get_fname(sim_dir, key, trial=0, ntrial=1):
@@ -171,7 +160,7 @@ def simulate(params, n_procs=None):
         raise RuntimeError("No dipole(s) rerturned from simulation")
 
     # make sure the directory for saving data has been created
-    data_dir = op.join(_get_output_dir(), 'data')
+    data_dir = op.join(get_output_dir(), 'data')
     sim_dir = op.join(data_dir, params['sim_prefix'])
     try:
         os.mkdir(sim_dir)
@@ -218,7 +207,7 @@ def simulate(params, n_procs=None):
                                  get_fname(sim_dir, 'rawspec', trial_idx,
                                           params['N_trials']))
 
-        # NOTE: the savefigs functionality is quite complicated and rewriting
+        # TODO: the savefigs functionality is quite complicated and rewriting
         # from scratch in hnn-core is probably a better option that will allow
         # deprecating the large amount of legacy code
 
@@ -251,9 +240,9 @@ def simulate(params, n_procs=None):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
-  def __init__ (self,c,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None):
+  def __init__ (self,p,d,ntrial,ncore,waitsimwin,params,opt=False,baseparamwin=None,mainwin=None):
     QThread.__init__(self)
-    self.c = c
+    self.p = p
     self.d = d
     self.killed = False
     self.ntrial = ntrial
@@ -263,7 +252,7 @@ class RunSimThread (QThread):
     self.opt = opt
     self.baseparamwin = baseparamwin
     self.mainwin = mainwin
-    self.paramfn = os.path.join(_get_output_dir(), 'param', self.params['sim_prefix'] + '.param')
+    self.paramfn = os.path.join(get_output_dir(), 'param', self.params['sim_prefix'] + '.param')
 
 
     # it would be ideal to display a dialog box, but we have to get that event back to the main window
@@ -291,7 +280,7 @@ class RunSimThread (QThread):
     self.prmComm.psig.emit(d)
 
   def updatedispparam (self):
-    self.c.commsig.emit()
+    self.p.psig.emit(self.params)
 
   def updatedrawerr (self):
     self.canvComm.csig.emit(False, self.opt) # False means do not recalculate error
@@ -416,7 +405,7 @@ class RunSimThread (QThread):
     self.baseparamwin.optparamwin.populate_initial_opt_ranges()
 
     # save initial parameters file
-    data_dir = op.join(_get_output_dir(), 'data')
+    data_dir = op.join(get_output_dir(), 'data')
     sim_dir = op.join(data_dir, self.params['sim_prefix'])
     param_out = os.path.join(sim_dir,'before_opt.param')
     write_legacy_paramf(param_out, self.params)
@@ -551,7 +540,7 @@ class RunSimThread (QThread):
       print(txt)
       self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
 
-      data_dir = op.join(_get_output_dir(), 'data')
+      data_dir = op.join(get_output_dir(), 'data')
       sim_dir = op.join(data_dir, self.params['sim_prefix'])
 
       fnoptinf = os.path.join(sim_dir,'optinf.txt')
