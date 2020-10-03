@@ -639,7 +639,7 @@ class RunSimThread (QThread):
         raise RuntimeError("No cores available for simulation")
 
       try:
-        simulate(self.params, self.ncore)
+        simulate(self.params, dconf['datdir'], self.ncore)
         # success, make default ncore
         defncore = self.ncore
         break
