@@ -64,29 +64,34 @@ install:
   - | # set up hnn module and testing packages
     if [[ "${WSL_INSTALL}" -ne 1 ]]; then
       pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt
-      command cd $TRAVIS_BUILD_DIR && python setup.py install
+      command cd $TRAVIS_BUILD_DIR
+      python setup.py install
     else
-      wsl -- bash -ec "pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt"
-      wsl -- bash -ec "python setup.py install"
+      wsl -- pip install flake8 pytest pytest-cov coverage coveralls mne \
+                 pytest-qt
+      wsl -- python3 setup.py install
     fi
 
 script:
   - | # run tests
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
-      # for start_vcxsrv_print and stop_vcxsrv
+      # helper commands from docker_functions.sh and utils.sh
       source "scripts/docker_functions.sh"
       set_globals
-
-      # source utility functions
       source scripts/utils.sh
       export -f cleanup
 
-      find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \
-        start_vcxsrv_print || script_fail
-      wsl -- bash -e //home/hnn_user/hnn/scripts/run-travis-wsl.sh
+      find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
+ 
+      # script_fail prints out the log before quitting so we can troubleshoot
+      start_vcxsrv_print || script_fail
+      wsl -- //home/hnn_user/hnn/scripts/run-travis-wsl.sh
       stop_vcxsrv || script_fail
     else
       echo "Running Python tests on host OS..."
+      pwd
+      command cd $TRAVIS_BUILD_DIR
+      pwd
       py.test --cov=. hnn/tests/
     fi
 
