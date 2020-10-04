@@ -19,16 +19,14 @@ import matplotlib.gridspec as gridspec
 import paramrw
 import spikefn
 from math import ceil
-from conf import dconf
-from gutils import getmplDPI
+from qt_lib import getmplDPI
 
 from hnn_core import read_params, read_spikes
 
 #plt.rcParams['lines.markersize'] = 15
 plt.rcParams['lines.linewidth'] = 1
 rastmarksz = 5 # raster dot size
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
+fontsize = plt.rcParams['font.size'] = 10
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -43,13 +41,15 @@ for i in range(len(sys.argv)):
     spkpath = sys.argv[i]
   elif sys.argv[i].endswith('.param'):
     paramf = sys.argv[i]
+    print(paramf)
     params = read_params(paramf)
     tstop = params['tstop']
     ntrial = params['N_trials']
     EvokedInputs = paramrw.usingEvokedInputs(params)
     OngoingInputs = paramrw.usingOngoingInputs(params)
     PoissonInputs = paramrw.usingPoissonInputs(params)
-    outparamf = os.path.join(dconf['datdir'],params['sim_prefix'],'param.txt')
+    outparamf = os.path.join(paramrw.get_output_dir(), 'data',
+                             params['sim_prefix'], 'param.txt')
 
 extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
 extinputs.add_delay_times()
@@ -247,8 +247,10 @@ class SpikeCanvas (FigureCanvas):
       alldat[idx]['dhist'] = dhist
       alldat[idx]['extinputs'] = extinputs
     else:
-      spkpathtrial = os.path.join(dconf['datdir'], params['sim_prefix'], 'spk_'+str(self.index-1)+'.txt')
-      dspktrial,haveinputs,dhisttrial = getdspk(spkpathtrial) # show spikes from first trial
+      spkpathtrial = os.path.join(paramrw.get_output_dir(), 'data',
+                                  params['sim_prefix'],
+                                  'spk_' + str(self.index-1) + '.txt')
+      dspktrial, haveinputs, dhisttrial = getdspk(spkpathtrial)  # show spikes from first trial
       try:
         extinputs = spikefn.ExtInputs(spkpathtrial, outparamf, params)
       except ValueError:
@@ -337,9 +339,11 @@ class SpikeGUI (QMainWindow):
     self.m.plot()
 
   def changeFontSize (self):
+    global fontsize
+
     i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if okPressed:
-      plt.rcParams['font.size'] = dconf['fontsize'] = i
+      plt.rcParams['font.size'] = fontsize = i
       self.initCanvas()
       self.m.plot()
 
@@ -396,7 +400,7 @@ class SpikeGUI (QMainWindow):
     # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
-    self.setCentralWidget(widget);
+    self.setCentralWidget(widget)
 
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass

@@ -15,15 +15,13 @@ from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
-import paramrw
+from paramrw import get_output_dir
 import spikefn
 from simdat import readdpltrials
-from conf import dconf
 
 from hnn_core import read_params
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: dconf['fontsize'] = 10
+fontsize = plt.rcParams['font.size'] = 10
 
 tstop = -1; ntrial = 1; scalefctr = 30e3; dplpath = ''; paramf = ''
 for i in range(len(sys.argv)):
@@ -37,9 +35,8 @@ for i in range(len(sys.argv)):
     tstop = params['tstop']
     ntrial = params['N_trials']
         
-basedir = os.path.join(dconf['datdir'], params['sim_prefix'])
-
 ddat = {}
+basedir = os.path.join(get_output_dir(), 'data', params['sim_prefix'])
 ddat['dpltrials'] = readdpltrials(basedir)
 try:
   ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))

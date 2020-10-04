@@ -17,12 +17,11 @@ import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 from math import sqrt
 from specfn import MorletSpec
-from conf import dconf
+from paramrw import get_output_dir
 
 from hnn_core import read_params
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: dconf['fontsize'] = 10
+fontsize = plt.rcParams['font.size'] = 10
 
 ddat = {}
 
@@ -228,7 +227,7 @@ if __name__ == '__main__':
       params = read_params(paramf)
       ntrial = params['N_trials']
 
-  basedir = os.path.join(dconf['datdir'],params['sim_prefix'])
+  basedir = os.path.join(get_output_dir(), 'data', params['sim_prefix'])
   specpath = os.path.join(basedir,'rawspec.npz')
   print('specpath',specpath)
   ddat['spec'] = np.load(specpath)

@@ -7,18 +7,20 @@ from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from gutils import getmplDPI
+from qt_lib import getmplDPI
 import matplotlib.pyplot as plt
-from conf import dconf
+from paramrw import get_output_dir
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
+fontsize = plt.rcParams['font.size'] = 10
 
 # GUI for viewing data from individual/all trials
 class DataViewGUI (QMainWindow):
   def __init__ (self, CanvasType, params, title):
-    super().__init__()        
-    self.fontsize = dconf['fontsize']
+    super().__init__()
+
+    global fontsize
+
+    self.fontsize = fontsize
     self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.CanvasType = CanvasType
@@ -53,9 +55,11 @@ class DataViewGUI (QMainWindow):
     viewMenu.addAction(changeMarkerSizeAction)
 
   def changeFontSize (self):
+    global fontsize
+
     i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if okPressed:
-      self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.fontsize = plt.rcParams['font.size'] = fontsize = i
       self.initCanvas()
       self.m.plot()
 
@@ -90,8 +94,8 @@ class DataViewGUI (QMainWindow):
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
-    self.grid.addWidget(self.toolbar, 0, 0, 1, 4); 
-    self.grid.addWidget(self.m, 1, 0, 1, 4);     
+    self.grid.addWidget(self.toolbar, 0, 0, 1, 4)
+    self.grid.addWidget(self.m, 1, 0, 1, 4)
 
   def updateCB (self):
     self.cb.clear()
@@ -107,7 +111,7 @@ class DataViewGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
     self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle(self.title + ' - ' + os.path.join(dconf['datdir'], self.params['sim_prefix'] + '.param'))
+    self.setWindowTitle(self.title + ' - ' + os.path.join(get_output_dir(), 'data', self.params['sim_prefix'] + '.param'))
     self.grid = grid = QGridLayout()
     self.index = 0
     self.initCanvas()

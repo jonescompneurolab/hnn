@@ -16,14 +16,13 @@ import pylab as plt
 import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 from specfn import MorletSpec
-from conf import dconf
 import simdat
 from simdat import readdpltrials
-import paramrw
+from paramrw import get_output_dir
 
 from hnn_core import read_params
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
+fontsize = plt.rcParams['font.size'] = 10
 
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=40.0):
@@ -65,7 +64,7 @@ def loaddat_txt (fname):
     return dat
 
 def loaddat (sim_prefix, ntrial):
-  basedir = os.path.join(dconf['datdir'], sim_prefix)
+  basedir = os.path.join(get_output_dir(), 'data', sim_prefix)
   if ntrial > 1:
     ddat = readdpltrials(basedir)
     #print('read dpl trials',ddat[0].shape)

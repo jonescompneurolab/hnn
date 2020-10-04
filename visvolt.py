@@ -15,13 +15,12 @@ from matplotlib.figure import Figure
 import pylab as plt
 import matplotlib.gridspec as gridspec
 import pickle
-from conf import dconf
-from gutils import getmplDPI
+from qt_lib import getmplDPI
+from paramrw import get_output_dir
 
 from hnn_core import read_params
 
-if dconf['fontsize'] > 0: plt.rcParams['font.size'] = dconf['fontsize']
-else: dconf['fontsize'] = 10
+fontsize = plt.rcParams['font.size'] = 10
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
@@ -39,14 +38,14 @@ for i in range(len(sys.argv)):
     params = read_params(paramf)
     tstop = params['tstop']
     ntrial = params['N_trials']
-    outparamf = os.path.join(dconf['datdir'],params['sim_prefix'],'param.txt')
+    outparamf = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'param.txt')
   elif sys.argv[i] == 'maxperty':
     maxperty = int(sys.argv[i])
 
 if ntrial <= 1:
-  voltpath = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma.pkl')
+  voltpath = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'vsoma.pkl')
 else:
-  voltpath = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma_1.pkl')
+  voltpath = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'vsoma_1.pkl')
 
 class VoltCanvas (FigureCanvas):
   def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Voltage Viewer'):
@@ -100,7 +99,7 @@ class VoltCanvas (FigureCanvas):
     ax.grid(True)
     if tstop != -1: ax.set_xlim((0,tstop))
     if i ==0: ax.set_title(ltextra)
-    ax.set_xlabel('Time (ms)');
+    ax.set_xlabel('Time (ms)')
 
     self.figure.subplots_adjust(bottom=0.01, left=0.01, right=0.99, top=0.99, wspace=0.1, hspace=0.09)
 
@@ -116,24 +115,25 @@ class VoltCanvas (FigureCanvas):
         dvolt = pickle.load(open(voltpath,'rb'))
       self.lax = self.drawvolt(dvolt,self.figure, self.G, 5, ltextra='All Trials')
     else:
-      voltpathtrial = os.path.join(dconf['datdir'],params['sim_prefix'],'vsoma_'+str(self.index)+'.pkl')
+      voltpathtrial = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'vsoma_'+str(self.index)+'.pkl')
       dvolttrial = pickle.load(open(voltpathtrial,'rb'))
-      self.lax=self.drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index));
+      self.lax=self.drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index))
     self.draw()
 
 class VoltGUI (QMainWindow):
   def __init__ (self):
-    global dfile, ddat, paramf
+    global dfile, ddat, paramf, fontsize
     super().__init__()        
-    self.fontsize = dconf['fontsize']
+    self.fontsize = fontsize
     self.linewidth = plt.rcParams['lines.linewidth'] = 1
     self.markersize = plt.rcParams['lines.markersize'] = 5
     self.initUI()
 
   def changeFontSize (self):
+    global fontsize
     i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
     if okPressed:
-      self.fontsize = plt.rcParams['font.size'] = dconf['fontsize'] = i
+      self.fontsize = plt.rcParams['font.size'] = fontsize = i
       self.initCanvas()
       self.m.plot()
 
@@ -191,8 +191,8 @@ class VoltGUI (QMainWindow):
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
     self.toolbar = NavigationToolbar(self.m, self)
-    self.grid.addWidget(self.toolbar, 0, 0, 1, 4); 
-    self.grid.addWidget(self.m, 1, 0, 1, 4);     
+    self.grid.addWidget(self.toolbar, 0, 0, 1, 4)
+    self.grid.addWidget(self.m, 1, 0, 1, 4)
 
   def initUI (self):
     self.initMenu()
@@ -211,7 +211,7 @@ class VoltGUI (QMainWindow):
     # need a separate widget to put grid on
     widget = QWidget(self)
     widget.setLayout(grid)
-    self.setCentralWidget(widget);
+    self.setCentralWidget(widget)
 
     try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
     except: pass

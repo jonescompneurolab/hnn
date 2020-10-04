@@ -1,7 +1,14 @@
+"""Miscellaneous Qt functions for HNN GUI"""
+
+# Authors: Sam Neymotin <samnemo@gmail.com>
+#          Blake Caldwell <blake_caldwell@brown.edu>
+
+import os
+
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLineEdit, QSplitter
-from PyQt5.QtWidgets import QHBoxLayout, QGroupBox
+from PyQt5.QtWidgets import QHBoxLayout, QGroupBox, QLabel
 from PyQt5.QtGui import QColor, QPainter, QFont, QPen
-from PyQt5.QtCore import QCoreApplication, pyqtSignal, QObject, Qt, QSize
+from PyQt5.QtCore import QCoreApplication, pyqtSignal, Qt, QSize
 from PyQt5.QtCore import QMetaObject
 
 DEFAULT_CSS = """
@@ -35,11 +42,96 @@ QRangeSlider > QSplitter::handle:pressed {
 }
 """
 
+
+def getscreengeom():
+    """use pyqt5 to get screen resolution"""
+
+    width, height = 2880, 1620  # default width,height - used for development
+    app = QCoreApplication.instance()  # can only have 1 instance of qtapp
+    app.setDesktopSettingsAware(True)
+    if len(app.screens()) > 0:
+        screen = app.screens()[0]
+        geom = screen.geometry()
+        return geom.width(), geom.height()
+    else:
+        return width, height
+
+
+def lowresdisplay():
+    """check if display has low resolution"""
+    w, h = getscreengeom()
+    return w < 1400 or h < 700
+
+
+def getmplDPI():
+    """get DPI for use in matplotlib figures
+
+    used in simulation output canvas - in simdat.py
+    """
+    if lowresdisplay():
+        return 60
+    return 120
+
+
+def scalegeom(width, height):
+    """get new window width, height
+
+    scaled by current screen resolution relative to original
+    development resolution
+    """
+    devwidth, devheight = 2880.0, 1620.0  # resolution used for development
+    screenwidth, screenheight = getscreengeom()
+    widthnew = int((screenwidth / devwidth) * width)
+    heightnew = int((screenheight / devheight) * height)
+    if widthnew > 1000 or heightnew > 850:
+        widthnew = 1000
+        heightnew = 850
+    return widthnew, heightnew
+
+
+def setscalegeom(dlg, x, y, origw, origh):
+    """set dialog's position (x,y) and rescale geometry
+
+    based on original width and height and development resolution
+    """
+
+    nw, nh = scalegeom(origw, origh)
+    dlg.setGeometry(x, y, int(nw), int(nh))
+    return int(nw), int(nh)
+
+
+def setscalegeomcenter(dlg, origw, origh):
+    """set dialog in center of screen width
+
+    rescale size based on original width and height and development resolution
+    """
+
+    nw, nh = scalegeom(origw, origh)
+    sw, _ = getscreengeom()
+    x = (sw - nw) / 2
+    y = 0
+    dlg.setGeometry(x, y, int(nw), int(nh))
+    return int(nw), int(nh)
+
+
 def scale(val, src, dst):
-    try:
-      return ((val - src[0]) / float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0])
-    except ZeroDivisionError:
-      return 0 
+    numerator = val - src[0]
+    denominator = float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0]
+
+    if denominator == 0:
+        return 0
+
+    return numerator / denominator
+
+
+def lookupresource(fn):
+    """look up resource adjusted for screen resolution"""
+    lowres = lowresdisplay()  # low resolution display
+    if lowres:
+        return os.path.join('res', fn + '2.png')
+    else:
+        return os.path.join('res', fn + '.png')
+
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -108,7 +200,7 @@ class Head(Element):
     def drawText(self, event, qp):
         qp.setPen(self.textColor())
         qp.setFont(QFont('Arial', 10))
-        qp.drawText(event.rect(), Qt.AlignLeft, ("%.3f"%self.main.min()))
+        qp.drawText(event.rect(), Qt.AlignLeft, ("%.3f" % self.main.min()))
 
 
 class Tail(Element):
@@ -118,7 +210,7 @@ class Tail(Element):
     def drawText(self, event, qp):
         qp.setPen(self.textColor())
         qp.setFont(QFont('Arial', 10))
-        qp.drawText(event.rect(), Qt.AlignRight, ("%.3f"%self.main.max()))
+        qp.drawText(event.rect(), Qt.AlignRight, ("%.3f" % self.main.max()))
 
 
 class LineBox(Element):
@@ -129,7 +221,7 @@ class LineBox(Element):
         qp.setPen(QPen(Qt.red, 2, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin))
         pos = self.main.valueToPos(self.main.line_value)
         if (pos == 0):
-          pos += 1
+            pos += 1
         qp.drawLine(pos, 0, pos, 50)
 
 
@@ -300,13 +392,16 @@ class QRangeSlider(QWidget, Ui_Form):
 
     def _handleMoveSplitter(self, xpos, index):
         self._splitter.handleWidth()
+
         def _lockWidth(widget):
             width = widget.size().width()
             widget.setMinimumWidth(width)
             widget.setMaximumWidth(width)
+
         def _unlockWidth(widget):
             widget.setMinimumWidth(0)
             widget.setMaximumWidth(16777215)
+
         if index == self._SPLIT_START:
             v = self._posToValue(xpos)
             _lockWidth(self._tail)
@@ -327,9 +422,9 @@ class QRangeSlider(QWidget, Ui_Form):
         _unlockWidth(self._head)
         _unlockWidth(self._handle)
 
-# see https://stackoverflow.com/questions/12182133/pyqt4-combine-textchanged-and-editingfinished-for-qlineedit
+
 class MyLineEdit(QLineEdit):
-    textModified = pyqtSignal(str) # (label)
+    textModified = pyqtSignal(str)  # (label)
 
     def __init__(self, contents, label, parent=None):
         super(MyLineEdit, self).__init__(contents, parent)
@@ -347,3 +442,12 @@ class MyLineEdit(QLineEdit):
         if before != after:
             self._before = after
             self.textModified.emit(self._label)
+
+
+class ClickLabel(QLabel):
+    """clickable label"""
+
+    clicked = pyqtSignal()
+
+    def mousePressEvent(self, event):
+        self.clicked.emit()

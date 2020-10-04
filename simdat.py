@@ -11,7 +11,7 @@ import spikefn
 from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs
 from paramrw import usingTonicInputs, countEvokedInputs, get_output_dir
 from scipy import signal
-from gutils import getscreengeom
+from qt_lib import getscreengeom
 import traceback
 
 from hnn_core import read_spikes
