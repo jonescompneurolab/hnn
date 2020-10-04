@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QDialog, QGridLayout
 from PyQt5.QtWidgets import QLineEdit, QLabel, QTextEdit, QInputDialog
-from PyQt5.QtWidgets import QMenu, QMessageBox, QWidget, QDialog
+from PyQt5.QtWidgets import QMenu, QMessageBox, QWidget, QDialog, QLayout
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -1932,13 +1932,16 @@ class HNNGUI (QMainWindow):
       self.m.plot(recalcErr)
       self.m.draw()
 
-  def setcursors (self,cursor):
+  def setcursors(self, cursor):
     # set cursors of self and children
     self.setCursor(cursor)
     self.update()
     kids = self.children()
-    kids.append(self.m) # matplotlib simcanvas
+    kids.append(self.m)  # matplotlib simcanvas
     for k in kids:
+        if type(k) == QLayout or type(k) == QAction:
+            # These types don't have setCursor()
+            continue
         k.setCursor(cursor)
         k.update()
 
