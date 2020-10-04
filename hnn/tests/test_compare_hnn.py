@@ -1,22 +1,44 @@
 import os.path as op
+import os
+import sys
 
 from numpy import loadtxt
 from numpy.testing import assert_allclose
 
 from mne.utils import _fetch_file
+from PyQt5 import QtWidgets, QtCore
 
-from ... import run
+from hnn import HNNGUI
 
-def test_hnn():
+
+def test_hnn(qtbot, monkeypatch):
     """Test to check that HNN produces consistent results"""
-    self.runthread = RunSimThread(self.p, self.d, ntrial, ncore,
-                                  self.waitsimwin, params, opt=False,
-                                  baseparamwin=None, mainwin=None)
 
+    # for pressing exit button
+    exit_calls = []
+    monkeypatch.setattr(QtWidgets.QApplication, "exit",
+                        lambda: exit_calls.append(1))
 
-    # print all messages (including error messages)
-    print('STDOUT', out)
-    print('STDERR', err)
+    # skip in warning messages
+    monkeypatch.setattr(QtWidgets.QMessageBox, "warning",
+                        lambda *args: QtWidgets.QMessageBox.Ok)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "information",
+                        lambda *args: QtWidgets.QMessageBox.Ok)
+
+    main = HNNGUI()
+    qtbot.addWidget(main)
+
+    # start the simulation by pressing the button
+    qtbot.mouseClick(main.btnsim, QtCore.Qt.LeftButton)
+    qtbot.waitUntil(lambda: main.runningsim)
+
+    # wait up to 100 seconds for simulation to finish
+    qtbot.waitUntil(lambda: not main.runningsim, 100000)
+    qtbot.mouseClick(main.qbtn, QtCore.Qt.LeftButton)
+    assert exit_calls == [1]
+
+    # only testing default configuration with 1 trial
+    ntrials = 1
 
     for trial in range(ntrials):
         print("Checking data for trial %d" % trial)
