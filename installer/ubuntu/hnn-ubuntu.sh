@@ -3,6 +3,7 @@
 set -e
 
 [[ "$LOGFILE" ]] || LOGFILE="ubuntu_install.log"
+[[ "$USE_CONDA" ]] || USE_CONDA=0
 
 function start_download {
   echo "Downloading $2"
@@ -65,12 +66,12 @@ sudo -E apt-get update &> "$LOGFILE"
 
 echo "Updating OS python packages..." | tee -a "$LOGFILE"
 if [[ "${PYTHON_VERSION}" =~ "3.7" ]] && [[ "$DISTRIB" =~ "bionic" ]]; then
-  sudo -E apt-get install --no-install-recommends -y python3.7 python3-pip python3.7-dev &> "$LOGFILE" && \
+  sudo -E apt-get install --no-install-recommends -y python3.7 python3-pip python3-tk python3.7-dev &> "$LOGFILE" && \
     sudo python3.7 -m pip install --upgrade pip setuptools &> "$LOGFILE"
   sudo ln -s /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so \
     /usr/lib/python3/dist-packages/apt_pkg.so
 else
-  sudo -E apt-get install --no-install-recommends -y python3 python3-pip python3-setuptools &> "$LOGFILE" && \
+  sudo -E apt-get install --no-install-recommends -y python3 python3-pip python3-tk python3-setuptools &> "$LOGFILE" && \
     sudo pip3 install --upgrade pip &> "$LOGFILE"
 fi
 
@@ -87,28 +88,41 @@ elif which python &> /dev/null; then
 fi
 echo "Using python: $PYTHON with pip: $PIP" | tee -a "$LOGFILE"
 
+if [[ "$USE_CONDA" -eq 0 ]]; then
+  echo "Downloading python packages for HNN with pip..." | tee -a "$LOGFILE"
+  $PIP download matplotlib PyOpenGL \
+                pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE" &
+  PIP_PID=$!
+fi
+
 echo "Installing OS compilation toolchain..." | tee -a "$LOGFILE"
 # get prerequisites from pip. requires gcc to build psutil
 sudo -E apt-get install --no-install-recommends -y \
         make gcc g++ python3-dev &> "$LOGFILE"
 
-URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-FILENAME="$HOME/miniconda.sh"
-start_download "$FILENAME" "$URL"
+if [[ "$USE_CONDA" -eq 0 ]]; then
+  echo "Waiting for python packages for HNN downloads to finish..."
+  NAME="downloading python packages for HNN "
+  wait_for_pid "${PIP_PID}" "$NAME"
+else
+  URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+  FILENAME="$HOME/miniconda.sh"
+  start_download "$FILENAME" "$URL"
 
-echo "Installing miniconda..."
-chmod +x "$HOME/miniconda.sh"
-"$HOME/miniconda.sh" -b -p "${HOME}/Miniconda3"
-export PATH=${HOME}/Miniconda3/bin:$PATH
+  echo "Installing miniconda..."
+  chmod +x "$HOME/miniconda.sh"
+  "$HOME/miniconda.sh" -b -p "${HOME}/Miniconda3"
+  export PATH=${HOME}/Miniconda3/bin:$PATH
 
-# create conda environment
-conda env create -f environment.yml
+  # create conda environment
+  conda env create -f environment.yml
 
-# conda is faster to install nlopt
-conda install -y -n hnn -c conda-forge nlopt
-conda install -y -n hnn mpi4py
+  # conda is faster to install nlopt
+  conda install -y -n hnn -c conda-forge nlopt
+  conda install -y -n hnn mpi4py
 
-source activate hnn && echo "activated conda HNN environment"
+  source activate hnn && echo "activated conda HNN environment"
+fi
 
 $PIP install --no-cache-dir NEURON
 
@@ -116,7 +130,7 @@ $PIP install --no-cache-dir NEURON
 if ! which nrnivmodl &> /dev/null; then
   export PATH="$PATH:$HOME/.local/bin"
   echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
-fi
+fi 
 
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
 $PIP install --no-cache-dir --user matplotlib \
