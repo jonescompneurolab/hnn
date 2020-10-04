@@ -1092,14 +1092,13 @@ class BaseParamDialog (QDialog):
     oktosave = True
     if os.path.isfile(tmpf) and checkok:
       self.show()
-      oktosave = False
       msg = QMessageBox()
-      msg.setIcon(QMessageBox.Warning)
-      msg.setText(tmpf + ' already exists. Over-write?')
-      msg.setWindowTitle('Over-write file(s)?')
-      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
-      if msg.exec_() == QMessageBox.Ok:
-          oktosave = True
+      ret = msg.warning(self, 'Over-write file(s)?',
+                         tmpf + ' already exists. Over-write?',
+                         QMessageBox.Ok | QMessageBox.Cancel,
+                         QMessageBox.Ok)
+      if ret == QMessageBox.Cancel:
+        oktosave = False
 
     if oktosave:
       with open(tmpf,'w') as fp:
@@ -1184,11 +1183,6 @@ class HNNGUI (QMainWindow):
     self.waitsimwin = WaitSimDialog(self)
     default_param = os.path.join(get_output_dir(), 'data', 'default')
     first_load = not (os.path.exists(default_param))
-
-    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
-      print("Exiting because HNN was started with TRAVIS_TESTING=1")
-      qApp.quit()
-      exit(0)
 
     if first_load:
       QMessageBox.information(self, "HNN", "Welcome to HNN! Default parameter file loaded. "
@@ -1641,28 +1635,28 @@ class HNNGUI (QMainWindow):
     
     # view menu - to view drawing/visualizations
     viewMenu = self.menubar.addMenu('&View')
-    viewDipoleAction = QAction('View Simulation Dipoles',self)
-    viewDipoleAction.setStatusTip('View Simulation Dipoles')
-    viewDipoleAction.triggered.connect(self.showDipolePlot)
-    viewMenu.addAction(viewDipoleAction)
-    viewRasterAction = QAction('View Simulation Spiking Activity',self)
-    viewRasterAction.setStatusTip('View Simulation Raster Plot')
-    viewRasterAction.triggered.connect(self.showRasterPlot)
-    viewMenu.addAction(viewRasterAction)
-    viewPSDAction = QAction('View PSD',self)
-    viewPSDAction.setStatusTip('View PSD')
-    viewPSDAction.triggered.connect(self.showPSDPlot)
-    viewMenu.addAction(viewPSDAction)
+    self.viewDipoleAction = QAction('View Simulation Dipoles',self)
+    self.viewDipoleAction.setStatusTip('View Simulation Dipoles')
+    self.viewDipoleAction.triggered.connect(self.showDipolePlot)
+    viewMenu.addAction(self.viewDipoleAction)
+    self.viewRasterAction = QAction('View Simulation Spiking Activity',self)
+    self.viewRasterAction.setStatusTip('View Simulation Raster Plot')
+    self.viewRasterAction.triggered.connect(self.showRasterPlot)
+    viewMenu.addAction(self.viewRasterAction)
+    self.viewPSDAction = QAction('View PSD',self)
+    self.viewPSDAction.setStatusTip('View PSD')
+    self.viewPSDAction.triggered.connect(self.showPSDPlot)
+    viewMenu.addAction(self.viewPSDAction)
 
-    viewSomaVAction = QAction('View Somatic Voltage',self)
-    viewSomaVAction.setStatusTip('View Somatic Voltage')
-    viewSomaVAction.triggered.connect(self.showSomaVPlot)
-    viewMenu.addAction(viewSomaVAction)
+    self.viewSomaVAction = QAction('View Somatic Voltage',self)
+    self.viewSomaVAction.setStatusTip('View Somatic Voltage')
+    self.viewSomaVAction.triggered.connect(self.showSomaVPlot)
+    viewMenu.addAction(self.viewSomaVAction)
 
-    viewSpecAction = QAction('View Spectrograms',self)
-    viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data')
-    viewSpecAction.triggered.connect(self.showSpecPlot)
-    viewMenu.addAction(viewSpecAction)
+    self.viewSpecAction = QAction('View Spectrograms',self)
+    self.viewSpecAction.setStatusTip('View Spectrograms/Dipoles from Experimental Data')
+    self.viewSpecAction.triggered.connect(self.showSpecPlot)
+    viewMenu.addAction(self.viewSpecAction)
 
     viewMenu.addSeparator()
     viewSchemAction = QAction('View Model Schematics',self)
@@ -1750,10 +1744,10 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.btnsim, gRow, 6, 1, 3)
 
     self.qbtn = qbtn = QPushButton('Quit', self)
-    qbtn.clicked.connect(QCoreApplication.instance().quit)
+    qbtn.clicked.connect(QApplication.exit)
     qbtn.resize(qbtn.sizeHint())
     self.grid.addWidget(self.qbtn, gRow, 9, 1, 3)
-    
+
   def shownetparamwin (self): bringwintotop(self.baseparamwin.netparamwin)
   def showoptparamwin (self): bringwintotop(self.baseparamwin.optparamwin)
   def showdistparamwin (self): bringwintotop(self.erselectdistal)
@@ -2039,7 +2033,7 @@ class HNNGUI (QMainWindow):
       msg += "running sim "
 
     if failed:
-      QMessageBox.information(self, "Failed!", msg + "using " + self.baseparamwin.paramfn + '. Check simulation log or console for error messages')
+      QMessageBox.critical(self, "Failed!", msg + "using " + self.baseparamwin.paramfn + '. Check simulation log or console for error messages')
     else:
       data_dir = os.path.join(get_output_dir(), 'data')
       sim_dir = os.path.join(data_dir, self.baseparamwin.params['sim_prefix'])
