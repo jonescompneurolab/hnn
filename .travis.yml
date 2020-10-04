@@ -4,68 +4,28 @@ matrix:
   include:
       # OSX
       - os: osx
-        name: "MacOS sierra"
-        osx_image: xcode9.2
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
+        name: "MacOS Catalina"
+        osx_image: xcode12
 
-      - os: osx
-        name: "MacOS el capitan"
-        osx_image: xcode8
+      # WSL
+      - os: windows
+        name: "WSL"
         env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-
-      - os: osx
-        name: "MacOS mojave"
-        osx_image: xcode11.3
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
-
-      - os: osx
-        name: "MacOS high sierra"
-        osx_image: xcode10.1
-        env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
+          - WSL_INSTALL=1
+          - USE_CONDA=0
 
       # Windows
       - os: windows
         name: "Windows"
         env:
-          - PYTHON_VERSION=3.7
-          - NEURON_VERSION=7.7
+          - WSL_INSTALL=0
 
       # Linux
       - os: linux
-        dist: xenial
-        name: "Ubuntu xenial"
-        env:
-          - NEURON_VERSION=7.7
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - xvfb
-
-      - os: linux
         dist: bionic
-        name: "Ubuntu bionic"
+        name: "Ubuntu Bionic"
         env:
-          - NEURON_VERSION=7.7
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - xvfb
-
-      - os: linux
-        dist: disco
-        name: "Ubuntu disco"
-        env:
-          - NEURON_VERSION=7.7
+          - USE_CONDA=1
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -84,102 +44,52 @@ matrix:
             - xvfb
 
 before_install:
-  - set -e  # error on any command failure
-  - | # function exports
+  - | # common environment exports for all subshells (scripts)
     export TRAVIS_TESTING=1
-
-    if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
-      # for start_vcxsrv_print and stop_vcxsrv
-      source "scripts/docker_functions.sh"
-      set_globals
-    fi
-
-    # source utility functions
+    export DISPLAY=:0
     export LOGFILE="hnn_travis.log"
-    source scripts/utils.sh
-    export -f cleanup
+  - | # Run prerequisite installation script
+    if [ "${WSL_INSTALL}" ] && [ "${WSL_INSTALL}" -eq 1 ]; then
+      echo "Installing WSL prerequisites"
+      scripts/setup-travis-wsl.sh
+    else
+      echo "Installing ${TRAVIS_OS_NAME} prerequisites"
+      scripts/setup-travis-${TRAVIS_OS_NAME}.sh
 
-  - |
-    if [ "${TRAVIS_OS_NAME}" == "osx" ]; then  # install osx prerequisites
-      echo "Installing macOS prerequisites"
-
-      scripts/setup-travis-mac.sh
-      export PATH=${HOME}/Miniconda3/bin:$PATH
-      export PATH=$PATH:/Applications/NEURON-${NEURON_VERSION}/nrn/x86_64/bin
-      export PYTHONPATH=/Applications/NEURON-${NEURON_VERSION}/nrn/lib/python:$PYTHONPATH
-      export PYTHON=python3
-
-      source activate hnn && echo "activated conda HNN environment"
-    fi
-  - | # windows
-    if [ "${TRAVIS_OS_NAME}" == "windows" ]; then
-      echo "Installing windows prerequisites"
-
-      scripts/setup-travis-windows.sh
-
-      # add miniconda python to the path
-      export PATH=$PATH:$HOME/Miniconda3/Scripts
-      export PATH=$HOME/Miniconda3/envs/hnn/:$PATH
-      export PATH=$HOME/Miniconda3/envs/hnn/Scripts:$PATH
-      export PATH=$HOME/Miniconda3/envs/hnn/Library/bin:$PATH
-
-      # for using X server
-      export PATH="$PATH:/c/Program\ Files/VcXsrv"
-
-      # for MESA dll's
-      export PATH=$PATH:/c/tools/msys64/mingw64/bin
-
-      # for sharing with WSL environment
-      export WSLENV=TRAVIS_TESTING/u
-
-      # set other variables for neuron and HNN
-      export PATH=$PATH:/c/nrn/bin
-      export DISPLAY="localhost:0"
-      export NEURONHOME=/c/nrn
-      export PYTHON=python
-    fi
-  - | # Linux
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      echo "Installing Linux prerequisites"
-
-      export DISPLAY=:0
-      export PATH=/usr/bin:/usr/local/bin:$PATH
-
-      echo "Starting fake Xserver"
-      Xvfb $DISPLAY -listen tcp -screen 0 1024x768x24 > /dev/null &
-
-      echo "Starting Ubuntu install script"
-      installer/ubuntu/hnn-ubuntu.sh
-
-      NLOPT_LIB=$(ls -d $HOME/.local/lib/python*/site-packages)
-      echo $NLOPT_LIB
-      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NLOPT_LIB
-      export PYTHON=python3
-
-      # test X server
-      xset -display $DISPLAY -q > /dev/null;
+      source "$HOME/Miniconda3/etc/profile.d/conda.sh"
+      conda activate hnn
     fi
 
 install:
-  - | # testing packages
-    pip install flake8 pytest pytest-cov coverage coveralls mne
-  - |
-    cd $TRAVIS_BUILD_DIR
-    python setup.py install
+  - | # set up hnn module and testing packages
+    if [[ "${WSL_INSTALL}" -ne 1 ]]; then
+      pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt
+      command cd $TRAVIS_BUILD_DIR && python setup.py install
+    else
+      wsl -- bash -ec "pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt"
+      wsl -- bash -ec "python setup.py install"
+    fi
 
 script:
-  - | # Check that the GUI starts on host OS
-    echo "Testing GUI on host OS..."
-    $PYTHON hnn.py
-  - | # Run py.test that includes running a simulation and verifying results
-    echo "Running Python tests on host OS..."
-    py.test --cov=. hnn/tests/
-  - | # Test WSL-based version on windows (needs VcXsrv)
-    if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+  - | # run tests
+    if [[ "${WSL_INSTALL}" -eq 1 ]]; then
+      # for start_vcxsrv_print and stop_vcxsrv
+      source "scripts/docker_functions.sh"
+      set_globals
+
+      # source utility functions
+      source scripts/utils.sh
+      export -f cleanup
+
       find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \
         start_vcxsrv_print || script_fail
       wsl -- bash -e //home/hnn_user/hnn/scripts/run-travis-wsl.sh
       stop_vcxsrv || script_fail
+    else
+      echo "Testing GUI on host OS..."
+      python hnn.py
+      echo "Running Python tests on host OS..."
+      py.test --cov=. hnn/tests/
     fi
 
 after_success:

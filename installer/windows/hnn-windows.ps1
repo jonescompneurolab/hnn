@@ -379,6 +379,13 @@ if ($proc1) {
   Write-Host "Miniconda is finished"
 }
 
+if ($proc2) {
+  Write-Host "Waiting for NEURON install to finish..."
+  $proc2.WaitForExit() 2>$null
+  Update-User-Paths("$script:NEURON_PATH\bin")
+  Write-Host "NEURON is finished"
+}
+
 # setup python with virtualenv or 'conda
 if ($null -ne $script:VIRTUALENV) {
   Write-Host "Creating Python virtualenv at $HOME\venv\hnn..."
@@ -391,6 +398,7 @@ if ($null -ne $script:VIRTUALENV) {
   if (Test-Python-3($script:PYTHON)) {
     # use pip3 for good measure
     Start-Process "$HOME\venv\hnn\Scripts\pip3" "install matplotlib scipy PyQt5 psutil nlopt" -Wait
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install --upgrade https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master" -Wait
   }
   else {
     Write-Warning "Virtualenv failed to create a valid python3 environment"
@@ -415,10 +423,10 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    conda create -y -f environment.yml
+    conda env create -f environment.yml
     conda install -y -n hnn -c conda-forge nlopt
 
-    pip install --upgrade https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+    pip install mpi4py
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null
@@ -433,27 +441,6 @@ elseif ($null -ne $script:CONDA_PATH)  {
 else {
   # setup virtualenv
 
-}
-
-
-if ($proc2) {
-  Write-Host "Waiting for NEURON install to finish..."
-  $proc2.WaitForExit() 2>$null
-  Update-User-Paths("$script:NEURON_PATH\bin")
-  Write-Host "NEURON is finished"
-}
-
-if (!(Test-Path "$HNN_PATH\nrnmech.dll" -PathType Leaf)) {
-  Write-Host "Creating nrnmech.dll"
-  Set-Location $HNN_PATH\mod
-  Start-Process "$script:NEURON_PATH\mingw\usr\bin\sh.exe" "$script:NEURON_ESC_PATH/lib/mknrndll.sh C:\nrn\"
-  $obj = New-Object -com Wscript.Shell
-  sleep -s 10
-  $obj.SendKeys("{ENTER}")
-  Copy-Item $HNN_PATH\mod\nrnmech.dll -Destination $HNN_PATH
-}
-else {
-  Write-Host "nrnmech.dll already exists $HNN_PATH\nrnmech.dll"
 }
 
 Write-Host ""
