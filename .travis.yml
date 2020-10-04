@@ -86,8 +86,6 @@ script:
       wsl -- bash -e //home/hnn_user/hnn/scripts/run-travis-wsl.sh
       stop_vcxsrv || script_fail
     else
-      echo "Testing GUI on host OS..."
-      python hnn.py
       echo "Running Python tests on host OS..."
       py.test --cov=. hnn/tests/
     fi

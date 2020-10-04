@@ -9,7 +9,6 @@ echo "Testing GUI on WSL..."
 cd $DIR/../
 
 export DISPLAY=:0
-python3 hnn.py
 
 echo "Running Python tests on WSL..."
 py.test --cov=. hnn/tests/
