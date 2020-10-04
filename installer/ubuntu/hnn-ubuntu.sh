@@ -101,8 +101,8 @@ if ! which nrnivmodl &> /dev/null; then
 fi
 
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP install --no-cache-dir --user matplotlib PyOpenGL \
-        pyqt5 pyqtgraph scipy numpy nlopt psutil &>> "$LOGFILE"
+$PIP install --no-cache-dir --user matplotlib \
+        pyqt5 scipy numpy nlopt psutil &>> "$LOGFILE"
 
 # save dir installing hnn to
 startdir=$(pwd)

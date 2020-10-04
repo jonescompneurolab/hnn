@@ -1,0 +1,16 @@
+name: hnn
+channels:
+- defaults
+dependencies:
+- python=3.7
+- pip
+- openmpi
+- numpy
+- scipy
+- matplotlib
+- psutil
+- pip:
+  - NEURON
+  - https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+  - PyQt5>=5.10,<5.14; platform_system == "Darwin"
+  - PyQt5>=5.10; platform_system != "Darwin"

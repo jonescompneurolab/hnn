@@ -9,7 +9,6 @@ import sys
 import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
-import paramrw
 
 # MorletSpec class based on a time vec tvec and a time series vec tsvec
 class MorletSpec():

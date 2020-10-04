@@ -31,14 +31,15 @@ import matplotlib.pyplot as plt
 from hnn_core import read_params
 
 # HNN modules
-import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs
-from paramrw import write_legacy_paramf, get_output_dir
-from simdat import SIMCanvas, getinputfiles, updatedat
-from run import RunSimThread, ParamSignal
-from qt_lib import  setscalegeom, setscalegeomcenter, getmplDPI, getscreengeom
-from qt_lib import lookupresource, ClickLabel
-from qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
+from .paramrw import usingOngoingInputs, usingEvokedInputs
+from .paramrw import write_legacy_paramf, get_output_dir
+from .simdat import SIMCanvas, getinputfiles, updatedat
+from .simdat import updatelsimdat, ddat, updateoptdat, lsimdat, lsimidx
+from .simdat import weighted_rmse, initial_ddat, calcerr
+from .run import RunSimThread, ParamSignal
+from .qt_lib import  setscalegeom, setscalegeomcenter, getmplDPI, getscreengeom
+from .qt_lib import lookupresource, ClickLabel
+from .qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
 
 # TODO: These globals should be made configurable via the GUI
 drawindivrast = 0
@@ -1163,7 +1164,7 @@ class HNNGUI (QMainWindow):
 
     global fontsize
 
-    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+    hnn_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 
     self.runningsim = False
     self.runthread = None
@@ -1240,9 +1241,7 @@ class HNNGUI (QMainWindow):
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
 
-    import simdat
-
-    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+    hnn_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 
     qfd = QFileDialog()
     qfd.setHistory([os.path.join(get_output_dir(), 'param'),
@@ -1273,9 +1272,9 @@ class HNNGUI (QMainWindow):
     self.setWindowTitle(self.baseparamwin.paramfn)
 
     # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
-    if 'dpl' in simdat.ddat:
+    if 'dpl' in ddat:
       # update lsimdat and its current sim index
-      simdat.updatelsimdat(self.baseparamwin.paramfn, self.baseparamwin.params, simdat.ddat['dpl'])
+      updatelsimdat(self.baseparamwin.paramfn, self.baseparamwin.params, ddat['dpl'])
 
     self.populateSimCB() # populate the combobox
 
@@ -1284,7 +1283,6 @@ class HNNGUI (QMainWindow):
 
   def loadDataFile (self, fn):
     # load a dipole data file
-    import simdat
 
     try:
       self.dextdata[fn] = np.loadtxt(fn)
@@ -1299,7 +1297,7 @@ class HNNGUI (QMainWindow):
       QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
       return False
 
-    simdat.ddat['dextdata'] = self.dextdata
+    ddat['dextdata'] = self.dextdata
     print('Loaded data in ', fn)
 
     self.m.plot()
@@ -1311,7 +1309,7 @@ class HNNGUI (QMainWindow):
 
   def loadDataFileDialog (self):
     # bring up window to select/load external dipole data file
-    hnn_root_dir = os.path.dirname(os.path.realpath(__file__))
+    hnn_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 
     qfd = QFileDialog()
     qfd.setHistory([os.path.join(get_output_dir(), 'data'),
@@ -1327,10 +1325,8 @@ class HNNGUI (QMainWindow):
 
   def clearDataFile (self):
     # clear external dipole data
-    import simdat
-
     self.m.clearlextdatobj()
-    self.dextdata = simdat.ddat['dextdata'] = {}
+    self.dextdata = ddat['dextdata'] = {}
     self.toggleEnableOptimization(False)
     self.m.plot()  # recreate canvas
     self.m.draw()
@@ -1343,7 +1339,7 @@ class HNNGUI (QMainWindow):
 
   def showAboutDialog (self):
     # show HNN's about dialog box
-    from __init__ import __version__
+    from hnn import __version__
     msgBox = QMessageBox(self)
     msgBox.setTextFormat(Qt.RichText)
     msgBox.setWindowTitle('About')
@@ -1491,11 +1487,9 @@ class HNNGUI (QMainWindow):
 
   def updateSelectedSim(self, sim_idx):
     """Update the sim shown in the ComboBox and update globals"""
-    import simdat
-
     # update globals
-    simdat.lsimidx = sim_idx
-    paramfn = simdat.lsimdat[sim_idx]['paramfn']
+    lsimidx = sim_idx
+    paramfn = lsimdat[sim_idx]['paramfn']
 
     try:
       params = read_params(paramfn)
@@ -1509,20 +1503,18 @@ class HNNGUI (QMainWindow):
 
     # update GUI
     self.updateDatCanv(params)
-    self.cbsim.setCurrentIndex(simdat.lsimidx)
+    self.cbsim.setCurrentIndex(lsimidx)
 
   def removeSim(self):
     """Remove the currently selected simulation"""
-    import simdat
-
     cidx = self.cbsim.currentIndex()
     self.cbsim.removeItem(cidx)
-    del simdat.lsimdat[cidx]
+    del lsimdat[cidx]
 
     # go to last entry
     new_simidx = self.cbsim.count() - 1
     if new_simidx < 0:
-      simdat.lsimidx = 0
+      lsimidx = 0
       self.clearSimulations()
     else:
       self.updateSelectedSim(new_simidx)
@@ -1549,13 +1541,11 @@ class HNNGUI (QMainWindow):
 
   def clearSimulationData (self):
     # clear the simulation data
-    import simdat
-
     self.baseparamwin.params = None
     self.baseparamwin.paramfn = None
-    simdat.ddat = {} # clear data in simdat.ddat
-    simdat.lsimdat = []
-    simdat.lsimidx = 0
+    ddat = {} # clear data in simdat.ddat
+    lsimdat = []
+    lsimidx = 0
     self.populateSimCB() # un-populate the combobox
     self.toggleEnableOptimization(False)
 
@@ -1569,10 +1559,9 @@ class HNNGUI (QMainWindow):
 
   def clearCanvas (self):
     # clear all simulation & external data and erase everything from the canvas
-    import simdat
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
-    self.dextdata = simdat.ddat['dextdata'] = {}
+    self.dextdata = ddat['dextdata'] = {}
     self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
@@ -1821,12 +1810,11 @@ class HNNGUI (QMainWindow):
     gRow += 2
 
     # store any sim just loaded in simdat's list - is this the desired behavior? or should we start empty?
-    import simdat
-    if 'dpl' in simdat.ddat:
+    if 'dpl' in ddat:
       # update lsimdat and its current sim index
-      simdat.updatelsimdat(self.baseparamwin.paramfn,
+      updatelsimdat(self.baseparamwin.paramfn,
                            self.baseparamwin.params,
-                           simdat.ddat['dpl'])
+                           ddat['dpl'])
 
     self.cbsim = QComboBox(self)
     self.populateSimCB() # populate the combobox
@@ -1861,9 +1849,9 @@ class HNNGUI (QMainWindow):
 
   def onActivateSimCB (self, paramfn):
     # load simulation when activating simulation combobox
-    import simdat
 
-    if self.cbsim.currentIndex() != simdat.lsimidx:
+    global lsimidx
+    if self.cbsim.currentIndex() != lsimidx:
       try:
         params = read_params(paramfn)
       except ValueError:
@@ -1873,17 +1861,16 @@ class HNNGUI (QMainWindow):
         return
       self.baseparamwin.paramfn = paramfn
 
-      simdat.lsimidx = self.cbsim.currentIndex()
+      lsimidx = self.cbsim.currentIndex()
       self.updateDatCanv(params)
 
   def populateSimCB (self):
     # populate the simulation combobox
     self.cbsim.clear()
-    import simdat
-    for sim in simdat.lsimdat:
+    for sim in lsimdat:
       sim_paramfn = sim['paramfn']
       self.cbsim.addItem(sim_paramfn)
-    self.cbsim.setCurrentIndex(simdat.lsimidx)
+    self.cbsim.setCurrentIndex(lsimidx)
 
   def initSimCanvas (self,recalcErr=True,optMode=False,gRow=1,reInit=True):
     # initialize the simulation canvas, loading any required data
@@ -1911,8 +1898,7 @@ class HNNGUI (QMainWindow):
     self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth)
     self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth)
     if len(self.dextdata.keys()) > 0:
-      import simdat
-      simdat.ddat['dextdata'] = self.dextdata
+      ddat['dextdata'] = self.dextdata
       self.m.plot(recalcErr)
       self.m.draw()
 

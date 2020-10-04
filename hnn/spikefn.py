@@ -9,7 +9,7 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import itertools as it
 import os
-import paramrw
+from .paramrw import read_gids_param
 
 from hnn_core import read_spikes
 
@@ -65,7 +65,7 @@ class ExtInputs (Spikes):
 
     self.p_dict = params
     try:
-      self.gid_dict = paramrw.read_gids_param(fgids)
+      self.gid_dict = read_gids_param(fgids)
     except FileNotFoundError:
       raise ValueError
 

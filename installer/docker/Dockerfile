@@ -1,4 +1,4 @@
-FROM caldweba/opengl-docker
+FROM ubuntu:18.04
 
 # avoid questions from debconf
 ENV DEBIAN_FRONTEND noninteractive
@@ -32,8 +32,8 @@ RUN sudo pip3 install --no-cache-dir --upgrade pip && \
     sudo apt-get update && \
     sudo apt-get install --no-install-recommends -y \
         gcc python3-dev && \
-    sudo pip install --no-cache-dir matplotlib PyOpenGL \
-        pyqt5 pyqtgraph scipy numpy nlopt psutil && \
+    sudo pip install --no-cache-dir matplotlib \
+        pyqt5 scipy numpy nlopt psutil && \
     sudo apt-get -y remove --purge \
         gcc python3-dev && \
     sudo apt-get autoremove -y --purge && \

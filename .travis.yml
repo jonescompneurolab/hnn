@@ -161,12 +161,11 @@ before_install:
     fi
 
 install:
-  - | # for mac build HNN .mod files
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      make -j2
-    fi
   - | # testing packages
     pip install flake8 pytest pytest-cov coverage coveralls mne
+  - |
+    cd $TRAVIS_BUILD_DIR
+    python setup.py install
 
 script:
   - | # Check that the GUI starts on host OS
@@ -174,7 +173,7 @@ script:
     $PYTHON hnn.py
   - | # Run py.test that includes running a simulation and verifying results
     echo "Running Python tests on host OS..."
-    py.test --cov=. tests/
+    py.test --cov=. hnn/tests/
   - | # Test WSL-based version on windows (needs VcXsrv)
     if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
       find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv" && \

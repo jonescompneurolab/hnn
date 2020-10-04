@@ -7,11 +7,11 @@ import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
 import numpy as np
 from math import ceil
-import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs
-from paramrw import usingTonicInputs, countEvokedInputs, get_output_dir
+from .spikefn import ExtInputs
+from .paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs
+from .paramrw import usingTonicInputs, countEvokedInputs, get_output_dir
 from scipy import signal
-from qt_lib import getscreengeom
+from .qt_lib import getscreengeom
 import traceback
 
 from hnn_core import read_spikes
@@ -284,7 +284,7 @@ class SIMCanvas (FigureCanvas):
     times = np.linspace(0, sim_tstop, num_step)
 
     try:
-      extinputs = spikefn.ExtInputs(dfile['spk'], dfile['outparam'],
+      extinputs = ExtInputs(dfile['spk'], dfile['outparam'],
                                     self.params)
       extinputs.add_delay_times()
       dinput = extinputs.inputs

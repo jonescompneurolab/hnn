@@ -14,9 +14,9 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QFormLayout
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
-from qt_lib import QRangeSlider, MyLineEdit, ClickLabel, setscalegeom
-from qt_lib import lookupresource
-from paramrw import chunk_evinputs, get_inputs, trans_input, countEvokedInputs
+from .qt_lib import QRangeSlider, MyLineEdit, ClickLabel, setscalegeom
+from .qt_lib import lookupresource
+from .paramrw import chunk_evinputs, get_inputs, trans_input, countEvokedInputs
 
 decay_multiplier = 1.6
 

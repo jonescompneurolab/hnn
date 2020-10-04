@@ -5,31 +5,14 @@ from numpy.testing import assert_allclose
 
 from mne.utils import _fetch_file
 
+from ... import run
 
 def test_hnn():
     """Test to check that HNN produces consistent results"""
-    # small snippet of data on data branch for now. To be deleted
-    # later. Data branch should have only commit so it does not
-    # pollute the history.
-    from subprocess import Popen, PIPE
-    import shlex
-    import os
-    import sys
+    self.runthread = RunSimThread(self.p, self.d, ntrial, ncore,
+                                  self.waitsimwin, params, opt=False,
+                                  baseparamwin=None, mainwin=None)
 
-    ntrials = 3
-    paramf = op.join('param', 'default.param')
-
-    nrniv_str = 'nrniv -python -nobanner'
-    cmd = nrniv_str + ' ' + sys.executable + ' run.py ' + paramf \
-        + ' ntrial ' + str(ntrials)
-
-    # Split the command into shell arguments for passing to Popen
-    cmdargs = shlex.split(cmd, posix="win" not in sys.platform)
-
-    # Start the simulation
-    proc = Popen(cmdargs, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                 cwd=os.getcwd(), universal_newlines=True)
-    out, err = proc.communicate()
 
     # print all messages (including error messages)
     print('STDOUT', out)

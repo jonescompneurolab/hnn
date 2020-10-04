@@ -15,12 +15,10 @@ chmod +x "$HOME/miniconda.sh"
 export PATH=${HOME}/Miniconda3/bin:$PATH
 
 # create conda environment
-conda create -n hnn --yes python=${PYTHON_VERSION} pip openmpi scipy numpy matplotlib pyqtgraph pyopengl psutil
+conda create -y -f environment.yml
 source activate hnn && echo "activated conda HNN environment"
 
 # conda is faster to install nlopt
 conda install -y -n hnn -c conda-forge nlopt
-
-pip install NEURON flake8 pytest pytest-cov coverage coveralls mne
 
 echo "Install finished"

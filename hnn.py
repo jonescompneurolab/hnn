@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 
-from hnn_qt5 import HNNGUI
+from hnn import HNNGUI
 
 def runqt5 ():
     app = QApplication(sys.argv)

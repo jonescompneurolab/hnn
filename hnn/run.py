@@ -20,10 +20,11 @@ from hnn_core.dipole import average_dipoles
 import nlopt
 from psutil import wait_procs, process_iter, NoSuchProcess
 
-from paramrw import usingOngoingInputs, write_gids_param
-import specfn
-import simdat
-from paramrw import write_legacy_paramf, get_output_dir
+from .paramrw import usingOngoingInputs, write_gids_param
+from .specfn import analysis_simp
+from .simdat import updatelsimdat, updatedat, ddat, updateoptdat
+from .simdat import weighted_rmse, initial_ddat, calcerr
+from .paramrw import write_legacy_paramf, get_output_dir
 
 
 def get_fname(sim_dir, key, trial=0, ntrial=1):
@@ -203,7 +204,7 @@ def simulate(params, n_procs=None):
                          'runtype': 'parallel'}
 
             # run the spectral analysis
-            specfn.analysis_simp(spec_opts, params, dpl,
+            analysis_simp(spec_opts, params, dpl,
                                  get_fname(sim_dir, 'rawspec', trial_idx,
                                           params['N_trials']))
 
@@ -379,15 +380,14 @@ class RunSimThread (QThread):
       self.updatewaitsimwin(txt)
 
     # should have good data written to files at this point
-    simdat.updatedat(self.params)
+    updatedat(self.params)
 
     if not is_opt:
       # update lsimdat and its current sim index
-      simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
+      updatelsimdat(self.paramfn, self.params, ddat['dpl'])
 
   def optmodel (self):
-    import simdat
-
+    global initial_ddat
     need_initial_ddat = False
 
     # initialize RNG with seed from config
@@ -396,9 +396,9 @@ class RunSimThread (QThread):
 
     # initial_ddat stores the initial fit (from "Run Simulation").
     # To be displayed in final dipole plot as black dashed line.
-    if len(simdat.ddat) > 0:
-      simdat.initial_ddat['dpl'] = deepcopy(simdat.ddat['dpl'])
-      simdat.initial_ddat['errtot'] = deepcopy(simdat.ddat['errtot'])
+    if len(ddat) > 0:
+      initial_ddat['dpl'] = deepcopy(ddat['dpl'])
+      initial_ddat['errtot'] = deepcopy(ddat['errtot'])
     else:
       need_initial_ddat = True
 
@@ -441,15 +441,15 @@ class RunSimThread (QThread):
       self.runOptStep(step)
 
       if 'dpl' in self.best_ddat:
-        simdat.ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
+        ddat['dpl'] = deepcopy(self.best_ddat['dpl'])
       if 'errtot' in self.best_ddat:
-        simdat.ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
+        ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
 
       if need_initial_ddat:
-        simdat.initial_ddat = deepcopy(simdat.ddat)
+        initial_ddat = deepcopy(ddat)
 
       # update optdat with best from this step
-      simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
+      updateoptdat(self.paramfn, self.params, ddat['dpl'])
 
       # put best opt results into GUI and save to param file
       push_values = {}
@@ -466,10 +466,10 @@ class RunSimThread (QThread):
     self.runsim(is_opt=True, banner=False)
 
     # update lsimdat and its current sim index
-    simdat.updatelsimdat(self.paramfn, self.params, simdat.ddat['dpl'])
+    updatelsimdat(self.paramfn, self.params, ddat['dpl'])
 
     # update optdat with the final best
-    simdat.updateoptdat(self.paramfn, self.params, simdat.ddat['dpl'])
+    updateoptdat(self.paramfn, self.params, ddat['dpl'])
 
     # re-enable all the range sliders
     self.baseparamwin.optparamwin.toggleEnableUserFields(step, enable=True)
@@ -518,24 +518,24 @@ class RunSimThread (QThread):
       self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
 
       # calculate wRMSE for all steps
-      simdat.weighted_rmse(simdat.ddat,
+      weighted_rmse(ddat,
                            self.opt_end,
                            self.opt_weights,
                            tstart=self.opt_start)
-      err = simdat.ddat['werrtot']
+      err = ddat['werrtot']
 
       if self.last_step:
         # weighted RMSE with weights of all 1's is the same as
         # regular RMSE
-        simdat.ddat['errtot'] = simdat.ddat['werrtot']
+        ddat['errtot'] = ddat['werrtot']
         txt = "RMSE = %f"%err
       else:
         # calculate regular RMSE for displaying on plot
-        simdat.calcerr(simdat.ddat,
+        calcerr(ddat,
                       self.opt_end,
                       tstart=self.opt_start)
 
-        txt = "weighted RMSE = %f, RMSE = %f"% (err,simdat.ddat['errtot'])
+        txt = "weighted RMSE = %f, RMSE = %f"% (err,ddat['errtot'])
 
       print(txt)
       self.updatewaitsimwin(os.linesep+'Simulation finished: ' + txt + os.linesep) # print error
@@ -545,7 +545,7 @@ class RunSimThread (QThread):
 
       fnoptinf = os.path.join(sim_dir,'optinf.txt')
       with open(fnoptinf,'a') as fpopt:
-        fpopt.write(str(simdat.ddat['errtot'])+os.linesep) # write error
+        fpopt.write(str(ddat['errtot'])+os.linesep) # write error
 
       # save params numbered by optsim
       param_out = os.path.join(sim_dir,'step_%d_sim_%d.param'%(self.cur_step,self.optsim))
@@ -558,10 +558,10 @@ class RunSimThread (QThread):
         # save best param file
         param_out = os.path.join(sim_dir,'step_%d_best.param'%self.cur_step)
         write_legacy_paramf(param_out, self.params)
-        if 'dpl' in simdat.ddat:
-          self.best_ddat['dpl'] = simdat.ddat['dpl']
-        if 'errtot' in simdat.ddat:
-          self.best_ddat['errtot'] = simdat.ddat['errtot']
+        if 'dpl' in ddat:
+          self.best_ddat['dpl'] = ddat['dpl']
+        if 'errtot' in ddat:
+          self.best_ddat['errtot'] = ddat['errtot']
 
       if self.optsim == 0 and not self.first_step:
         # Update plots for the first simulation only of this step (best results from last round)
