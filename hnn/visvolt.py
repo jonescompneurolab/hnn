@@ -179,14 +179,13 @@ class VoltGUI (QMainWindow):
 
   def initCanvas (self):
     self.invertedax = False
-    try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
-      self.grid.removeWidget(self.m)
-      self.grid.removeWidget(self.toolbar)
-      self.m.setParent(None)
-      self.toolbar.setParent(None)
-      self.m = self.toolbar = None
-    except:
-      pass
+    # to avoid memory leaks remove any pre-existing widgets before adding new ones
+    self.grid.removeWidget(self.m)
+    self.grid.removeWidget(self.toolbar)
+    self.m.setParent(None)
+    self.toolbar.setParent(None)
+    self.m = self.toolbar = None
+
     self.m = VoltCanvas(paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
@@ -213,8 +212,7 @@ class VoltGUI (QMainWindow):
     widget.setLayout(grid)
     self.setCentralWidget(widget)
 
-    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
-    except: pass
+    self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
 
     self.show()
 

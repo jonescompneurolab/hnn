@@ -211,11 +211,9 @@ class ExtInputs (Spikes):
 
   # check if gid is associated with a Poisson input
   def is_pois_gid (self, gid):
-    try:
-      if len(self.inputs['pois']) > 0:
-        return self.pois_gid_range[0] <= gid <= self.pois_gid_range[1]
-    except:
-      pass
+    if len(self.inputs['pois']) > 0:
+      return self.pois_gid_range[0] <= gid <= self.pois_gid_range[1]
+
     return False
 
   def truncate_ext (self, dtype, t_int):

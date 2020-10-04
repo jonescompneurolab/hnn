@@ -38,11 +38,8 @@ for i in range(len(sys.argv)):
 ddat = {}
 basedir = os.path.join(get_output_dir(), 'data', params['sim_prefix'])
 ddat['dpltrials'] = readdpltrials(basedir)
-try:
-  ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
-except:
-  print('Could not load',dplpath)
-  quit()
+ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
+
 
 class DipoleCanvas (FigureCanvas):
 
@@ -57,13 +54,10 @@ class DipoleCanvas (FigureCanvas):
     self.paramf = paramf
     self.plot()
 
-  def clearaxes (self):
-    try:
+  def clearaxes(self):
       for ax in self.lax:
-        ax.set_yticks([])
-        ax.cla()
-    except:
-      pass
+          ax.set_yticks([])
+          ax.cla()
 
   def drawdipole (self, fig):
 

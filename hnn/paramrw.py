@@ -39,19 +39,17 @@ def usingOngoingInputs (params, lty = ['_prox', '_dist']):
     return False
 
   dpref = {'_prox':'input_prox_A_','_dist':'input_dist_A_'}
-  try:
-    for postfix in lty:
-      if float(params['t0_input'+postfix])<= tstop and \
-         float(params['tstop_input'+postfix])>=float(params['t0_input'+postfix]) and \
-         float(params['f_input'+postfix])>0.:
-        for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
-                  'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
-                  'weight_inh_ampa','weight_inh_nmda']:
-          if float(params[dpref[postfix]+k])>0.:
-            # print('usingOngoingInputs:',params[dpref[postfix]+k])
-            return True
-  except: 
-    return False
+  for postfix in lty:
+    if float(params['t0_input'+postfix])<= tstop and \
+        float(params['tstop_input'+postfix])>=float(params['t0_input'+postfix]) and \
+        float(params['f_input'+postfix])>0.:
+      for k in ['weight_L2Pyr_ampa','weight_L2Pyr_nmda',\
+                'weight_L5Pyr_ampa','weight_L5Pyr_nmda',\
+                'weight_inh_ampa','weight_inh_nmda']:
+        if float(params[dpref[postfix]+k])>0.:
+          # print('usingOngoingInputs:',params[dpref[postfix]+k])
+          return True
+
   return False
 
 # return number of evoked inputs (proximal, distal)

@@ -100,13 +100,11 @@ class PSDCanvas (FigureCanvas):
     return lax
 
 
-  def clearaxes (self):
-    try:
+  def clearaxes(self):
       for ax in self.lax:
-        ax.set_yticks([])
-        ax.cla()
-    except:
-      pass
+          ax.set_yticks([])
+          ax.cla()
+
 
   def clearlextdatobj (self):
     if hasattr(self,'lextdatobj'):

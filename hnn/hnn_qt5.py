@@ -1501,10 +1501,8 @@ class HNNGUI (QMainWindow):
 
   def updateDatCanv(self, params):
     # update the simulation data and canvas
-    try:
-      getinputfiles(self.baseparamwin.paramfn) # reset input data - if already exists
-    except:
-      pass
+    # reset input data - if already exists
+    getinputfiles(self.baseparamwin.paramfn)
 
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam(params)
@@ -1873,8 +1871,7 @@ class HNNGUI (QMainWindow):
     self.d = DoneSignal()
     self.d.finishSim.connect(self.done)
 
-    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
-    except: pass
+    self.setWindowIcon(QIcon(os.path.join('res', 'icon.png')))
 
     self.schemwin.show() # so it's underneath main window
 
@@ -1942,11 +1939,8 @@ class HNNGUI (QMainWindow):
     kids = self.children()
     kids.append(self.m) # matplotlib simcanvas
     for k in kids:
-      try:
         k.setCursor(cursor)
         k.update()
-      except:
-        pass
 
   def startoptmodel (self):
     # start model optimization

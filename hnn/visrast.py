@@ -97,9 +97,7 @@ def getdspk (fn):
     ddat['spk'] = np.r_[spikes.times, spikes.gids].T
   except ValueError:
     ddat['spk'] = np.loadtxt(fn)
-  except:
-    print('Could not load',fn)
-    quit()
+
   dspk = {'Cell':([],[],[]),'Input':([],[],[])}
   dhist = {}
   for ty in dclr.keys(): dhist[ty] = []
@@ -222,13 +220,10 @@ class SpikeCanvas (FigureCanvas):
     self.G = gridspec.GridSpec(16,1)
     self.plot()
 
-  def clearaxes (self):
-    try:
+  def clearaxes(self):
       for ax in self.lax:
-        ax.set_yticks([])
-        ax.cla()
-    except:
-      pass
+          ax.set_yticks([])
+          ax.cla()
 
   def loadspk (self,idx):
     global haveinputs,extinputs,params
@@ -363,14 +358,13 @@ class SpikeGUI (QMainWindow):
       self.m.plot()
 
   def initCanvas (self):
-    try: # to avoid memory leaks remove any pre-existing widgets before adding new ones
-      self.grid.removeWidget(self.m)
-      self.grid.removeWidget(self.toolbar)
-      self.m.setParent(None)
-      self.toolbar.setParent(None)
-      self.m = self.toolbar = None
-    except:
-      pass
+    # to avoid memory leaks remove any pre-existing widgets before adding new ones
+    self.grid.removeWidget(self.m)
+    self.grid.removeWidget(self.toolbar)
+    self.m.setParent(None)
+    self.toolbar.setParent(None)
+    self.m = self.toolbar = None
+
     self.m = SpikeCanvas(paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
     # this is the Navigation widget
     # it takes the Canvas widget and a parent
@@ -402,8 +396,7 @@ class SpikeGUI (QMainWindow):
     widget.setLayout(grid)
     self.setCentralWidget(widget)
 
-    try: self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
-    except: pass
+    self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
 
     self.show()
 

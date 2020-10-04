@@ -552,10 +552,10 @@ class SIMCanvas (FigureCanvas):
   def clearlextdatobj (self):
     # clear list of external data objects
     for o in self.lextdatobj:
-      try:
-        o.set_visible(False)
-      except:
-        o[0].set_visible(False)
+      # try:
+      o.set_visible(False)
+      # except:
+      #   o[0].set_visible(False)
     del self.lextdatobj
     self.lextdatobj = [] # reset list of external data objects
     self.lpatch = [] # reset legend

@@ -213,10 +213,10 @@ class Spec():
         # may be better ways of doing this...
         self.fspec = fspec
         print('Spec: fspec:',fspec)
-        try:
-          self.expmt = fspec.split('/')[6].split('.')[0]
-        except:
-          self.expmt = ''
+        # try:
+        self.expmt = fspec.split('/')[6].split('.')[0]
+        # except:
+        #   self.expmt = ''
         self.fname = 'spec.npz' # fspec.split('/')[-1].split('-spec')[0]
 
         self.spec_cmap = spec_cmap
