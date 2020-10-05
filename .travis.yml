@@ -45,12 +45,17 @@ matrix:
 
 before_install:
   - |
-    # set common environment exports for all subshells (scripts)
+    # Step 0: set common environment variables
 
     set -e
     export TRAVIS_TESTING=1
     export DISPLAY=:0
     export LOGFILE="hnn_travis.log"
+
+    if [ "${WSL_INSTALL}" ] && [ "${WSL_INSTALL}" -eq 1 ]; then
+      # for sharing with WSL environment
+      export WSLENV=TRAVIS_TESTING/u
+    fi
   - |
     # Step 1: install prerequisites
 
@@ -71,7 +76,6 @@ install:
 
     if [[ "${WSL_INSTALL}" -ne 1 ]]; then
       pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt
-      command cd $TRAVIS_BUILD_DIR
       python setup.py install
     else
       wsl -- pip install flake8 pytest pytest-cov coverage coveralls mne \
@@ -94,7 +98,7 @@ script:
  
       # script_fail prints out the log before quitting so we can troubleshoot
       start_vcxsrv_print || script_fail
-      wsl -- //home/hnn_user/hnn/scripts/run-travis-wsl.sh
+      wsl -- //home/hnn_user/hnn/scripts/run-pytest-wsl.sh
       stop_vcxsrv || script_fail
     else
       if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then

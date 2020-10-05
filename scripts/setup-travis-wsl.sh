@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# for sharing with WSL environment
-export WSLENV=TRAVIS_TESTING/u
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # we use wait_for_pid and start_download from utils.sh
