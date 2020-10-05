@@ -72,9 +72,10 @@ HNN Releases can be seen on the [GitHub releases page](https://github.com/jonesc
 To download the latest release, use the following commands within an Ubuntu terminal:
 
 ```bash
-wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/archive/v1.3.1.tar.gz
-tar -xf hnn.tar.gz
-cd hnn-1.3.1
+wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+cd hnn_source_code
+make
 python3 hnn.py
 ```
 

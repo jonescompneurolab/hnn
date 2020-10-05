@@ -117,7 +117,7 @@ if [[ $TRAVIS_TESTING -ne 1 ]]; then
     fi
   else
     echo "Downloading and extracting HNN..." | tee -a "$LOGFILE"
-    wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/archive/v1.3.1.tar.gz | tee -a "$LOGFILE"
+    wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz | tee -a "$LOGFILE"
     mkdir hnn_source_code
     tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code &>> "$LOGFILE" && \
       cd hnn_source_code &>> "$LOGFILE" 

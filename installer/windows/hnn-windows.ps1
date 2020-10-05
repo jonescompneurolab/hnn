@@ -353,7 +353,7 @@ elseif (($null -ne $test_dir) -and
 }
 else {
   $file = "hnn.zip"
-  $url = "https://github.com/jonescompneurolab/hnn/archive/v1.3.1.zip"
+  $url = "https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.zip"
   Download-Program $program $file $url
   $test_dir = Resolve-Path -Path ".\hnn" 2> $null
   if (($null -ne $test_dir) -and

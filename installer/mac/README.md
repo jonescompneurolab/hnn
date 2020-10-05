@@ -69,9 +69,9 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 1. The following commands will download the hnn source code and compile HNN's mod files for NEURON. This is where Xcode Command Line Tools are needed.
 
     ```bash
-    curl --remote-name https://github.com/jonescompneurolab/hnn/archive/v1.3.1.tar.gz
-    tar -xf v1.3.1.tar.gz
-    cd hnn-1.3.1
+    curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+    tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+    cd hnn_source_code
     make
     ```
 
@@ -94,6 +94,20 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 4. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
     - A directory called "hnn_out" exists in your home directory where the results from your simulations (data and param files) will be stored.
+
+## Upgrading to a new version of HNN
+
+HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
+
+To download the latest release, use the following commands within an Ubuntu terminal:
+
+```bash
+curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+cd hnn_source_code
+make
+python3 hnn.py
+```
 
 ## Troubleshooting
 
