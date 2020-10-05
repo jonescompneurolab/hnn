@@ -1,4 +1,6 @@
-# Installing HNN on Mac OS (Docker Desktop)
+# DEPRECATED: Installing HNN on Mac OS (Docker Desktop)
+
+- Supported alternative: [Python install instructions](README.md)
 
 ## Prerequisite: XQuartz
 
@@ -19,32 +21,14 @@
 
 ## Start HNN
 
-1. Clone or download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Choose one of the following methods:**
-
-   * Option 1: Cloning (requires <a href="native_install#prerequisite-2-xcode-command-line-tools">Xcode Command Line Tools</a>)
-
-     1. Check that you have Git installed from a terminal window
-
-        ```bash
-        $ git version
-        git version 2.21.0 (Apple Git-122)
-        ```
-
-     2. Type the following to clone the repo. If you already have a previous version of the repository, bring it up to date with the command `git pull origin master` instead of the `git clone` command below.
-
-        ```bash
-        $ git clone https://github.com/jonescompneurolab/hnn.git
-        $ cd hnn
-        ```
-
-   * Option 2: Downloading a HNN release
+1. Download the [HNN repo](https://github.com/jonescompneurolab/hnn). **Choose one of the following methods:**
 
      1. Download the source code (zip) for our latest HNN release from our [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases)
      2. Open the .zip file and click "Extract all". Choose any destination folder on your machine.
      3. Open a cmd.exe window and change to the directory part of the extracted HNN release shown below:
 
         ```bash
-        $ cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn
+        cd REPLACE-WITH-FOLDER-EXTRACTED-TO/hnn
         ```
 
 2. Start the Docker container using the `hnn_docker.sh` script. For the first time, we will pass the `-u` option in case there were any previous versions of the docker image on your computer. You can omit the `-u` option later
@@ -54,9 +38,9 @@
     ```
 
 3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+    - If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
-    * A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
+    - A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
 5. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
 
     ```bash

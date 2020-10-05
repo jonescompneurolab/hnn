@@ -61,16 +61,6 @@ export DEBIAN_FRONTEND=noninteractive
 echo "Updating package repository..." | tee -a "$LOGFILE"
 sudo -E apt-get update &> "$LOGFILE"
 
-echo "Downloading Python packages..." | tee -a "$LOGFILE"
-apt-get download \
-  make gcc g++ python3 python3-pip python3-dev python3-tk python3-setuptools \
-  libncurses5 libreadline5 libdbus-1-3 libopenmpi-dev &> "$LOGFILE" &
-APT_DOWNLOAD=$!
-
-echo "Waiting for package download to finish..."
-NAME="downloading python packages"
-wait_for_pid "${APT_DOWNLOAD}" "$NAME"
-
 echo "Updating OS python packages..." | tee -a "$LOGFILE"
 if [[ "${PYTHON_VERSION}" =~ "3.7" ]] && [[ "$DISTRIB" =~ "bionic" ]]; then
   sudo -E apt-get install --no-install-recommends -y python3.7 python3-pip python3.7-tk python3.7-dev &> "$LOGFILE" && \
@@ -95,41 +85,22 @@ elif which python &> /dev/null; then
 fi
 echo "Using python: $PYTHON with pip: $PIP" | tee -a "$LOGFILE"
 
-echo "Downloading python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP download matplotlib PyOpenGL \
-        pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE" &
-PIP_PID=$!
-
 echo "Installing OS compilation toolchain..." | tee -a "$LOGFILE"
 # get prerequisites from pip. requires gcc to build psutil
 sudo -E apt-get install --no-install-recommends -y \
         make gcc g++ python3-dev &> "$LOGFILE"
-
-echo "Waiting for python packages for HNN downloads to finish..."
-NAME="downloading python packages for HNN "
-wait_for_pid "${PIP_PID}" "$NAME"
 
 $PIP install --no-cache-dir NEURON
 
 # WSL may not have nrnivmodl in PATH
 if ! which nrnivmodl &> /dev/null; then
   export PATH="$PATH:$HOME/.local/bin"
+  echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
 fi
 
 echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
 $PIP install --no-cache-dir --user matplotlib PyOpenGL \
         pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
-
-echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"
-apt-get download \
-  openmpi-bin lsof libfontconfig1 libxext6 libx11-xcb1 libxcb-glx0 \
-  libxkbcommon-x11-0 	libgl1-mesa-glx \
-  libc6-dev libtinfo-dev libncurses5-dev \
-  libx11-dev libreadline-dev \
-  libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
-  libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
-  libxcb-xinerama0 &> "$LOGFILE" &
-APT_DOWNLOAD=$!
 
 # save dir installing hnn to
 startdir=$(pwd)
@@ -145,9 +116,11 @@ if [[ $TRAVIS_TESTING -ne 1 ]]; then
       git pull origin master &> "$LOGFILE"
     fi
   else
-    echo "Cloning HNN..." | tee -a "$LOGFILE"
-    git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code &> "$LOGFILE" && \
-      cd hnn_source_code
+    echo "Downloading and extracting HNN..." | tee -a "$LOGFILE"
+    wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/archive/v1.3.1.tar.gz | tee -a "$LOGFILE"
+    mkdir hnn_source_code
+    tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code &>> "$LOGFILE" && \
+      cd hnn_source_code &>> "$LOGFILE" 
   fi
 else
   source_code_dir="$startdir"
@@ -174,10 +147,6 @@ if [[ -d "$HOME/Desktop" ]]; then
     chmod +x "$HOME/Desktop/hnn.desktop"
   } &> "$LOGFILE"
 fi
-
-echo "Waiting for prerequisite package downloads to finish..."
-NAME="downloading prerequisite packages"
-wait_for_pid "${APT_DOWNLOAD}" "$NAME"
 
 echo "Installing prerequisites..." | tee -a "$LOGFILE"
 sudo -E apt-get install --no-install-recommends -y \

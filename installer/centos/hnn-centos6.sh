@@ -3,7 +3,7 @@
 # start with this since it gets input needed
 sudo yum -y install git
 # HNN repo from github - moved to github on April 8, 2018
-git clone https://github.com/jonescompneurolab/hnn.git
+git clone https://github.com/jonescompneurolab/hnn.git hnn_source_code
 
 sudo yum -y install epel-release
 sudo yum -y install python34-devel
@@ -26,25 +26,14 @@ sudo PATH=$PATH:/usr/lib64/openmpi/bin pip3 install mpi4py
 startdir=$(pwd)
 echo $startdir
 
-git clone https://github.com/neuronsimulator/nrn
-cd nrn
-#git checkout be2997e
-./build.sh
-./configure --with-nrnpython=python3 --with-paranrn --disable-rx3d \
-    --without-iv --without-nrnoc-x11 --with-mpi --prefix=$startdir/nrn/build
-make -j4
-PATH=$PATH:/usr/lib64/openmpi/bin make install -j4
-cd src/nrnpython
-python3 setup.py install --user
+pip install NEURON
 
 # move outside of nrn directories
 cd $startdir
 
 # setup HNN itself
-cd hnn
+cd hnn_source_code
 # make compiles the mod files
-export CPU=$(uname -m)
-export PATH=$PATH:$startdir/nrn/build/$CPU/bin
 make
 cd ..
 
@@ -78,12 +67,6 @@ sudo make install -j4
 cd ..
 rm -rf PyQt5_gpl-5.8.2
 rm -f PyQt5_gpl-5.8.2.tar.gz
-
-# used by pqtgraph - for visualization
-sudo pip3 install PyOpenGL PyOpenGL_accelerate
-
-# pyqtgraph - only used for visualization
-sudo pip3 install pyqtgraph
 
 # needed for matplotlib
 sudo yum -y install python34-tkinter
