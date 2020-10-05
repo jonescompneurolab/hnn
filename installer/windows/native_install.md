@@ -1,6 +1,4 @@
-# HNN native install (Windows)
-
-This method will run HNN without using virtualization, meaning the GUI may feel more responsive and simulations may run slightly faster. However, there is a possibility that differences in the base environment may require additional troubleshooting. Thus, it is best suited for advanced users, and we recommend the [Docker-based install instructions](README.md).
+# Windows-native HNN install script
 
 With this method, a [PowerShell install script](hnn-windows.ps1) will manage downloading all prerequisites, including Python (Anaconda), NEURON, and Git for Windows.
 
@@ -77,5 +75,3 @@ rm $HOME\AppData\Local\Microsoft\WindowsApps\python3.exe
 ### Other issues
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
-
-For other HNN software issues, please visit the [HNN bulletin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)

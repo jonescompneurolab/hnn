@@ -1,4 +1,6 @@
-# Installing HNN on Windows 10 (Home)
+# DEPRECATED: Installing HNN on Windows 10 (Home)
+
+- Supported alternative: [Windows-native install instructions](native_install.md)
 
 ## Prerequisite: hardware virtualization features
 
@@ -85,18 +87,18 @@ It is necessary to turn off Hyper-V for using HNN with Docker Toolbox. You may f
     user@DESKTOP-LHCRPOM /c/Program Files/Docker Toolbox$
     ```
 
-   * If you get the error message shown below in the "Docker Quickstart Terminal", hardware support for virtualization isn't turned on, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
+   - If you get the error message shown below in the "Docker Quickstart Terminal", hardware support for virtualization isn't turned on, which is required for Docker on Windows. This may be fixable by changing settings in your PC manufacturer's BIOS. See the note on "Hardware virtualization features" under the "Prerequisite: Virtualization support" heading at the top of this page.
 
       <img src="install_pngs/vtx_disabled.png" width="500"/>
 
-   * If you get the error message shown below, the Hyper-V feature needs to be turned off. Please see the "Prerequisite: disable Hyper-V" heading at the top of this page. After rebooting, launch "Docker Quickstart Terminal" from the Start Menu.
+   - If you get the error message shown below, the Hyper-V feature needs to be turned off. Please see the "Prerequisite: disable Hyper-V" heading at the top of this page. After rebooting, launch "Docker Quickstart Terminal" from the Start Menu.
 
       <img src="install_pngs/docker-toolbox-error-hyperv-on.png" width="500" />
 
 9. We want HNN to use all of the CPU cores available on your system when it runs a simulation, and Docker only uses half by default. To change this setting we need to first stop the Docker VM that was started above in step 5. Run the command below in a "Docker Quickstart Terminal" window.
 
     ```bash
-    $ docker-machine stop
+    docker-machine stop
     ```
 
 10. Type 'VirtualBox' into the start menu search bar and launch "Oracle VM VirtualBox"
@@ -125,14 +127,14 @@ If you run into problems, check the official Docker Toolbox documentation: [Dock
     ./hnn_docker.sh -u start
     ```
 
-    * A window may pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
+    - A window may pop up stating "Docker needs to access your computer's filesystem". This is necessary to share data and parameter files that HNN creates with your Windows OS. Enter your Windows login password.
 
         <img src="install_pngs/access_filesystem.png" width="300" />
 
 3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+    - If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
 4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
-    * A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
+    - A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
 5. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
 
     ```bash

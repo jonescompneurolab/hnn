@@ -7,15 +7,13 @@ install Miniconda:
 
 Additionally the following will be installed if they are not found:
  - nrn-7.7.w64-mingwsetup.exe
- - Git-2.13.0-64-bit.exe
 
 Other requirements:
  - Only 64-bit installs are supported due to NEURON compatibility
  - Windows 7 or greater is required for multi-processing support
 
-There may be several permission prompts for installing Git and Microsoft MPI. Additionally,
-a couple of terminal Windows may open up: one for "git clone" and then another for building
-nrnmech.dll
+There may be several permission prompts for installing Microsoft MPI. Additionally, a
+terminal Windows may open up for building nrnmech.dll
 
 Expect that installation will pause for several minutes while waiting for the Miniconda
 installation to finish
@@ -44,7 +42,7 @@ function Test-Installed($program) {
     (Get-Package -Name *$program* ).Length -gt 0 2> $null
   }
   else {
-    # This method is not reliable for non-MSI installers (NEURON, Miniconda/Anaconda, Git)
+    # This method is not reliable for non-MSI installers (NEURON, Miniconda/Anaconda)
     # So for older versions, the packages will likely be installed again. If a python3 exe 
     # can be found, it will still be used instead of installing Miniconda
     if (((Get-ChildItem "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall") |
@@ -324,28 +322,6 @@ else {
   Write-Host "$program already installed"
 }
 
-$program = "Git"
-if (!(Test-Installed($program))) {
-# After Git 2.13.0 the installer stopped working with Windows Vista.
-# So let's use the older version for compatibility
-#  $file = "Git-2.20.1-64-bit.exe"
-  $file = "Git-2.13.0-64-bit.exe"
-  $dst = "$HOME\Downloads\$file"
-  if (!(Test-Path $dst)) {
-    Write-Host "Downloading git..."
-#    $url = "https://github.com/git-for-windows/git/releases/download/v2.20.1.windows.1/$file"
-    $url = "https://github.com/git-for-windows/git/releases/download/v2.13.0.windows.1/$file"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (New-Object System.Net.WebClient).DownloadFile($url,$dst)
-  }
-  Write-Host "Installing Git..."
-  Start-Process $dst "/VERYSILENT /SP- /o:PathOption=Cmd" -Wait
-}
-else {
-  Write-Host "$program already installed"
-}
-
-
 $program = "Microsoft MPI"
 if (!(Test-Installed($program))) {
   $file = "msmpisetup.exe"
@@ -357,21 +333,6 @@ if (!(Test-Installed($program))) {
 }
 else {
   Write-Host "$program already installed"
-}
-
-# Would be best to get install directory from git but this has
-# no lasting effect and was necessary to proceed
-if (Test-Path "$env:ProgramFiles\Git\bin\git.exe" -PathType Leaf) {
-  $Env:path += ";$env:ProgramFiles\bin"
-  Update-User-Paths("$env:ProgramFiles\bin")
-}
-elseif (Test-Path "$HOME\AppData\Local\Programs\Git\bin\git.exe" -PathType Leaf) {
-  $Env:path += ";$HOME\AppData\Local\Programs\Git\bin"
-  Update-User-Paths("$HOME\AppData\Local\Programs\Git\bin")
-}
-else {
-  Write-Warning "Didn't find git binary at $GitPath\git"
-  return
 }
 
 # Script might have been run installers/windows from hnn repo
@@ -391,21 +352,24 @@ elseif (($null -ne $test_dir) -and
   $HNN_PATH = (Get-Item -Path "$test_dir").FullName
 }
 else {
-  # it's not being run from repo, so check if a clone to $HOME is needed
-  if (!(Test-Path "$HOME\hnn\.git")) {
-    Write-Host "Cloning HNN repo to $HOME\hnn"
-    git clone https://github.com/jonescompneurolab/hnn.git $HOME\hnn
+  $file = "hnn.zip"
+  $url = "https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.zip"
+  Download-Program $program $file $url
+  $test_dir = Resolve-Path -Path ".\hnn" 2> $null
+  if (($null -ne $test_dir) -and
+    (Test-Path -Path "$test_dir")) {
+      Write-Host "dir $test_dir already exists"
+  }
+  else{
+    unzip $HOME\Downloads\hnn.zip
+    Rename-Item .\hnn-1.3.1 .\hnn
     $hnn_cloned = $true
   }
-  # else hnn will not be cloned because it existed at $HOME\hnn
   $HNN_PATH = (Get-Item -Path "$HOME\hnn").FullName
 }
 
 if (!($hnn_cloned)) {
-  Write-Host "HNN repository already exists at $HNN_PATH. Bringing up to date"
-  Set-Location $HNN_PATH
-  git checkout master 2> $null
-  git pull origin master 2> $null
+  Write-Host "HNN source code already exists at $HNN_PATH."
 }
 
 

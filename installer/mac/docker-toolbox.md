@@ -1,4 +1,6 @@
-# Installing HNN on Mac OS (Docker Toolbox)
+# DEPRECATED: Installing HNN on Mac OS (Docker Toolbox)
+
+- Supported alternative: [Python install instructions](README.md)
 
 ## Prerequisite: XQuartz
 
@@ -71,7 +73,7 @@
 6. We want HNN to use all of the CPU cores available on your system when it runs a simulation, and Docker only uses half by default. To change this setting we need to first stop the Docker VM that was started above in step 5. Run the command below in a "Docker Quickstart Terminal" window.
 
     ```bash
-    $ docker-machine stop
+    docker-machine stop
     ```
 
 7. Type 'VirtualBox' into the start menu search bar and launch "Oracle VM VirtualBox"
@@ -98,9 +100,11 @@ If you run into problems, check the official Docker Toolbox documentation: [Dock
     ```
 
 3. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
-    * If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+    - If the GUI doesn't show up, check the [Docker troubleshooting section](../docker/troubleshooting.md) (also links the bottom of this page)
+
 4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
-    * A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
+    - A subdirectory called "hnn_out" is created in your home directory and is where simulation results and parameter files will be saved.
+
 5. To quit HNN and shut down container, first press 'Quit' within the GUI. Then run `./hnn_docker.sh stop`.
 
     ```bash
