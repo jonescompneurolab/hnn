@@ -57,17 +57,17 @@ start_download "$FILENAME" "$URL" > /dev/null
 echo "Installing VcXsrv..."
 cmd //c "$HOME/vcxsrv-64.1.20.8.1.installer.exe /S"
 
-# # get opengl32.dll from mesa
-# # this is needed to be able to start vcxsrv
-# export msys2='cmd //C RefreshEnv.cmd '
-# export msys2+='& set MSYS=winsymlinks:nativestrict '
-# export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
-# export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
-# export msys2+=" -msys2 -c "\"\$@"\" --"
-# $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa
+# get opengl32.dll from mesa
+# this is needed to be able to start vcxsrv
+export msys2='cmd //C RefreshEnv.cmd '
+export msys2+='& set MSYS=winsymlinks:nativestrict '
+export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
+export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
+export msys2+=" -msys2 -c "\"\$@"\" --"
+$msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-mesa
 
-# # for MESA dll's
-# export PATH=$PATH:/c/tools/msys64/mingw64/bin
+# for MESA dll's
+export PATH=$PATH:/c/tools/msys64/mingw64/bin
 
 # for using X server
 export PATH="$PATH:/c/Program\ Files/VcXsrv"

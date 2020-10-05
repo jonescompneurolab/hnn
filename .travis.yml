@@ -44,11 +44,16 @@ matrix:
             - xvfb
 
 before_install:
-  - | # common environment exports for all subshells (scripts)
+  - |
+    # set common environment exports for all subshells (scripts)
+
+    set -e
     export TRAVIS_TESTING=1
     export DISPLAY=:0
     export LOGFILE="hnn_travis.log"
-  - | # Run prerequisite installation script
+  - |
+    # Step 1: install prerequisites
+
     if [ "${WSL_INSTALL}" ] && [ "${WSL_INSTALL}" -eq 1 ]; then
       echo "Installing WSL prerequisites"
       scripts/setup-travis-wsl.sh
@@ -61,7 +66,9 @@ before_install:
     fi
 
 install:
-  - | # set up hnn module and testing packages
+  - |
+    # Step 2: install hnn Python module and modules for testing
+
     if [[ "${WSL_INSTALL}" -ne 1 ]]; then
       pip install flake8 pytest pytest-cov coverage coveralls mne pytest-qt
       command cd $TRAVIS_BUILD_DIR
@@ -69,11 +76,13 @@ install:
     else
       wsl -- pip install flake8 pytest pytest-cov coverage coveralls mne \
                  pytest-qt
-      wsl -- python3 setup.py install
+      wsl -- python3 setup.py install --user
     fi
 
 script:
-  - | # run tests
+  - |
+    # Step 3: run CI tests with py.test
+
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       # helper commands from docker_functions.sh and utils.sh
       source "scripts/docker_functions.sh"
@@ -88,10 +97,15 @@ script:
       wsl -- //home/hnn_user/hnn/scripts/run-travis-wsl.sh
       stop_vcxsrv || script_fail
     else
+      if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+        # NEURON will fail to import if DISPLAY is set
+        unset DISPLAY
+      elif [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+        # Python will search path to find neuron dll's
+        export PATH=$PATH:/c/nrn/bin
+      fi
+
       echo "Running Python tests on host OS..."
-      pwd
-      command cd $TRAVIS_BUILD_DIR
-      pwd
       py.test --cov=. hnn/tests/
     fi
 
