@@ -234,7 +234,7 @@ class ExtInputs (Spikes):
 
   # extinput is either 'dist' or 'prox'
   def plot_hist (self, ax, extinput, tvec, bins='auto', xlim=None, color='green', hty='bar',lw=4):
-    if bins is 'auto':
+    if bins == 'auto':
         bins = hist_bin_opt(self.inputs[extinput], 1)
     if not xlim:
       xlim = (0., self.p_dict['tstop'])

@@ -146,9 +146,9 @@ def read_gids_param (fparam):
         if line.startswith('#'): continue
         keystring, val = line.split(": ")
         key = keystring.strip()
-        if val[0] is '[':
+        if val[0] == '[':
             val_range = val[1:-1].split(', ')
-            if len(val_range) is 2:
+            if len(val_range) == 2:
                 ind_start = int(val_range[0])
                 ind_end = int(val_range[1]) + 1
                 gid_dict[key] = np.arange(ind_start, ind_end)
