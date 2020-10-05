@@ -51,15 +51,17 @@ before_install:
     export TRAVIS_TESTING=1
     export DISPLAY=:0
     export LOGFILE="hnn_travis.log"
+    export PATH="$PATH:$HOME/.local/bin"
 
-    if [ "${WSL_INSTALL}" ] && [ "${WSL_INSTALL}" -eq 1 ]; then
+    if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       # for sharing with WSL environment
-      export WSLENV=TRAVIS_TESTING/u
+      export OMPI_MCA_btl_vader_single_copy_mechanism=none
+      export WSLENV=TRAVIS_TESTING/u:DISPLAY/u:OMPI_MCA_btl_vader_single_copy_mechanism/u:WSL_INSTALL/y
     fi
   - |
     # Step 1: install prerequisites
 
-    if [ "${WSL_INSTALL}" ] && [ "${WSL_INSTALL}" -eq 1 ]; then
+    if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       echo "Installing WSL prerequisites"
       scripts/setup-travis-wsl.sh
     else
@@ -87,14 +89,10 @@ script:
   - |
     # Step 3: run CI tests with py.test
 
-    # first check code style with flake8 (ignored currently)
-    flake8 --exit-zero --quiet --count \
-      --exclude visdipole.py,visrast.py,visvolt.py,visspec.py,vispsd.py \
-      --exclude spikefn.py,specfn.py,DataViewGUI.py hnn
-
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       # for X server DLLs
       export PATH="$PATH:/c/Program\ Files/VcXsrv"
+      export PATH=$PATH:/c/msys64/mingw64/bin
 
       # use helper commands from docker_functions.sh and utils.sh
       # script_fail prints out the log before quitting so we can troubleshoot
@@ -105,7 +103,7 @@ script:
 
       find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
       start_vcxsrv_print || script_fail
-      wsl -- //home/hnn_user/hnn/scripts/run-pytest-wsl.sh
+      wsl -- //home/hnn_user/hnn/scripts/run-pytest.sh
       stop_vcxsrv || script_fail
     else
       if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
@@ -115,11 +113,12 @@ script:
         # Python will search path to find neuron dll's
         export PATH=$PATH:/c/nrn/bin
 
-        runas //user:"test user" "cmd py.test --cov=. hnn/tests/" > /dev/null < "$HOME/test_user_creds"
+        # run tests first as a user with a space (TODO)
+        # runas //user:"test user" //wait "bash" "scripts/run-pytest.sh" < "$HOME/test_user_creds"
+        # echo "Finished test with 'test user'"
       fi
 
-      echo "Running Python tests on host OS..."
-      py.test --cov=. hnn/tests/
+      scripts/run-pytest.sh
     fi
 
 after_success:
