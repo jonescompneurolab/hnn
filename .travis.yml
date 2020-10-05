@@ -7,12 +7,12 @@ matrix:
         name: "MacOS Catalina"
         osx_image: xcode12
 
-      # WSL
-      - os: windows
-        name: "WSL"
-        env:
-          - WSL_INSTALL=1
-          - USE_CONDA=0
+      # # WSL
+      # - os: windows
+      #   name: "WSL"
+      #   env:
+      #     - WSL_INSTALL=1
+      #     - USE_CONDA=0
 
       # Windows
       - os: windows
