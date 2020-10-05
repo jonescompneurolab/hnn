@@ -104,6 +104,21 @@ if [[ "$USE_CONDA" -eq 0 ]]; then
   echo "Waiting for python packages for HNN downloads to finish..."
   NAME="downloading python packages for HNN "
   wait_for_pid "${PIP_PID}" "$NAME"
+
+  $PIP install --no-cache-dir NEURON
+
+  # WSL may not have nrnivmodl in PATH
+  if ! which nrnivmodl &> /dev/null; then
+    export PATH="$PATH:$HOME/.local/bin"
+    echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+  fi
+
+  echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
+  $PIP install --no-cache-dir --user matplotlib PyOpenGL \
+    pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
+
+  pip install \
+    https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
 else
   URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
   FILENAME="$HOME/miniconda.sh"
@@ -119,22 +134,19 @@ else
 
   # conda is faster to install nlopt
   conda install -y -n hnn -c conda-forge nlopt
-  conda install -y -n hnn mpi4py
 
   source activate hnn && echo "activated conda HNN environment"
+
+  echo "Installing MPI compilation toolchain..." | tee -a "$LOGFILE"
+  # get prerequisites to build mpi4py
+  sudo -E apt-get install --no-install-recommends -y \
+          libopenmpi-dev &> "$LOGFILE"
+
+  pip install mpi4py NEURON
+  pip install \
+    https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
 fi
 
-$PIP install --no-cache-dir NEURON
-
-# WSL may not have nrnivmodl in PATH
-if ! which nrnivmodl &> /dev/null; then
-  export PATH="$PATH:$HOME/.local/bin"
-  echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
-fi 
-
-echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
-$PIP install --no-cache-dir --user matplotlib \
-        pyqt5 scipy numpy nlopt psutil &> "$LOGFILE"
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"
 apt-get download \
   openmpi-bin lsof libfontconfig1 libxext6 libx11-xcb1 libxcb-glx0 \

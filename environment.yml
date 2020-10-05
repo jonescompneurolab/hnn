@@ -9,6 +9,4 @@ dependencies:
 - matplotlib
 - psutil
 - pip:
-  - NEURON
-  - https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
   - PyQt5
