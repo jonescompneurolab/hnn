@@ -1,13 +1,14 @@
 from PyQt5 import QtWidgets, QtCore
+import pytest
 
 from hnn import HNNGUI
 
-
+@pytest.mark.skip
 def test_HNNGUI(qtbot):
     main = HNNGUI()
     qtbot.addWidget(main)
 
-
+@pytest.mark.skip
 def test_exit_button(qtbot, monkeypatch):
     exit_calls = []
     monkeypatch.setattr(QtWidgets.QApplication, "exit",

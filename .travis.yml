@@ -87,6 +87,11 @@ script:
   - |
     # Step 3: run CI tests with py.test
 
+    # first check code style with flake8 (ignored currently)
+    flake8 --exit-zero --quiet --count \
+      --exclude visdipole.py,visrast.py,visvolt.py,visspec.py,vispsd.py \
+      --exclude spikefn.py,specfn.py,DataViewGUI.py hnn
+
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       # helper commands from docker_functions.sh and utils.sh
       source "scripts/docker_functions.sh"
