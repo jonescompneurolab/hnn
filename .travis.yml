@@ -7,12 +7,12 @@ matrix:
         name: "MacOS Catalina"
         osx_image: xcode12
 
-      # # WSL
-      # - os: windows
-      #   name: "WSL"
-      #   env:
-      #     - WSL_INSTALL=1
-      #     - USE_CONDA=0
+      # WSL
+      - os: windows
+        name: "WSL"
+        env:
+          - WSL_INSTALL=1
+          - USE_CONDA=0
 
       # Windows
       - os: windows
@@ -93,15 +93,17 @@ script:
       --exclude spikefn.py,specfn.py,DataViewGUI.py hnn
 
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
-      # helper commands from docker_functions.sh and utils.sh
+      # for X server DLLs
+      export PATH="$PATH:/c/Program\ Files/VcXsrv"
+
+      # use helper commands from docker_functions.sh and utils.sh
+      # script_fail prints out the log before quitting so we can troubleshoot
       source "scripts/docker_functions.sh"
       set_globals
       source scripts/utils.sh
       export -f cleanup
 
       find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
- 
-      # script_fail prints out the log before quitting so we can troubleshoot
       start_vcxsrv_print || script_fail
       wsl -- //home/hnn_user/hnn/scripts/run-pytest-wsl.sh
       stop_vcxsrv || script_fail
@@ -112,6 +114,8 @@ script:
       elif [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
         # Python will search path to find neuron dll's
         export PATH=$PATH:/c/nrn/bin
+
+        runas //user:"test user" "cmd py.test --cov=. hnn/tests/" > /dev/null < "$HOME/test_user_creds"
       fi
 
       echo "Running Python tests on host OS..."
