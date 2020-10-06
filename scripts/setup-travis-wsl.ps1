@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 Set-Location C:\Users\travis
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-Write-Host "Downloading Ubuntu image..."
+Write-Host "Downloading Ubuntu WSL image..."
 Invoke-WebRequest -Uri https://aka.ms/wsl-ubuntu-1804 -OutFile Ubuntu.appx -UseBasicParsing
 
 Write-Host "Finished downloading Ubuntu image. Extracting..."

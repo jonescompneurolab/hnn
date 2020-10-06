@@ -62,8 +62,8 @@ before_install:
     # Step 1: install prerequisites
 
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
-      echo "Installing WSL prerequisites"
-      scripts/setup-travis-wsl.sh
+      powershell.exe -ExecutionPolicy Bypass -File ./scripts/setup-travis-wsl.ps1
+      # scripts/setup-travis-wsl.sh
     else
       echo "Installing ${TRAVIS_OS_NAME} prerequisites"
       scripts/setup-travis-${TRAVIS_OS_NAME}.sh
@@ -90,22 +90,7 @@ script:
     # Step 3: run CI tests with py.test
 
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
-      # use helper commands from docker_functions.sh and utils.sh
-      # script_fail prints out the log before quitting so we can troubleshoot
-      source "scripts/docker_functions.sh"
-      set_globals
-      source scripts/utils.sh
-      export -f cleanup
-
-      # for X server DLLs
-      export PATH=$PATH:/c/Program\ Files/VcXsrv
-
-      # find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
-      # start_vcxsrv_print || script_fail
-      which vcxsrv
-      vcxsrv.exe -wgl -multiwindow
       wsl -- //home/hnn_user/hnn/scripts/run-pytest.sh
-      # stop_vcxsrv || script_fail
     else
       if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
         # NEURON will fail to import if DISPLAY is set

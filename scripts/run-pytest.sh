@@ -3,6 +3,8 @@ set -e
 
 if [[ "${WSL_INSTALL}" -eq 1 ]]; then
     export PATH="$PATH:$HOME/.local/bin"
+    # unable to get vcxsrv to work (DLL loading problems)
+    unset DISPLAY
 fi
 
 # first check code style with flake8 (ignored currently)
