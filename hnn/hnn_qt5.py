@@ -1119,8 +1119,9 @@ class BaseParamDialog (QDialog):
     self.setWindowTitle('Set Parameters')    
 
   def saveparams (self, checkok = True):
-    tmpf = os.path.join(get_output_dir(), 'param',
-                        self.qle.text() + '.param')
+    param_dir = os.path.join(get_output_dir(), 'param')
+    tmpf = os.path.join(param_dir, self.params['sim_prefix'] + '.param')
+
     oktosave = True
     if os.path.isfile(tmpf) and checkok:
       self.show()
@@ -1133,6 +1134,8 @@ class BaseParamDialog (QDialog):
         oktosave = False
 
     if oktosave:
+      os.makedirs(param_dir, exist_ok=True)
+
       with open(tmpf,'w') as fp:
         fp.write(str(self))
 
@@ -1150,8 +1153,8 @@ class BaseParamDialog (QDialog):
     self.saveparams(checkok = False)
 
   def __str__ (self):
-    s = 'sim_prefix: ' + self.qle.text() + os.linesep
-    s += 'expmt_groups: {' + self.qle.text() + '}' + os.linesep
+    s = 'sim_prefix: ' + self.params['sim_prefix'] + os.linesep
+    s += 'expmt_groups: {' + self.params['sim_prefix'] + '}' + os.linesep
     for win in self.lsubwin: s += str(win)
     return s
 
@@ -2014,9 +2017,10 @@ class HNNGUI (QMainWindow):
     try:
       params = read_params(self.baseparamwin.paramfn)
     except ValueError:
-      QMessageBox.information(self, "HNN", "WARNING: could not"
-                              "retrieve parameters from %s" %
-                              self.baseparamwin.paramfn)
+      txt = "WARNING: could not retrieve parameters from %s" % \
+            self.baseparamwin.paramfn
+      QMessageBox.information(self, "HNN", txt)
+      print(txt)
       return
 
     self.setcursors(Qt.WaitCursor)
