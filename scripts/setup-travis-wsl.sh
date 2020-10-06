@@ -18,6 +18,7 @@ start_download "$FILENAME" "$URL" > /dev/null
 echo "Installing VcXsrv..."
 cmd //c "$HOME/vcxsrv-64.1.20.8.1.installer.exe /S"
 
+/c/Program\ Files/VcXSrv/vcxsrv.exe -wgl -multiwindow
 echo "Waiting for WSL install to finish..."
 NAME="installing WSL"
 wait_for_pid "${WSL_PID}" "$NAME" || script_fail

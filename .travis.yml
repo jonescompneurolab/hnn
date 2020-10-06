@@ -102,7 +102,8 @@ script:
 
       # find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
       # start_vcxsrv_print || script_fail
-      /c/Program\ Files/VcXsrv/vcxsrv.exe -wgl -multiwindow
+      which vcxsrv
+      vcxsrv.exe -wgl -multiwindow
       wsl -- //home/hnn_user/hnn/scripts/run-pytest.sh
       # stop_vcxsrv || script_fail
     else
