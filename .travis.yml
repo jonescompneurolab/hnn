@@ -56,7 +56,7 @@ before_install:
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
       # for sharing with WSL environment
       export OMPI_MCA_btl_vader_single_copy_mechanism=none
-      export WSLENV=TRAVIS_TESTING/u:DISPLAY/u:OMPI_MCA_btl_vader_single_copy_mechanism/u:WSL_INSTALL/y
+      export WSLENV=TRAVIS_TESTING/u:DISPLAY/u:OMPI_MCA_btl_vader_single_copy_mechanism/u:WSL_INSTALL/u
     fi
   - |
     # Step 1: install prerequisites
@@ -90,10 +90,6 @@ script:
     # Step 3: run CI tests with py.test
 
     if [[ "${WSL_INSTALL}" -eq 1 ]]; then
-      # for X server DLLs
-      export PATH="$PATH:/c/Program\ Files/VcXsrv"
-      export PATH=$PATH:/c/msys64/mingw64/bin
-
       # use helper commands from docker_functions.sh and utils.sh
       # script_fail prints out the log before quitting so we can troubleshoot
       source "scripts/docker_functions.sh"
@@ -101,10 +97,14 @@ script:
       source scripts/utils.sh
       export -f cleanup
 
-      find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
-      start_vcxsrv_print || script_fail
+      # for X server DLLs
+      export PATH=$PATH:/c/Program\ Files/VcXsrv
+
+      # find_command_suggested_path "vcxsrv" "/c/Program Files/VcXsrv"
+      # start_vcxsrv_print || script_fail
+      /c/Program\ Files/VcXsrv/vcxsrv.exe -wgl -multiwindow
       wsl -- //home/hnn_user/hnn/scripts/run-pytest.sh
-      stop_vcxsrv || script_fail
+      # stop_vcxsrv || script_fail
     else
       if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
         # NEURON will fail to import if DISPLAY is set
