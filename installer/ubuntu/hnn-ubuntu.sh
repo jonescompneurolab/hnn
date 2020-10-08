@@ -48,6 +48,8 @@ echo "Output in log file: $LOGFILE"
     PYTHON_VERSION=3.6
   elif [[ "$DISTRIB" =~ "disco" ]]; then
     PYTHON_VERSION=3.7
+  elif [[ "$DISTRIB" =~ "focal" ]]; then
+    PYTHON_VERSION=3.8
   else
     echo "Error: Ubuntu distribtion $DISTRIB not supported" | tee -a "$LOGFILE"
     exit 1
