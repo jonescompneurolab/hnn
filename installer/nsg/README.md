@@ -1,6 +1,8 @@
-# DEPRECATED: Running HNN on Neuroscience Gateway Portal (NSG)
+# Running HNN on Neuroscience Gateway Portal (NSG)
 
-**HNN GUI is temporality not available on NSG, please email us at hnneurosolver@gmail.com if you have questions about running HNN on NSG**
+## HNN GUI is temporality not available on NSG, please email us at hnneurosolver@gmail.com if you have questions about running HNN on NSG
+
+---
 
 The [Neuroscience Gateway Portal (NSG)](http://www.nsgportal.org) is high-performance compute environment sponsored by NSF/NIH and the BBSRC (UK). Availability of HNN on NSG enables users to run simulations on one of many cluster compute nodes, which reduces simulation runtime. In addition, users will not have to install HNN on their local workstations, allowing them to get started running simulations more quickly. Below are instructions on how to run HNN on NSG.
 
