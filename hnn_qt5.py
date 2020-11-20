@@ -3383,10 +3383,10 @@ class HNNGUI (QMainWindow):
     # We need to use print_exception(...):
     traceback.print_exception(exc_type, exc_value, enriched_tb)
     msgBox = QMessageBox(self)
-    msgBox.information(self, "Exception", "WARNING: an exception occurred! Details can be "
-                      "found in hnn_docker.log or the console output. We would "
-                      "greatly appreciate reporting this issue to our development "
-                      "team: <a href=https://github.com/jonescompneurolab/hnn/issues>"
+    msgBox.information(self, "Exception", "WARNING: an exception occurred! "
+                      "Details can be found in the console output. Please "
+                      "include this output when opening an issue og GitHub: "
+                      "<a href=https://github.com/jonescompneurolab/hnn/issues>"
                       "https://github.com/jonescompneurolab/hnn/issues</a>")
 
 
@@ -3458,10 +3458,14 @@ class HNNGUI (QMainWindow):
 
     import simdat
     try:
-     self.dextdata[fn] = np.loadtxt(fn)
+      self.dextdata[fn] = np.loadtxt(fn)
     except ValueError:
-      QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
-      return False
+      # possible that data file is comma delimted instead of whitespace delimted
+      try:
+        self.dextdata[fn] = np.loadtxt(fn, delimiter=',')
+      except ValueError:
+        QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
+        return False
     except IsADirectoryError:
       QMessageBox.information(self, "HNN", "WARNING: could not load data file %s" % fn)
       return False
