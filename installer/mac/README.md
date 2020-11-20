@@ -2,7 +2,15 @@
 
 ## Opening a terminal window
 
-1. Open up macOS's terminal.app by searching for terminal in Spotlight (upper right search icon). We will use this terminal for running the commands below.
+- Open up macOS's terminal.app by searching for terminal in Spotlight (upper right search icon). We will use this terminal for running the commands below.
+
+## Run pre-install checks
+
+- The command below will run a script to check for existing installations of prerequisites. If a compatible version is installed, it will say which steps can be skipped below.
+
+    ```bash
+    curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-pre.sh" | bash
+    ```
 
 ## Prerequisite 1: Xcode Command Line Tools
 
@@ -23,7 +31,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 ## Prerequisite 2: Miniconda (Python 3)
 
-1. Run the commands below from a terminal window (as a regular user). This will create a python environment isolated from other installations on the system. You could use homebrew `brew install python3` if you wish (has been tested with HNN), but this guide will cover the miniconda version.
+- Run the commands below from a terminal window (as a regular user). This will create a python environment isolated from other installations on the system. You could use homebrew `brew install python3` if you wish (has been tested with HNN), but this guide will cover the miniconda version.
 
     ```bash
     cd /tmp/
@@ -64,12 +72,21 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     source activate hnn
     ```
 
-## Download HNN source code
+## Run post-install checks
 
-1. The following commands will download the hnn source code and compile HNN's mod files for NEURON. This is where Xcode Command Line Tools are needed.
+- Run the command below to check that all of the steps were successful and are ready to run HNN.
 
     ```bash
-    curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+    curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
+    ```
+
+## Download HNN source code
+
+- The following commands will download the hnn source code and compile HNN's mod files for NEURON. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
+
+    ```bash
+    curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+    mkdir hnn_source code
     tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
     cd hnn_source_code
     make
@@ -99,15 +116,9 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
 
-To download the latest release, use the following commands within an Ubuntu terminal:
+If you downloaded the `tar.gz` file, simply re-run the steps above, but replace `hnn_source_code` with a new directory name.
 
-```bash
-curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
-tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
-cd hnn_source_code
-make
-python3 hnn.py
-```
+Otherwise, if you are using `git`, then run `git pull origin master` from the source code directory.
 
 ## Troubleshooting
 

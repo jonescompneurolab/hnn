@@ -110,7 +110,6 @@ if [[ -z "$FOUND" ]]; then
   fi
 fi
 
-
 # Check for environment variables
 
 echo -n "Checking PATH environment variable for nrniv..."
@@ -147,52 +146,26 @@ else
   MPI_FOUND=1
 fi
 
-
-echo -n "Checking PYTHONPATH environment variable..."
-FOUND_NRN_PYLIBS=
-if [ -n "$PYTHONPATH" ]; then
-  if [[ "$PYTHONPATH" =~ "NEURON" ]] || [[ "$PYTHONPATH" =~ "NRN" ]]; then
-    IFS=':' read -ra PPATH <<< "$PYTHONPATH"
-    for i in "${PPATH[@]}"; do
-      ls "$i/neuron/hoc.so" > /dev/null 2>&1
-      if [[ "$?" -eq "0" ]]; then
-        echo "ok"
-        if [[ "$VERBOSE" -eq "1" ]]; then
-          echo "Found NEURON python modules at $i"
-          echo
-        fi
-        FOUND_NRN_PYLIBS=1
-        break
-      fi
-    done
-  fi
-fi
-
-if [[ -z ${FOUND_NRN_PYLIBS} ]]; then
-  echo "failed"
-  echo "Couldn't find NEURON python modules in $PYTHONPATH"
-  echo "PYTHONPATH=$PYTHONPATH"
-  echo
-fi
-
-
 # should be empty
-echo -n "Checking PYTHONHOME environment variable..."
+echo -n "Checking PYTHONHOME environment variable is not set..."
 if [ -n "$PYTHONHOME" ]; then
-  echo -e "\nPYTHONHOME is set make sure that this is the correct environment to run HNN"
+  echo -e "\nPYTHONHOME is set. This is not recommended."
+  echo "Make sure that this is the correct environment to run HNN"
   echo "PYTHONHOME=$PYTHONHOME"
   echo
+  return=1
 else
   echo "ok"
 fi
 
 # should be empty
-echo -n "Checking NRN_PYLIB environment variable..."
+echo -n "Checking NRN_PYLIB environment variable is not set..."
 if [ -n "$NRN_PYLIB" ]; then
   echo -e "\nNRN_PYLIB is set. This is most likely not wanted and can prevent HNN from"
   echo "running if this file is missing or belongs to the wrong NEURON version."
   echo "NRN_PYLIB=$NRN_PYLIB"
   echo
+  return=1
 else
   echo "ok"
 fi
@@ -237,8 +210,23 @@ else
   echo "Skipping NEURON funtionality tests."
 fi
 
+PREREQS_INSTALLED=1
+for prereq in "pyqtgraph" "matplotlib" "scipy" "psutil" "numpy" "nlopt" "neuron"; do
+  echo -n "Checking Python can import $prereq module..."
+  $PYTHON -c "import $prereq" > /dev/null 2>&1
+  if [[ "$?" -eq "0" ]]; then
+    echo "ok"
+  else
+    echo "failed"
+    $PYTHON -c "import $prereq"
+    echo
+    PREREQS_INSTALLED=0
+    return=2
+  fi
+done
+
 NRNIV_AND_PYTHON_WORKS=
-if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$FOUND_NRN_PYLIBS" -eq "1" ]]; then
+if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$PREREQS_INSTALLED" -eq "1" ]]; then
   echo -n "Checking NEURON nrniv funtionality with Python..."
   COMMAND="nrniv -nobanner -python -c 'from neuron import h; print(\"Hello\"); h.quit()' 2>&1"
   OUTPUT=$(nrniv -nobanner -python -c 'from neuron import h; print("Hello"); h.quit()' 2>&1)
@@ -258,24 +246,35 @@ else
   echo "Skipping NEURON funtionality tests with Python."
 fi
 
+echo -n "Checking for setting LD_LIBRARY_PATH..."
+source ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh > /dev/null 2>&1
+if [[ "$?" -eq "0" ]] && [[ -n "${LD_LIBRARY_PATH}" ]]; then
+  echo "ok"
+else
+  echo "warning"
+  echo "The LD_LIBRARY_PATH variable is not set correctly. Make sure you follow the installation"
+  echo "instructions to add the correct lines to ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh"
+  return=1
+fi
+
 
 MPI_AND_NRNIV_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]]; then
   echo -n "Checking NEURON nrniv funtionality with MPI..."
-  COMMAND="mpiexec -n 2 nrniv -nobanner -nopython -mpi -c '{print \"hello\" quit()}' 2>&1"
-  OUTPUT=$(bash --login -c "mpiexec -n 2 nrniv -nobanner -nopython -mpi -c '{print \"hello\" quit()}' 2>\&1")
+  mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()' > /dev/null 2>&1
   if [[ "$?" -eq "0" ]]; then
     echo "ok"
     MPI_AND_NRNIV_WORKS=1
   else
     # try with LD_LIBRARY_PATH
-    OUTPUT=$(export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib; mpiexec -n 2 nrniv -nobanner -nopython -mpi -c '{print "hello" quit()}' 2>&1)
+    COMMAND="mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()'"
+    OUTPUT=$(export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib; mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()')
     if [[ "$?" -eq "0" ]]; then
-      echo "ok"
-      echo "However, you must set the environment variable LD_LIBRARY_PATH with the command below:"
+      echo "warning"
+      echo "The LD_LIBRARY_PATH variable is not set correctly. Make sure you follow the installation"
+      echo "instructions to add the correct lines to ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh"
       echo
-      echo "export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib"
-      echo
+      return=1
       MPI_AND_NRNIV_WORKS=1
     else
       echo "failed"
@@ -293,34 +292,28 @@ else
   echo "Skipping NEURON funtionality tests with MPI."
 fi
 
-# Note (BC 3/27/19): The command below does not exit the python shell cleanly
-# so it outputs an error. Todo is creating a test program that exists cleanly
+NRNIV_AND_PYTHON_AND_MPI_WORKS=
+if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] &&
+  [[ "$PREREQS_INSTALLED" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]] &&
+  [[ "$MPI_AND_NRNIV_WORKS" -eq "1" ]]; then
+ echo -n "Checking NEURON nrniv funtionality with Python and MPI..."
+ COMMAND="mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1"
+ OUTPUT=$(mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1)
+ if [[ "$?" -eq "0" ]]; then
+   echo "ok"
+   NRNIV_AND_PYTHON_AND_MPI_WORKS=1
+ else
+   echo "failed"
+   echo "Could not run nrniv with Python and MPI"
+   echo "the command that failed was:"
+   echo "$COMMAND"
+   echo $OUTPUT
+   return=2
+   fi
+else
+ echo "Skipping NEURON funtionality tests with Python and MPI."
+fi
 
-#NRNIV_AND_PYTHON_AND_MPI_WORKS=
-#if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] &&
-#   [[ "$FOUND_NRN_PYLIBS" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]] &&
-#   [[ "$MPI_AND_NRNIV_WORKS" -eq "1" ]]; then
-#  echo -n "Checking NEURON nrniv funtionality with Python and MPI..."
-#  COMMAND="mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext();'  2>&1"
-#  OUTPUT=$(mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext();'  2>&1)
-#  if [[ "$?" -eq "0" ]]; then
-#    echo "ok"
-#    NRNIV_AND_PYTHON_AND_MPI_WORKS=1
-#  else
-#    echo "failed"
-#    echo "Could not run nrniv with Python and MPI"
-#    echo "the command that failed was:"
-#    echo "$COMMAND"
-#    echo $OUTPUT
-#    return=2
-#    fi
-#else
-#  echo "Skipping NEURON funtionality tests with Python and MPI."
-#fi
-
-
-# TODO
-# Are the necessary python prerequisites installed?
 
 echo "--------------------------------------"
 echo "Done with post-install checks"
