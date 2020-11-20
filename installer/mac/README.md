@@ -86,7 +86,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
     ```bash
     curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
-    mkdir hnn_source code
+    mkdir hnn_source_code
     tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
     cd hnn_source_code
     make
