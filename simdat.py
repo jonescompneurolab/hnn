@@ -10,7 +10,8 @@ from math import ceil
 from conf import dconf
 import conf
 import spikefn
-from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs, find_param, quickgetprm, countEvokedInputs, ExpParams
+from paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs, usingTonicInputs
+from paramrw import find_param, quickgetprm, get_evoked_input_timing, quickreadprm, ExpParams
 from scipy import signal
 from gutils import getscreengeom
 
@@ -425,36 +426,29 @@ class SIMCanvas (FigureCanvas):
 
     num_step = ceil(sim_tstop / sim_dt) + 1
     times = np.linspace(0, sim_tstop, num_step)
-    ltprox, ltdist = self.getEVInputTimes()
-    for prox in ltprox:
-      pdf = stats.norm.pdf(times, prox[0], prox[1])
+    p = quickreadprm(self.paramf)
+    inputs = get_evoked_input_timing(p)
+    for single_prox in inputs['evprox']:
+      pdf = stats.norm.pdf(times, single_prox['start'], single_prox['sigma'])
       dinput['evprox'].append((times,pdf))
-    for dist in ltdist:
-      pdf = stats.norm.pdf(times, dist[0], dist[1])
+    for single_dist in inputs['evdist']:
+      pdf = stats.norm.pdf(times, single_dist['start'], single_dist['sigma'])
       dinput['evdist'].append((times,pdf))
     return dinput
 
-  def getEVInputTimes (self):
-    # get the evoked input times
-    nprox, ndist = countEvokedInputs(self.paramf)
-    ltprox, ltdist = [], []
-    for i in range(nprox):
-      input_mu = quickgetprm(self.paramf,'t_evprox_' + str(i+1), float)
-      input_sigma = quickgetprm(self.paramf,'sigma_t_evprox_' + str(i+1), float)
-      ltprox.append((input_mu, input_sigma))
-    for i in range(ndist):
-      input_mu = quickgetprm(self.paramf,'t_evdist_' + str(i+1), float)
-      input_sigma = quickgetprm(self.paramf,'sigma_t_evdist_' + str(i+1), float)
-      ltdist.append((input_mu, input_sigma))
-    return ltprox, ltdist
+  def drawEVInputTimes(self, ax, yl, h=0.1, hw=15, hl=15):
+    """draw the evoked input times using arrows"""
 
-  def drawEVInputTimes (self, ax, yl, h=0.1, hw=15, hl=15):
-    # draw the evoked input times using arrows
-    ltprox, ltdist = self.getEVInputTimes()
+    p = quickreadprm(self.paramf)
+    inputs = get_evoked_input_timing(p)
     yrange = abs(yl[1] - yl[0])
-    #print('drawEVInputTimes:',yl,yrange,h,hw,hl,h*yrange,-h*yrange,yl[0]+h*yrange,yl[1]-h*yrange)
-    for tt in ltprox: ax.arrow(tt[0],yl[0],0,h*yrange,fc='r',ec='r', head_width=hw,head_length=hl)#head_length=w,head_width=1.)#w/4)#length_includes_head=True,
-    for tt in ltdist: ax.arrow(tt[0],yl[1],0,-h*yrange,fc='g',ec='g',head_width=hw,head_length=hl)#head_length=w,head_width=1.)#w/4)
+
+    for tt in inputs['evprox'].values():
+        ax.arrow(tt['start'], yl[0], 0, h*yrange, fc='r', ec='r',
+                 head_width=hw,head_length=hl)
+    for tt in inputs['evdist'].values():
+        ax.arrow(tt['start'], yl[1], 0, -h*yrange, fc='g', ec='g',
+                 head_width=hw, head_length=hl)
 
   def getInputs (self):
     """ get a dictionary of input types used in simulation
@@ -466,8 +460,8 @@ class SIMCanvas (FigureCanvas):
 
     try:
       dinty['Evoked'] = usingEvokedInputs(self.paramf)
-      dinty['EvokedDist'] = usingEvokedInputs(self.paramf, lsuffty = ['_evdist_'])
-      dinty['EvokedProx'] = usingEvokedInputs(self.paramf, lsuffty = ['_evprox_'])
+      dinty['EvokedDist'] = usingEvokedInputs(self.paramf, lsuffty = ['evdist'])
+      dinty['EvokedProx'] = usingEvokedInputs(self.paramf, lsuffty = ['evprox'])
       dinty['Ongoing'] = usingOngoingInputs(self.paramf)
       dinty['OngoingDist'] = usingOngoingInputs(self.paramf, lty = ['_dist'])
       dinty['OngoingProx'] = usingOngoingInputs(self.paramf, lty = ['_prox'])

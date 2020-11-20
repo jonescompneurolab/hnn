@@ -73,38 +73,76 @@ def usingOngoingInputs (d, lty = ['_prox', '_dist']):
     return False
   return False
 
-# return number of evoked inputs (proximal, distal)
-# using dictionary d (or if d is a string, first load the dictionary from filename d)
-def countEvokedInputs (d):
-  if type(d) == str: d = quickreadprm(d)
-  nprox = ndist = 0
-  for k,v in d.items():
-    if k.startswith('t_'):
-      if k.count('evprox') > 0:
-        nprox += 1
-      elif k.count('evdist') > 0:
-        ndist += 1
-  return nprox, ndist
+def get_evoked_input_timing(d):
+    """ return dictionary of evoked input timings (proximal, distal)
+
+    using dictionary d
+    """
+
+    inputs = {'evprox': {}, 'evdist': {}}
+    num_inputs = {'evprox': 0, 'evdist': 0}
+
+    for k, v in d.items():
+        start_re = re.match('t_(.+?)_([0-9]+)', k)
+        if start_re is not None and len(start_re.groups()) == 2:
+            input_type = start_re.group(1)
+            input_number = int(start_re.group(2))
+            if input_number in inputs[input_type]:
+                inputs[input_type][input_number]['start'] = float(v)
+            else:
+                inputs[input_type][input_number] = {'start': float(v)}
+            continue
+        sigma_re = re.match('sigma_t_(.+?)_([0-9]+)', k)
+        if sigma_re is not None and len(sigma_re.groups()) == 2:
+            input_type = sigma_re.group(1)
+            input_number = int(sigma_re.group(2))
+            if input_number in inputs[input_type]:
+                inputs[input_type][input_number]['sigma'] = float(v)
+            else:
+                inputs[input_type][input_number] = {'sigma': float(v)}
+            continue
+
+    # fill in with missing indexes to make inputs[input_type] continuous
+    for input_type in ['evprox', 'evdist']:
+        indices = list(inputs[input_type].keys()).copy()
+        for input_index in indices:
+            if input_index > num_inputs[input_type] + 1:
+                for inner_input_index in range(num_inputs[input_type]+1,
+                                               input_index):
+                    print("Warning: Parameter file contains a missing input."
+                          " Adding input %s_%d with default values." %
+                          (input_type, inner_input_index))
+                    inputs[input_type][inner_input_index] = {'start': 0,
+                                                             'sigma': 0}
+                    num_inputs[input_type] += 1
+            if 'start' not in inputs[input_type][input_index]:
+                inputs[input_type][input_index] = {'start': 0}
+            if 'sigma' not in inputs[input_type][input_index]:
+                inputs[input_type][input_index] = {'sigma': 0}
+
+            # now have a complete entry in inputs dict
+            num_inputs[input_type] += 1
+
+    return inputs
 
 # check if using any evoked inputs 
-def usingEvokedInputs (d, lsuffty = ['_evprox_', '_evdist_']):
-  if type(d) == str: d = quickreadprm(d)
-  nprox,ndist = countEvokedInputs(d)
-  tstop = float(d['tstop']) 
-  lsuff = []
-  if '_evprox_' in lsuffty:
-    for i in range(1,nprox+1,1): lsuff.append('_evprox_'+str(i))
-  if '_evdist_' in lsuffty:
-    for i in range(1,ndist+1,1): lsuff.append('_evdist_'+str(i))
-  for suff in lsuff:
-    k = 't' + suff
-    if k not in d: continue
-    if float(d[k]) > tstop: continue
-    k = 'gbar' + suff
-    for k1 in d.keys():
-      if k1.startswith(k):
-        if float(d[k1]) > 0.0: return True
-  return False
+def usingEvokedInputs(d, lsuffty = ['evprox', 'evdist']):
+    if type(d) == str:
+        d = quickreadprm(d)
+    inputs = get_evoked_input_timing(d)
+    tstop = float(d['tstop']) 
+
+    for input_type in lsuffty:
+        for input_index in inputs[input_type].keys():
+            if inputs[input_type][input_index]['start'] > tstop:
+                continue
+            k = 'gbar_' + input_type + '_' + str(input_index)
+            for k1 in d.keys():
+                if k1.startswith(k):
+                    if float(d[k1]) > 0.0:
+                        return True
+
+    return False
 
 # check if using any poisson inputs 
 def usingPoissonInputs (d):
@@ -364,7 +402,10 @@ class ExpParams():
 
     # create the dict based on the default param dict
     def __create_dict_from_default (self, p_all_input):
-        nprox, ndist = countEvokedInputs(p_all_input)
+        inputs = get_evoked_input_timing(p_all_input)
+        nprox = len(inputs['evprox']) + 1
+        ndist = len(inputs['evdist']) + 1
+
         # print('found nprox,ndist ev inputs:', nprox, ndist)
 
         # create a copy of params_default through which to iterate
@@ -667,7 +708,9 @@ def create_pext (p, tstop):
 
     p_ext = feed_validate(p_ext, feed_dist, tstop)
 
-    nprox, ndist = countEvokedInputs(p)
+    inputs = get_evoked_input_timing(p)
+    nprox = len(inputs['evprox']) + 1
+    ndist = len(inputs['evdist']) + 1
     # print('nprox,ndist evoked inputs:', nprox, ndist)
 
     # NEW: make sure all evoked synaptic weights present (for backwards compatibility)

@@ -22,7 +22,7 @@ import numpy as np
 from math import ceil, isclose
 import spikefn
 import params_default
-from paramrw import quickreadprm, usingOngoingInputs, countEvokedInputs, usingEvokedInputs, ExpParams
+from paramrw import quickreadprm, usingOngoingInputs, get_evoked_input_timing, usingEvokedInputs, ExpParams
 from paramrw import chunk_evinputs, get_inputs, trans_input, find_param, validate_param_file
 from simdat import SIMCanvas, getinputfiles, updatedat
 from gutils import setscalegeom, lowresdisplay, setscalegeomcenter, getmplDPI, getscreengeom
@@ -1410,7 +1410,9 @@ class EvokedInputParamDialog (QDialog):
       # modify existing inputs.
       self.removeAllInputs() # turn off any previously set inputs
 
-      nprox, ndist = countEvokedInputs(din)
+      inputs = get_evoked_input_timing(din)
+      nprox = len(inputs['evprox']) + 1
+      ndist = len(inputs['evdist']) + 1
       for i in range(nprox+ndist):
         if i % 2 == 0:
           if self.nprox < nprox:
