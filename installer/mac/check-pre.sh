@@ -5,6 +5,9 @@ return=0
 VERBOSE=
 [[ $1 ]] && VERBOSE=1
 
+PYTHON_REQ_MAJ=3
+PYTHON_REQ_MAJ=6
+
 check_python_version () {
   # this works with system installed python 2.7 and Anaconda versions
   # mileage may vary with enthought or other distros
@@ -14,7 +17,7 @@ check_python_version () {
   if [ -n "$PYTHON_VERSION" ]; then  
     VERSION_STRING=$(echo "${PYTHON_VERSION}" | cut -d ' ' -f 2)
     SPLITVER=( ${VERSION_STRING//./ } )
-    if [[ "${SPLITVER[0]}" -ge "3" ]] && [[ "${SPLITVER[1]}" -ge "5" ]]; then
+    if [[ "${SPLITVER[0]}" -ge "3" ]] && [[ "${SPLITVER[1]}" -ge "6" ]]; then
       return 0
     else
       return 2
@@ -23,8 +26,6 @@ check_python_version () {
     return 2
   fi
 }
-
-
 
 echo "Performing pre-install checks for HNN"
 echo "--------------------------------------"
@@ -50,10 +51,10 @@ for PYTHON in python python3; do
     PYTHON_VERSION=$($PYTHON -V 2>&1)
     check_python_version "${PYTHON_VERSION}"
     if [[ "$?" -eq "0" ]]; then
-      echo "warning"
-      echo "Existing version ${PYTHON_VERSION} ($(which $PYTHON) is compatible with HNN."
+      echo "ok"
+      echo "Existing version ${PYTHON_VERSION} ($(which $PYTHON)) is compatible with HNN."
+      echo "You can skip the miniconda install if you know what you are doing."
       echo
-      return=1
       FOUND=1
       break
     else
@@ -64,26 +65,29 @@ for PYTHON in python python3; do
 done
 
 if [[ -z "$FOUND" ]]; then
-  if [[ -z "$PYTHON_VERSION" ]]; then
-    echo "failed"
-    return=2
-  else
-    echo "You should install miniconda, and make sure that HNN is not trying to use the old python or any of its modules"
+  echo "failed"
+  return=2
+  if [[ -n "$PYTHON_VERSION" ]]; then
+    echo "Existing version ${PYTHON_VERSION} ($(which $PYTHON)) is not compatible with HNN."
+    echo "HNN requires at least Python ${PYTHON_REQ_MAJ}.${PYTHON_REQ_MIN}"
     echo
-    return=2
+  else
+    echo "ok"
+    echo "No python version found. Make sure you install miniconda"
+    echo
   fi
 fi
 
 
 # Check for environment variables
 
-echo -n "Checking PATH environment variable..."
+echo -n "Checking for existing NEURON installation..."
 which nrniv > /dev/null 2>&1
 if [[ "$?" -eq "0" ]]; then
-  echo "warning"
+  echo "ok"
   echo "nrniv found in path ($(which nrniv))"
   echo "Make sure it is from the NEURON version used to compile HNN"
-  return=1
+  echo "You can skip the NEURON install step if you know what you are doing."
   echo
 elif [[ "PATH" =~ "NEURON" ]] || [[ "$PATH" =~ "NRN" ]]; then
   echo -e "\nNEURON found in path, but nrniv cannot be found. Does this need to be cleaned up?"
@@ -94,12 +98,13 @@ else
   echo "ok"
 fi
 
-echo -n "Checking PYTHONPATH environment variable..."
+echo -n "Checking PYTHONPATH environment variable is not set..."
 if [ -n "$PYTHONPATH" ]; then
   if [[ "$PYTHONPATH" =~ "NEURON" ]] || [[ "$PYTHONPATH" =~ "NRN" ]]; then
     echo "warning"
-    echo "NEURON libraries found in PYTHONPATH variable."
-    echo "Make sure they match the version used to compile HNN"
+    echo "NEURON libraries found in PYTHONPATH variable. This was used before "
+    echo "the 'pip install' method. Make sure this matches the version used to "
+    echo "compile HNN modules with 'make'"
     echo "PYTHONPATH=$PYTHONPATH"
     echo
     return=1
@@ -110,9 +115,11 @@ else
   echo "ok"
 fi
 
-echo -n "Checking PYTHONHOME environment variable..."
+echo -n "Checking PYTHONHOME environment variable is not set..."
 if [ -n "$PYTHONHOME" ]; then
-  echo -e "\nPYTHONHOME is set make sure that this is the correct environment to run HNN"
+  echo "warning"
+  echo -e "\nPYTHONHOME is set. This is not the recommended way to set the python environment."
+  echo "Make sure that this is the correct environment to run HNN."
   echo "PYTHONHOME=$PYTHONHOME"
   return=1
   if [[ -n "$PYTHON_VERSION" ]]; then
@@ -126,7 +133,7 @@ else
   echo "ok"
 fi
 
-echo -n "Checking NRN_PYLIB environment variable..."
+echo -n "Checking NRN_PYLIB environment variable is not set..."
 if [ -n "$NRN_PYLIB" ]; then
   echo -e "\nNRN_PYLIB is set. This is most likely not wanted and can prevent HNN from"
   echo "running if this file is missing or belongs to the wrong NEURON version."
@@ -150,7 +157,7 @@ fi
 if [[ -n "$HNN_DIR" ]]; then
   echo "found"
   echo "Existing HNN source code directory found at $HNN_DIR"
-  echo "Optional: use this directory instead of step \"Clone and compile HNN source code\""
+  echo "Optional: use this directory instead of step \"Download HNN source code\""
   echo
 else
   echo "ok"
