@@ -1,70 +1,14 @@
 # Troubleshooting on Mac OS
 
-## Running simulations fail with "dyld: Library not loaded: /usr/X11/lib/libX11.6.dylib"
-
-The full text of the error message in the terminal window will look something like:
-
-```none
-dyld: Library not loaded: /usr/X11/lib/libX11.6.dylib
-  Referenced from: /Applications/NEURON-7.7/nrn/x86_64/bin/nrniv
-  Reason: image not found
-
-  Error message: `There are not enough slots available in the system`
-```
-
-This error has been seen when upgrading macOS to Catalina 10.15. It occurs because files from XQuartz get removed during the upgrade. To fix this error, reinstall XQuartz following the instructions under "Prerequisite 1: XQuartz" on the [macOS native install page](native_install.md)
-
-## Running any git command fails
-
-The full text of the error message in the terminal window will look something like:
-
-```none
-xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun
-```
-
-The Xcode command-line tools need to be reinstalled. To fix, run this command in the terminal window:
+First, run the `post-install.sh` script. Save this output and please include it when creating a [GitHub issue](https://github.com/jonescompneurolab/hnn/issues)
 
 ```bash
-xcode-select --install
+installer/mac/check-post.sh
 ```
 
-## Error message: "ls: /usr/local/bin/../lib/libpython*.dylib: No such file or directory"
+## Simulation log says "processes failed to start"
 
-This error message may appear when running simulations and is more likely to appear if a different python is used than Anaconda or Miniconda. One such case is when python3 is installed using homebrew `brew install python3`. In this case, PYTHONHOME needs to be specified in addition to NRN_PYLIB. An example is below. Verify the paths that exist on your system and use them in place of the paths below.
-
-```bash
-export NRN_PYLIB="/usr/local/Cellar/python3/3.7.2_2/Frameworks/Python.framework/Versions/3.7/lib/libpython3.7m.dylib"
-export PYTHONHOME="/usr/local/Cellar/python/3.7.2_2/Frameworks/Python.framework/Versions/3.7/"
-```
-
-## Error message: "Error: Cannot allocate memory. Check the CQE attribute"
-
-This message gets printed to the command line from mpiexec:
-
-```bash
-Starting simulation. . .
---------------------------------------------------------------------------
-Failed to create a completion queue (CQ):
-
-Hostname: node423
-Requested CQE: 16384
-Error:    Cannot allocate memory
-
-Check the CQE attribute
---------------------------------------------------------------------------
-```
-
-One possible fix to this may be increasing the maximum locked memory a user is able to allocate using
-
-```bash
-ulimit -l unlimited
-```
-
-This may not be allowed for a non-privileged user, such as on a batch or HPC environment. Check with the system administrator if you get an error message running this command.
-
-## Simulation log says "X total processes failed to start"
-
-Check the command line output where "`python hnn.py`" was run. If you get a message like the following, then your PATH environment variable needs to be updated to include the NEURON binaries, like `nrniv`
+Check the simulation log (View menu) or the console output where "`python hnn.py`" was run. If you get a message like the following, then your PATH environment variable needs to be updated to include the NEURON binaries, like `nrniv`
 
 ```bash
 Starting simulation. . .
@@ -78,20 +22,18 @@ while attempting to start process rank 0.
 --------------------------------------------------------------------------
 ```
 
-Try running `nrniv` from the command line. If you get a message like `-bash: nrniv: command not found`, add the directory containing `nrniv` to the PATH environment variable. If this fixed the problem, you will need to add the export or set (for tcsh) command to your .bashrc or .csh/.tcsh file so that it works for every terminal window.
+## Running simulations fail with "dyld: Library not loaded: /usr/X11/lib/libX11.6.dylib"
 
-```bash
-$ export PATH=/Applications/NEURON-7.6/nrn/x86_64/bin:$PATH
-$ nrniv
-NEURON -- VERSION 7.6.5 master (f3dad62b) 2019-01-11
-Duke, Yale, and the BlueBrain Project -- Copyright 1984-2018
-See http://neuron.yale.edu/neuron/credits
+The full text of the error message in the terminal window will look something like:
 
-loading membrane mechanisms from x86_64/.libs/libnrnmech.so
-Additional mechanisms from files
- mod/ar.mod mod/beforestep_py.mod mod/ca.mod mod/cad.mod mod/cat.mod mod/dipole.mod mod/dipole_pp.mod mod/hh2.mod mod/kca.mod mod/km.mod mod/lfp.mod mod/mea.mod mod/vecevent.mod
-oc>
+```none
+dyld: Library not loaded: /usr/X11/lib/libX11.6.dylib
+  Referenced from: /Applications/NEURON-7.7/nrn/x86_64/bin/nrniv
+  Reason: image not found
+
 ```
+
+This error has been seen when upgrading macOS to Catalina 10.15. It occurs because files from XQuartz get removed during the upgrade. To fix this error, reinstall XQuartz following the instructions under "Prerequisite 1: XQuartz" on the [macOS native install page](native_install.md)
 
 ## Stream of error messages from MPI
 
@@ -115,6 +57,12 @@ that caused that situation.
 ```
 
 * These are standard error messages that openmpi produces when there's an error on one process. Since we are running an openmpi process for each core that HNN runs on, these messages will be repeated.
+
+* Please open a [GitHub issue](https://github.com/jonescompneurolab/hnn/issues) (including the output from `check-post.sh`) if you notice a MPI error not documented here.
+
+## NEURON/MPI debugging (deprecated)
+
+The steps below have not been updated for new version of NEURON that get installed with `pip install`. They may be useful for advanced troubleshooting, however.
 
 ### MPI debugging, step 1:  NEURON (part 1)
 
