@@ -6,11 +6,14 @@
 
 import os.path as op
 import os
+import sys
+import io
 import numpy as np
 from threading import Lock
 from time import sleep
 from copy import deepcopy
 from math import ceil, isclose
+from contextlib import redirect_stdout
 
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 from hnn_core import simulate_dipole, Network, MPIBackend
@@ -271,6 +274,20 @@ class RunSimThread(QThread):
     def updatewaitsimwin(self, txt):
         self.txtComm.tsig.emit(txt)
 
+    class _log_sim_status(object):
+        def __init__(self, parent):
+            self.out = sys.stdout
+            self.parent = parent
+
+        def write(self, message):
+            self.out.write(message)
+            stripped_message = message.strip()
+            if not stripped_message == '':
+                self.parent.updatewaitsimwin(stripped_message)
+
+        def flush(self):
+            self.out.flush()
+
     def updatebaseparamwin(self, d):
         self.prmComm.psig.emit(d)
 
@@ -337,7 +354,9 @@ class RunSimThread(QThread):
                 raise RuntimeError("No cores available for simulation")
 
             try:
-                simulate(self.params, self.ncore)
+                sim_log = self._log_sim_status(parent=self)
+                with redirect_stdout(sim_log):
+                    simulate(self.params, self.ncore)
                 break
             except RuntimeError as e:
                 if self.ncore == 1:
