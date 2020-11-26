@@ -106,8 +106,6 @@ class VoltCanvas (FigureCanvas):
     return lax
 
   def plot (self):
-    global params
-
     if self.index == 0:
       if ntrial == 1:
         dvolt = pickle.load(open(voltpath,'rb'))
@@ -122,7 +120,7 @@ class VoltCanvas (FigureCanvas):
 
 class VoltGUI (QMainWindow):
   def __init__ (self):
-    global dfile, ddat, paramf, fontsize
+    global fontsize
     super().__init__()        
     self.fontsize = fontsize
     self.linewidth = plt.rcParams['lines.linewidth'] = 1

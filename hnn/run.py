@@ -7,9 +7,7 @@
 import os.path as op
 import os
 import sys
-import io
 import numpy as np
-from threading import Lock
 from time import sleep
 from copy import deepcopy
 from math import ceil, isclose
@@ -23,8 +21,6 @@ from psutil import wait_procs, process_iter, NoSuchProcess
 
 from .paramrw import usingOngoingInputs, write_gids_param
 from .specfn import analysis_simp
-from .simdat import updatelsimdat, updatedat, ddat, updateoptdat
-from .simdat import weighted_rmse, initial_ddat, calcerr
 from .paramrw import write_legacy_paramf, get_output_dir
 
 
@@ -77,6 +73,11 @@ def get_fname(sim_dir, key, trial=0, ntrial=1):
 class TextSignal (QObject):
     """for passing text"""
     tsig = pyqtSignal(str)
+
+
+class DataSignal (QObject):
+    """for signalling data read"""
+    dsig = pyqtSignal(str, dict)
 
 
 class ParamSignal (QObject):
@@ -242,39 +243,86 @@ def simulate(params, n_procs=None):
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread(QThread):
-    def __init__(self, p, d, ntrial, ncore, waitsimwin, params, opt=False,
-                 baseparamwin=None, mainwin=None):
+    """The RunSimThread class.
+
+    Parameters
+    ----------
+
+    ncore : int
+        Number of cores to run this simulation over
+    params : dict
+        Dictionary of params describing simulation config
+    param_signal : ParamSignal
+        Signal to main process to send back params
+    done_signal : DoneSignal
+        Signal to main process that the simulation has finished
+    waitsimwin : WaitSimDialog
+        Handle to the Qt dialog during a simulation
+    baseparamwin : BaseParamDialog
+        Handle to the Qt dialog with parameter values
+    mainwin : HNNGUI
+        Handle to the main application window
+    opt : bool
+        Whether this simulation thread is running an optimization
+
+    Attributes
+    ----------
+    ncore : int
+        Number of cores to run this simulation over
+    params : dict
+        Dictionary of params describing simulation config
+    param_signal : ParamSignal
+        Signal to main process to send back params
+    done_signal : DoneSignal
+        Signal to main process that the simulation has finished
+    waitsimwin : WaitSimDialog
+        Handle to the Qt dialog during a simulation
+    baseparamwin : BaseParamDialog
+        Handle to the Qt dialog with parameter values
+    mainwin : HNNGUI
+        Handle to the main application window
+    opt : bool
+        Whether this simulation thread is running an optimization
+    killed : bool
+        Whether this simulation was forcefully terminated
+    killed : bool
+        Whether this simulation was forcefully terminated
+    """
+
+    def __init__(self, ncore, params, param_signal, done_signal, waitsimwin,
+                 baseparamwin, mainwin, opt=False):
         QThread.__init__(self)
-        self.p = p
-        self.d = d
-        self.killed = False
-        self.ntrial = ntrial
         self.ncore = ncore
-        self.waitsimwin = waitsimwin
         self.params = params
-        self.opt = opt
+        self.param_signal = param_signal
+        self.done_signal = done_signal
+        self.waitsimwin = waitsimwin
         self.baseparamwin = baseparamwin
         self.mainwin = mainwin
+        self.opt = opt
+        self.killed = False
+
         self.paramfn = os.path.join(get_output_dir(), 'param',
                                     self.params['sim_prefix'] + '.param')
+
+        self.dataComm = DataSignal()
+        self.dataComm.dsig.connect(self.mainwin.sim_data.update_sim_data)
 
         self.txtComm = TextSignal()
         self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
 
         self.prmComm = ParamSignal()
-        if self.baseparamwin is not None:
-            self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
+        self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
 
         self.canvComm = CanvSignal()
-        if self.mainwin is not None:
-            self.canvComm.csig.connect(self.mainwin.initSimCanvas)
+        self.canvComm.csig.connect(self.mainwin.initSimCanvas)
 
-        self.lock = Lock()
-
-    def updatewaitsimwin(self, txt):
+    def _updatewaitsimwin(self, txt):
+        """Used to write messages to simulation window"""
         self.txtComm.tsig.emit(txt)
 
     class _log_sim_status(object):
+        """Replaces sys.stdout.write() to write message to simulation window"""
         def __init__(self, parent):
             self.out = sys.stdout
             self.parent = parent
@@ -283,32 +331,43 @@ class RunSimThread(QThread):
             self.out.write(message)
             stripped_message = message.strip()
             if not stripped_message == '':
-                self.parent.updatewaitsimwin(stripped_message)
+                self.parent._updatewaitsimwin(stripped_message)
 
         def flush(self):
             self.out.flush()
 
-    def updatebaseparamwin(self, d):
+    def _read_sim_data(self, paramfn, params):
+        """Signals main window to read sim data from files"""
+        self.dataComm.dsig.emit(paramfn, params)
+
+    def _updatebaseparamwin(self, d):
+        """Signals baseparamwin to update its parameter from passed dict"""
         self.prmComm.psig.emit(d)
 
-    def updatedispparam(self):
-        self.p.psig.emit(self.params)
+    def _updatedispparam(self):
+        """Signals baseparamwin to run updateDispParam"""
+        self.param_signal.psig.emit(self.params)
 
-    def updatedrawerr(self):
-        # False means do not recalculate error
+    def _updatedrawerr(self):
+        """Signals mainwin to redraw canvas with RMSE"""
+        # When self.opt is false, do not recalculate error
         self.canvComm.csig.emit(False, self.opt)
 
     def stop(self):
-        self.killproc()
+        """Terminate running simulation"""
+        _kill_and_check_nrniv_procs()
+        self.killed = True
 
     def __del__(self):
         self.quit()
         self.wait()
 
     def run(self):
+        """Start simulation"""
+
         msg = ''
 
-        if self.opt and self.baseparamwin is not None:
+        if self.opt:
             try:
                 self.optmodel()  # run optimization
             except RuntimeError as e:
@@ -319,35 +378,17 @@ class RunSimThread(QThread):
                 self.baseparamwin.optparamwin.optimization_running = False
         else:
             try:
-                self.runsim()  # run simulation
+                self._runsim()  # run simulation
                 # update params in all windows (optimization)
-                self.updatedispparam()
+                self._updatedispparam()
             except RuntimeError as e:
                 msg = str(e)
 
-        self.d.finishSim.emit(self.opt, msg)  # send the finish signal
-
-    def killproc(self):
-        """make sure all nrniv procs have been killed"""
-        _kill_and_check_nrniv_procs()
-
-        self.lock.acquire()
-        self.killed = True
-        self.lock.release()
-
-    def get_proc_stream(self, stream, print_to_console=False):
-        for line in iter(stream.readline, ""):
-            if print_to_console:
-                print(line.strip())
-            # send a signal to waitsimwin, which updates its textedit
-            self.updatewaitsimwin(line.strip())
-        stream.close()
+        self.done_signal.finishSim.emit(self.opt, msg)
 
     # run sim command via mpi, then delete the temp file.
-    def runsim(self, is_opt=False, banner=True, simlength=None):
-        self.lock.acquire()
+    def _runsim(self, is_opt=False, banner=True, simlength=None):
         self.killed = False
-        self.lock.release()
 
         while True:
             if self.ncore == 0:
@@ -362,31 +403,24 @@ class RunSimThread(QThread):
                 if self.ncore == 1:
                     # can't reduce ncore any more
                     print(str(e))
-                    self.updatewaitsimwin(str(e))
+                    self._updatewaitsimwin(str(e))
                     _kill_and_check_nrniv_procs()
                     raise RuntimeError("Simulation failed to start")
 
             # check if proc was killed before retrying with fewer cores
-            self.lock.acquire()
             if self.killed:
-                self.lock.release()
                 # exit using RuntimeError
                 raise RuntimeError("Terminated")
-            else:
-                self.lock.release()
 
             self.ncore = ceil(self.ncore/2)
             txt = "INFO: Failed starting simulation, retrying with %d cores" \
                 % self.ncore
             print(txt)
-            self.updatewaitsimwin(txt)
-
-        # should have good data written to files at this point
-        updatedat(self.params)
+            self._updatewaitsimwin(txt)
 
         if not is_opt:
-            # update lsimdat and its current sim index
-            updatelsimdat(self.paramfn, self.params, ddat['dpl'])
+            # send signal to read data from files and save
+            self._read_sim_data(self.paramfn, self.params)
 
     def optmodel(self):
         need_initial_ddat = False
@@ -411,7 +445,7 @@ class RunSimThread(QThread):
         param_out = os.path.join(sim_dir, 'before_opt.param')
         write_legacy_paramf(param_out, self.params)
 
-        self.updatewaitsimwin('Optimizing model. . .')
+        self._updatewaitsimwin('Optimizing model. . .')
 
         self.last_step = False
         self.first_step = True
@@ -433,17 +467,17 @@ class RunSimThread(QThread):
             if self.step_sims == 0:
                 txt = "Skipping optimization step %d (0 simulations)" % \
                     (step + 1)
-                self.updatewaitsimwin(txt)
+                self._updatewaitsimwin(txt)
                 continue
 
             if len(self.step_ranges) == 0:
                 txt = "Skipping optimization step %d (0 parameters)" % \
                     (step + 1)
-                self.updatewaitsimwin(txt)
+                self._updatewaitsimwin(txt)
                 continue
 
             txt = "Starting optimization step %d/%d" % (step + 1, num_steps)
-            self.updatewaitsimwin(txt)
+            self._updatewaitsimwin(txt)
             self.runOptStep(step)
 
             if 'dpl' in self.best_ddat:
@@ -452,16 +486,17 @@ class RunSimThread(QThread):
                 ddat['errtot'] = deepcopy(self.best_ddat['errtot'])
 
             if need_initial_ddat:
+                save_initial_sim_data()
                 initial_ddat = deepcopy(ddat)
 
             # update optdat with best from this step
-            updateoptdat(self.paramfn, self.params, ddat['dpl'])
+            update_opt_data(self.paramfn, self.params, ddat['dpl'])
 
             # put best opt results into GUI and save to param file
             push_values = {}
             for param_name in self.step_ranges.keys():
                 push_values[param_name] = self.step_ranges[param_name]['final']
-            self.updatebaseparamwin(push_values)
+            self._updatebaseparamwin(push_values)
             self.baseparamwin.optparamwin.push_chunk_ranges(step, push_values)
 
             sleep(1)
@@ -469,13 +504,13 @@ class RunSimThread(QThread):
             self.first_step = False
 
         # one final sim with the best parameters to update display
-        self.runsim(is_opt=True, banner=False)
+        self._runsim(is_opt=True, banner=False)
 
         # update lsimdat and its current sim index
-        updatelsimdat(self.paramfn, self.params, ddat['dpl'])
+        update_sim_data(self.paramfn, self.params, ddat['dpl'])
 
         # update optdat with the final best
-        updateoptdat(self.paramfn, self.params, ddat['dpl'])
+        update_opt_data(self.paramfn, self.params, ddat['dpl'])
 
         # re-enable all the range sliders
         self.baseparamwin.optparamwin.toggleEnableUserFields(step,
@@ -497,7 +532,7 @@ class RunSimThread(QThread):
         def optrun(new_params, grad=0):
             txt = "Optimization step %d, simulation %d" % (step + 1,
                                                            self.optsim + 1)
-            self.updatewaitsimwin(txt)
+            self._updatewaitsimwin(txt)
             print(txt)
 
             dtest = {}
@@ -517,15 +552,15 @@ class RunSimThread(QThread):
                     return 1e9  # invalid param value -> large error
 
             # put new param values into GUI and save params to file
-            self.updatebaseparamwin(dtest)
+            self._updatebaseparamwin(dtest)
             sleep(1)
 
             # run the simulation, but stop early if possible
-            self.runsim(is_opt=True, banner=False, simlength=self.opt_end)
+            self._runsim(is_opt=True, banner=False, simlength=self.opt_end)
 
             # calculate wRMSE for all steps
-            weighted_rmse(ddat, self.opt_end, self.opt_weights,
-                          tstart=self.opt_start)
+            calcerr(self.paramfn, self.opt_end, tstart=self.opt_start,
+                    weights=self.opt_weights)
             err = ddat['werrtot']
 
             if self.last_step:
@@ -535,11 +570,11 @@ class RunSimThread(QThread):
                 txt = "RMSE = %f" % err
             else:
                 # calculate regular RMSE for displaying on plot
-                calcerr(ddat, self.opt_end, tstart=self.opt_start)
+                calcerr(self.paramfn, self.opt_end, tstart=self.opt_start)
                 txt = "weighted RMSE = %f, RMSE = %f" % (err, ddat['errtot'])
 
             print(txt)
-            self.updatewaitsimwin(os.linesep + 'Simulation finished: ' + txt +
+            self._updatewaitsimwin(os.linesep + 'Simulation finished: ' + txt +
                                   os.linesep)
 
             data_dir = op.join(get_output_dir(), 'data')
@@ -555,7 +590,7 @@ class RunSimThread(QThread):
             write_legacy_paramf(param_out, self.params)
 
             if err < self.stepminopterr:
-                self.updatewaitsimwin("new best with RMSE %f" % err)
+                self._updatewaitsimwin("new best with RMSE %f" % err)
 
                 self.stepminopterr = err
                 # save best param file
@@ -571,7 +606,7 @@ class RunSimThread(QThread):
                 # Update plots for the first simulation only of this step
                 # (best results from last round). Skip the first step because
                 # there are no optimization results to show yet.
-                self.updatedrawerr()  # send event to draw updated RMSE
+                self._updatedrawerr()  # send event to draw updated RMSE
 
             self.optsim += 1
 
@@ -609,7 +644,7 @@ class RunSimThread(QThread):
 
         txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
                                                     self.opt_end)
-        self.updatewaitsimwin(txt)
+        self._updatewaitsimwin(txt)
 
         num_params = len(self.step_ranges)
         algorithm = nlopt.LN_COBYLA

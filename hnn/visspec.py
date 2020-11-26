@@ -26,7 +26,6 @@ fontsize = plt.rcParams['font.size'] = 10
 
 # assumes column 0 is time, rest of columns are time-series
 def extractspec (dat, fmax=40.0):
-  global ntrial
   #print('extractspec',dat.shape)
   lspec = []
   tvec = dat[:,0]

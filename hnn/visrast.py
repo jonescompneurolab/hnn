@@ -288,7 +288,6 @@ class SpikeCanvas (FigureCanvas):
 
 class SpikeGUI (QMainWindow):
   def __init__ (self):
-    global dfile, ddat, paramf
     super().__init__()        
     self.initUI()
 
