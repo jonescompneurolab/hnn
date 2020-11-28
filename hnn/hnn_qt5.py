@@ -329,6 +329,8 @@ class EvokedOrRhythmicDialog (QDialog):
         self.evwin = evwin
         self.rhythwin = rhythwin
         self.initUI()
+        # TODO: add back tooltips
+        # self.addtips()
 
     def initUI(self):
         self.layout = QVBoxLayout(self)

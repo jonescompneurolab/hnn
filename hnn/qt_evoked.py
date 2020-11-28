@@ -77,6 +77,8 @@ class EvokedInputBaseDialog(QDialog):
         self.dqline = {}
         # for translating model variable name to more human-readable form
         self.dtransvar = {}
+        # TODO: add back tooltips
+        # self.addtips()
 
     def transvar(self, k):
         if k in self.dtransvar:
@@ -197,12 +199,6 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
     super(EvokedInputParamDialog, self).__init__()
     self.initUI()
     self.setfromdin(din)
-
-  # TODO: add back tooltips
-  # def addtips (self):
-  #   for ktip in dconf.keys():
-  #     if ktip in self.dqline:
-  #       self.dqline[ktip].setToolTip(dconf[ktip])
 
   def transvar (self,k):
     if k in self.dtransvar: return self.dtransvar[k]
