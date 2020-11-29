@@ -1501,9 +1501,6 @@ class HNNGUI (QMainWindow):
       if cury >= sh: cury = cury = 0
 
   def updateDatCanv(self, params):
-    # update the simulation data and canvas
-    # self.sim_data.update_sim_data(self.paramfn, params)
-
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam(params)
     self.initSimCanvas() # recreate canvas
@@ -2023,6 +2020,11 @@ class HNNGUI (QMainWindow):
 
     self.statusBar().showMessage("Running simulation. . .")
 
+    # check that valid number of trials was given
+    if 'N_trials' not in params or params['N_trials'] == 0:
+      print("Warning: invalid configured number of trials. Setting to 1.")
+      params['N_trials'] = 1
+
     self.runthread = RunSimThread(ncore, params,
                                   self.param_signal, self.done_signal,
                                   self.waitsimwin, self.baseparamwin,
@@ -2069,6 +2071,15 @@ class HNNGUI (QMainWindow):
     if failed:
       QMessageBox.critical(self, "Failed!", msg + "using " + self.baseparamwin.paramfn + '. Check simulation log or console for error messages')
     else:
+      self.sim_data.update_sim_data(self.baseparamwin.paramfn,
+                                    self.baseparamwin.params)
+
+      if self.baseparamwin.params['save_figs']:
+        self.sim_data.save_dipole_with_hist(self.baseparamwin.paramfn,
+                                            self.baseparamwin.params)
+        self.sim_data.save_spec_with_hist(self.baseparamwin.paramfn,
+                                          self.baseparamwin.params)
+
       data_dir = os.path.join(get_output_dir(), 'data')
       sim_dir = os.path.join(data_dir, self.baseparamwin.params['sim_prefix'])
       QMessageBox.information(self, "Done!", msg + "using " + self.baseparamwin.paramfn + '. Saved data/figures in: ' + sim_dir)

@@ -5,13 +5,14 @@
 # last major: (SL: toward python3)
 
 import numpy as np
-import scipy.signal as sps
 import matplotlib.pyplot as plt
 import itertools as it
 import os
-from .paramrw import read_gids_param
 
+import scipy.signal as sps
 from hnn_core import read_spikes
+
+from .paramrw import read_gids_param
 
 # meant as a class for ONE cell type
 class Spikes():
@@ -64,15 +65,14 @@ class ExtInputs (Spikes):
   def __init__ (self, fspk, fgids, params, evoked=False):
 
     self.p_dict = params
-    try:
-      self.gid_dict = read_gids_param(fgids)
-    except FileNotFoundError:
-      raise ValueError
+    self.gid_dict = read_gids_param(fgids)
 
     if 'common' in self.gid_dict:
       extinput_key = 'common'
-    else:
+    elif 'extinput' in self.gid_dict:
       extinput_key = 'extinput'
+    else:
+      raise ValueError("Bad 'param.txt' file for reading input gids")
 
     self.evoked = evoked
 
@@ -164,7 +164,7 @@ class ExtInputs (Spikes):
     s_all = []
     try:
       spikes = read_spikes(fspk)
-      s_all = np.r_[spikes.times, spikes.gids].T
+      s_all = np.r_[spikes.spike_times, spikes.spike_gids].T
     except ValueError:
       s_all = np.loadtxt(open(fspk, 'rb'))
     except IndexError:
@@ -175,7 +175,7 @@ class ExtInputs (Spikes):
 
     if len(s_all) == 0:
       # couldn't read spike times
-      raise ValueError
+      raise ValueError("No spikes in file: %s" % fspk)
 
     inputs = {k:np.array([]) for k in ['prox','dist','evprox','evdist','pois']}
     if self.gid_prox is not None: inputs['prox'] = self.get_times(self.gid_prox,s_all)
@@ -252,7 +252,6 @@ def bin_count(bins_per_second, tinterval): return bins_per_second * tinterval / 
 
 # splits ext random feeds (of type exttype) by supplied cell type
 def split_extrand(s, gid_dict, celltype, exttype):
-  gid_cell = gid_dict[celltype]
   gid_exttype_start = gid_dict[exttype][0]
   gid_exttype_cell = [gid + gid_exttype_start for gid in gid_dict[celltype]]
   return Spikes(s, gid_exttype_cell)

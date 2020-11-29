@@ -17,7 +17,7 @@ import matplotlib.gridspec as gridspec
 from DataViewGUI import DataViewGUI
 from paramrw import get_output_dir
 import spikefn
-from simdat import readdpltrials
+from simdat import read_dpltrials
 
 from hnn_core import read_params
 
@@ -37,7 +37,7 @@ for i in range(len(sys.argv)):
         
 ddat = {}
 basedir = os.path.join(get_output_dir(), 'data', params['sim_prefix'])
-ddat['dpltrials'] = readdpltrials(basedir)
+ddat['dpltrials'] = read_dpltrials(basedir)
 ddat['dpl'] = np.loadtxt(os.path.join(basedir,'dpl.txt'))
 
 

@@ -19,55 +19,9 @@ from hnn_core.dipole import average_dipoles
 import nlopt
 from psutil import wait_procs, process_iter, NoSuchProcess
 
-from .paramrw import usingOngoingInputs, write_gids_param
+from .paramrw import usingOngoingInputs, write_gids_param, get_fname
 from .specfn import analysis_simp
 from .paramrw import write_legacy_paramf, get_output_dir
-
-
-def get_fname(sim_dir, key, trial=0, ntrial=1):
-    """Build the file names using the old HNN scheme
-
-    Parameters
-    ----------
-    sim_dir : str
-        The base data directory where simulation result files are stored
-    key : str
-        A string describing the type of file (HNN specific)
-    trial : int | None
-        Trial number for which to generate files (separate files per trial).
-        If None is given, then trial number 0 is assumed.
-    ntrial : int | None
-        The total number of trials that are part of this simulation. If None
-        is given, then a total of 1 trial is assumed.
-
-    Returns
-    ----------
-    fname : str
-        A string with the correct filename
-    """
-
-    datatypes = {'rawspk': ('spk', '.txt'),
-                 'rawdpl': ('rawdpl', '.txt'),
-                 'normdpl': ('dpl', '.txt'),
-                 'rawcurrent': ('i', '.txt'),
-                 'rawspec': ('rawspec', '.npz'),
-                 'rawspeccurrent': ('speci', '.npz'),
-                 'avgdpl': ('dplavg', '.txt'),
-                 'avgspec': ('specavg', '.npz'),
-                 'figavgdpl': ('dplavg', '.png'),
-                 'figavgspec': ('specavg', '.png'),
-                 'figdpl': ('dpl', '.png'),
-                 'figspec': ('spec', '.png'),
-                 'figspk': ('spk', '.png'),
-                 'param': ('param', '.txt'),
-                 'vsoma': ('vsoma', '.pkl')}
-
-    if ntrial == 1 or key == 'param':
-        # param file currently identical for all trials
-        return op.join(sim_dir, datatypes[key][0] + datatypes[key][1])
-    else:
-        return op.join(sim_dir, datatypes[key][0] + '_' + str(trial) +
-                       datatypes[key][1])
 
 
 class TextSignal (QObject):
@@ -177,21 +131,21 @@ def simulate(params, n_procs=None):
 
     # TODO: Can below be removed if spk.txt is new hnn-core format with 3
     # columns (including spike type)?
-    write_gids_param(get_fname(sim_dir, 'param'), net.gid_dict)
+    write_gids_param(get_fname(sim_dir, 'param'), net.gid_ranges)
 
     # save spikes by trial
     glob = op.join(sim_dir, 'spk_%d.txt')
-    net.spikes.write(glob)
+    net.cell_response.write(glob)
 
     spike_fn = get_fname(sim_dir, 'rawspk')
     # save spikes from the individual trials in a single file
     with open(spike_fn, 'w') as fspkout:
-        for trial_idx in range(len(net.spikes.times)):
-            for spike_idx in range(len(net.spikes.times[trial_idx])):
+        for trial_idx in range(len(net.cell_response.spike_times)):
+            for spike_idx in range(len(net.cell_response.spike_times[trial_idx])):
                 fspkout.write('{:.3f}\t{}\t{}\n'.format(
-                              net.spikes.times[trial_idx][spike_idx],
-                              int(net.spikes.gids[trial_idx][spike_idx]),
-                              net.spikes.types[trial_idx][spike_idx]))
+                              net.cell_response.spike_times[trial_idx][spike_idx],
+                              int(net.cell_response.spike_gids[trial_idx][spike_idx]),
+                              net.cell_response.spike_types[trial_idx][spike_idx]))
 
     # save dipole for each trial and perform spectral analysis
     for trial_idx, dpl in enumerate(dpls):
@@ -210,21 +164,15 @@ def simulate(params, n_procs=None):
                           get_fname(sim_dir, 'rawspec', trial_idx,
                                     params['N_trials']))
 
-        # TODO: the savefigs functionality is quite complicated and rewriting
-        # from scratch in hnn-core is probably a better option that will allow
-        # deprecating the large amount of legacy code
-
-        # if params['save_figs']:
-        #     savefigs(params) # save output figures
-
     if params['save_spec_data'] or usingOngoingInputs(params):
         # save average spectrogram from individual trials in a single file
 
         dspecin = {}
         dout = {}
         lf = []
-        for i in range(ntrial):
-            lf.append(op.join(sim_dir, 'rawspec_' + str(i) + '.npz'))
+        for _ in range(ntrial):
+            f_spec = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
+            lf.append(f_spec)
 
         for f in lf:
             dspecin[f] = np.load(f)

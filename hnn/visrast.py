@@ -94,7 +94,7 @@ def getdspk (fn):
   ddat = {}
   try:
     spikes = read_spikes(fn)
-    ddat['spk'] = np.r_[spikes.times, spikes.gids].T
+    ddat['spk'] = np.r_[spikes.spike_times, spikes.spike_gids].T
   except ValueError:
     ddat['spk'] = np.loadtxt(fn)
 

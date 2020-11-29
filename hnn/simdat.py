@@ -2,6 +2,7 @@ import os
 from PyQt5.QtWidgets import QSizePolicy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
@@ -11,10 +12,11 @@ from glob import glob
 from scipy import signal
 
 from hnn_core import read_spikes
+from hnn_core.dipole import Dipole
 
 from .spikefn import ExtInputs
-from .paramrw import usingOngoingInputs, usingEvokedInputs, usingPoissonInputs
-from .paramrw import usingTonicInputs, countEvokedInputs, get_output_dir
+from .paramrw import get_output_dir, get_fname, get_inputs
+from .paramrw import countEvokedInputs
 from .qt_lib import getscreengeom
 
 drawindivdpl = 1
@@ -32,34 +34,102 @@ def read_dpltrials(sim_dir):
         try:
             dpl_trial = np.loadtxt(dipole_fn)
         except OSError:
-            print('Warning: could not read file:', dipole_fn)
+            if os.path.exists(sim_dir):
+                print('Warning: could not read file:', dipole_fn)
         except ValueError:
-            print('Warning: could not read file:', dipole_fn)
+            if os.path.exists(sim_dir):
+                print('Warning: could not read file:', dipole_fn)
 
         ldpl.append(dpl_trial)
 
     return ldpl
 
 
-def get_inputs(params):
-    """ get a dictionary of input types used in simulation
-        with distal/proximal specificity for evoked,ongoing inputs
-    """
+def check_feeds_to_plot(feeds_from_spikes, params):
+    # ensures synaptic weight > 0
+    using_feeds = get_inputs(params)
 
-    dinty = {'Evoked': False, 'Ongoing': False, 'Poisson': False,
-             'Tonic': False, 'EvokedDist': False, 'EvokedProx': False,
-             'OngoingDist': False, 'OngoingProx': False}
+    feed_counts = {'pois': len(feeds_from_spikes['pois']) > 0,
+                   'evdist': len(feeds_from_spikes['evdist']) > 0,
+                   'evprox': len(feeds_from_spikes['evprox']) > 0,
+                   'dist': len(feeds_from_spikes['dist']) > 0,
+                   'prox': len(feeds_from_spikes['prox']) > 0}
+    feed_counts['evoked'] = feed_counts['evdist'] or feed_counts['evprox']
+    feed_counts['ongoing'] = feed_counts['dist'] or feed_counts['prox']
 
-    dinty['Evoked'] = usingEvokedInputs(params)
-    dinty['EvokedDist'] = usingEvokedInputs(params, lsuffty=['_evdist_'])
-    dinty['EvokedProx'] = usingEvokedInputs(params, lsuffty=['_evprox_'])
-    dinty['Ongoing'] = usingOngoingInputs(params)
-    dinty['OngoingDist'] = usingOngoingInputs(params, lty=['_dist'])
-    dinty['OngoingProx'] = usingOngoingInputs(params, lty=['_prox'])
-    dinty['Poisson'] = usingPoissonInputs(params)
-    dinty['Tonic'] = usingTonicInputs(params)
+    feeds_to_plot = {}
+    for key in feed_counts.keys():
+        feeds_to_plot[key] = feed_counts[key] and using_feeds[key]
 
-    return dinty
+    return feeds_to_plot
+
+
+def plot_hists_on_gridspec(figure, gridspec, feeds_to_plot, extinputs, times,
+                           xlim, linewidth):
+
+    axdist = axpois = axprox = None
+    axes = []
+    n_hists = 0
+
+    # check poisson inputs, create subplot
+    if feeds_to_plot['pois']:
+        axpois = figure.add_subplot(gridspec[n_hists, :])
+        n_hists += 1
+
+    # check distal inputs, create subplot
+    if feeds_to_plot['evdist'] or feeds_to_plot['dist']:
+        axdist = figure.add_subplot(gridspec[n_hists, :])
+        n_hists += 1
+
+    # check proximal inputs, create subplot
+    if feeds_to_plot['evprox'] or feeds_to_plot['prox']:
+        axprox = figure.add_subplot(gridspec[n_hists, :])
+        n_hists += 1
+
+    # check input types provided in simulation
+    if feeds_to_plot['pois']:
+        extinputs.plot_hist(axpois, 'pois', times, 'auto', xlim,
+                            color='k', hty='step',
+                            lw=linewidth+1)
+        axes.append(axpois)
+    if feeds_to_plot['dist']:
+        extinputs.plot_hist(axdist, 'dist', times, 'auto', xlim,
+                            color='g', lw=linewidth+1)
+        axes.append(axdist)
+    if feeds_to_plot['prox']:
+        extinputs.plot_hist(axprox, 'prox', times, 'auto', xlim,
+                            color='r', lw=linewidth+1)
+        axes.append(axprox)
+    if feeds_to_plot['evdist']:
+        extinputs.plot_hist(axdist, 'evdist', times, 'auto', xlim,
+                            color='g', hty='step',
+                            lw=linewidth+1)
+        axes.append(axdist)
+    if feeds_to_plot['evprox']:
+        extinputs.plot_hist(axprox, 'evprox', times, 'auto', xlim,
+                            color='r', hty='step',
+                            lw=linewidth+1)
+        axes.append(axprox)
+
+    # get the ymax for the two histograms
+    ymax = 0
+    for ax in [axpois, axdist, axprox]:
+        if ax is not None:
+            if ax.get_ylim()[1] > ymax:
+                ymax = ax.get_ylim()[1]
+
+    # set ymax for both to be the same
+    for ax in [axpois, axdist, axprox]:
+        if ax is not None:
+            ax.set_ylim(0, ymax)
+            ax.set_xlim(xlim)
+            ax.legend(loc=1)  # legend in upper right
+
+    # invert the distal input axes
+    if axdist is not None:
+        axdist.invert_yaxis()
+
+    return axes
 
 
 class SimData(object):
@@ -69,6 +139,7 @@ class SimData(object):
         self._sim_data = {}
         self._opt_data = {}
         self._exp_data = {}
+        self._data_dir = os.path.join(get_output_dir(), 'data')
 
     def remove_sim_by_fn(self, paramfn):
         """Deletes sim from SimData
@@ -132,8 +203,7 @@ class SimData(object):
             Dictionary containing parameters
         """
 
-        data_dir = os.path.join(get_output_dir(), 'data')
-        sim_dir = os.path.join(data_dir, params['sim_prefix'])
+        sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
         warn_nofile = False
         if os.path.exists(sim_dir):
             warn_nofile = True
@@ -155,7 +225,8 @@ class SimData(object):
         spikes_array = None
         try:
             raw_spikes = read_spikes(spike_fn)
-            spikes_array = np.r_[raw_spikes.times, raw_spikes.gids].T
+            spikes_array = np.r_[raw_spikes.spike_times,
+                                 raw_spikes.spike_gids].T
             if len(spikes_array) == 0 and warn_nofile:
                 print(warning_message, spike_fn)
         except ValueError:
@@ -172,9 +243,9 @@ class SimData(object):
                   spike_fn)
 
         warn_nospec = False
-        dinty = get_inputs(params)
-        if params['save_spec_data'] or dinty['Ongoing'] or \
-                dinty['Poisson'] or dinty['Tonic']:
+        using_feeds = get_inputs(params)
+        if params['save_spec_data'] or using_feeds['ongoing'] or \
+                using_feeds['pois'] or using_feeds['tonic']:
             warn_nospec = True
 
         spec_fn = os.path.join(sim_dir, 'rawspec.npz')
@@ -287,6 +358,165 @@ class SimData(object):
         self._opt_data = {'paramfn': paramfn, 'params': params,
                           'data': {'avg_dpl': avg_dpl}}
 
+    def _read_dpl(self, paramfn, trial_idx, ntrial):
+        if ntrial == 1:
+            dpltrial = self._sim_data[paramfn]['data']['avg_dpl']
+        else:
+            trial_data = self._sim_data[paramfn]['data']['dpl_trials']
+            if trial_idx > len(trial_data):
+                print("Warning: data not available for trials above index",
+                      (len(trial_data) - 1))
+                return None
+
+            dpltrial = self._sim_data[paramfn]['data']['dpl_trials'][trial_idx]
+
+        dpl_data = np.c_[dpltrial[:, 1],
+                         dpltrial[:, 2],
+                         dpltrial[:, 3]]
+
+        return Dipole(dpltrial[:, 0], dpl_data)
+
+    def _plot_spec(self, ax, paramfn, params, xlim, fontsize):
+        single_spec = self._sim_data[paramfn]['data']['spec']
+
+        # Plot TFR data and add colorbar
+        plot = ax.imshow(single_spec['TFR'],
+                         extent=(single_spec['time'][0],
+                                 single_spec['time'][-1],
+                                 single_spec['freq'][-1],
+                                 single_spec['freq'][0]),
+                         aspect='auto', origin='upper',
+                         cmap=plt.get_cmap(params['spec_cmap']))
+        ax.set_ylabel('Frequency (Hz)', fontsize=fontsize)
+        ax.set_xlabel('Time (ms)', fontsize=fontsize)
+        ax.set_xlim(xlim)
+        ax.set_ylim(single_spec['freq'][-1], single_spec['freq'][0])
+
+        return plot
+
+    def save_spec_with_hist(self, paramfn, params):
+        sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
+        ntrial = params['N_trials']
+        xmin = 0.
+        xmax = params['tstop']
+        xlim = (xmin, xmax)
+        linewidth = 1
+
+        num_step = ceil(xmax / params['dt']) + 1
+        times = np.linspace(xmin, xmax, num_step)
+
+        for trial_idx in range(ntrial):
+            spec_fn = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
+            spike_fn = get_fname(sim_dir, 'rawspk', trial_idx, ntrial)
+            out_paramfn = get_fname(sim_dir, 'param', trial_idx, ntrial)
+
+            # Generate file prefix
+            fprefix = os.path.splitext(os.path.split(spec_fn)[-1])[0]
+
+            # Create the fig name
+            fig_name = os.path.join(sim_dir, fprefix+'.png')
+
+            f = plt.figure(figsize=(8, 8))
+            font_prop = {'size': 8}
+            mpl.rc('font', **font_prop)
+
+            # get inputs from spike file
+            extinputs = ExtInputs(spike_fn, out_paramfn, params)
+            extinputs.add_delay_times()
+            feeds_from_spikes = extinputs.inputs
+            feeds_to_plot = check_feeds_to_plot(feeds_from_spikes, params)
+
+            if feeds_to_plot['ongoing'] or feeds_to_plot['evoked'] or \
+                    feeds_to_plot['pois']:
+                # hist gridspec
+                gs2 = gridspec.GridSpec(2, 1, hspace=0.14, bottom=0.75,
+                                        top=0.95, left=0.1, right=0.82)
+
+                plot_hists_on_gridspec(f, gs2, feeds_to_plot, extinputs,
+                                       times, xlim, linewidth)
+
+            # the right margin is a hack and NOT guaranteed!
+            # it's making space for the stupid colorbar that creates a new
+            # grid to replace gs1 when called, and it doesn't update the
+            # params of gs1
+            gs0 = gridspec.GridSpec(1, 4, wspace=0.05, hspace=0., bottom=0.05,
+                                    top=0.45, left=0.1, right=1.)
+            gs1 = gridspec.GridSpec(2, 1, height_ratios=[1, 3], bottom=0.50,
+                                    top=0.70, left=0.1, right=0.82)
+
+            axspec = f.add_subplot(gs0[:, :])
+            axdipole = f.add_subplot(gs1[:, :])
+
+            cax = self._plot_spec(axspec, paramfn, params, xlim, fontsize)
+            f.colorbar(cax, ax=axspec)
+
+            # set xlim based on TFR plot
+            # xlim_new = axspec.get_xlim()
+
+            # dipole
+            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
+            if dpl is None:
+                break
+            dpl.plot(axdipole, 'agg', show=False)
+            axdipole.set_xlim(xlim)
+
+            f.savefig(fig_name, dpi=300)
+            plt.close(f)
+
+    def save_dipole_with_hist(self, paramfn, params):
+        sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
+        ntrial = params['N_trials']
+        xmin = 0.
+        xmax = params['tstop']
+        xlim = (xmin, xmax)
+        linewidth = 1
+
+        num_step = ceil(xmax / params['dt']) + 1
+        times = np.linspace(xmin, xmax, num_step)
+
+        for trial_idx in range(ntrial):
+            dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx, ntrial)
+            spike_fn = get_fname(sim_dir, 'rawspk', trial_idx, ntrial)
+            out_paramfn = get_fname(sim_dir, 'param', trial_idx, ntrial)
+
+            # split to find file prefix
+            file_prefix = dipole_fn.split('/')[-1].split('.')[0]
+            # Create the fig name
+            fig_name = os.path.join(sim_dir, file_prefix+'.png')
+            f = plt.figure(figsize=(12, 6))
+            font_prop = {'size': 8}
+            mpl.rc('font', **font_prop)
+
+            extinputs = ExtInputs(spike_fn, out_paramfn, params)
+            extinputs.add_delay_times()
+            feeds_from_spikes = extinputs.inputs
+            feeds_to_plot = check_feeds_to_plot(feeds_from_spikes, params)
+
+            if feeds_to_plot['ongoing'] or feeds_to_plot['evoked'] or \
+                    feeds_to_plot['pois']:
+                # hist gridspec
+                gs1 = gridspec.GridSpec(2, 1, hspace=0.14, bottom=0.60,
+                                        top=0.95, left=0.1, right=0.90)
+
+                plot_hists_on_gridspec(f, gs1, feeds_to_plot, extinputs,
+                                       times, xlim, linewidth)
+
+            # dipole gridpec
+            gs0 = gridspec.GridSpec(1, 1, wspace=0.05, hspace=0, bottom=0.10,
+                                    top=0.55, left=0.1, right=0.90)
+            axdipole = f.add_subplot(gs0[:, :])
+
+            # dipole
+            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
+            if dpl is None:
+                break
+            dpl.plot(axdipole, 'agg', show=False)
+            axdipole.set_xlim(xlim)
+
+            fig_name = os.path.join(sim_dir, file_prefix+'.png')
+            f.savefig(fig_name, dpi=300)
+            plt.close(f)
+
 
 class SIMCanvas (FigureCanvasQTAgg):
     # matplotlib/pyqt-compatible canvas for drawing simulation & external data
@@ -313,6 +543,7 @@ class SIMCanvas (FigureCanvasQTAgg):
         self.paramfn = paramfn
         self.initaxes()
         self.G = gridspec.GridSpec(10, 1)
+        self._data_dir = os.path.join(get_output_dir(), 'data')
 
         self.optMode = optMode
         if not optMode:
@@ -321,136 +552,83 @@ class SIMCanvas (FigureCanvasQTAgg):
 
     def initaxes(self):
         # initialize the axes
-        self.axdist = self.axprox = self.axdipole = self.axspec = None
-        self.axpois = None
+        self.axdipole = self.axspec = None
 
-    def plotinputhist(self, xl, dinty):
-        """ plot input histograms
-            xl = x axis limits
-            dinty = dict of input types used,
-                    determines how many/which axes created/displayed
-        """
+    def plotinputhist(self, extinputs=None, feeds_to_plot=None,
+                      plot_distribs=False):
+        """ plot input histograms"""
 
-        extinputs = None
-        plot_distribs = False
+        xmin = 0.
+        xmax = self.params['tstop']
+        xlim = (xmin, xmax)
+        axes = []
 
-        if self.params is None:
-            raise ValueError("No valid params found")
+        sim_dt = self.params['dt']
+        num_step = ceil(xmax / sim_dt) + 1
+        times = np.linspace(xmin, xmax, num_step)
 
-        sim_tstop = self.params['tstop']
-        sim_dt = self.params['tstop']
-        num_step = ceil(sim_tstop / sim_dt) + 1
-        times = np.linspace(0, sim_tstop, num_step)
-
-        data_dir = os.path.join(get_output_dir(), 'data')
-        sim_dir = os.path.join(data_dir, self.params['sim_prefix'])
+        sim_dir = os.path.join(self._data_dir, self.params['sim_prefix'])
         spike_fn = os.path.join(sim_dir, 'spk.txt')
         out_paramfn = os.path.join(sim_dir, 'param.txt')
-        try:
-            extinputs = ExtInputs(spike_fn, out_paramfn, self.params)
-            extinputs.add_delay_times()
-            dinput = extinputs.inputs
-        except ValueError:
+
+        if not plot_distribs:
+            if feeds_to_plot is None:
+                extinputs = ExtInputs(spike_fn, out_paramfn, self.params)
+                extinputs.add_delay_times()
+                dinput = extinputs.inputs
+                feeds_to_plot = check_feeds_to_plot(dinput, self.params)
+
+            if feeds_to_plot['ongoing'] or feeds_to_plot['evoked'] or \
+                    feeds_to_plot['pois']:
+                # hist gridspec
+                axes = plot_hists_on_gridspec(self.figure, self.G,
+                                              feeds_to_plot, extinputs, times,
+                                              xlim, self.linewidth)
+            else:
+                plot_distribs = True
+
+        if plot_distribs:
             dinput = self.getInputDistrib()
-            plot_distribs = True
+            feeds_to_plot = check_feeds_to_plot(dinput, self.params)
+            if not (feeds_to_plot['ongoing'] or feeds_to_plot['evoked'] or
+                    feeds_to_plot['pois']):
+                # no plots to create
+                return axes
 
-        if len(dinput['dist']) <= 0 and len(dinput['prox']) <= 0 and \
-                len(dinput['evdist']) <= 0 and len(dinput['evprox']) <= 0 and \
-                len(dinput['pois']) <= 0:
-            return False
+            n_hists = 0
 
-        self.hist = {'feed_dist': None,
-                     'feed_prox': None,
-                     'feed_evdist': None,
-                     'feed_evprox': None,
-                     'feed_pois': None}
-
-        # dinty ensures synaptic weight > 0
-        hasPois = len(dinput['pois']) > 0 and dinty['Poisson']
-        gRow = 0
-        self.axdist = self.axprox = self.axpois = None  # axis objects
-
-        # check poisson inputs, create subplot
-        if hasPois:
-            self.axpois = self.figure.add_subplot(self.G[gRow, 0])
-            gRow += 1
-
-        # check distal inputs, create subplot
-        if (len(dinput['dist']) > 0 and dinty['OngoingDist']) or \
-                (len(dinput['evdist']) > 0 and dinty['EvokedDist']):
-            self.axdist = self.figure.add_subplot(self.G[gRow, 0])
-            gRow += 1
-
-        # check proximal inputs, create subplot
-        if (len(dinput['prox']) > 0 and dinty['OngoingProx']) or \
-                (len(dinput['evprox']) > 0 and dinty['EvokedProx']):
-            self.axprox = self.figure.add_subplot(self.G[gRow, 0])
-            gRow += 1
-
-        # check input types provided in simulation
-        if extinputs is not None and self._has_simdata():
-            if hasPois:
-                extinputs.plot_hist(self.axpois, 'pois', times, 'auto', xl,
-                                    color='k', hty='step',
-                                    lw=self.linewidth+1)
-
-            # dinty condition ensures synaptic weight > 0
-            if len(dinput['dist']) > 0 and dinty['OngoingDist']:
-                extinputs.plot_hist(self.axdist, 'dist', times, 'auto', xl,
-                                    color='g', lw=self.linewidth+1)
-
-            if len(dinput['prox']) > 0 and dinty['OngoingProx']:
-                extinputs.plot_hist(self.axprox, 'prox', times, 'auto', xl,
-                                    color='r', lw=self.linewidth+1)
-
-            if len(dinput['evdist']) > 0 and dinty['EvokedDist']:
-                extinputs.plot_hist(self.axdist, 'evdist', times, 'auto', xl,
-                                    color='g', hty='step',
-                                    lw=self.linewidth+1)
-
-            if len(dinput['evprox']) > 0 and dinty['EvokedProx']:
-                extinputs.plot_hist(self.axprox, 'evprox', times, 'auto', xl,
-                                    color='r', hty='step',
-                                    lw=self.linewidth+1)
-        elif plot_distribs:
-            if len(dinput['evprox']) > 0 and dinty['EvokedProx']:
-                prox_tot = np.zeros(len(dinput['evprox'][0][0]))
-                for prox in dinput['evprox']:
-                    prox_tot += prox[1]
-                self.axprox.plot(dinput['evprox'][0][0], prox_tot, color='r',
-                                 lw=self.linewidth,
-                                 label='evprox distribution')
-                self.axprox.set_xlim(dinput['evprox'][0][0][0],
-                                     dinput['evprox'][0][0][-1])
-            if len(dinput['evdist']) > 0 and dinty['EvokedDist']:
+            if feeds_to_plot['evdist']:
                 dist_tot = np.zeros(len(dinput['evdist'][0][0]))
                 for dist in dinput['evdist']:
                     dist_tot += dist[1]
-                self.axdist.plot(dinput['evdist'][0][0], dist_tot, color='g',
-                                 lw=self.linewidth,
-                                 label='evdist distribution')
-                self.axprox.set_xlim(dinput['evdist'][0][0][0],
-                                     dinput['evdist'][0][0][-1])
 
-        ymax = 0
-        for ax in [self.axpois, self.axdist, self.axprox]:
-            if ax is not None:
-                if ax.get_ylim()[1] > ymax:
-                    ymax = ax.get_ylim()[1]
+                axdist = self.figure.add_subplot(self.G[n_hists, :])
+                n_hists += 1
 
-        if ymax == 0:
-            return False
-        else:
-            for ax in [self.axpois, self.axdist, self.axprox]:
-                if ax is not None:
-                    ax.set_ylim(0, ymax)
-            if self.axdist:
-                self.axdist.invert_yaxis()
-            for ax in [self.axpois, self.axdist, self.axprox]:
-                if ax:
-                    ax.set_xlim(xl)
-                    ax.legend(loc=1)  # legend in upper right
-            return True, gRow
+                axdist.plot(dinput['evdist'][0][0], dist_tot, color='g',
+                            lw=self.linewidth,
+                            label='evdist distribution')
+                axdist.set_xlim(dinput['evdist'][0][0][0],
+                                dinput['evdist'][0][0][-1])
+                axdist.invert_yaxis()  # invert the distal input axes
+                axes.append(axdist)
+
+            if feeds_to_plot['evprox']:
+                prox_tot = np.zeros(len(dinput['evprox'][0][0]))
+                for prox in dinput['evprox']:
+                    prox_tot += prox[1]
+
+                axprox = self.figure.add_subplot(self.G[n_hists, :])
+                n_hists += 1
+
+                axprox.plot(dinput['evprox'][0][0], prox_tot, color='r',
+                            lw=self.linewidth,
+                            label='evprox distribution')
+                axprox.set_xlim(dinput['evprox'][0][0][0],
+                                dinput['evprox'][0][0][-1])
+                axes.append(axprox)
+
+        return axes
 
     def clearaxes(self):
         # clear the figures axes
@@ -655,29 +833,41 @@ class SIMCanvas (FigureCanvasQTAgg):
         if self.params is None:
             only_create_axes = True
             DrawSpec = False
-            xl = (0.0, 1.0)
+            xlim = (0.0, 1.0)
         else:
-            # setup the figure axis for drawing the dipole signal
-            dinty = get_inputs(self.params)
+            tstop = self.params['tstop']
+            xlim = (0.0, tstop)
+            sim_dir = os.path.join(self._data_dir, self.params['sim_prefix'])
+            spike_fn = os.path.join(sim_dir, 'spk.txt')
+            out_paramfn = os.path.join(sim_dir, 'param.txt')
+            try:
+                extinputs = ExtInputs(spike_fn, out_paramfn, self.params)
+                extinputs.add_delay_times()
+                feeds_from_spikes = extinputs.inputs
+                feeds_to_plot = check_feeds_to_plot(feeds_from_spikes,
+                                                    self.params)
+                axes = self.plotinputhist(extinputs, feeds_to_plot,
+                                          plot_distribs=False)
+                self.gRow = len(axes)
+            except FileNotFoundError:
+                axes = self.plotinputhist(plot_distribs=True)
+                self.gRow = len(axes)
 
-            self.sim_data.update_sim_data(self.paramfn, self.params)
+            # for trying to plot a simulation read from disk (e.g. default)
+            if self.paramfn not in self.sim_data._sim_data:
+                self.sim_data.update_sim_data(self.paramfn, self.params)
 
-            single_sim_data = self.sim_data._sim_data[self.paramfn]['data']
-            if single_sim_data['avg_dpl'] is None:
+            # check that dipole data is present
+            single_sim = self.sim_data._sim_data[self.paramfn]['data']
+            if single_sim['avg_dpl'] is None:
                 failed_loading = True
-
-            xl = (0.0, self.params['tstop'])
-            if dinty['Ongoing'] or dinty['Evoked'] or dinty['Poisson']:
-                xo = self.plotinputhist(xl, dinty)
-                if xo:
-                    self.gRow = xo[1]
 
             # whether to draw the specgram - should draw if user saved it or
             # have ongoing, poisson, or tonic inputs
             DrawSpec = (not failed_loading) and \
-                single_sim_data['spec'] is not None and \
-                (self.params['save_spec_data'] or dinty['Ongoing']
-                 or dinty['Poisson'] or dinty['Tonic'])
+                single_sim['spec'] is not None and \
+                (self.params['save_spec_data'] or feeds_to_plot['ongoing']
+                 or feeds_to_plot['pois'] or feeds_to_plot['tonic'])
 
         if DrawSpec:  # dipole axis takes fewer rows if also drawing specgram
             self.axdipole = self.figure.add_subplot(self.G[self.gRow:5, 0])
@@ -685,9 +875,9 @@ class SIMCanvas (FigureCanvasQTAgg):
         else:
             self.axdipole = self.figure.add_subplot(self.G[self.gRow:-1, 0])
 
-        yl = (-0.001, 0.001)
-        self.axdipole.set_ylim(yl)
-        self.axdipole.set_xlim(xl)
+        ylim = (-0.001, 0.001)
+        self.axdipole.set_ylim(ylim)
+        self.axdipole.set_xlim(xlim)
 
         left = 0.08
         w, _ = getscreengeom()
@@ -700,29 +890,21 @@ class SIMCanvas (FigureCanvasQTAgg):
         if failed_loading or only_create_axes:
             return
 
-        ds = None
-        tstop = self.params['tstop']
-        dt = self.params['dt']
-        xl = (0, tstop)
-
         # get spectrogram if it exists, then adjust axis limits but only
         # if drawing spectrogram
         if DrawSpec:
-            single_sim_data = self.sim_data._sim_data[self.paramfn]['data']
-            if single_sim_data['spec'] is not None:
-                ds = single_sim_data['spec']  # spectrogram
-                xl = (ds['time'][0], ds['time'][-1])  # use spectogram limits
+            single_sim = self.sim_data._sim_data[self.paramfn]['data']
+            if single_sim['spec'] is not None:
+                # use spectogram limits (missing first 50 ms b/c edge effects)
+                xl = (single_sim['spec']['time'][0],
+                      single_sim['spec']['time'][-1])
             else:
                 DrawSpec = False
 
-        sampr = 1e3 / dt  # dipole sampling rate
-        # use these indices to find dipole min,max
-        sidx, eidx = int(sampr*xl[0] / 1e3), int(sampr*xl[1] / 1e3)
-
         yl = [0, 0]
         dpl = self.sim_data._sim_data[self.paramfn]['data']['avg_dpl']
-        yl[0] = min(yl[0], np.amin(dpl[sidx:eidx, 1]))
-        yl[1] = max(yl[1], np.amax(dpl[sidx:eidx, 1]))
+        yl[0] = min(yl[0], np.amin(dpl[:, 1]))
+        yl[1] = max(yl[1], np.amax(dpl[:, 1]))
 
         if not self.optMode:
             # skip for optimization
@@ -744,16 +926,16 @@ class SIMCanvas (FigureCanvasQTAgg):
                     self.axdipole.plot(dpltrial[:, 0], dpltrial[:, 1],
                                        color='gray',
                                        linewidth=self.linewidth)
-                    yl[0] = min(yl[0], dpltrial[sidx:eidx, 1].min())
-                    yl[1] = max(yl[1], dpltrial[sidx:eidx, 1].max())
+                    yl[0] = min(yl[0], dpltrial[:, 1].min())
+                    yl[1] = max(yl[1], dpltrial[:, 1].max())
 
             if drawavgdpl or self.params['N_trials'] <= 1:
                 # this is the average dipole (across trials)
                 # it's also the ONLY dipole when running a single trial
                 self.axdipole.plot(dpl[:, 0], dpl[:, 1], 'k',
                                    linewidth=self.linewidth + 1)
-                yl[0] = min(yl[0], dpl[sidx:eidx, 1].min())
-                yl[1] = max(yl[1], dpl[sidx:eidx, 1].max())
+                yl[0] = min(yl[0], dpl[:, 1].min())
+                yl[1] = max(yl[1], dpl[:, 1].max())
         else:
             if self.sim_data._opt_data['avg_dpl'] is not None:
                 # show optimized dipole as gray line
@@ -761,8 +943,8 @@ class SIMCanvas (FigureCanvasQTAgg):
                 self.axdipole.plot(optdpl[:, 0], optdpl[:, 1], 'k',
                                    color='gray',
                                    linewidth=self.linewidth + 1)
-                yl[0] = min(yl[0], optdpl[sidx:eidx, 1].min())
-                yl[1] = max(yl[1], optdpl[sidx:eidx, 1].max())
+                yl[0] = min(yl[0], optdpl[:, 1].min())
+                yl[1] = max(yl[1], optdpl[:, 1].max())
 
             if self.sim_data._opt_data['initial_dpl'] is not None:
                 # show initial dipole in dotted black line
@@ -771,7 +953,7 @@ class SIMCanvas (FigureCanvasQTAgg):
                 plot_dpl = plot_data[:, 0]
                 self.axdipole.plot(times, plot_dpl, '--', color='black',
                                    linewidth=self.linewidth)
-                dpl = self.sim_data._opt_data['initial_dpl'][sidx:eidx, 1]
+                dpl = self.sim_data._opt_data['initial_dpl'][:, 1]
                 yl[0] = min(yl[0], dpl.min())
                 yl[1] = max(yl[1], dpl.max())
 
@@ -797,23 +979,14 @@ class SIMCanvas (FigureCanvasQTAgg):
             self.axdipole.set_ylabel(r'Dipole (nAm $\times$ ' +
                                      str(scalefctr) +
                                      ')\n', fontsize=fontsize)
-        self.axdipole.set_xlim(xl)
+        self.axdipole.set_xlim(xlim)
         self.axdipole.set_ylim(yl)
 
         if DrawSpec:
             gRow = 6
             self.axspec = self.figure.add_subplot(self.G[gRow:10, 0])
-            cax = self.axspec.imshow(ds['TFR'], extent=(ds['time'][0],
-                                                        ds['time'][-1],
-                                                        ds['freq'][-1],
-                                                        ds['freq'][0]),
-                                     aspect='auto', origin='upper',
-                                     cmap=plt.get_cmap(
-                                         self.params['spec_cmap']))
-            self.axspec.set_ylabel('Frequency (Hz)', fontsize=fontsize)
-            self.axspec.set_xlabel('Time (ms)', fontsize=fontsize)
-            self.axspec.set_xlim(xl)
-            self.axspec.set_ylim(ds['freq'][-1], ds['freq'][0])
+            cax = self.sim_data._plot_spec(self.axspec, self.paramfn,
+                                           self.params, xl, fontsize)
             cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
             # plot colorbar horizontally to save space
             plt.colorbar(cax, cax=cbaxes, orientation='horizontal')
@@ -825,8 +998,8 @@ class SIMCanvas (FigureCanvasQTAgg):
         xl = self.axdipole.get_xlim()
         yl = self.axdipole.get_ylim()
 
-        dinty = get_inputs(self.params)
-        if dinty['Evoked']:
+        using_feeds = get_inputs(self.params)
+        if using_feeds['evoked']:
             self.drawEVInputTimes(self.axdipole, yl, 0.1,
                                   (xl[1] - xl[0]) * .02,
                                   (yl[1] - yl[0]) * .02)
