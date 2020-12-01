@@ -52,7 +52,6 @@ for i in range(len(sys.argv)):
                              params['sim_prefix'], 'param.txt')
 
 extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
-extinputs.add_delay_times()
 
 alldat = {}
 
@@ -235,7 +234,6 @@ class SpikeCanvas (FigureCanvas):
       except ValueError:
         print("Error: could not load spike timings from %s" % spkpath)
         return
-      extinputs.add_delay_times()
       dspk,haveinputs,dhist = getdspk(spkpath)
       alldat[idx]['dspk'] = dspk
       alldat[idx]['haveinputs'] = haveinputs
@@ -251,7 +249,6 @@ class SpikeCanvas (FigureCanvas):
       except ValueError:
         print("Error: could not load spike timings from %s" % spkpath)
         return
-      extinputs.add_delay_times()
       alldat[idx]['dspk'] = dspktrial
       alldat[idx]['haveinputs'] = haveinputs
       alldat[idx]['dhist'] = dhisttrial

@@ -26,7 +26,7 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 from psutil import cpu_count
-from hnn_core import read_params, read_spikes
+from hnn_core import read_params, CellResponse
 from hnn_core.dipole import average_dipoles
 
 # HNN modules
@@ -2081,9 +2081,6 @@ class HNNGUI (QMainWindow):
         except FileExistsError:
             pass
 
-        # now write the files
-        sim_data['avg_dpl'].write(os.path.join(sim_dir, 'dpl.txt'))
-
         # TODO: Can below be removed if spk.txt is new hnn-core format with 3
         # columns (including spike type)?
         # Follow https://github.com/jonescompneurolab/hnn-core/issues/219
@@ -2092,19 +2089,6 @@ class HNNGUI (QMainWindow):
         # save spikes by trial
         glob = os.path.join(sim_dir, 'spk_%d.txt')
         sim_data['spikes'].write(glob)
-
-        spike_fn = get_fname(sim_dir, 'rawspk')
-        # save spikes from the individual trials in a single file
-        with open(spike_fn, 'w') as fspkout:
-            for trial_idx in range(len(sim_data['spikes'].spike_times)):
-                spike_times = sim_data['spikes'].spike_times[trial_idx]
-                spike_gids = sim_data['spikes'].spike_gids[trial_idx]
-                spike_types = sim_data['spikes'].spike_types[trial_idx]
-                for spike_idx in range(len(spike_times)):
-                    fspkout.write('{:.3f}\t{}\t{}\n'.format(
-                                  spike_times[spike_idx],
-                                  int(spike_gids[spike_idx]),
-                                  spike_types[spike_idx]))
 
         spec_fns = []
         # save dipole for each trial and perform spectral analysis
@@ -2127,28 +2111,9 @@ class HNNGUI (QMainWindow):
                 spec_fn = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
                 spec_fns.append(spec_fn)
 
-                # run the spectral analysis
+                # run the spectral analysis and save to spec_fn
                 spec_results = analysis_simp(spec_opts, params, dpl, spec_fn)
                 sim_data['spec'].append(spec_results)
-
-        # save average spectrogram from individual trials in a single file
-        if params['save_spec_data'] or \
-                usingOngoingInputs(params):
-
-            spec_out = {}
-            for key in ['TFR', 'TFR_L5', 'TFR_L2']:
-                spec_list = [sim_data['spec'][i][key] for i in range(ntrial)]
-                spec_out[key] = np.mean(np.array(spec_list), axis=0)
-            with open(os.path.join(sim_dir, 'rawspec.npz'), 'wb') as spec_fn:
-                np.savez_compressed(spec_fn, t_L5=sim_data['spec'][0]['t_L5'],
-                                    f_L5=sim_data['spec'][0]['f_L5'],
-                                    t_L2=sim_data['spec'][0]['t_L2'],
-                                    f_L2=sim_data['spec'][0]['f_L2'],
-                                    time=sim_data['spec'][0]['time'],
-                                    freq=sim_data['spec'][0]['freq'],
-                                    TFR=spec_out['TFR'],
-                                    TFR_L5=spec_out['TFR_L5'],
-                                    TFR_L2=spec_out['TFR_L2'])
 
         paramfn = os.path.join(get_output_dir(), 'param',
                                 params['sim_prefix'] + '.param')
@@ -2156,7 +2121,7 @@ class HNNGUI (QMainWindow):
         self.sim_data.update_sim_data(paramfn, params, sim_data['dpls'],
                                       sim_data['avg_dpl'], sim_data['spikes'],
                                       sim_data['gid_ranges'],
-                                      sim_data['raw_dpls'], sim_data['spec'])
+                                      sim_data['spec'])
 
     def done(self, optMode, except_msg):
         # called when the simulation completes running
@@ -2193,9 +2158,6 @@ class HNNGUI (QMainWindow):
                                 '. Check simulation log or console for error '
                                 'messages')
         else:
-            self.sim_data.update_sim_data_from_disk(self.baseparamwin.paramfn,
-                                                  self.baseparamwin.params)
-
             if self.baseparamwin.params['save_figs']:
                 self.sim_data.save_dipole_with_hist(self.baseparamwin.paramfn,
                                                     self.baseparamwin.params)

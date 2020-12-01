@@ -183,9 +183,6 @@ class RunSimThread(QtCore.QThread):
         self.paramfn = os.path.join(get_output_dir(), 'param',
                                     self.params['sim_prefix'] + '.param')
 
-        self.dataComm = DataSignal()
-        self.dataComm.dsig.connect(self.mainwin.sim_data.update_sim_data_from_disk)
-
         self.txtComm = TextSignal()
         self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
 
@@ -213,10 +210,6 @@ class RunSimThread(QtCore.QThread):
 
         def flush(self):
             self.out.flush()
-
-    def _read_sim_data(self, paramfn, params):
-        """Signals main window to read sim data from files"""
-        self.dataComm.dsig.emit(paramfn, params)
 
     def _updatebaseparamwin(self, d):
         """Signals baseparamwin to update its parameter from passed dict"""
@@ -257,9 +250,6 @@ class RunSimThread(QtCore.QThread):
         else:
             try:
                 self._runsim()  # run simulation
-
-                # send signal to read data from files and save
-                self._read_sim_data(self.paramfn, self.params)
 
                 # update params in all windows (optimization)
                 self._updatedispparam()

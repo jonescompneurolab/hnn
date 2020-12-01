@@ -20,7 +20,7 @@ def get_output_dir():
     return os.path.join(base_dir, 'hnn_out')
 
 
-def get_fname(sim_dir, key, trial=0, ntrial=1):
+def get_fname(sim_dir, key, trial=0, ntrial=0):
     """Build the file names using the old HNN scheme
 
     Parameters
@@ -34,7 +34,8 @@ def get_fname(sim_dir, key, trial=0, ntrial=1):
         If None is given, then trial number 0 is assumed.
     ntrial : int | None
         The total number of trials that are part of this simulation. If None
-        is given, then a total of 1 trial is assumed.
+        is given, then ntrial will be 0, which creates filenames without
+        the trial number suffix.
 
     Returns
     ----------
@@ -53,12 +54,12 @@ def get_fname(sim_dir, key, trial=0, ntrial=1):
                  'figavgdpl': ('dplavg', '.png'),
                  'figavgspec': ('specavg', '.png'),
                  'figdpl': ('dpl', '.png'),
-                 'figspec': ('spec', '.png'),
+                 'figspec': ('rawspec', '.png'),
                  'figspk': ('spk', '.png'),
                  'param': ('param', '.txt'),
                  'vsoma': ('vsoma', '.pkl')}
 
-    if ntrial == 1 or key == 'param':
+    if ntrial == 0 or key == 'param':
         # param file currently identical for all trials
         return os.path.join(sim_dir, datatypes[key][0] + datatypes[key][1])
     else:

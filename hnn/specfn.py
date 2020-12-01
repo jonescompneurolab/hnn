@@ -67,7 +67,7 @@ class MorletSpec():
         # range should probably be 0 to len(self.S_trans)
         # shift tvec to reflect change
         # this is in ms
-        self.t = 1000. * np.arange(1, len(self.S_trans)+1) / self.fs + \
+        self.t = 1000. * np.arange(1, len(self.S_trans) + 1) / self.fs + \
             self.tmin - self.params['dt']
 
         # preallocation
@@ -104,7 +104,7 @@ class MorletSpec():
         st = 1. / (2. * np.pi * sf)
 
         # A in 1 / s
-        A = 1. / (st * np.sqrt(2.*np.pi))
+        A = 1. / (st * np.sqrt(2. * np.pi))
 
         # units: 1/s * (exp (s**2 / s**2)) * exp( 1/ s * s)
         y = A * np.exp(-t**2. / (2. * st**2.)) * np.exp(1.j * 2. * np.pi * f *
@@ -125,7 +125,7 @@ class MorletSpec():
         sf = f / self.width
         st = 1. / (2. * np.pi * sf)
 
-        t = np.arange(-3.5*st, 3.5*st, dt)
+        t = np.arange(-3.5 * st, 3.5 * st, dt)
 
         # calculate the morlet wavelet for this frequency
         # units of m are 1/s
@@ -137,7 +137,7 @@ class MorletSpec():
         # take the power ...
         y = (2. * abs(y) / self.fs)**2.
         i_lower = int(np.ceil(len(m) / 2.))
-        i_upper = int(len(y) - np.floor(len(m) / 2.)+1)
+        i_upper = int(len(y) - np.floor(len(m) / 2.) + 1)
         y = y[i_lower:i_upper]
 
         return y
@@ -195,8 +195,9 @@ def spec_dpl_kernel(params, dpl, fspec, opts):
 
     spec_results = {'time': spec_agg.t, 'freq': spec_agg.f,
                     'TFR': spec_agg.TFR, 'max_agg': max_agg,
-                    't_L2': spec_L2.t, 'f_L2': spec_L2.f, 'TFR_L2': spec_L2.TFR,
-                    't_L5': spec_L5.t, 'f_L5': spec_L5.f, 'TFR_L5': spec_L5.TFR,
+                    't_L2': spec_L2.t, 'f_L2': spec_L2.f,
+                    'TFR_L2': spec_L2.TFR, 't_L5': spec_L5.t,
+                    'f_L5': spec_L5.f, 'TFR_L5': spec_L5.TFR,
                     'pgram_p': pgram.P, 'pgram_f': pgram.f}
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f,
@@ -206,6 +207,7 @@ def spec_dpl_kernel(params, dpl, fspec, opts):
                         pgram_p=pgram.P, pgram_f=pgram.f)
 
     return spec_results
+
 
 def analysis_simp(opts, params, fdpl, fspec):
     opts_run = {'type': 'dpl_laminar',
