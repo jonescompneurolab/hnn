@@ -116,7 +116,7 @@ def setscalegeomcenter(dlg, origw, origh):
 
 def scale(val, src, dst):
     numerator = val - src[0]
-    denominator = float(src[1]-src[0]) * (dst[1]-dst[0]) + dst[0]
+    denominator = float(src[1] - src[0]) * (dst[1] - dst[0]) + dst[0]
 
     if denominator == 0:
         return 0
@@ -365,11 +365,11 @@ class QRangeSlider(QWidget, Ui_Form):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left:
-            s = self.start()-1
-            e = self.end()-1
+            s = self.start() - 1
+            e = self.end() - 1
         elif key == Qt.Key_Right:
-            s = self.start()+1
-            e = self.end()+1
+            s = self.start() + 1
+            e = self.end() + 1
         else:
             event.ignore()
             return

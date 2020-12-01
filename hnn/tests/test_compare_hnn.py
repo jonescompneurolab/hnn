@@ -35,6 +35,7 @@ def run_hnn(qtbot, monkeypatch):
     qtbot.mouseClick(main.qbtn, QtCore.Qt.LeftButton)
     assert exit_calls == [1]
 
+
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="does not run on windows")
 def test_hnn(qtbot, monkeypatch):
