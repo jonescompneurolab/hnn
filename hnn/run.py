@@ -13,35 +13,38 @@ from copy import deepcopy
 from math import ceil, isclose
 from contextlib import redirect_stdout
 
-from PyQt5.QtCore import QThread, pyqtSignal, QObject
+from PyQt5 import QtCore
 from hnn_core import simulate_dipole, Network, MPIBackend
-from hnn_core.dipole import average_dipoles
 import nlopt
 from psutil import wait_procs, process_iter, NoSuchProcess
 
-from .paramrw import usingOngoingInputs, write_gids_param, get_fname
-from .specfn import analysis_simp
 from .paramrw import write_legacy_paramf, get_output_dir
 
 
-class TextSignal (QObject):
+class TextSignal(QtCore.QObject):
     """for passing text"""
-    tsig = pyqtSignal(str)
+    tsig = QtCore.pyqtSignal(str)
 
 
-class DataSignal (QObject):
+class DataSignal(QtCore.QObject):
     """for signalling data read"""
-    dsig = pyqtSignal(str, dict)
+    dsig = QtCore.pyqtSignal(str, dict)
 
 
-class ParamSignal (QObject):
+class ParamSignal(QtCore.QObject):
     """for updating GUI & param file during optimization"""
-    psig = pyqtSignal(dict)
+    psig = QtCore.pyqtSignal(dict)
 
 
-class CanvSignal (QObject):
+class CanvSignal(QtCore.QObject):
     """for updating main GUI canvas"""
-    csig = pyqtSignal(bool, bool)
+    csig = QtCore.pyqtSignal(bool, bool)
+
+
+class ResultObj(QtCore.QObject):
+    def __init__(self, data, params):
+        self.data = data
+        self.params = params
 
 
 def _kill_list_of_procs(procs):
@@ -103,94 +106,18 @@ def simulate(params, n_procs=None):
     # been created yet
     net = Network(params)
 
+    sim_data = {}
     # run the simulation with MPIBackend for faster completion time
     with MPIBackend(n_procs=n_procs, mpi_cmd='mpiexec'):
-        dpls = simulate_dipole(net, params['N_trials'])
+        sim_data['raw_dpls'] = simulate_dipole(net, params['N_trials'], postproc=False)
 
-    ntrial = len(dpls)
-    # save average dipole from individual trials in a single file
-    if ntrial > 1:
-        avg_dpl = average_dipoles(dpls)
-    elif ntrial == 1:
-        avg_dpl = dpls[0]
-    else:
-        raise RuntimeError("No dipole(s) rerturned from simulation")
+    sim_data['gid_ranges'] = net.gid_ranges
+    sim_data['spikes'] = net.cell_response
 
-    # make sure the directory for saving data has been created
-    data_dir = op.join(get_output_dir(), 'data')
-    sim_dir = op.join(data_dir, params['sim_prefix'])
-    try:
-        os.mkdir(sim_dir)
-    except FileExistsError:
-        pass
-
-    # now write the files
-    # TODO: rawdpl in hnn-core
-
-    avg_dpl.write(op.join(sim_dir, 'dpl.txt'))
-
-    # TODO: Can below be removed if spk.txt is new hnn-core format with 3
-    # columns (including spike type)?
-    write_gids_param(get_fname(sim_dir, 'param'), net.gid_ranges)
-
-    # save spikes by trial
-    glob = op.join(sim_dir, 'spk_%d.txt')
-    net.cell_response.write(glob)
-
-    spike_fn = get_fname(sim_dir, 'rawspk')
-    # save spikes from the individual trials in a single file
-    with open(spike_fn, 'w') as fspkout:
-        for trial_idx in range(len(net.cell_response.spike_times)):
-            for spike_idx in range(len(net.cell_response.spike_times[trial_idx])):
-                fspkout.write('{:.3f}\t{}\t{}\n'.format(
-                              net.cell_response.spike_times[trial_idx][spike_idx],
-                              int(net.cell_response.spike_gids[trial_idx][spike_idx]),
-                              net.cell_response.spike_types[trial_idx][spike_idx]))
-
-    # save dipole for each trial and perform spectral analysis
-    for trial_idx, dpl in enumerate(dpls):
-        dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx,
-                              params['N_trials'])
-        dpl.write(dipole_fn)
-
-        if params['save_spec_data'] or usingOngoingInputs(params):
-            spec_opts = {'type': 'dpl_laminar',
-                         'f_max': params['f_max_spec'],
-                         'save_data': 1,
-                         'runtype': 'parallel'}
-
-            # run the spectral analysis
-            analysis_simp(spec_opts, params, dpl,
-                          get_fname(sim_dir, 'rawspec', trial_idx,
-                                    params['N_trials']))
-
-    if params['save_spec_data'] or usingOngoingInputs(params):
-        # save average spectrogram from individual trials in a single file
-
-        dspecin = {}
-        dout = {}
-        lf = []
-        for _ in range(ntrial):
-            f_spec = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
-            lf.append(f_spec)
-
-        for f in lf:
-            dspecin[f] = np.load(f)
-        for k in ['t_L5', 'f_L5', 't_L2', 'f_L2', 'time', 'freq']:
-            dout[k] = dspecin[lf[0]][k]
-        for k in ['TFR', 'TFR_L5', 'TFR_L2']:
-            dout[k] = np.mean(np.array([dspecin[f][k] for f in lf]), axis=0)
-
-        with open(op.join(sim_dir, 'rawspec.npz'), 'wb') as spec_fn:
-            np.savez_compressed(spec_fn, t_L5=dout['t_L5'], f_L5=dout['f_L5'],
-                                t_L2=dout['t_L2'], f_L2=dout['f_L2'],
-                                time=dout['time'], freq=dout['freq'],
-                                TFR=dout['TFR'], TFR_L5=dout['TFR_L5'],
-                                TFR_L2=dout['TFR_L2'])
-
+    return sim_data
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
-class RunSimThread(QThread):
+class RunSimThread(QtCore.QThread):
     """The RunSimThread class.
 
     Parameters
@@ -237,9 +164,11 @@ class RunSimThread(QThread):
         Whether this simulation was forcefully terminated
     """
 
+    result_signal = QtCore.pyqtSignal(object)
+
     def __init__(self, ncore, params, param_signal, done_signal, waitsimwin,
-                 baseparamwin, mainwin, opt=False):
-        QThread.__init__(self)
+                 baseparamwin, result_callback, mainwin, opt=False):
+        QtCore.QThread.__init__(self)
         self.ncore = ncore
         self.params = params
         self.param_signal = param_signal
@@ -247,6 +176,7 @@ class RunSimThread(QThread):
         self.waitsimwin = waitsimwin
         self.baseparamwin = baseparamwin
         self.mainwin = mainwin
+        self.result_signal.connect(result_callback)
         self.opt = opt
         self.killed = False
 
@@ -254,7 +184,7 @@ class RunSimThread(QThread):
                                     self.params['sim_prefix'] + '.param')
 
         self.dataComm = DataSignal()
-        self.dataComm.dsig.connect(self.mainwin.sim_data.update_sim_data)
+        self.dataComm.dsig.connect(self.mainwin.sim_data.update_sim_data_from_disk)
 
         self.txtComm = TextSignal()
         self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
@@ -327,6 +257,10 @@ class RunSimThread(QThread):
         else:
             try:
                 self._runsim()  # run simulation
+
+                # send signal to read data from files and save
+                self._read_sim_data(self.paramfn, self.params)
+
                 # update params in all windows (optimization)
                 self._updatedispparam()
             except RuntimeError as e:
@@ -345,7 +279,7 @@ class RunSimThread(QThread):
             try:
                 sim_log = self._log_sim_status(parent=self)
                 with redirect_stdout(sim_log):
-                    simulate(self.params, self.ncore)
+                    sim_data = simulate(self.params, self.ncore)
                 break
             except RuntimeError as e:
                 if self.ncore == 1:
@@ -366,9 +300,8 @@ class RunSimThread(QThread):
             print(txt)
             self._updatewaitsimwin(txt)
 
-        if not is_opt:
-            # send signal to read data from files and save
-            self._read_sim_data(self.paramfn, self.params)
+        # put sim_data into the val attribute of a ResultObj
+        self.result_signal.emit(ResultObj(sim_data, self.params))
 
     def optmodel(self):
         need_initial_ddat = False
@@ -455,10 +388,10 @@ class RunSimThread(QThread):
         self._runsim(is_opt=True, banner=False)
 
         # update lsimdat and its current sim index
-        update_sim_data(self.paramfn, self.params, ddat['dpl'])
+        update_sim_data_from_disk(self.paramfn, self.params, ddat['dpl'])
 
         # update optdat with the final best
-        update_opt_data(self.paramfn, self.params, ddat['dpl'])
+        update_opt_data_from_disk(self.paramfn, self.params, ddat['dpl'])
 
         # re-enable all the range sliders
         self.baseparamwin.optparamwin.toggleEnableUserFields(step,

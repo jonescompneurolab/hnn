@@ -62,10 +62,10 @@ class Spikes():
 # Class to handle extinput event times
 class ExtInputs (Spikes):
   # class for external inputs - extracts gids and times
-  def __init__ (self, fspk, fgids, params, evoked=False):
+  def __init__ (self, fspk, gid_ranges, params, evoked=False):
 
     self.p_dict = params
-    self.gid_dict = read_gids_param(fgids)
+    self.gid_dict = gid_ranges
 
     if 'common' in self.gid_dict:
       extinput_key = 'common'

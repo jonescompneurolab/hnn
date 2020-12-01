@@ -193,6 +193,11 @@ def spec_dpl_kernel(params, dpl, fspec, opts):
     # Generate periodogram resutls
     pgram = Welch(dpl.times, dpl.data['agg'], params['dt'])
 
+    spec_results = {'time': spec_agg.t, 'freq': spec_agg.f,
+                    'TFR': spec_agg.TFR, 'max_agg': max_agg,
+                    't_L2': spec_L2.t, 'f_L2': spec_L2.f, 'TFR_L2': spec_L2.TFR,
+                    't_L5': spec_L5.t, 'f_L5': spec_L5.f, 'TFR_L5': spec_L5.TFR,
+                    'pgram_p': pgram.P, 'pgram_f': pgram.f}
     # Save spec results
     np.savez_compressed(fspec, time=spec_agg.t, freq=spec_agg.f,
                         TFR=spec_agg.TFR, max_agg=max_agg,
@@ -200,6 +205,7 @@ def spec_dpl_kernel(params, dpl, fspec, opts):
                         t_L5=spec_L5.t, f_L5=spec_L5.f, TFR_L5=spec_L5.TFR,
                         pgram_p=pgram.P, pgram_f=pgram.f)
 
+    return spec_results
 
 def analysis_simp(opts, params, fdpl, fspec):
     opts_run = {'type': 'dpl_laminar',
@@ -210,4 +216,5 @@ def analysis_simp(opts, params, fdpl, fspec):
     for key, val in opts.items():
         if key in opts_run.keys():
             opts_run[key] = val
-            spec_dpl_kernel(params, fdpl, fspec, opts_run)
+
+    return spec_dpl_kernel(params, fdpl, fspec, opts_run)

@@ -16,7 +16,7 @@ from hnn_core.dipole import Dipole
 
 from .spikefn import ExtInputs
 from .paramrw import get_output_dir, get_fname, get_inputs
-from .paramrw import countEvokedInputs
+from .paramrw import countEvokedInputs, read_gids_param
 from .qt_lib import getscreengeom
 
 drawindivdpl = 1
@@ -151,12 +151,15 @@ class SimData(object):
         """
         del self._sim_data[paramfn]
 
-    def _update_sim_list(self, paramfn, params, avg_dpl, dpl_trials,
-                         spikes=None, spec=None):
+    def update_sim_data(self, paramfn, params, dpls, avg_dpl,
+                         spikes, gid_ranges, raw_dpls=None,
+                         spec=None):
         self._sim_data[paramfn] = {'params': params,
-                                   'data': {'avg_dpl': avg_dpl,
-                                            'dpl_trials': dpl_trials,
-                                            'spk': spikes,
+                                   'data': {'dpls': dpls,
+                                            'avg_dpl': avg_dpl,
+                                            'spikes': spikes,
+                                            'gid_ranges': gid_ranges,
+                                            'raw_dpls': raw_dpls,
                                             'spec': spec}}
 
     def clear_exp_data(self):
@@ -192,7 +195,7 @@ class SimData(object):
 
         return len(self._exp_data)
 
-    def update_sim_data(self, paramfn, params):
+    def update_sim_data_from_disk(self, paramfn, params):
         """Adds simulation data to SimData
 
         Parameters
@@ -226,7 +229,8 @@ class SimData(object):
         try:
             raw_spikes = read_spikes(spike_fn)
             spikes_array = np.r_[raw_spikes.spike_times,
-                                 raw_spikes.spike_gids].T
+                                 raw_spikes.spike_gids,
+                                 raw_spikes.spike_types].T
             if len(spikes_array) == 0 and warn_nofile:
                 print(warning_message, spike_fn)
         except ValueError:
@@ -242,27 +246,45 @@ class SimData(object):
             print('Warning: incorrect dimensions for spike file: %s' %
                   spike_fn)
 
-        warn_nospec = False
+        paramtxt_fn = get_fname(sim_dir, 'param')
+        gid_ranges = read_gids_param(paramtxt_fn)
+
+        warn_no_spec = False
         using_feeds = get_inputs(params)
         if params['save_spec_data'] or using_feeds['ongoing'] or \
                 using_feeds['pois'] or using_feeds['tonic']:
-            warn_nospec = True
+            warn_no_spec = True
 
         spec_fn = os.path.join(sim_dir, 'rawspec.npz')
         spec = None
         try:
             spec = np.load(spec_fn)
         except OSError:
-            if warn_nospec:
+            if warn_no_spec and warn_nofile:
                 print(warning_message, spec_fn)
         except ValueError:
-            if warn_nospec:
+            if warn_no_spec and warn_nofile:
                 print(warning_message, spec_fn)
 
-        dpl_trials = read_dpltrials(sim_dir)
+        warn_no_raw_dpl = False
+        if params['save_dpl']:
+            warn_no_raw_dpl = True
 
-        self._update_sim_list(paramfn, params, avg_dpl, dpl_trials,
-                              spikes_array, spec)
+        raw_dipole_fn = os.path.join(sim_dir, 'rawdpl.txt')
+        raw_dpl = None
+        try:
+            raw_dpl = np.loadtxt(raw_dipole_fn)
+        except OSError:
+            if warn_no_raw_dpl and warn_nofile:
+                print(warning_message, raw_dipole_fn)
+        except ValueError:
+            if warn_no_raw_dpl and warn_nofile:
+                print(warning_message, raw_dipole_fn)
+
+        dpls = read_dpltrials(sim_dir)
+
+        self.update_sim_data(paramfn, params, dpls, avg_dpl, spikes_array,
+                             gid_ranges, raw_dpl, spec)
 
     def calcerr(self, paramfn, tstop, tstart=0.0, weights=None):
         """Calculate root mean squared error using SimData
@@ -362,13 +384,13 @@ class SimData(object):
         if ntrial == 1:
             dpltrial = self._sim_data[paramfn]['data']['avg_dpl']
         else:
-            trial_data = self._sim_data[paramfn]['data']['dpl_trials']
+            trial_data = self._sim_data[paramfn]['data']['dpls']
             if trial_idx > len(trial_data):
                 print("Warning: data not available for trials above index",
                       (len(trial_data) - 1))
                 return None
 
-            dpltrial = self._sim_data[paramfn]['data']['dpl_trials'][trial_idx]
+            dpltrial = self._sim_data[paramfn]['data']['dpls'][trial_idx]
 
         dpl_data = np.c_[dpltrial[:, 1],
                          dpltrial[:, 2],
@@ -408,7 +430,6 @@ class SimData(object):
         for trial_idx in range(ntrial):
             spec_fn = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
             spike_fn = get_fname(sim_dir, 'rawspk', trial_idx, ntrial)
-            out_paramfn = get_fname(sim_dir, 'param', trial_idx, ntrial)
 
             # Generate file prefix
             fprefix = os.path.splitext(os.path.split(spec_fn)[-1])[0]
@@ -421,7 +442,8 @@ class SimData(object):
             mpl.rc('font', **font_prop)
 
             # get inputs from spike file
-            extinputs = ExtInputs(spike_fn, out_paramfn, params)
+            gid_ranges = self._sim_data[paramfn]['data']['gid_ranges']
+            extinputs = ExtInputs(spike_fn, gid_ranges, params)
             extinputs.add_delay_times()
             feeds_from_spikes = extinputs.inputs
             feeds_to_plot = check_feeds_to_plot(feeds_from_spikes, params)
@@ -477,7 +499,6 @@ class SimData(object):
         for trial_idx in range(ntrial):
             dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx, ntrial)
             spike_fn = get_fname(sim_dir, 'rawspk', trial_idx, ntrial)
-            out_paramfn = get_fname(sim_dir, 'param', trial_idx, ntrial)
 
             # split to find file prefix
             file_prefix = dipole_fn.split('/')[-1].split('.')[0]
@@ -487,7 +508,8 @@ class SimData(object):
             font_prop = {'size': 8}
             mpl.rc('font', **font_prop)
 
-            extinputs = ExtInputs(spike_fn, out_paramfn, params)
+            gid_ranges = self._sim_data[paramfn]['data']['gid_ranges']
+            extinputs = ExtInputs(spike_fn, gid_ranges, params)
             extinputs.add_delay_times()
             feeds_from_spikes = extinputs.inputs
             feeds_to_plot = check_feeds_to_plot(feeds_from_spikes, params)
@@ -569,11 +591,11 @@ class SIMCanvas (FigureCanvasQTAgg):
 
         sim_dir = os.path.join(self._data_dir, self.params['sim_prefix'])
         spike_fn = os.path.join(sim_dir, 'spk.txt')
-        out_paramfn = os.path.join(sim_dir, 'param.txt')
 
         if not plot_distribs:
             if feeds_to_plot is None:
-                extinputs = ExtInputs(spike_fn, out_paramfn, self.params)
+                sim_data = self.sim_data._sim_data[self.paramfn]['data']
+                extinputs = ExtInputs(spike_fn, sim_data['gid_ranges'], self.params)
                 extinputs.add_delay_times()
                 dinput = extinputs.inputs
                 feeds_to_plot = check_feeds_to_plot(dinput, self.params)
@@ -835,13 +857,19 @@ class SIMCanvas (FigureCanvasQTAgg):
             DrawSpec = False
             xlim = (0.0, 1.0)
         else:
+            # for trying to plot a simulation read from disk (e.g. default)
+            if self.paramfn not in self.sim_data._sim_data:
+                self.sim_data.update_sim_data_from_disk(self.paramfn,
+                                                        self.params)
+
             tstop = self.params['tstop']
             xlim = (0.0, tstop)
             sim_dir = os.path.join(self._data_dir, self.params['sim_prefix'])
             spike_fn = os.path.join(sim_dir, 'spk.txt')
-            out_paramfn = os.path.join(sim_dir, 'param.txt')
             try:
-                extinputs = ExtInputs(spike_fn, out_paramfn, self.params)
+                sim_data = self.sim_data._sim_data[self.paramfn]['data']
+                extinputs = ExtInputs(spike_fn, sim_data['gid_ranges'],
+                                      self.params)
                 extinputs.add_delay_times()
                 feeds_from_spikes = extinputs.inputs
                 feeds_to_plot = check_feeds_to_plot(feeds_from_spikes,
@@ -852,10 +880,6 @@ class SIMCanvas (FigureCanvasQTAgg):
             except FileNotFoundError:
                 axes = self.plotinputhist(plot_distribs=True)
                 self.gRow = len(axes)
-
-            # for trying to plot a simulation read from disk (e.g. default)
-            if self.paramfn not in self.sim_data._sim_data:
-                self.sim_data.update_sim_data(self.paramfn, self.params)
 
             # check that dipole data is present
             single_sim = self.sim_data._sim_data[self.paramfn]['data']
@@ -921,8 +945,8 @@ class SIMCanvas (FigureCanvasQTAgg):
             sim_data = self.sim_data._sim_data[self.paramfn]['data']
             # plot dipoles from individual trials
             if self.params['N_trials'] > 1 and drawindivdpl and \
-                    len(sim_data['dpl_trials']) > 0:
-                for dpltrial in sim_data['dpl_trials']:
+                    len(sim_data['dpls']) > 0:
+                for dpltrial in sim_data['dpls']:
                     self.axdipole.plot(dpltrial[:, 0], dpltrial[:, 1],
                                        color='gray',
                                        linewidth=self.linewidth)
