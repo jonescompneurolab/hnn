@@ -1302,9 +1302,9 @@ class HNNGUI (QMainWindow):
 
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam(params)
-      self.initSimCanvas() # recreate canvas
-      # self.sim_canvas.plot() # replot data
       self.setWindowTitle(self.baseparamwin.paramfn)
+
+      self.initSimCanvas() # recreate canvas
 
       self.populateSimCB() # populate the combobox
 
@@ -1917,6 +1917,7 @@ class HNNGUI (QMainWindow):
       self.sim_canvas = SIMCanvas(self.baseparamwin.paramfn, self.baseparamwin.params,
                         parent=self, width=10, height=1, dpi=getmplDPI(),
                         optMode=optMode)
+
       # this is the Navigation widget
       # it takes the Canvas widget and a parent
       self.toolbar = NavigationToolbar2QT(self.sim_canvas, self)
@@ -1926,6 +1927,9 @@ class HNNGUI (QMainWindow):
       if self.sim_data.get_exp_data_size() > 0:
         self.sim_canvas.plot(recalcErr)
         self.sim_canvas.draw()
+
+      if self.sim_canvas.saved_exception is not None:
+        raise self.sim_canvas.saved_exception
 
     def setcursors(self, cursor):
       # set cursors of self and children

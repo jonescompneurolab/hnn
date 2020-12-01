@@ -79,6 +79,19 @@ def read_spectrials(sim_dir):
     return spec_list
 
 
+def read_spktrials(sim_dir, gid_ranges):
+    spk_fname_pattern = os.path.join(sim_dir, 'spk_*.txt')
+    if len(glob(str(spk_fname_pattern))) == 0:
+        # if legacy HNN only ran one trial, then no spk_0.txt gets written
+        spk_fname_pattern = get_fname(sim_dir, 'rawspk')
+
+    try:
+        spikes = read_spikes(spk_fname_pattern, gid_ranges)
+    except FileNotFoundError:
+        print('Warning: could not read file:', spk_fname_pattern)
+
+    return spikes
+
 def check_feeds_to_plot(feeds_from_spikes, params):
     # ensures synaptic weight > 0
     using_feeds = get_inputs(params)
@@ -262,6 +275,10 @@ class SimData(object):
         else:
             avg_dpl = average_dipoles(dpls)
 
+        if len(dpls) < params['N_trials']:
+            print("Warning: only read %d of %d dipole files in %s" %
+                  (len(dpls), params['N_trials'], sim_dir))
+
         # gid_ranges
         paramtxt_fn = get_fname(sim_dir, 'param')
         try:
@@ -270,15 +287,12 @@ class SimData(object):
             print(warning_message, paramtxt_fn)
 
         # spikes
-        spk_fname_pattern = os.path.join(sim_dir, 'spk_*.txt')
-        if len(glob(str(spk_fname_pattern))) == 0:
-            # if legacy HNN only ran one trial, then no spk_0.txt gets written
-            spk_fname_pattern = get_fname(sim_dir, 'rawspk')
-
-        try:
-            spikes = read_spikes(spk_fname_pattern, gid_ranges)
-        except FileNotFoundError:
-            print(warning_message, spk_fname_pattern)
+        spikes = read_spktrials(sim_dir, gid_ranges)
+        if len(spikes.spike_times) == 0:
+            print("Warning: no spikes read from %s" % sim_dir)
+        elif len(spikes.spike_times) < params['N_trials']:
+            print("Warning: only read %d of %d spike files in %s" %
+                  (len(spikes.spike_times), params['N_trials'], sim_dir))
 
         # spec data
         spec = None
@@ -286,6 +300,11 @@ class SimData(object):
         if params['save_spec_data'] or using_feeds['ongoing'] or \
                 using_feeds['pois'] or using_feeds['tonic']:
             spec = read_spectrials(sim_dir)
+            if len(spec) == 0:
+                print("Warning: no spec data read from %s" % sim_dir)
+            elif len(spec) < params['N_trials']:
+                print("Warning: only read %d of %d spec files in %s" %
+                    (len(spec), params['N_trials'], sim_dir))
 
         self.update_sim_data(paramfn, params, dpls, avg_dpl, spikes,
                              gid_ranges, spec)
@@ -558,18 +577,19 @@ class SIMCanvas (FigureCanvasQTAgg):
         FigureCanvasQTAgg.updateGeometry(self)
         self.params = params
         self.paramfn = paramfn
-        self.initaxes()
+        self.axdipole = self.axspec = None
         self.G = gridspec.GridSpec(10, 1)
         self._data_dir = os.path.join(get_output_dir(), 'data')
 
         self.optMode = optMode
         if not optMode:
             self.sim_data.clear_opt_data()
-        self.plot()
 
-    def initaxes(self):
-        # initialize the axes
-        self.axdipole = self.axspec = None
+        self.saved_exception = None
+        try:
+            self.plot()
+        except Exception as err:
+            self.saved_exception = err
 
     def plotinputhist(self, extinputs=None, feeds_to_plot=None):
         """ plot input histograms"""
