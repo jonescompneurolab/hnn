@@ -17,6 +17,8 @@ except:
 import numpy as np
 import itertools as it
 
+p = cfg.hnn_params  # quick access to p['hnn_params']
+
 
 # ----------------------------------------------------------------------------
 #
@@ -29,9 +31,9 @@ netParams = specs.NetParams()  # object of class NetParams to store the network 
 #------------------------------------------------------------------------------
 # General network parameters
 #------------------------------------------------------------------------------
-netParams.sizeX = ((cfg.N_pyr_x * cfg.gridSpacingPyr) - 1) * cfg.xzScaling  # x-dimension (horizontal length) size in um
+netParams.sizeX = ((p['N_pyr_x'] * cfg.gridSpacingPyr) - 1) * cfg.xzScaling  # x-dimension (horizontal length) size in um
 netParams.sizeY = cfg.sizeY # y-dimension (vertical height or cortical depth) size in um
-netParams.sizeZ = ((cfg.N_pyr_y * cfg.gridSpacingPyr) - 1) * cfg.xzScaling # z-dimension (horizontal depth) size in um
+netParams.sizeZ = ((p['N_pyr_y'] * cfg.gridSpacingPyr) - 1) * cfg.xzScaling # z-dimension (horizontal depth) size in um
 netParams.shape = 'cuboid'
 
 
@@ -51,10 +53,10 @@ layersI = {'L2': [0.0*cfg.sizeY-00.0, 0.0*cfg.sizeY-00.0], 'L5': [0.654*cfg.size
 
 # Create list of locations for Basket cells based on original ad hoc rules 
 # define relevant x spacings for basket cells
-xzero = np.arange(0, cfg.N_pyr_x, 3)
-xone = np.arange(1, cfg.N_pyr_x, 3)
-yeven = np.arange(0, cfg.N_pyr_y, 2)
-yodd = np.arange(1, cfg.N_pyr_y, 2)
+xzero = np.arange(0, p['N_pyr_x'], 3)
+xone = np.arange(1, p['N_pyr_x'], 3)
+yeven = np.arange(0, p['N_pyr_y'], 2)
+yodd = np.arange(1, p['N_pyr_y'], 2)
 coords = [pos for pos in it.product(xzero, yeven)] + [pos for pos in it.product(xone, yodd)]
 coords_sorted = sorted(coords, key=lambda pos: pos[1])
 L2BasketLocs = [{'x': coord[0]*cfg.xzScaling, 'y': layersI['L2'][0], 'z': coord[1]*cfg.xzScaling} for coord in coords_sorted]
@@ -69,23 +71,23 @@ netParams.popParams['L5Pyr'] =    {'cellType':  'L5Pyr',    'cellModel': 'HH_red
 # create variables useful for connectivity
 pops = list(netParams.popParams.keys())
 cellsPerPop = {}
-cellsPerPop['L2Pyr'] = cellsPerPop['L5Pyr'] = int(cfg.N_pyr_x * cfg.N_pyr_x)
-cellsPerPop['L2Basket'] = cellsPerPop['L5Basket'] = int(np.ceil(cfg.N_pyr_x * cfg.N_pyr_x / cfg.gridSpacingBasket[2]) + 1)
+cellsPerPop['L2Pyr'] = cellsPerPop['L5Pyr'] = int(p['N_pyr_x'] * p['N_pyr_x'])
+cellsPerPop['L2Basket'] = cellsPerPop['L5Basket'] = int(np.ceil(p['N_pyr_x'] * p['N_pyr_x'] / cfg.gridSpacingBasket[2]) + 1)
 
 
 #------------------------------------------------------------------------------
 # Synaptic mechanism parameters
 #------------------------------------------------------------------------------
 
-netParams.synMechParams['L2Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_ampa_tau1, 'tau2': cfg.L2Pyr_ampa_tau2, 'e': cfg.L2Pyr_ampa_e}
-netParams.synMechParams['L2Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L2Pyr_nmda_tau1, 'tau2': cfg.L2Pyr_nmda_tau2, 'e': cfg.L2Pyr_nmda_e}
-netParams.synMechParams['L2Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabaa_tau1, 'tau2': cfg.L2Pyr_gabaa_tau2, 'e': cfg.L2Pyr_gabaa_e}
-netParams.synMechParams['L2Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L2Pyr_gabab_tau1, 'tau2': cfg.L2Pyr_gabab_tau2, 'e': cfg.L2Pyr_gabab_e}
+netParams.synMechParams['L2Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': p['L2Pyr_ampa_tau1'], 'tau2': p['L2Pyr_ampa_tau2'], 'e': p['L2Pyr_ampa_e']}
+netParams.synMechParams['L2Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': p['L2Pyr_nmda_tau1'], 'tau2': p['L2Pyr_nmda_tau2'], 'e': p['L2Pyr_nmda_e']}
+netParams.synMechParams['L2Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': p['L2Pyr_gabaa_tau1'], 'tau2': p['L2Pyr_gabaa_tau2'], 'e': p['L2Pyr_gabaa_e']}
+netParams.synMechParams['L2Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': p['L2Pyr_gabab_tau1'], 'tau2': p['L2Pyr_gabab_tau2'], 'e': p['L2Pyr_gabab_e']}
 
-netParams.synMechParams['L5Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_ampa_tau1, 'tau2': cfg.L5Pyr_ampa_tau2, 'e': cfg.L5Pyr_ampa_e}
-netParams.synMechParams['L5Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': cfg.L5Pyr_nmda_tau1, 'tau2': cfg.L5Pyr_nmda_tau2, 'e': cfg.L5Pyr_nmda_e}
-netParams.synMechParams['L5Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabaa_tau1, 'tau2': cfg.L5Pyr_gabaa_tau2, 'e': cfg.L5Pyr_gabaa_e}
-netParams.synMechParams['L5Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': cfg.L5Pyr_gabab_tau1, 'tau2': cfg.L5Pyr_gabab_tau2, 'e': cfg.L5Pyr_gabab_e}
+netParams.synMechParams['L5Pyr_AMPA'] = {'mod':'Exp2Syn', 'tau1': p['L5Pyr_ampa_tau1'], 'tau2': p['L5Pyr_ampa_tau2'], 'e': p['L5Pyr_ampa_e']}
+netParams.synMechParams['L5Pyr_NMDA'] = {'mod': 'Exp2Syn', 'tau1': p['L5Pyr_nmda_tau1'], 'tau2': p['L5Pyr_nmda_tau2'], 'e': p['L5Pyr_nmda_e']}
+netParams.synMechParams['L5Pyr_GABAA'] = {'mod':'Exp2Syn', 'tau1': p['L5Pyr_gabaa_tau1'], 'tau2': p['L5Pyr_gabaa_tau2'], 'e': p['L5Pyr_gabaa_e']}
+netParams.synMechParams['L5Pyr_GABAB'] = {'mod':'Exp2Syn', 'tau1': p['L5Pyr_gabab_tau1'], 'tau2': p['L5Pyr_gabab_tau2'], 'e': p['L5Pyr_gabab_e']}
 
 netParams.synMechParams['AMPA'] = {'mod':'Exp2Syn', 'tau1': 0.5, 'tau2': 5.0, 'e': 0}
 netParams.synMechParams['NMDA'] = {'mod': 'Exp2Syn', 'tau1': 1, 'tau2': 20, 'e': 0}
@@ -105,12 +107,12 @@ if cfg.localConn:
 
     # L2 Pyr -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L2Pyr_ampa,
+                'A_weight': cfg.EEgain * p['gbar_L2Pyr_L2Pyr_ampa'],
                 'A_delay': 1.,
                 'lamtha': 3.},
 
                 {'synMech': 'L2Pyr_NMDA',
-                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L2Pyr_nmda,
+                'A_weight': cfg.EEgain * p['gbar_L2Pyr_L2Pyr_nmda'],
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
@@ -119,7 +121,7 @@ if cfg.localConn:
             'preConds': {'pop': 'L2Pyr'}, 
             'postConds': {'pop': 'L2Pyr'},
             'synMech': synParams['synMech'],
-            'weight': weightDistFunc.format(**synParams), # equivalent to weightDistFunc.format(A_weight=cfg.gbar_L2Pyr_L2Pyr_ampa, lamtha=1.)
+            'weight': weightDistFunc.format(**synParams), # equivalent to weightDistFunc.format(A_weight=p['gbar_L2Pyr_L2Pyr_ampa'], lamtha=1.)
             'delay': delayDistFunc.format(**synParams),
             'synsPerConn': 3,
             'sec': ['basal_2', 'basal_3','apical_oblique', ]}
@@ -127,12 +129,12 @@ if cfg.localConn:
 
     # L2 Basket -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_GABAA',
-                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L2Pyr_gabaa,
+                'A_weight': cfg.IEgain * p['gbar_L2Basket_L2Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 50.},
 
                 {'synMech': 'L2Pyr_GABAB',
-                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L2Pyr_gabab,
+                'A_weight': cfg.IEgain * p['gbar_L2Basket_L2Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 50.}]
 
@@ -149,7 +151,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L2 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.EIgain * cfg.gbar_L2Pyr_L2Basket,
+                'A_weight': cfg.EIgain * p['gbar_L2Pyr_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -165,7 +167,7 @@ if cfg.localConn:
 
     # L2 Basket -> L2 Basket 
     synParams = {'synMech': 'GABAA',
-                'A_weight': cfg.IIgain * cfg.gbar_L2Basket_L2Basket,
+                'A_weight': cfg.IIgain * p['gbar_L2Basket_L2Basket'],
                 'A_delay': 1.,
                 'lamtha': 20.}
 
@@ -181,12 +183,12 @@ if cfg.localConn:
 
     # L5 Pyr -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.EEgain * cfg.gbar_L5Pyr_L5Pyr_ampa,
+                'A_weight': cfg.EEgain * p['gbar_L5Pyr_L5Pyr_ampa'],
                 'A_delay': 1.,
                 'lamtha': 3.},
 
                 {'synMech': 'L5Pyr_NMDA',
-                'A_weight': cfg.EEgain * cfg.gbar_L5Pyr_L5Pyr_nmda,
+                'A_weight': cfg.EEgain * p['gbar_L5Pyr_L5Pyr_nmda'],
                 'A_delay': 1.,
                 'lamtha': 3.}]
 
@@ -203,12 +205,12 @@ if cfg.localConn:
 
     # L5 Basket -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_GABAA',
-                'A_weight': cfg.IEgain * cfg.gbar_L5Basket_L5Pyr_gabaa,
+                'A_weight': cfg.IEgain * p['gbar_L5Basket_L5Pyr_gabaa'],
                 'A_delay': 1.,
                 'lamtha': 70.},
 
                 {'synMech': 'L5Pyr_GABAB',
-                'A_weight': cfg.IEgain * cfg.gbar_L5Basket_L5Pyr_gabab,
+                'A_weight': cfg.IEgain * p['gbar_L5Basket_L5Pyr_gabab'],
                 'A_delay': 1.,
                 'lamtha': 70.}]
 
@@ -225,7 +227,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L5 Pyr
     synParams = {'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.EEgain * cfg.gbar_L2Pyr_L5Pyr,
+                'A_weight': cfg.EEgain * p['gbar_L2Pyr_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -241,7 +243,7 @@ if cfg.localConn:
 
     # L2 Basket -> L5 Pyr
     synParams = {'synMech': 'L5Pyr_GABAA',
-                'A_weight': cfg.IEgain * cfg.gbar_L2Basket_L5Pyr,
+                'A_weight': cfg.IEgain * p['gbar_L2Basket_L5Pyr'],
                 'A_delay': 1.,
                 'lamtha': 50.}
 
@@ -257,7 +259,7 @@ if cfg.localConn:
 
     # L5 Pyr -> L5 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.EIgain * cfg.gbar_L5Pyr_L5Basket,
+                'A_weight': cfg.EIgain * p['gbar_L5Pyr_L5Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -273,7 +275,7 @@ if cfg.localConn:
 
     # L2 Pyr -> L5 Basket 
     synParams = {'synMech': 'AMPA',
-                'A_weight': cfg.EIgain * cfg.gbar_L2Pyr_L5Basket,
+                'A_weight': cfg.EIgain * p['gbar_L2Pyr_L5Basket'],
                 'A_delay': 1.,
                 'lamtha': 3.}
 
@@ -289,7 +291,7 @@ if cfg.localConn:
 
     # L5 Basket -> L5 Basket 
     synParams = {'synMech': 'GABAA',
-                'A_weight': cfg.IIgain * cfg.gbar_L5Basket_L5Basket,
+                'A_weight': cfg.IIgain * p['gbar_L5Basket_L5Basket'],
                 'A_delay': 1.,
                 'lamtha': 20.}
 
@@ -308,9 +310,9 @@ if cfg.localConn:
 #------------------------------------------------------------------------------
 
 # Location of external inputs
-xrange = np.arange(cfg.N_pyr_x)
+xrange = np.arange(p['N_pyr_x'])
 extLocX = xrange[int((len(xrange) - 1) // 2)]
-zrange = np.arange(cfg.N_pyr_y)
+zrange = np.arange(p['N_pyr_y'])
 extLocZ = xrange[int((len(zrange) - 1) // 2)]
 extLocY = 650 # positive depth of L5 relative to L2; doesn't affect weight/delay calculations
 
@@ -323,26 +325,26 @@ if cfg.rhythmicInputs:
 
     ## "if stdev is zero, increase synaptic weights 5 fold to make"
     ## "single input equivalent to 5 simultaneous input to prevent spiking <<---- SN: WHAT IS THIS RULE!?!?!?"
-    if cfg.f_stdev_prox == 0.0 and cfg.distribution_prox != 'uniform':
+    if p['f_stdev_prox'] == 0.0 and p['distribution_prox'] != 'uniform':
         for key in [k for k in cfg.__dict__ if k.startswith('input_prox_A_weight')]:
             cfg.__dict__[key] *= 5.0
 
-    if cfg.f_stdev_dist == 0.0 and cfg.distribution_dist != 'uniform':
+    if p['f_stdev_dist'] == 0.0 and p['distribution_dist'] != 'uniform':
         for key in [k for k in cfg.__dict__ if k.startswith('input_dist_A_weight')]:
             cfg.__dict__[key] *= 5.0
 
     ## "if L5 delay is -1, use same delays as L2 unless L2 delay is 0.1 in which case use 1. <<---- SN: WHAT IS THIS RULE!?!?!?"
-    if cfg.input_prox_A_delay_L5 == -1:
-        if cfg.input_prox_A_delay_L2 != 0.1:
-            cfg.input_prox_A_delay_L5 = cfg.input_prox_A_delay_L2
+    if p['input_prox_A_delay_L5'] == -1:
+        if p['input_prox_A_delay_L2'] != 0.1:
+            p['input_prox_A_delay_L5'] = p['input_prox_A_delay_L2']
         else:
-            cfg.input_prox_A_delay_L5 = 1.0
+            p['input_prox_A_delay_L5'] = 1.0
 
-    if cfg.input_dist_A_delay_L5 == -1:
-        if cfg.input_dist_A_delay_L2 != 0.1:
-            cfg.input_dist_A_delay_L5 = cfg.input_dist_A_delay_L2
+    if p['input_dist_A_delay_L5'] == -1:
+        if p['input_dist_A_delay_L2'] != 0.1:
+            p['input_dist_A_delay_L5'] = p['input_dist_A_delay_L2']
         else:
-            cfg.input_dist_A_delay_L5 = 1.0
+            p['input_dist_A_delay_L5'] = 1.0
             
     # External Rhythmic proximal inputs (1 VecStim per cell for each cell population)
     netParams.popParams['extRhythmicProximal'] = {
@@ -351,17 +353,17 @@ if cfg.rhythmicInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_prox),
+        'seed': int(p['prng_seedcore_input_prox']),
         'spikePattern': {
                 'type': 'rhythmic',
-                'start': cfg.t0_input_prox,
-                'startStd': cfg.t0_input_stdev_prox,
-                'stop': cfg.tstop_input_prox,
-                'freq': cfg.f_input_prox,
-                'freqStd': cfg.f_stdev_prox,
-                'eventsPerCycle': cfg.events_per_cycle_prox,
-                'distribution': cfg.distribution_prox,
-                'repeats': cfg.repeats_prox}}
+                'start': p['t0_input_prox'],
+                'startStd': p['t0_input_stdev_prox'],
+                'stop': p['tstop_input_prox'],
+                'freq': p['f_input_prox'],
+                'freqStd': p['f_stdev_prox'],
+                'eventsPerCycle': p['events_per_cycle_prox'],
+                'distribution': p['distribution_prox'],
+                'repeats': p['repeats_prox']}}
 
 
     # External Rhythmic distal inputs (population of 1 VecStim)
@@ -371,28 +373,28 @@ if cfg.rhythmicInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.prng_seedcore_input_dist),
+        'seed': int(p['prng_seedcore_input_dist']),
         'spikePattern': {
                 'type': 'rhythmic',
-                'start': cfg.t0_input_dist,
-                'startStd': cfg.t0_input_stdev_dist,
-                'stop': cfg.tstop_input_dist,
-                'freq': cfg.f_input_dist,
-                'freqStd': cfg.f_stdev_dist,
-                'eventsPerCycle': cfg.events_per_cycle_dist,
-                'distribution': cfg.distribution_dist,
-                'repeats': cfg.repeats_dist}}
+                'start': p['t0_input_dist'],
+                'startStd': p['t0_input_stdev_dist'],
+                'stop': p['tstop_input_dist'],
+                'freq': p['f_input_dist'],
+                'freqStd': p['f_stdev_dist'],
+                'eventsPerCycle': p['events_per_cycle_dist'],
+                'distribution': p['distribution_dist'],
+                'repeats': p['repeats_dist']}}
 
 
     # Rhytmic proximal -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                'A_weight': cfg.input_prox_A_weight_L2Pyr_ampa,
-                'A_delay': cfg.input_prox_A_delay_L2,
+                'A_weight': p['input_prox_A_weight_L2Pyr_ampa'],
+                'A_delay': p['input_prox_A_delay_L2'],
                 'lamtha': 100.},
 
                 {'synMech': 'L2Pyr_NMDA',
-                'A_weight': cfg.input_prox_A_weight_L2Pyr_nmda,
-                'A_delay': cfg.input_prox_A_delay_L2,
+                'A_weight': p['input_prox_A_weight_L2Pyr_nmda'],
+                'A_delay': p['input_prox_A_delay_L2'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -408,13 +410,13 @@ if cfg.rhythmicInputs:
 
     # Rhythmic distal -> L2 Pyr
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                'A_weight': cfg.input_dist_A_weight_L2Pyr_ampa,
-                'A_delay': cfg.input_dist_A_delay_L2,
+                'A_weight': p['input_dist_A_weight_L2Pyr_ampa'],
+                'A_delay': p['input_dist_A_delay_L2'],
                 'lamtha': 100.},
 
                 {'synMech': 'L2Pyr_NMDA',
-                'A_weight': cfg.input_dist_A_weight_L2Pyr_nmda,
-                'A_delay': cfg.input_dist_A_delay_L2,
+                'A_weight': p['input_dist_A_weight_L2Pyr_nmda'],
+                'A_delay': p['input_dist_A_delay_L2'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -430,13 +432,13 @@ if cfg.rhythmicInputs:
 
     # Rhythmic proximal -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.input_prox_A_weight_L5Pyr_ampa,
-                'A_delay': cfg.input_prox_A_delay_L5,
+                'A_weight': p['input_prox_A_weight_L5Pyr_ampa'],
+                'A_delay': p['input_prox_A_delay_L5'],
                 'lamtha': 100.},
 
                 {'synMech': 'L5Pyr_NMDA',
-                'A_weight': cfg.input_prox_A_weight_L5Pyr_nmda,
-                'A_delay': cfg.input_prox_A_delay_L5,
+                'A_weight': p['input_prox_A_weight_L5Pyr_nmda'],
+                'A_delay': p['input_prox_A_delay_L5'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -452,13 +454,13 @@ if cfg.rhythmicInputs:
 
     # Rhythmic distal -> L5 Pyr
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                'A_weight': cfg.input_dist_A_weight_L5Pyr_ampa,
-                'A_delay': cfg.input_dist_A_delay_L5,
+                'A_weight': p['input_dist_A_weight_L5Pyr_ampa'],
+                'A_delay': p['input_dist_A_delay_L5'],
                 'lamtha': 100.},
 
                 {'synMech': 'L5Pyr_NMDA',
-                'A_weight': cfg.input_dist_A_weight_L5Pyr_nmda,
-                'A_delay': cfg.input_dist_A_delay_L5,
+                'A_weight': p['input_dist_A_weight_L5Pyr_nmda'],
+                'A_delay': p['input_dist_A_delay_L5'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -474,13 +476,13 @@ if cfg.rhythmicInputs:
 
     # Rhytmic proximal -> L2 Basket
     synParamsList = [{'synMech': 'AMPA',
-                'A_weight': cfg.input_prox_A_weight_L2Basket_ampa,
-                'A_delay': cfg.input_prox_A_delay_L2,
+                'A_weight': p['input_prox_A_weight_L2Basket_ampa'],
+                'A_delay': p['input_prox_A_delay_L2'],
                 'lamtha': 100.},
 
                 {'synMech': 'NMDA',
-                'A_weight': cfg.input_prox_A_weight_L2Basket_nmda,
-                'A_delay': cfg.input_prox_A_delay_L2,
+                'A_weight': p['input_prox_A_weight_L2Basket_nmda'],
+                'A_delay': p['input_prox_A_delay_L2'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -496,13 +498,13 @@ if cfg.rhythmicInputs:
 
     # Rhytmic proximal -> L5 Basket
     synParamsList = [{'synMech': 'AMPA',
-                'A_weight': cfg.input_prox_A_weight_L5Basket_ampa,
-                'A_delay': cfg.input_prox_A_delay_L5,
+                'A_weight': p['input_prox_A_weight_L5Basket_ampa'],
+                'A_delay': p['input_prox_A_delay_L5'],
                 'lamtha': 100.},
 
                 {'synMech': 'NMDA',
-                'A_weight': cfg.input_prox_A_weight_L5Basket_nmda,
-                'A_delay': cfg.input_prox_A_delay_L5,
+                'A_weight': p['input_prox_A_weight_L5Basket_nmda'],
+                'A_delay': p['input_prox_A_delay_L5'],
                 'lamtha': 100.}]
 
     for i,synParams in enumerate(synParamsList):
@@ -536,23 +538,23 @@ if cfg.evokedInputs:
                 'xRange': [extLocX, extLocX],
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
-                'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
+                'seed': int(p['prng_seedcore_' + skey]),
                 'spikePattern': {
                         'type': 'evoked',
-                        'start': getattr(cfg, 't_' + skey),
-                        'startStd': getattr(cfg, 'sigma_t_' + skey),
-                        'numspikes': getattr(cfg, 'numspikes_' + skey),
-                        'sync': getattr(cfg, 'sync_evinput')}}
+                        'start': p['t_' + skey],
+                        'startStd': p['sigma_t_' + skey],
+                        'numspikes': p['numspikes_' + skey],
+                        'sync': p['sync_evinput']}}
 
 
         # Evoked proximal -> L2 Pyr
         synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L2Pyr_ampa'],
                     'A_delay': 0.1,
                     'lamtha': 3.},
 
                     {'synMech': 'L2Pyr_NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L2Pyr_nmda'],
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
@@ -569,12 +571,12 @@ if cfg.evokedInputs:
 
         # Evoked proximal -> L5 Pyr
         synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L5Pyr_ampa'],
                     'A_delay': 1.0,
                     'lamtha': 3.},
 
                     {'synMech': 'L5Pyr_NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L5Pyr_nmda'],
                     'A_delay': 1.0,
                     'lamtha': 3.}]
 
@@ -591,12 +593,12 @@ if cfg.evokedInputs:
 
         # Evoked proximal -> L2 Basket
         synParamsList = [{'synMech': 'AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L2Basket_ampa'],
                     'A_delay': 0.1,
                     'lamtha': 3.},
 
                     {'synMech': 'NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L2Basket_nmda'],
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
@@ -613,12 +615,12 @@ if cfg.evokedInputs:
 
         # Evoked proximal -> L5 Basket
         synParamsList = [{'synMech': 'AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Basket_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L5Basket_ampa'],
                     'A_delay': 1.0,
                     'lamtha': 3.},
 
                     {'synMech': 'NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Basket_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L5Basket_nmda'],
                     'A_delay': 1.0,
                     'lamtha': 3.}]
 
@@ -644,23 +646,23 @@ if cfg.evokedInputs:
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
-            'seed': int(getattr(cfg, 'prng_seedcore_' + skey)),
+            'seed': int(p['prng_seedcore_' + skey]),
             'spikePattern': {
                     'type': 'evoked',
-                    'start': getattr(cfg, 't_' + skey),
-                    'startStd': getattr(cfg, 'sigma_t_' + skey),
-                    'numspikes': getattr(cfg, 'numspikes_' + skey),
-                    'sync': getattr(cfg, 'sync_evinput')}}
+                    'start': p['t_' + skey],
+                    'startStd': p['sigma_t_' + skey],
+                    'numspikes': p['numspikes_' + skey],
+                    'sync': p['sync_evinput']}}
 
 
         # Evoked Distal -> L2 Pyr
         synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L2Pyr_ampa'],
                     'A_delay': 0.1,
                     'lamtha': 3.},
 
                     {'synMech': 'L2Pyr_NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Pyr_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L2Pyr_nmda'],
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
@@ -677,12 +679,12 @@ if cfg.evokedInputs:
 
         # Evoked Distal -> L5 Pyr
         synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L5Pyr_ampa'],
                     'A_delay': 0.1,
                     'lamtha': 3.},
 
                     {'synMech': 'L5Pyr_NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L5Pyr_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L5Pyr_nmda'],
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
@@ -699,12 +701,12 @@ if cfg.evokedInputs:
 
         # Evoked Distal -> L2 Basket
         synParamsList = [{'synMech': 'AMPA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_ampa'),
+                    'A_weight': p['gbar_'+skey+'_L2Basket_ampa'],
                     'A_delay': 0.1,
                     'lamtha': 3.},
 
                     {'synMech': 'NMDA',
-                    'A_weight': getattr(cfg, 'gbar_'+skey+'_L2Basket_nmda'),
+                    'A_weight': p['gbar_'+skey+'_L2Basket_nmda'],
                     'A_delay': 0.1,
                     'lamtha': 3.}]
 
@@ -727,42 +729,42 @@ if cfg.evokedInputs:
 if cfg.tonicInputs:
 
     # Tonic inputs (IClamp) -> L2Pyr
-    if cfg.Itonic_T_L2Pyr_soma == -1:
-        t_dur = cfg.duration - cfg.Itonic_t0_L2Pyr_soma
+    if p['Itonic_T_L2Pyr_soma'] == -1:
+        t_dur = cfg.duration - p['Itonic_t0_L2Pyr_soma']
     else:
-        t_dur = cfg.Itonic_T_L2Pyr_soma - cfg.Itonic_t0_L2Pyr_soma
+        t_dur = p['Itonic_T_L2Pyr_soma'] - p['Itonic_t0_L2Pyr_soma']
 
-    netParams.stimSourceParams['ITonic_L2Pyr'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L2Pyr_soma, 'dur': t_dur, 'amp': cfg.Itonic_A_L2Pyr_soma}
+    netParams.stimSourceParams['ITonic_L2Pyr'] = {'type': 'IClamp', 'del': p['Itonic_t0_L2Pyr_soma'], 'dur': t_dur, 'amp': p['Itonic_A_L2Pyr_soma']}
     netParams.stimTargetParams['ITonic->L2Pyr'] = {'source': 'ITonic_L2Pyr', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L2Pyr'}}
 
 
     # Tonic inputs (IClamp) -> L5Pyr
-    if cfg.Itonic_T_L5Pyr_soma == -1:
-        t_dur = cfg.duration - cfg.Itonic_t0_L5Pyr_soma
+    if p['Itonic_T_L5Pyr_soma'] == -1:
+        t_dur = cfg.duration - p['Itonic_t0_L5Pyr_soma']
     else:
-        t_dur = cfg.Itonic_T_L5Pyr_soma - cfg.Itonic_t0_L5Pyr_soma
+        t_dur = p['Itonic_T_L5Pyr_soma'] - p['Itonic_t0_L5Pyr_soma']
 
-    netParams.stimSourceParams['ITonic_L5Pyr'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L5Pyr_soma, 'dur': t_dur, 'amp': cfg.Itonic_A_L5Pyr_soma}
+    netParams.stimSourceParams['ITonic_L5Pyr'] = {'type': 'IClamp', 'del': p['Itonic_t0_L5Pyr_soma'], 'dur': t_dur, 'amp': p['Itonic_A_L5Pyr_soma']}
     netParams.stimTargetParams['ITonic->L5Pyr'] = {'source': 'ITonic_L5Pyr', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L5Pyr'}}
 
 
     # Tonic inputs (IClamp) -> L2Basket
-    if cfg.Itonic_T_L2Basket == -1:
-        t_dur = cfg.duration - cfg.Itonic_t0_L2Basket
+    if p['Itonic_T_L2Basket'] == -1:
+        t_dur = cfg.duration - p['Itonic_t0_L2Basket']
     else:
-        t_dur = cfg.Itonic_T_L2Basket - cfg.Itonic_t0_L2Basket
+        t_dur = p['Itonic_T_L2Basket'] - p['Itonic_t0_L2Basket']
 
-    netParams.stimSourceParams['ITonic_L2Basket'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L2Basket, 'dur': t_dur, 'amp': cfg.Itonic_A_L2Basket}
+    netParams.stimSourceParams['ITonic_L2Basket'] = {'type': 'IClamp', 'del': p['Itonic_t0_L2Basket'], 'dur': t_dur, 'amp': p['Itonic_A_L2Basket']}
     netParams.stimTargetParams['ITonic->L2Basket'] = {'source': 'ITonic_L2Basket', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L2Basket'}}
 
 
     # Tonic inputs (IClamp) -> L5Basket
-    if cfg.Itonic_T_L5Basket == -1:
-        t_dur = cfg.duration - cfg.Itonic_t0_L5Basket
+    if p['Itonic_T_L5Basket'] == -1:
+        t_dur = cfg.duration - p['Itonic_t0_L5Basket']
     else:
-        t_dur = cfg.Itonic_T_L5Basket - cfg.Itonic_t0_L5Basket
+        t_dur = p['Itonic_T_L5Basket'] - p['Itonic_t0_L5Basket']
 
-    netParams.stimSourceParams['ITonic_L5Basket'] = {'type': 'IClamp', 'del': cfg.Itonic_t0_L5Basket, 'dur': t_dur, 'amp': cfg.Itonic_A_L5Basket}
+    netParams.stimSourceParams['ITonic_L5Basket'] = {'type': 'IClamp', 'del': p['Itonic_t0_L5Basket'], 'dur': t_dur, 'amp': p['Itonic_A_L5Basket']}
     netParams.stimTargetParams['ITonic->L5Basket'] = {'source': 'ITonic_L5Basket', 'sec':'soma', 'loc': 0.5, 'conds': {'pop': 'L5Basket'}}
 
 
@@ -779,20 +781,20 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extpois')),
+        'seed': int(cfg.hnn_params.get('prng_seedcore_extpois')),
         'spikePattern': {
                 'type': 'poisson',
-                'start': getattr(cfg, 't0_pois'),
-                'stop': getattr(cfg, 'T_pois'),
-                'frequency': getattr(cfg, 'L2Pyr_Pois_lamtha')}}
+                'start': p['t0_pois'],
+                'stop': p['T_pois'],
+                'frequency': p['L2Pyr_Pois_lamtha']}}
 
     synParamsList = [{'synMech': 'L2Pyr_AMPA',
-                'A_weight': getattr(cfg, 'L2Pyr_Pois_A_weight_ampa'),
+                'A_weight': p['L2Pyr_Pois_A_weight_ampa'],
                 'A_delay': 0.1,
                 'lamtha': 100.},
 
                 {'synMech': 'L2Pyr_NMDA',
-                'A_weight': getattr(cfg, 'L2Pyr_Pois_A_weight_nmda'),
+                'A_weight': p['L2Pyr_Pois_A_weight_nmda'],
                 'A_delay': 0.1,
                 'lamtha': 100.}]
 
@@ -815,20 +817,20 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extpois')),
+        'seed': int(p['prng_seedcore_extpois']),
         'spikePattern': {
                 'type': 'poisson',
-                'start': getattr(cfg, 't0_pois'),
-                'stop': getattr(cfg, 'T_pois'),
-                'frequency': getattr(cfg, 'L5Pyr_Pois_lamtha')}}
+                'start': p['t0_pois'],
+                'stop': p['T_pois'],
+                'frequency': p['L5Pyr_Pois_lamtha']}}
 
     synParamsList = [{'synMech': 'L5Pyr_AMPA',
-                'A_weight': getattr(cfg, 'L5Pyr_Pois_A_weight_ampa'),
+                'A_weight': p['L5Pyr_Pois_A_weight_ampa'],
                 'A_delay': 0.1,
                 'lamtha': 100.},
 
                 {'synMech': 'L5Pyr_NMDA',
-                'A_weight': getattr(cfg, 'L5Pyr_Pois_A_weight_nmda'),
+                'A_weight': p['L5Pyr_Pois_A_weight_nmda'],
                 'A_delay': 0.1,
                 'lamtha': 100.}]
 
@@ -851,20 +853,20 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extpois')),
+        'seed': int(p['prng_seedcore_extpois']),
         'spikePattern': {
                 'type': 'poisson',
-                'start': getattr(cfg, 't0_pois'),
-                'stop': getattr(cfg, 'T_pois'),
-                'frequency': getattr(cfg, 'L2Basket_Pois_lamtha')}}
+                'start': p['t0_pois'],
+                'stop': p['T_pois'],
+                'frequency': p['L2Basket_Pois_lamtha']}}
 
     synParamsList = [{'synMech': 'AMPA',
-                'A_weight': getattr(cfg, 'L2Basket_Pois_A_weight_ampa'),
+                'A_weight': p['L2Basket_Pois_A_weight_ampa'],
                 'A_delay': 1.0,
                 'lamtha': 100.},
 
                 {'synMech': 'NMDA',
-                'A_weight': getattr(cfg, 'L2Basket_Pois_A_weight_nmda'),
+                'A_weight': p['L2Basket_Pois_A_weight_nmda'],
                 'A_delay': 1.0,
                 'lamtha': 100.}]
 
@@ -887,20 +889,20 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extpois')),
+        'seed': int(p['prng_seedcore_extpois']),
         'spikePattern': {
                 'type': 'poisson',
-                'start': getattr(cfg, 't0_pois'),
-                'stop': getattr(cfg, 'T_pois'),
-                'frequency': getattr(cfg, 'L5Basket_Pois_lamtha')}}
+                'start': p['t0_pois'],
+                'stop': p['T_pois'],
+                'frequency': p['L5Basket_Pois_lamtha']}}
 
     synParamsList = [{'synMech': 'AMPA',
-                'A_weight': getattr(cfg, 'L5Basket_Pois_A_weight_ampa'),
+                'A_weight': p['L5Basket_Pois_A_weight_ampa'],
                 'A_delay': 1.0,
                 'lamtha': 100.},
 
                 {'synMech': 'NMDA',
-                'A_weight': getattr(cfg, 'L5Basket_Pois_A_weight_nmda'),
+                'A_weight': p['L5Basket_Pois_A_weight_nmda'],
                 'A_delay': 1.0,
                 'lamtha': 100.}]
 
@@ -929,14 +931,14 @@ if cfg.gaussInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extgauss')),
+        'seed': int(p['prng_seedcore_extgauss']),
         'spikePattern': {
                 'type': 'gauss',
-                'mu': getattr(cfg, 'L2Pyr_Gauss_mu'),
-                'sigma': getattr(cfg, 'L2Pyr_Gauss_sigma')}}
+                'mu': p['L2Pyr_Gauss_mu'],
+                'sigma': p['L2Pyr_Gauss_sigma']}}
 
     synParams = {'synMech': 'L2Pyr_AMPA',
-                'A_weight': getattr(cfg, 'L2Pyr_Gauss_A_weight'),
+                'A_weight': p['L2Pyr_Gauss_A_weight'],
                 'A_delay': 0.1,
                 'lamtha': 100.}
 
@@ -957,14 +959,14 @@ if cfg.gaussInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(getattr(cfg, 'prng_seedcore_extgauss')),
+        'seed': int(p['prng_seedcore_extgauss']),
         'spikePattern': {
                 'type': 'gauss',
-                'mu': getattr(cfg, 'L5Pyr_Gauss_mu'),
-                'sigma': getattr(cfg, 'L5Pyr_Gauss_sigma')}}
+                'mu': p['L5Pyr_Gauss_mu'],
+                'sigma': p['L5Pyr_Gauss_sigma']}}
 
     synParams = {'synMech': 'L5Pyr_AMPA',
-                'A_weight': getattr(cfg, 'L5Pyr_Gauss_A_weight'),
+                'A_weight': p['L5Pyr_Gauss_A_weight'],
                 'A_delay': 0.1,
                 'lamtha': 100.}
 
