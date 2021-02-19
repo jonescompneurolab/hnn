@@ -11,31 +11,33 @@ waveforms using HNN-netpyne.
 ###############################################################################
 # Let us import hnn_netpyne
 
-from hnn-funcs import set_model, read_params, simulate_trials
-from hnn-funcs.viz import plot_dipole, plot_raster, plot_spike_hist, mean_rates
+from hnn_funcs import read_params
+#from hnn-funcs.viz import plot_dipole, plot_raster, plot_spike_hist, mean_rates
 
-user_params, net_params = read_params(model_folder='../hnn-models/hnn-neocortex', params_fname='param/default.param')
+cfg_params, net_params = read_params(model_folder='../hnn-models/hnn-neocortex', params_fname='param/default.param')
 
-net = create_network(user_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
+hnn_params = cfg_params.hnn_params
 
-net.plot_cells()
+# net = create_network(user_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
 
-trials_data = simulate_trials(net, n_trials=2)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
+# net.plot_cells()
 
-plot_dipole(trials_data, options)
+# trials_data = simulate_trials(cfg, net_params, n_trials=2)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
 
-plot_raster(trials_data, options)
+# plot_dipole(trials_data, options)
 
-plot_spike_hist(trials_data, options)
+# plot_raster(trials_data, options)
 
-mean_rates(trials_data, options)
+# plot_spike_hist(trials_data, options)
 
-user_params.update({'sync_evinput': True}) # alternative: user_params.sync_evinput = True
+# mean_rates(trials_data, options)
 
-net_sync = create_network(user_params, net_params)
+# user_params.update({'sync_evinput': True}) # alternative: user_params.sync_evinput = True
 
-trials_data_sync = simulate_trials(net, n_trials=1)
+# net_sync = create_network(user_params, net_params)
 
-plot_dipoles(trials_data_sync, options)
+# trials_data_sync = simulate_trials(net, n_trials=1)
+
+# plot_dipoles(trials_data_sync, options)
 
 
