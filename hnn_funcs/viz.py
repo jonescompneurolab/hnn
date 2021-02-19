@@ -63,6 +63,8 @@ def plot_cells():
         sim.gatherData()
     sim.analysis.plotShape(includePost=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'])
 
+    # add separation between cells!
+
 
 # parallel_backends / simulation file
 def simulate_trials:
