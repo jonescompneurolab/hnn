@@ -1,17 +1,20 @@
-'''
-init.py
+"""
+params.py 
 
-Starting script to run NetPyNE-based HNN model.
-
-Usage:
-    python init.py # Run simulation, optionally plot a raster
-
-MPI usage:
-    mpiexec -n 4 nrniv -python -mpi init.py
+Useful functions for the NetPyNE-based implementation of HNN
 
 Contributors: salvadordura@gmail.com
-'''
+"""
 
+#network file
+def create_network():
+    sim.initialize(simConfig=cfg, netParams=netParams)  
+    sim.net.createPops()
+    sim.net.createCells()
+    sim.gatherData()
+
+''' 
+from init.py
 from netpyne import sim
 from utils import setCfgFromFile
 
@@ -32,3 +35,4 @@ from netParams import netParams
 
 # Create, simulate and analyze model
 sim.createSimulateAnalyze(simConfig = cfg, netParams = netParams)  
+'''

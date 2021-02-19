@@ -50,6 +50,29 @@ def read_params(params_fname):
 
     return params
 
+#network file
+def create_network():
+    sim.initialize(simConfig=cfg, netParams=netParams)  
+    sim.net.createPops()
+    sim.net.createCells()
+    sim.gatherData()
+
+# viz file
+def plot_cells():
+    if not gatherData: 
+        sim.gatherData()
+    sim.analysis.plotShape(includePost=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'])
+
+
+# parallel_backends / simulation file
+def simulate_trials:
+    dpls = []
+    for trial in range(n_trials):
+        print('Trial %d ...' % (trial))
+        cfg.prng_seedcore_input_prox += 1
+        sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)  
+        dpls.append(sim.allSimData['dipole'])
+
 # utils 
 # Function to set cfg params from .param file
 def setCfgFromFile (fn, cfg, exclude = []):
