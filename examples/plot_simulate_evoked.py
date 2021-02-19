@@ -10,72 +10,32 @@ waveforms using HNN-netpyne.
 
 ###############################################################################
 # Let us import hnn_netpyne
-from netpyne import sim
-from utils import setCfgFromFile
 
-###############################################################################
-# Then we read the parameters file
-cfgFile = '../param/ERPYes100Trials.param'      # ERP
+from hnn-funcs import set_model, read_params, simulate_trials
+from hnn-funcs.viz import plot_dipole, plot_raster, plot_spike_hist, mean_rates
 
-# Import simConfig and set parameters from file
-cfg, netParams = sim.readCmdLineArgs()
-cfg = setCfgFromFile(cfgFile, cfg)#, exclude = ['prng_seedcore_input_prox', 'prng_seedcore_input_dist']) # exclude parameters modified in batch.py
+user_params, net_params = read_params(model_folder='../hnn-models/hnn-neocortex', params_fname='param/default.param')
 
-from netParams import netParams
+net = create_network(user_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
 
-###############################################################################
-# Let us first create our network from the params file and visualize the cells
-# inside it.
-sim.initialize(simConfig=cfg, netParams=netParams)  
-sim.net.createPops()
-sim.net.createCells()
-sim.gatherData()
-sim.analysis.plotShape(includePost=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'])
+net.plot_cells()
 
-###############################################################################
-# Now let's simulate the dipole, running 2 trials with the Joblib backend.
-# To run them in parallel we could set n_jobs to equal the number of trials.
+trials_data = simulate_trials(net, n_trials=2)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
 
-n_trials = 2
-dpls = []
-for trial in range(n_trials):
-    print('Trial %d ...' % (trial))
-    cfg.prng_seedcore_input_prox += 1
-    sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)  
-    dpls.append(sim.allSimData['dipole'])
+plot_dipole(trials_data, options)
 
-from matplotlib import pyplot as plt
-plt.plot(dpls)
+plot_raster(trials_data, options)
 
-''' Alternative using batch
-from netpyne.batch import Batch
+plot_spike_hist(trials_data, options)
 
-params = {'prng_seedcore_input_prox': [13, 14]}  # set params 
-b = Batch(params=params)  # create netpyne Batch object
-b.batchLabel = 'erp_trials'
-b.saveFolder = '../data/'+b.batchLabel
-b.runCfg = {'type': 'mpi_direct', 'mpi_command': 'mpirun', 'script': 'init.py'}
-b.run()
+mean_rates(trials_data, options)
 
-'''
+user_params.update({'sync_evinput': True}) # alternative: user_params.sync_evinput = True
 
-###############################################################################
-# We can additionally calculate the mean spike rates for each cell class by
-# specifying a time window with tstart and tstop.
+net_sync = create_network(user_params, net_params)
 
-# in netpyne pop rates are already printed at end of sim
-# accessible print(sim.allSimData['popRates'])
+trials_data_sync = simulate_trials(net, n_trials=1)
 
-###############################################################################
-# Now, let us try to make the exogenous driving inputs to the cells
-# synchronous and see what happens
+plot_dipoles(trials_data_sync, options)
 
-##############################################################################
-# Next, let's simulate a single trial using the MPI backend. This will
-# start the simulation trial across the number of processors (cores)
-# specified by n_procs using MPI. The 'mpiexec' launcher is for
-# openmpi, which must be installed on the system
-
-cfg.sync_evinput = True
-sim.createSimulateAnalyze(simConfig=cfg, netParams=netParams)  
 
