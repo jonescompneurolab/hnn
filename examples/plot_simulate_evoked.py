@@ -5,6 +5,13 @@ Simulate dipole
 
 This example demonstrates how to simulate a dipole for evoked-like
 waveforms using HNN-netpyne.
+
+Requires adding the hnn_func package to PYTHONPATH, e.g.:
+
+ - cd ~
+ - git clone --single-branch --branch hnn2 https://github.com/jonescompneurolab/hnn.git hnn2
+ - export PYTHONPATH=~/hnn2/:$PYTHONPATH
+
 """
 
 
@@ -14,7 +21,7 @@ waveforms using HNN-netpyne.
 from hnn_funcs import read_params
 #from hnn-funcs.viz import plot_dipole, plot_raster, plot_spike_hist, mean_rates
 
-cfg_params, net_params = read_params(model_folder='../hnn-models/hnn-neocortex', params_fname='param/default.param')
+cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/default.param')
 
 hnn_params = cfg_params.hnn_params
 

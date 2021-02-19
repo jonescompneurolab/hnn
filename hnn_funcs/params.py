@@ -42,9 +42,9 @@ def read_params(model_folder, params_fname):
     ext = split_fname[1]
 
     if ext == '.json':
-        cfg_params = _read_json(model_folder+'/'+params_fname, cfg_params)
+        cfg_params = _read_json(params_fname, cfg_params)
     elif ext == '.param':
-        cfg_params = _read_legacy_params(model_folder+'/'+params_fname, cfg_params) 
+        cfg_params = _read_legacy_params(params_fname, cfg_params) 
     else:
         raise ValueError('Unrecognized extension, expected one of' +
                          ' .json, .param. Got %s' % ext)
@@ -71,7 +71,7 @@ def _read_json(fname, cfg):
     with open(fname) as json_data:
         params_input = json.load(json_data)
     
-    cfg['hnn_params'] = params_input
+    cfg.hnn_params = params_input
 
     return cfg
 
@@ -90,7 +90,7 @@ def _read_legacy_params (params_fname, cfg, exclude = []):
         object of class SimConfig with parameters
     """
 
-    cfg['hnn_params'] = {}
+    cfg.hnn_params = {}
     d = {}
     with open(params_fname,'r') as fp:
         ln = fp.readlines()
@@ -113,7 +113,7 @@ def _read_legacy_params (params_fname, cfg, exclude = []):
                 d[sp[0].strip()] = value
     for k, v in d.items():
         if k not in exclude:
-            cfg['hnn_params'][k] = v
-        if 'duration' not in exclude:
-            cfg.duration = cfg['hnn_params']['tstop']
+            cfg.hnn_params[k] = v
+    if 'duration' not in exclude:
+        cfg.duration = cfg.hnn_params['tstop']
     return cfg
