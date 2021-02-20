@@ -13,7 +13,6 @@ from netpyne import specs, sim
 
 
 def read_params(model_folder, params_fname):
-    # (model_folder='../hnn-models/hnn-neocortex', params_fname='param/default.param')
 
     """Read param values from a file (.json or .param).
 
@@ -33,7 +32,11 @@ def read_params(model_folder, params_fname):
     """
 
     # Import cfg_params and net_params for target model
-    os.chdir(model_folder)
+    #os.chdir(model_folder)
+
+    import sys
+    sys.path.insert(1, model_folder)
+
     from cfg import cfg as cfg_params
     from netParams import netParams as net_params
 
@@ -42,9 +45,9 @@ def read_params(model_folder, params_fname):
     ext = split_fname[1]
 
     if ext == '.json':
-        cfg_params = _read_json(params_fname, cfg_params)
+        cfg_params = _read_json(model_folder+'/'+params_fname, cfg_params)
     elif ext == '.param':
-        cfg_params = _read_legacy_params(params_fname, cfg_params) 
+        cfg_params = _read_legacy_params(model_folder+'/'+params_fname, cfg_params) 
     else:
         raise ValueError('Unrecognized extension, expected one of' +
                          ' .json, .param. Got %s' % ext)
@@ -52,6 +55,10 @@ def read_params(model_folder, params_fname):
     if len(cfg_params.__dict__) == 0:
         raise ValueError("Failed to read parameters from file: %s" %
                          op.normpath(params_fname))
+
+    # save model and params path 
+    cfg_params.model_folder = model_folder
+    cfg_params.params_fname = params_fname
 
     return cfg_params, net_params
 

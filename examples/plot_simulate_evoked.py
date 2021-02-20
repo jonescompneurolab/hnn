@@ -18,18 +18,19 @@ Requires adding the hnn_func package to PYTHONPATH, e.g.:
 ###############################################################################
 # Let us import hnn_netpyne
 
-from hnn_funcs import read_params, create_network
-#from hnn-funcs.viz import plot_dipole, plot_raster, plot_spike_hist, mean_rates
+from hnn_funcs import read_params, create_network, simulate_trials
+from hnn_funcs.viz import plot_cells  #plot_dipole, plot_raster, plot_spike_hist, mean_rates
 
 cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/default.param')
 
-hnn_params = cfg_params.hnn_params
+# hnn_params = cfg_params.hnn_params
 
-net = create_network(cfg_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
+# net = create_network(cfg_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
 
-# net.plot_cells()
+# plot_cells()
 
-# trials_data = simulate_trials(cfg, net_params, n_trials=2)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
+
+trials_data = simulate_trials(cfg_params, net_params, n_trials=2)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
 
 # plot_dipole(trials_data, options)
 
