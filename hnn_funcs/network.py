@@ -7,7 +7,7 @@ Contributors: salvadordura@gmail.com
 """
 
 from neuron import h
-from netpyne import sim
+from netpyne import sim, specs
 
 
 def create_network(cfg_params, net_params, createNEURONObj=True):
@@ -71,7 +71,7 @@ def load_custom_mechanisms(folder=''):
 
 
 
-def simulate_trials(cfg_params, net_params, n_trials):
+def simulate_trials(cfg_params, net_params, n_trials, n_cores=1):
 
     from netpyne.batch import Batch
 
@@ -80,10 +80,11 @@ def simulate_trials(cfg_params, net_params, n_trials):
     # create netpyne Batch object
     seeds = range(n_trials)
 
-    params = {'prng_seedcore_input_prox': list(seeds),
-              'prng_seedcore_input_dist': list(seeds),
-              'prng_seedcore_extpois': list(seeds),
-              'prng_seedcore_extgauss': list(seeds)}
+    params = specs.ODict()
+    params['prng_seedcore_input_prox'] = list(seeds)
+    params['prng_seedcore_input_dist'] = list(seeds)
+    params['prng_seedcore_extpois'] = list(seeds)
+    params['prng_seedcore_extgauss'] = list(seeds)
 
     groupedParams = {'prng_seedcore_input_prox', 'prng_seedcore_input_dist', 'prng_seedcore_extpois', 'prng_seedcore_extgauss'}
 
@@ -91,14 +92,14 @@ def simulate_trials(cfg_params, net_params, n_trials):
              groupedParams=groupedParams,
              cfgFile=model_folder+'/cfg.py', 
              netParamsFile=model_folder+'/netParams.py', 
-             cfg=None)
+             cfg=cfg_params)
              
     b.batchLabel = 'trials'
     b.saveFolder = model_folder+'/data/'+b.batchLabel
     b.method = 'grid'
     b.runCfg = {'type': 'mpi_direct', 
                 'script': model_folder+'/init.py',
-                'cores': 1, 
+                'cores': n_cores, 
                 'skip': False}
 
     b.run() # run batch

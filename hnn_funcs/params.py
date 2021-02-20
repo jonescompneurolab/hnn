@@ -97,7 +97,8 @@ def _read_legacy_params (params_fname, cfg, exclude = []):
         object of class SimConfig with parameters
     """
 
-    cfg.hnn_params = {}
+    if not hasattr(cfg, 'hnn_params'):
+        cfg.hnn_params = {}
     d = {}
     with open(params_fname,'r') as fp:
         ln = fp.readlines()
