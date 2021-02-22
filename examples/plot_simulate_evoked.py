@@ -29,8 +29,9 @@ cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex',
 
 # plot_cells()
 
+cfg_params.duration = 5
 
-trials_data = simulate_trials(cfg_params, net_params, n_trials=2, n_cores=4)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
+trials_data = simulate_trials(cfg_params, net_params, n_trials=2, n_cores=1)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
 
 # plot_dipole(trials_data, options)
 

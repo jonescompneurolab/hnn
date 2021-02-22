@@ -57,13 +57,15 @@ cfg.recordDipoles = {'L2': ['L2Pyr'], 'L5': ['L5Pyr']}
 cfg.sim_prefix = cfg.simLabel = 'default'
 
 cfg.saveFolder = '.'
-cfg.savePickle = False
+cfg.savePickle = True
 cfg.saveJson = False
 cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
 
 # ----------------------------------------------------------------------------
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
+
+'''
 pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
 evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
   'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
@@ -90,7 +92,7 @@ cfg.analysis['iplotConn'] = {'includePre': pops, 'includePost': pops, 'feature':
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 
 #cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
-
+'''
 
 # ----------------------------------------------------------------------------
 # Network parameters
