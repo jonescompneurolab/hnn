@@ -18,8 +18,8 @@ Requires adding the hnn_func package to PYTHONPATH, e.g.:
 ###############################################################################
 # Let us import hnn_netpyne
 
-from hnn_funcs import read_params, create_network, simulate_trials
-from hnn_funcs.viz import plot_cells  #plot_dipole, plot_raster, plot_spike_hist, mean_rates
+from hnn_func import read_params, create_network, simulate_trials
+from hnn_func.viz import plot_cells  #plot_dipole, plot_raster, plot_spike_hist, mean_rates
 
 cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/default.param')
 

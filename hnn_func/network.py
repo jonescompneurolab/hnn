@@ -123,15 +123,13 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1):
 
 
 def read_trials_data(dataFolder, batchLabel, n_trials):
-
-    from specs import OrderedDict
     
     data = {}
     
     # read vars from all files - store in dict 
     for i in range(n_trials):
         # read output file
-        iCombStr = ''.join([''.join('_'+str(i)) for j in range(n_trials)])
+        iCombStr = ''.join([''.join('_'+str(i)) for j in range(4)])
         simLabel = batchLabel+iCombStr
         
         
@@ -142,7 +140,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
         if os.path.isfile(outFile+'.json'):
             outFile = outFile + '.json'
             with open(outFile, 'rb') as fileObj:
-                output = json.load(fileObj, object_pairs_hook=OrderedDict)
+                output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
         elif os.path.isfile(outFile+'.pkl'):
             outFile = outFile + '.pkl'
             with open(outFile, 'rb') as fileObj:
@@ -150,7 +148,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
 
         print(output)
 
-        
+
         try:
             # save output file in data dict
             data[i] = {}  
