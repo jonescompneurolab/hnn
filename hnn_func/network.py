@@ -86,7 +86,7 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
     seeds = range(n_trials)
 
     params = specs.ODict()
-    params['prng_seedcore'] = list(seeds)
+    params[('hnn_params','prng_seedcore')] = list(seeds)
  
     b = Batch(params=params, 
              cfgFile=model_folder+'/cfg.py', 
