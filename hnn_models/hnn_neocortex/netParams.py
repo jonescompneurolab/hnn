@@ -705,7 +705,7 @@ if cfg.rhythmicInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_input_prox']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'rhythmic',
                 'start': p['t0_input_prox'],
@@ -890,7 +890,7 @@ if cfg.evokedInputs:
                 'xRange': [extLocX, extLocX],
                 'yRange': [extLocY, extLocY],
                 'zRange': [extLocZ, extLocZ],
-                'seed': int(p['prng_seedcore_' + skey]),
+                'seed': int(p['prng_seedcore']),
                 'spikePattern': {
                         'type': 'evoked',
                         'start': p['t_' + skey],
@@ -998,7 +998,7 @@ if cfg.evokedInputs:
             'xRange': [extLocX, extLocX],
             'yRange': [extLocY, extLocY],
             'zRange': [extLocZ, extLocZ],
-            'seed': int(p['prng_seedcore_' + skey]),
+            'seed': int(p['prng_seedcore']),
             'spikePattern': {
                     'type': 'evoked',
                     'start': p['t_' + skey],
@@ -1133,7 +1133,7 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(cfg.hnn_params.get('prng_seedcore_extpois')),
+        'seed': int(cfg.hnn_params.get('prng_seedcore')),
         'spikePattern': {
                 'type': 'poisson',
                 'start': p['t0_pois'],
@@ -1169,7 +1169,7 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_extpois']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'poisson',
                 'start': p['t0_pois'],
@@ -1205,7 +1205,7 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_extpois']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'poisson',
                 'start': p['t0_pois'],
@@ -1241,7 +1241,7 @@ if cfg.poissonInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_extpois']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'poisson',
                 'start': p['t0_pois'],
@@ -1283,7 +1283,7 @@ if cfg.gaussInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_extgauss']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'gauss',
                 'mu': p['L2Pyr_Gauss_mu'],
@@ -1311,7 +1311,7 @@ if cfg.gaussInputs:
         'xRange': [extLocX, extLocX],
         'yRange': [extLocY, extLocY],
         'zRange': [extLocZ, extLocZ],
-        'seed': int(p['prng_seedcore_extgauss']),
+        'seed': int(p['prng_seedcore']),
         'spikePattern': {
                 'type': 'gauss',
                 'mu': p['L5Pyr_Gauss_mu'],

@@ -468,6 +468,7 @@ cfg.hnn_params['N_trials'] = 1
 # prng seed cores are the base integer seed for the specific
 # prng object for a specific random number stream
 cfg.hnn_params['prng_state'] = None
+cfg.hnn_params['prng_seedcore'] = 0  # replace multiple seedcores with single one
 cfg.hnn_params['prng_seedcore_input_prox'] = 0
 cfg.hnn_params['prng_seedcore_input_dist'] = 0
 cfg.hnn_params['prng_seedcore_extpois'] = 0

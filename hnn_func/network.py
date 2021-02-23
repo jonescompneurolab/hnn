@@ -86,15 +86,9 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
     seeds = range(n_trials)
 
     params = specs.ODict()
-    params['prng_seedcore_input_prox'] = list(seeds)
-    params['prng_seedcore_input_dist'] = list(seeds)
-    params['prng_seedcore_extpois'] = list(seeds)
-    params['prng_seedcore_extgauss'] = list(seeds)
-
-    groupedParams = {'prng_seedcore_input_prox', 'prng_seedcore_input_dist', 'prng_seedcore_extpois', 'prng_seedcore_extgauss'}
-
+    params['prng_seedcore'] = list(seeds)
+ 
     b = Batch(params=params, 
-             groupedParams=groupedParams,
              cfgFile=model_folder+'/cfg.py', 
              netParamsFile=model_folder+'/netParams.py', 
              cfg=cfg_params)
@@ -107,7 +101,7 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
                 'cores': n_cores, 
                 'skip': False}
 
-    #b.run() 
+    b.run() 
 
     # read data from batch output files 
     data = read_trials_data(model_folder+'/data/', b.batchLabel, n_trials)
@@ -146,8 +140,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
     # read vars from all files - store in dict 
     for i in range(n_trials):
         # read output file
-        iCombStr = ''.join([''.join('_'+str(i)) for j in range(4)])
-        simLabel = batchLabel+iCombStr
+        simLabel = batchLabel+'_'+str(i)
 
         outFile = dataFolder+'/'+batchLabel+'/'+simLabel
         if os.path.isfile(outFile+'.json'):
