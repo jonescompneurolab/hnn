@@ -59,13 +59,16 @@ cfg.sim_prefix = cfg.simLabel = 'default'
 cfg.saveFolder = '.'
 cfg.savePickle = True
 cfg.saveJson = False
-cfg.saveDataInclude = ['simData', 'simConfig'] #, 'netParams', 'net']
+cfg.saveDataInclude = ['simData', 'simConfig', 'net'] #, 'netParams', 'net']
+cfg.saveCellSecs = False
+cfg.saveCellConns = False
+
 
 # ----------------------------------------------------------------------------
 # Analysis and plotting 
 # ----------------------------------------------------------------------------
 
-'''
+
 pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
 evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
   'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
@@ -74,6 +77,7 @@ evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5B
 popColors = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
     'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
 
+'''
 cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
 							  'showFig': True, 'timeRange': [0, cfg.duration]}
 
@@ -87,7 +91,7 @@ cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 80}  # change freq
 
 cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80} # change freq to 40 for alpha&beta tut
 
-cfg.analysis['iplotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+# cfg.analysis['iplotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
 
 # cfg.analysis['iplotLFP'] = {'showFig': True}
 

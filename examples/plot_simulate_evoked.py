@@ -15,29 +15,26 @@ Requires adding the hnn_func package to PYTHONPATH, e.g.:
 """
 
 
-###############################################################################
-# Let us import hnn_netpyne
-
+# Let us import hnn_func
 from hnn_func import read_params, create_network, simulate_trials
-from hnn_func.viz import plot_cells  #plot_dipole, plot_raster, plot_spike_hist, mean_rates
+from hnn_func.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
 
-cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/default.param')
 
-# hnn_params = cfg_params.hnn_params
+cfg_params, net_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/ERPYes100Trials.param') #default.param')
+
+print(cfg_params.hnn_params)
 
 # net = create_network(cfg_params, net_params)  # this is really just the netParams or mixtude of netParams and non-instantiated net; cell locs and stims
 
 # plot_cells()
 
-cfg_params.duration = 5
-
 trials_data = simulate_trials(cfg_params, net_params, n_trials=2, n_cores=1)  # this can be done using netpyne batch (via disk) or hnn-core backends (via memory)
 
-# plot_dipole(trials_data, options)
+plot_dipole(trials_data)
 
-# plot_raster(trials_data, options)
+plot_spike_hist(trials_data)
 
-# plot_spike_hist(trials_data, options)
+plot_spike_raster(trials_data)
 
 # mean_rates(trials_data, options)
 

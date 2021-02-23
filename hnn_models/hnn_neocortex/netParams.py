@@ -877,8 +877,8 @@ if cfg.rhythmicInputs:
 if cfg.evokedInputs:
 
     # Evoked proximal inputs (population of 1 VecStim)
-    nprox = len([k for k in cfg.__dict__ if k.startswith('t_evprox')])
-    ndist = len([k for k in cfg.__dict__ if k.startswith('t_evdist')])
+    nprox = len([k for k in cfg.hnn_params if k.startswith('t_evprox')])
+    ndist = len([k for k in cfg.hnn_params if k.startswith('t_evdist')])
 
     # Evoked proximal inputs (population of 1 VecStim)
     for iprox in range(nprox):

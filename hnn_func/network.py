@@ -76,13 +76,13 @@ def load_custom_mechanisms(folder=''):
 
 
 
-def simulate_trials(cfg_params, net_params, n_trials, n_cores=1):
+def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
 
     from netpyne.batch import Batch
 
     model_folder = cfg_params.model_folder
-
-    # create netpyne Batch object
+    
+    # setup and run netpyne batch with different seeds
     seeds = range(n_trials)
 
     params = specs.ODict()
@@ -107,17 +107,34 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1):
                 'cores': n_cores, 
                 'skip': False}
 
-    b.run() # run batch
-    
-    for i in range(n_trials):
-        with open('%s/%s_%d_%d_%d_%d.run' % (b.saveFolder, b.batchLabel, i, i, i, i), 'r') as f:
-            newline = f.readline()
-            while 'End time' not in newline:
-                if len(newline) > 1:
-                    print(newline, end='')
-                newline = f.readline()
-            
+    b.run() 
+
+    # read data from batch output files 
     data = read_trials_data(model_folder+'/data/', b.batchLabel, n_trials)
+
+    # postprocess dipole data
+    if postproc:
+        from .dipole import Dipole
+
+        dpls = []
+
+        for i, trial_data in data.items():
+            trial_data['simData']['dipole']['L2'][0] = 0
+            trial_data['simData']['dipole']['L5'][0] = 0
+            
+            dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
+                        np.array(trial_data['simData']['dipole']['L2']), 
+                        np.array(trial_data['simData']['dipole']['L5'])]
+            dpl_trial = Dipole(np.array(trial_data['simData']['t']), np.array(dpl_data).T)
+            dpl_trial.post_proc(cfg_params.hnn_params['N_pyr_x'],
+                                cfg_params.hnn_params['N_pyr_y'], 
+                                cfg_params.hnn_params['dipole_smooth_win'],
+                                cfg_params.hnn_params['dipole_scalefctr'])
+            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
+            dpls.append(dpl_trial)
+
+        data['dpls'] = dpls
+
 
     return data    
 
@@ -131,10 +148,6 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
         # read output file
         iCombStr = ''.join([''.join('_'+str(i)) for j in range(4)])
         simLabel = batchLabel+iCombStr
-        
-        
-        print(simLabel)
-
 
         outFile = dataFolder+'/'+batchLabel+'/'+simLabel
         if os.path.isfile(outFile+'.json'):
@@ -145,9 +158,6 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
             outFile = outFile + '.pkl'
             with open(outFile, 'rb') as fileObj:
                 output = pickle.load(fileObj)
-
-        print(output)
-
 
         try:
             # save output file in data dict
@@ -165,8 +175,8 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
         except:
             pass
 
+    
     return data
-
 
 
 def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None, maxCombs=None, listCombs=None):
