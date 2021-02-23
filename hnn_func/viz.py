@@ -42,7 +42,6 @@ def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core')
         The matplotlib figure handle.
     """
     import matplotlib.pyplot as plt
-
     
     if method == 'hnn-core':
 
@@ -72,13 +71,33 @@ def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core')
 
 def plot_spike_raster(trials_data, **kwargs):
     if len(trials_data) > 0:
+
+        if 'include' not in kwargs:
+            kwargs['include'] = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+
+        if 'popColors' not in kwargs:
+            kwargs['popColors'] = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
+                        'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
+
+        if 'markerSize' not in kwargs: 
+            kwargs['markerSize'] = 6
+        
+        if 'orderInverse' not in kwargs:
+            kwargs['orderInverse'] = True
+
+        if 'showFig' not in kwargs:
+            kwargs['showFig'] = True
+
+        if 'timeRange' not in kwargs:
+            kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
+
         sim.initialize()
         sim.loadNet(None, data=trials_data[0])
 
         for trial_data in trials_data.values():
             sim.loadSimData(filename=None, data=trial_data)
             try:
-                fig, data = sim.analysis.plotRaster()
+                fig, data = sim.analysis.iplotRaster(**kwargs)
             except:
                 fig, data = -1, {}
 
@@ -86,6 +105,30 @@ def plot_spike_raster(trials_data, **kwargs):
 
 
 def plot_spike_hist(trials_data, **kwargs):
+
+    if 'include' not in kwargs:
+        pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+        evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
+                'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
+        evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
+        kwargs['include'] = [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal']
+
+    if 'legendLabels' not in kwargs:
+        kwargs['legendLabels'] = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr', 'Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal']
+
+    if 'popColors' not in kwargs:
+        kwargs['popColors'] = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
+                    'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
+
+    if 'yaxis' not in kwargs:
+        kwargs['yaxis'] = 'count'
+
+    if 'showFig' not in kwargs:
+        kwargs['showFig'] = True
+
+    if 'timeRange' not in kwargs:
+        kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
+
     if len(trials_data) > 0:
         sim.initialize()
         sim.loadNet(None, data=trials_data[0])
@@ -93,7 +136,7 @@ def plot_spike_hist(trials_data, **kwargs):
         for trial_data in trials_data.values():
             sim.loadSimData(filename=None, data=trial_data)
             try:
-                fig, data = sim.analysis.plotSpikeHist()
+                fig, data = sim.analysis.iplotSpikeHist(**kwargs)
             except:
                 fig, data = -1, {}
 
@@ -101,6 +144,9 @@ def plot_spike_hist(trials_data, **kwargs):
 
 
 def netpyne_plot(func_name, trials_data, **kwargs):
+
+    if 'timeRange' not in kwargs:
+        kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
 
     if len(trials_data) > 0:
         sim.initialize()
@@ -115,13 +161,31 @@ def netpyne_plot(func_name, trials_data, **kwargs):
     return fig
 
 
-'''
-fig = plt.figure()
-f2 = plt.figure()
-plt.plot([1,2], [1,2])
-f2.axes[0].figure=fig
-fig.add_subplot(f2.axes[0])
-plt.show()
+pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
+  'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
+evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
 
-from ax can get fig
+popColors = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
+    'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
+
+'''
+cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 
+							  'showFig': True, 'timeRange': [0, cfg.duration]}
+
+cfg.analysis['iplotRaster'] = {'include': pops, 'showFig': True, 'popColors': popColors, 'markerSize': 6, 'orderInverse': True}
+
+cfg.analysis['iplotSpikeHist'] = {'include': [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal'], 'legendLabels': pops + ['Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal'], 'popColors': popColors, 'yaxis': 'count', 'showFig': True}
+
+cfg.analysis['iplotDipole'] = {'showFig': True}
+
+cfg.analysis['iplotDipolePSD'] = {'showFig': True, 'maxFreq': 80}  # change freq to 40 for alpha&beta tut
+
+cfg.analysis['iplotDipoleSpectrogram'] = {'showFig': True, 'maxFreq': 80} # change freq to 40 for alpha&beta tut
+
+# cfg.analysis['iplotConn'] = {'includePre': pops, 'includePost': pops, 'feature': 'strength'}
+
+# cfg.analysis['iplotLFP'] = {'showFig': True}
+
+#cfg.analysis['iplotRatePSD'] = {'include': pops, 'showFig': True}
 '''

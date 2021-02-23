@@ -107,7 +107,7 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
                 'cores': n_cores, 
                 'skip': False}
 
-    b.run() 
+    #b.run() 
 
     # read data from batch output files 
     data = read_trials_data(model_folder+'/data/', b.batchLabel, n_trials)
@@ -128,7 +128,7 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
             dpl_trial = Dipole(np.array(trial_data['simData']['t']), np.array(dpl_data).T)
             dpl_trial.post_proc(cfg_params.hnn_params['N_pyr_x'],
                                 cfg_params.hnn_params['N_pyr_y'], 
-                                cfg_params.hnn_params['dipole_smooth_win'],
+                                cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
                                 cfg_params.hnn_params['dipole_scalefctr'])
             dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
             dpls.append(dpl_trial)
