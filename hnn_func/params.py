@@ -38,7 +38,6 @@ def read_params(model_folder, params_fname):
     sys.path.insert(1, model_folder)
 
     from cfg import cfg as cfg_params
-    from netParams import netParams as net_params
 
     # update cfg_params based on hnn params file
     split_fname = op.splitext(params_fname)
@@ -60,7 +59,7 @@ def read_params(model_folder, params_fname):
     cfg_params.model_folder = model_folder
     cfg_params.params_fname = params_fname
 
-    return cfg_params, net_params
+    return cfg_params
 
 
 def _read_json(fname, cfg):
@@ -124,4 +123,7 @@ def _read_legacy_params (params_fname, cfg, exclude = []):
             cfg.hnn_params[k] = v
     if 'duration' not in exclude:
         cfg.duration = cfg.hnn_params['tstop']
+    if 'dt' not in exclude:
+        cfg.dt = cfg.hnn_params['dt']
+
     return cfg

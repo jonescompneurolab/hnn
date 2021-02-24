@@ -17,63 +17,6 @@ def _hammfilt(x, winsz):
     return convolve(x, win, 'same')
 
 
-def simulate_dipole(net, n_trials=None, record_vsoma=False,
-                    record_isoma=False, postproc=True):
-    """Simulate a dipole given the experiment parameters.
-
-    Parameters
-    ----------
-    net : Network object
-        The Network object specifying how cells are
-        connected.
-    n_trials : int | None
-        The number of trials to simulate. If None the value in
-        net.params['N_trials'] will be used
-    record_vsoma : bool
-        Option to record somatic voltages from cells
-    record_isoma : bool
-        Option to record somatic currents from cells
-    postproc : bool
-        If False, no postprocessing applied to the dipole
-
-    Returns
-    -------
-    dpls: list
-        List of dipole objects for each trials
-    """
-
-    from .parallel_backends import _BACKEND, JoblibBackend
-
-    if _BACKEND is None:
-        _BACKEND = JoblibBackend(n_jobs=1)
-
-    if n_trials is not None:
-        net.params['N_trials'] = n_trials
-        # need to redo these if n_trials changed after net.__init__()!
-        net._instantiate_feeds(n_trials=n_trials)
-    else:
-        n_trials = net.params['N_trials']
-
-    if n_trials < 1:
-        raise ValueError("Invalid number of simulations: %d" % n_trials)
-
-    if isinstance(record_vsoma, bool):
-        net.params['record_vsoma'] = record_vsoma
-    else:
-        raise TypeError("record_vsoma must be bool, got %s"
-                        % type(record_vsoma).__name__)
-
-    if isinstance(record_isoma, bool):
-        net.params['record_isoma'] = record_isoma
-    else:
-        raise TypeError("record_isoma must be bool, got %s"
-                        % type(record_isoma).__name__)
-
-    dpls = _BACKEND.simulate(net, postproc)
-
-    return dpls
-
-
 def read_dipole(fname, units='nAm'):
     """Read dipole values from a file and create a Dipole instance.
 

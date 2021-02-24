@@ -14,10 +14,22 @@ from netpyne import sim
 
 # viz file
 def plot_cells(pops=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], iv = False):
-    sim.analysis.plotShape(includePost=pops, iv=iv)
 
-    # add options to plot from data passed as arguments of from saved file 
+    # create list of segement colors based on cell gid  
+    try:
+        cvals = []
+        for cell in sim.net.cells:
+            if cell.tags['pop'] in pops:
+                for sec in cell.secs.values():
+                    cvals.extend([cell.gid] * sec['hObj'].nseg) # [pops.index(cell.tags['pop'])] *sec['hObj'].nseg ) 
+    except:
+        cvals = None
 
+    # plot morphology of net cells
+    fig, data = sim.analysis.plotShape(includePost=pops, iv=iv, cvals=cvals, elev=110, azim=-80)
+
+    return fig
+    
 
 def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core'):
     """Simple layer-specific plot function.
@@ -44,23 +56,23 @@ def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core')
     import matplotlib.pyplot as plt
     
     if method == 'hnn-core':
+        # plot dipoles
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
+        
+        for trial_data in trials_data:
+            dpl_trial = trial_data.get('dpl', None)
 
-        dpls = trials_data.get('dpls', None)
+            if dpl_trial:
 
-        if dpls:
-            # plot dipoles
-            if ax is None:
-                fig, ax = plt.subplots(1, 1)
-
-            for dpl_trial in dpls:
                 if layer in dpl_trial.data.keys():
                     ax.plot(dpl_trial.times, dpl_trial.data[layer])
 
-            ax.set_xlabel('Time (ms)')
-            ax.set_title(layer)
+                ax.set_xlabel('Time (ms)')
+                ax.set_title(layer)
 
-            if show:
-                plt.show()
+        if show:
+            plt.show()
 
     elif method == 'netpyne':
         # sim.analysis.iplotDipole()
@@ -88,13 +100,16 @@ def plot_spike_raster(trials_data, **kwargs):
         if 'showFig' not in kwargs:
             kwargs['showFig'] = True
 
+        if 'saveFig' not in kwargs:
+            kwargs['saveFig'] = False
+
         if 'timeRange' not in kwargs:
             kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
 
         sim.initialize()
         sim.loadNet(None, data=trials_data[0])
 
-        for trial_data in trials_data.values():
+        for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
             try:
                 fig, data = sim.analysis.iplotRaster(**kwargs)
@@ -105,35 +120,38 @@ def plot_spike_raster(trials_data, **kwargs):
 
 
 def plot_spike_hist(trials_data, **kwargs):
-
-    if 'include' not in kwargs:
-        pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
-        evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
-                'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
-        evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
-        kwargs['include'] = [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal']
-
-    if 'legendLabels' not in kwargs:
-        kwargs['legendLabels'] = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr', 'Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal']
-
-    if 'popColors' not in kwargs:
-        kwargs['popColors'] = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
-                    'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
-
-    if 'yaxis' not in kwargs:
-        kwargs['yaxis'] = 'count'
-
-    if 'showFig' not in kwargs:
-        kwargs['showFig'] = True
-
-    if 'timeRange' not in kwargs:
-        kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
-
     if len(trials_data) > 0:
+
+        if 'include' not in kwargs:
+            pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
+            evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
+                    'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
+            evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
+            kwargs['include'] = [*pops, evprox, evdist, 'extRhythmicProximal', 'extRhythmicDistal']
+
+        if 'legendLabels' not in kwargs:
+            kwargs['legendLabels'] = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr', 'Evoked proximal', 'Evoked distal', 'Rhythmic proximal', 'Rhythmic distal']
+
+        if 'popColors' not in kwargs:
+            kwargs['popColors'] = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
+                        'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
+
+        if 'yaxis' not in kwargs:
+            kwargs['yaxis'] = 'count'
+
+        if 'showFig' not in kwargs:
+            kwargs['showFig'] = True
+
+        if 'saveFig' not in kwargs:
+            kwargs['saveFig'] = False   
+
+        if 'timeRange' not in kwargs:
+            kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
+
         sim.initialize()
         sim.loadNet(None, data=trials_data[0])
 
-        for trial_data in trials_data.values():
+        for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
             try:
                 fig, data = sim.analysis.iplotSpikeHist(**kwargs)
@@ -144,15 +162,15 @@ def plot_spike_hist(trials_data, **kwargs):
 
 
 def netpyne_plot(func_name, trials_data, **kwargs):
-
-    if 'timeRange' not in kwargs:
-        kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
-
     if len(trials_data) > 0:
+
+        if 'timeRange' not in kwargs:
+            kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
+
         sim.initialize()
         sim.loadNet(None, data=trials_data[0])
 
-        for trial_data in trials_data.values():
+        for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
             try:
                 fig, data = getattr(sim.analysis, 'func_name')(**kwargs)
@@ -160,14 +178,6 @@ def netpyne_plot(func_name, trials_data, **kwargs):
                 fig, data = -1, {}
     return fig
 
-
-pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
-evprox = ['evokedProximal_1_L2Basket', 'evokedProximal_1_L2Pyr', 'evokedProximal_1_L5Basket', 'evokedProximal_1_L5Pyr',
-  'evokedProximal_2_L2Basket', 'evokedProximal_2_L2Pyr', 'evokedProximal_2_L5Basket', 'evokedProximal_2_L5Pyr']
-evdist = ['evokedDistal_1_L2Basket', 'evokedDistal_1_L2Pyr', 'evokedDistal_1_L5Basket', 'evokedDistal_1_L5Pyr']
-
-popColors = {'L2Basket': [0.0, 0.0, 0.0], 'L2Pyr': [0.0, 0.6, 0.0], 'L5Basket': [0.0, 0.0, 1.0], 'L5Pyr': [1.0, 0.0, 0.0],
-    'Evoked proximal': [0.0, 1.0, 1.0], 'Evoked distal': [1.0, 1.0, 0.0]}
 
 '''
 cfg.analysis['iplotTraces'] = {'include': [('L5Pyr',0) ], 'oneFigPer': 'cell', 'saveFig': False, 

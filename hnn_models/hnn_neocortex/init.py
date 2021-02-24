@@ -14,7 +14,5 @@ hnn_func.load_custom_mechanisms(os.path.dirname(__file__))
 
 from netpyne import sim
 cfg, netParams = sim.readCmdLineArgs(simConfigDefault='cfg.py', netParamsDefault='netParams.py')
-sim.create(netParams, cfg)
-sim.simulate()
-sim.analyze()
+sim.createSimulateAnalyze(netParams, cfg)
 sys.exit()

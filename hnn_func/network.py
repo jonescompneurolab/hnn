@@ -15,19 +15,32 @@ from neuron import h
 from netpyne import sim, specs
 
 
-def create_network(cfg_params, net_params, createNEURONObj=True):
+def create_network(cfg_params, createNEURONObj=True, xzScaling=100):
 
+    # option to create NEURON objects or just 
     if createNEURONObj:
         cfg_params.createNEURONObj = True
         load_custom_mechanisms(cfg_params.model_folder)
     else:
         cfg_params.createNEURONObj = False
+    
+    # ensure cell sections are stored so can be plotted
+    cfg_params.saveCellSecs = True  
+    
+    # param to fix hnn model horizontal spacing of 1um (for visualization) 
+    xzScaling_orig = cfg_params.xzScaling    
+    cfg_params.xzScaling = xzScaling  
 
+    # create network
+    from netParams import netParams as net_params
     sim.initialize(simConfig=cfg_params, netParams=net_params)  
     sim.net.createPops()
     sim.net.createCells()
     sim.net.addStims()
     sim.gatherData()
+
+    # restore original param
+    cfg_params.xzScaling = xzScaling_orig
 
     return sim.net
 
@@ -76,7 +89,7 @@ def load_custom_mechanisms(folder=''):
 
 
 
-def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
+def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True):
 
     from netpyne.batch import Batch
 
@@ -110,9 +123,7 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
     if postproc:
         from .dipole import Dipole
 
-        dpls = []
-
-        for i, trial_data in data.items():
+        for i, trial_data in enumerate(data):
             trial_data['simData']['dipole']['L2'][0] = 0
             trial_data['simData']['dipole']['L5'][0] = 0
             
@@ -125,17 +136,14 @@ def simulate_trials(cfg_params, net_params, n_trials, n_cores=1, postproc=True):
                                 cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
                                 cfg_params.hnn_params['dipole_scalefctr'])
             dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
-            dpls.append(dpl_trial)
-
-        data['dpls'] = dpls
-
+            trial_data['dpl'] = dpl_trial
 
     return data    
 
 
 def read_trials_data(dataFolder, batchLabel, n_trials):
     
-    data = {}
+    data = []
     
     # read vars from all files - store in dict 
     for i in range(n_trials):
@@ -154,24 +162,38 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
 
         try:
             # save output file in data dict
-            data[i] = {}  
+            trial_data = {}  
 
             for key in output.keys():
                 if isinstance(key, tuple):
                     container = output
                     for ikey in range(len(key)-1):
                         container = container[key[ikey]]
-                    data[i][key[1]] = container[key[-1]]
+                    trial_data[key[1]] = container[key[-1]]
 
                 elif isinstance(key, str): 
-                    data[i][key] = output[key]
+                    trial_data[key] = output[key]
+
+            data.append(trial_data)
         except:
             pass
 
-    
     return data
 
 
+def mean_rates(trials_data, mean_type='all'): 
+
+    if mean_type == 'all':
+        mean_rates_values = np.mean([list(trial_data['simData']['popRates'].values()) for trial_data in trials_data], 0)
+        mean_rates = dict(zip(trials_data[0]['simData']['popRates'].keys(), mean_rates_values)) 
+
+    elif mean_type == 'trial':
+        mean_rates = [trial_data['simData']['popRates'] for trial_data in trials_data]
+        
+    return mean_rates
+
+
+'''
 def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None, maxCombs=None, listCombs=None):
     # load from previously saved file with all data
     if loadAll:
@@ -268,3 +290,4 @@ def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None
                 json.dump(dataSave, fileObj)
         
         return params, data
+'''

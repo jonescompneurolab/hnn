@@ -1025,7 +1025,8 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': conn1to1Pyr,
+                #'connList': conn1to1Pyr,
+                'divergence': p['div_'+skey+'_L2Pyr'],
                 'synsPerConn': 1,
                 'sec': 'apical_tuft'}
 
@@ -1047,7 +1048,8 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': conn1to1Pyr,
+                #'connList': conn1to1Pyr,
+                'divergence': p['div_'+skey+'_L5Pyr'],
                 'synsPerConn': 1,
                 'sec': 'apical_tuft'}
 
@@ -1069,7 +1071,8 @@ if cfg.evokedInputs:
                 'synMech': synParams['synMech'],
                 'weight': weightDistFunc.format(**synParams),
                 'delay': delayDistFunc.format(**synParams),
-                'connList': conn1to1Basket,
+                #'connList': conn1to1Basket,
+                'divergence': p['div_'+skey+'_L2Basket'],
                 'synsPerConn': 1,
                 'sec': 'soma'}
 
