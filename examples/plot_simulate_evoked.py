@@ -26,7 +26,7 @@ print(cfg_params.hnn_params)
 
 net = create_network(cfg_params) 
 
-plot_cells()
+plot_cells(net)
 
 trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=2) 
 

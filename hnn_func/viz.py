@@ -13,20 +13,23 @@ from pprint import pprint as print
 from netpyne import sim
 
 # viz file
-def plot_cells(pops=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], iv = False):
+def plot_cells(net, pops=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], iv = False):
 
     # create list of segement colors based on cell gid  
     try:
         cvals = []
-        for cell in sim.net.cells:
+        for cell in net.cells:
             if cell.tags['pop'] in pops:
                 for sec in cell.secs.values():
                     cvals.extend([cell.gid] * sec['hObj'].nseg) # [pops.index(cell.tags['pop'])] *sec['hObj'].nseg ) 
     except:
         cvals = None
 
+    # currently using sim.net and assuming already instantiated; make more flexible by using sim.loadNet:
+    # sim.loadNet(None, data={'net': {'cells': net.allCells, 'pops': net.allPops}}, instantiate=True)  
+
     # plot morphology of net cells
-    fig, data = sim.analysis.plotShape(includePost=pops, iv=iv, cvals=cvals, elev=110, azim=-80)
+    fig, data = sim.analysis.plotShape(includePost=pops, iv=iv, cvals=cvals, elev=125, azim=-115)
 
     return fig
     
@@ -107,7 +110,8 @@ def plot_spike_raster(trials_data, **kwargs):
             kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
 
         sim.initialize()
-        sim.loadNet(None, data=trials_data[0])
+        sim.loadNet(None, data=trials_data[0], instantiate=False)
+        sim.loadSimCfg(None, data=trials_data[0])
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
@@ -149,7 +153,8 @@ def plot_spike_hist(trials_data, **kwargs):
             kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
 
         sim.initialize()
-        sim.loadNet(None, data=trials_data[0])
+        sim.loadNet(None, data=trials_data[0], instantiate=False)
+        sim.loadSimCfg(None, data=trials_data[0])
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
@@ -164,16 +169,15 @@ def plot_spike_hist(trials_data, **kwargs):
 def netpyne_plot(func_name, trials_data, **kwargs):
     if len(trials_data) > 0:
 
-        if 'timeRange' not in kwargs:
-            kwargs['timeRange'] = [0, trials_data[0]['simConfig']['duration']]
-
         sim.initialize()
-        sim.loadNet(None, data=trials_data[0])
+        sim.loadNet(None, data=trials_data[0], instantiate=False)
+        sim.loadSimCfg(None, data=trials_data[0])
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
+
             try:
-                fig, data = getattr(sim.analysis, 'func_name')(**kwargs)
+                fig, data = getattr(sim.analysis, func_name)(**kwargs)
             except:
                 fig, data = -1, {}
     return fig

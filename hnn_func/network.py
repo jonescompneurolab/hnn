@@ -91,7 +91,7 @@ def load_custom_mechanisms(folder=''):
 
 
 
-def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True):
+def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=False):
 
     from netpyne.batch import Batch
 
@@ -116,7 +116,8 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True):
                 'cores': n_cores, 
                 'skip': False}
 
-    b.run() 
+    if not only_read:
+        b.run() 
 
     # read data from batch output files 
     data = read_trials_data(model_folder+'/data/', b.batchLabel, n_trials)
