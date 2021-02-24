@@ -25,7 +25,7 @@ UNITS {
 
 ASSIGNED {
     ia (nA)
-    ri (Mohm)
+    ri (Mohm)     : internal resistance
     pv (mV)
     v (mV)
     ztan (um)

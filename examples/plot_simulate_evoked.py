@@ -22,29 +22,28 @@ from hnn_func.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_
 
 cfg_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/ERPYes1Trial.param') 
 
-# print(cfg_params.hnn_params)
+print(cfg_params.hnn_params)
 
-#net = create_network(cfg_params) 
+net = create_network(cfg_params) 
 
-#plot_cells()
+plot_cells()
 
-trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=1) 
+trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=2) 
 
-# plot_dipole(trials_data)
+plot_dipole(trials_data)
+plot_spike_hist(trials_data)
+plot_spike_raster(trials_data)
 
-# plot_spike_hist(trials_data)
+all_rates = mean_rates(trials_data, mean_type='all')
+print('Mean spike rates across trials: \n', all_rates)
 
-# plot_spike_raster(trials_data)
+trial_rates = mean_rates(trials_data, mean_type='trial')
+print('Mean spike rates for individual trials: \n', trial_rates)
 
-# all_rates = mean_rates(trials_data, mean_type='all')
-# print('Mean spike rates across trials: \n', all_rates)
+cfg_params.hnn_params['sync_evinput'] = True  # alternatively can use dict.update()
+trials_data_sync = simulate_trials(cfg_params, n_trials=1, n_cores=4)
 
-# trial_rates = mean_rates(trials_data, mean_type='trial')
-# print('Mean spike rates for individual trials: \n', trial_rates)
-
-# cfg_params.hnn_params['sync_evinput'] = True  # alternatively can use dict.update()
-# trials_data_sync = simulate_trials(cfg_params, n_trials=1, n_cores=4)
-# plot_dipole(trials_data_sync)
-# plot_spike_hist(trials_data_sync)
-# plot_spike_raster(trials_data_sync)
+plot_dipole(trials_data_sync)
+plot_spike_hist(trials_data_sync)
+plot_spike_raster(trials_data_sync)
 

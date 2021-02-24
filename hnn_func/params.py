@@ -124,6 +124,6 @@ def _read_legacy_params (params_fname, cfg, exclude = []):
     if 'duration' not in exclude:
         cfg.duration = cfg.hnn_params['tstop']
     if 'dt' not in exclude:
-        cfg.dt = cfg.hnn_params['dt']
+        cfg.dt = cfg.recordStep = cfg.hnn_params['dt']
 
     return cfg

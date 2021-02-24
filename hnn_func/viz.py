@@ -116,7 +116,7 @@ def plot_spike_raster(trials_data, **kwargs):
             except:
                 fig, data = -1, {}
 
-    return fig
+    return 1
 
 
 def plot_spike_hist(trials_data, **kwargs):

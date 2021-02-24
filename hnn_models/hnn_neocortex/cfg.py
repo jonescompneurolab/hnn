@@ -46,7 +46,7 @@ cfg.checkErrors = False # True # leave as False to avoid extra printouts
 cfg.recordTraces = {'V_soma': {'sec': 'soma', 'loc': 0.5, 'var': 'v'}}
 cfg.recordCells = [('L2Basket',0), ('L2Pyr',0), ('L5Basket',0), ('L5Pyr',0)]  
 cfg.recordStims = False  
-cfg.recordStep = 0.1 #0.025
+cfg.recordStep = 0.025
 cfg.recordDipoles = {'L2': ['L2Pyr'], 'L5': ['L5Pyr']}
 
 # cfg.recordLFP = [[50, 50, 50], [50, 1300, 50]]
@@ -138,7 +138,7 @@ cfg.IIgain = 1.0
 cfg.hnn_params = {}
 
 cfg.hnn_params['tstop'] = cfg.duration 
-cfg.hnn_params['dt'] = cfg.dt = 0.1  # 0.025
+cfg.hnn_params['dt'] = cfg.dt = 0.025
 cfg.hnn_params['celsius'] = cfg.hParams['celsius'] = 37.0
 cfg.hnn_params['threshold'] = 0.0 # firing threshold (sets netParams.defaultThreshold)
 

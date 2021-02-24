@@ -15,7 +15,7 @@ from neuron import h
 from netpyne import sim, specs
 
 
-def create_network(cfg_params, createNEURONObj=True, xzScaling=100):
+def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=100):
 
     # option to create NEURON objects or just 
     if createNEURONObj:
@@ -36,7 +36,9 @@ def create_network(cfg_params, createNEURONObj=True, xzScaling=100):
     sim.initialize(simConfig=cfg_params, netParams=net_params)  
     sim.net.createPops()
     sim.net.createCells()
-    sim.net.addStims()
+    if addConns: 
+        sim.cfg.saveCellConns = True
+        sim.net.connectCells()
     sim.gatherData()
 
     # restore original param
