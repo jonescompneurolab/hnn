@@ -7,6 +7,7 @@ Contributors: salvadordura@gmail.com
 """
 
 import json
+import os
 from netpyne import specs
 
 # ############################################################################
@@ -15,8 +16,12 @@ from netpyne import specs
 #
 # ############################################################################
 
-with open('cfg_small.json', 'r') as f:
+root = os.path.dirname(__file__) + '/'
+
+with open(root+'cfg_small.json', 'r') as f:
     data = json.load(f)
 
 cfg = specs.SimConfig(data['simConfig'])  
+
+cfg.hnn_params = {'prng_seedcore': 1}
 

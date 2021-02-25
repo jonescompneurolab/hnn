@@ -59,7 +59,7 @@ cfg.sim_prefix = cfg.simLabel = 'default'
 cfg.saveFolder = '.'
 cfg.savePickle = True
 cfg.saveJson = False
-cfg.saveDataInclude = ['simData', 'simConfig', 'net'] #, 'netParams', 'net']
+cfg.saveDataInclude = ['simData', 'simConfig', 'net', 'netParams']
 cfg.saveCellSecs = False
 cfg.saveCellConns = False
 

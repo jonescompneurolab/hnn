@@ -169,9 +169,22 @@ def plot_spike_hist(trials_data, **kwargs):
 def plot_LFP(trials_data, **kwargs):
     if len(trials_data) > 0:
 
-        sim.initialize()
-        sim.loadNet(None, data=trials_data[0], instantiate=True)
-        sim.loadSimCfg(None, data=trials_data[0])
+        from netpyne import specs
+
+        # sim.initialize()
+        # sim.loadNet(None, data=trials_data[0], instantiate=False)
+        # sim.loadSimCfg(None, data=trials_data[0])
+
+        cfg = specs.SimConfig(trials_data[0]['simConfig'])
+        cfg.createNEURONObj = False
+
+        sim.initialize()  # create network object and set cfg and net params
+        sim.loadAll('', data=trials_data[0], instantiate=False)
+        sim.setSimCfg(cfg)
+        sim.net.createPops()     
+        sim.net.createCells()
+        sim.setupRecording()
+        sim.gatherData() 
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
@@ -186,17 +199,12 @@ def plot_LFP(trials_data, **kwargs):
 def netpyne_plot(func_name, trials_data, **kwargs):
     if len(trials_data) > 0:
 
-        import IPython; IPython.embed()
-        
         sim.initialize()
         sim.loadNet(None, data=trials_data[0], instantiate=False)
         sim.loadSimCfg(None, data=trials_data[0])
-        sim.setupRecording()
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
-
-            import IPython; IPython.embed()
 
             try:
                 fig, data = getattr(sim.analysis, func_name)(**kwargs)

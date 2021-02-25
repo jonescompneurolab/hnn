@@ -8,7 +8,7 @@ HNN-core.
 """
 
 
-# Let us import hnn_func
+# Let us import hnn_api
 from hnn_api import read_params, create_network, simulate_trials, mean_rates
 from hnn_api.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
 

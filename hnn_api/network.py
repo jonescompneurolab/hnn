@@ -28,7 +28,7 @@ def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=1
     saveCellSecs_orig = cfg_params.saveCellSecs  
     cfg_params.saveCellSecs = True  
     
-    # param to fix hnn model horizontal spacing of 1um (for visualization) 
+    # param to fix hnn model horizontal spacing of 1um (hack for visualization) 
     xzScaling_orig = cfg_params.xzScaling    
     cfg_params.xzScaling = xzScaling  
 
@@ -99,7 +99,10 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
     from netpyne import sim
     from netpyne.batch import Batch
     
-    sim.clearAll()
+    try:
+        sim.clearAll()
+    except:
+        pass
     
     model_folder = cfg_params.model_folder
     

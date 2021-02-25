@@ -17,12 +17,9 @@ except:
 import numpy as np
 import itertools as it
 import json
+import os
 
 from netpyne import specs
-
-with open('netParams_small.json', 'r') as f:
-    data = json.load(f)
-
 
 # ----------------------------------------------------------------------------
 #
@@ -30,8 +27,15 @@ with open('netParams_small.json', 'r') as f:
 #
 # ----------------------------------------------------------------------------
 
+root = os.path.dirname(__file__) + '../../'
+with open(root+'netParams_small.json', 'r') as f:
+    data = json.load(f)
+
 netParams = specs.NetParams(data['net']['params'])  # object of class NetParams to store the network parameters
 
 # add dipoles
 for cp in [v for k,v in netParams.cellParams.items() if 'IT' in k  or 'PT' in k or 'CT' in k]:
     cp['secs']['soma']['mechs']['dipole'] = {}  
+
+# set random seed
+cfg.seeds['input'] = cfg.hnn_params['prng_seedcore']
