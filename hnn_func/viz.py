@@ -29,7 +29,7 @@ def plot_cells(net, pops=['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket'], iv = False)
     # sim.loadNet(None, data={'net': {'cells': net.allCells, 'pops': net.allPops}}, instantiate=True)  
 
     # plot morphology of net cells
-    fig, data = sim.analysis.plotShape(includePost=pops, iv=iv, cvals=cvals, elev=125, azim=-115)
+    fig, data = sim.analysis.plotShape(includePost=pops, iv=iv, cvals=cvals, elev=125, azim=-115, showFig=True)
 
     return fig
     
@@ -166,15 +166,37 @@ def plot_spike_hist(trials_data, **kwargs):
     return fig
 
 
-def netpyne_plot(func_name, trials_data, **kwargs):
+def plot_LFP(trials_data, **kwargs):
     if len(trials_data) > 0:
 
         sim.initialize()
-        sim.loadNet(None, data=trials_data[0], instantiate=False)
+        sim.loadNet(None, data=trials_data[0], instantiate=True)
         sim.loadSimCfg(None, data=trials_data[0])
 
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
+            try:
+                fig, data = sim.analysis.plotLFP(**kwargs)
+            except:
+                fig, data = -1, {}
+
+    return fig
+
+
+def netpyne_plot(func_name, trials_data, **kwargs):
+    if len(trials_data) > 0:
+
+        import IPython; IPython.embed()
+        
+        sim.initialize()
+        sim.loadNet(None, data=trials_data[0], instantiate=False)
+        sim.loadSimCfg(None, data=trials_data[0])
+        sim.setupRecording()
+
+        for trial_data in trials_data:
+            sim.loadSimData(filename=None, data=trial_data)
+
+            import IPython; IPython.embed()
 
             try:
                 fig, data = getattr(sim.analysis, func_name)(**kwargs)

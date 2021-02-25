@@ -9,10 +9,14 @@ Contributors: salvadordura@gmail.com
 import hnn_func
 import os
 import sys
+from time import sleep
 
 hnn_func.load_custom_mechanisms(os.path.dirname(__file__))
 
 from netpyne import sim
 cfg, netParams = sim.readCmdLineArgs(simConfigDefault='cfg.py', netParamsDefault='netParams.py')
 sim.createSimulateAnalyze(netParams, cfg)
-sys.exit()
+while sim.pc.working():
+    sleep(1)
+if sim.pc.id() == 0:
+    sys.exit()

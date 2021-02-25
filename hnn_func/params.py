@@ -40,16 +40,17 @@ def read_params(model_folder, params_fname):
     from cfg import cfg as cfg_params
 
     # update cfg_params based on hnn params file
-    split_fname = op.splitext(params_fname)
-    ext = split_fname[1]
+    if len(params_fname) > 0:
+        split_fname = op.splitext(params_fname)
+        ext = split_fname[1]
 
-    if ext == '.json':
-        cfg_params = _read_json(model_folder+'/'+params_fname, cfg_params)
-    elif ext == '.param':
-        cfg_params = _read_legacy_params(model_folder+'/'+params_fname, cfg_params) 
-    else:
-        raise ValueError('Unrecognized extension, expected one of' +
-                         ' .json, .param. Got %s' % ext)
+        if ext == '.json':
+            cfg_params = _read_json(model_folder+'/'+params_fname, cfg_params)
+        elif ext == '.param':
+            cfg_params = _read_legacy_params(model_folder+'/'+params_fname, cfg_params) 
+        else:
+            raise ValueError('Unrecognized extension, expected one of' +
+                            ' .json, .param. Got %s' % ext)
 
     if len(cfg_params.__dict__) == 0:
         raise ValueError("Failed to read parameters from file: %s" %

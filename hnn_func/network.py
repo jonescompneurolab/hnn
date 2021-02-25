@@ -25,6 +25,7 @@ def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=1
         cfg_params.createNEURONObj = False
     
     # ensure cell sections are stored so can be plotted
+    saveCellSecs_orig = cfg_params.saveCellSecs  
     cfg_params.saveCellSecs = True  
     
     # param to fix hnn model horizontal spacing of 1um (for visualization) 
@@ -41,9 +42,11 @@ def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=1
         sim.net.connectCells()
     sim.gatherData()
 
-    # restore original param
+    # restore original param values
     cfg_params.xzScaling = xzScaling_orig
+    cfg_params.saveCellSecs = saveCellSecs_orig
 
+    
     return sim.net
 
 
@@ -93,8 +96,11 @@ def load_custom_mechanisms(folder=''):
 
 def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=False):
 
+    from netpyne import sim
     from netpyne.batch import Batch
-
+    
+    sim.clearAll()
+    
     model_folder = cfg_params.model_folder
     
     # setup and run netpyne batch with different seeds

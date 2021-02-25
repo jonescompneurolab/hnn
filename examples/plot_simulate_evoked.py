@@ -27,18 +27,20 @@ print(cfg_params.hnn_params)
 net = create_network(cfg_params) 
 
 plot_cells(net)
-
-trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=2) 
+    
+trials_data = simulate_trials(cfg_params, n_trials=2, n_cores=4) 
 
 plot_dipole(trials_data)
 plot_spike_hist(trials_data)
 plot_spike_raster(trials_data)
 
 all_rates = mean_rates(trials_data, mean_type='all')
-print('Mean spike rates across trials: \n', all_rates)
+print('Mean spike rates across trials: ') 
+print(all_rates)
 
 trial_rates = mean_rates(trials_data, mean_type='trial')
-print('Mean spike rates for individual trials: \n', trial_rates)
+print('Mean spike rates for individual trials: ')
+print(trial_rates)
 
 cfg_params.hnn_params['sync_evinput'] = True  # alternatively can use dict.update()
 trials_data_sync = simulate_trials(cfg_params, n_trials=1, n_cores=4)
