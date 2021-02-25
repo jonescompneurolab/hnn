@@ -16,8 +16,8 @@ Requires adding the hnn_func package to PYTHONPATH, e.g.:
 
 
 # Let us import hnn_func
-from hnn_func import read_params, create_network, simulate_trials, mean_rates
-from hnn_func.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
+from hnn_api import read_params, create_network, simulate_trials, mean_rates
+from hnn_api.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
 
 
 cfg_params = read_params(model_folder='../hnn_models/hnn_neocortex_divergence', params_fname='param/ERPYes1Trial.param') 

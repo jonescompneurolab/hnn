@@ -15,8 +15,8 @@ Requires adding the hnn_func package to PYTHONPATH, e.g.:
 """
 
 # Let us import hnn_func
-from hnn_func import read_params, create_network, simulate_trials, mean_rates
-from hnn_func.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, plot_LFP, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
+from hnn_api import read_params, create_network, simulate_trials, mean_rates
+from hnn_api.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, plot_LFP, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
 
 
 cfg_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/ERPYes1Trial.param') 
@@ -43,7 +43,7 @@ pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
 #netpyne_plot('iplotDipoleSpectrogram', trials_data, dpl={'L2': trials_data[0]['dpl'].data['L2'], 'L5': trials_data[0]['dpl'].data['L5']}, showFig=1)
 
 # LFP / CSD
-plot_LFP(trials_data, showFig= True)
+plot_LFP(trials_data, showFig = True)
 
 # granger causality
 #netpyne_plot('plotGranger', trials_data, showFig= True)
