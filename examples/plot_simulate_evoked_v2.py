@@ -54,7 +54,7 @@ netpyne_plot('granger', trials_data, cells1=['L2Pyr'], cells2=['L5Pyr'], label1=
 # batch explore params
 params_explore = {}
 params_explore[('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa')] = [0.05, 0.1]
-#params_explore[('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')] = [0.001, 0.005]
+params_explore[('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')] = [0.001, 0.005]
 
 explore_data = explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_read=False)
 

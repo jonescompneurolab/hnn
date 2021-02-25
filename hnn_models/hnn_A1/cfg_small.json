@@ -543,7 +543,7 @@
                 100
             ]
         ],
-        "recordStep": 0.1,
+        "recordStep": 0.05,
         "recordStim": false,
         "recordTime": false,
         "recordTraces": {
