@@ -27,7 +27,9 @@ from netpyne import specs
 #
 # ----------------------------------------------------------------------------
 
-root = os.path.dirname(__file__) + '../../'
+import hnn_api 
+
+root =  os.path.dirname(hnn_api.__file__)+'/../hnn_models/hnn_A1/'
 with open(root+'netParams_small.json', 'r') as f:
     data = json.load(f)
 

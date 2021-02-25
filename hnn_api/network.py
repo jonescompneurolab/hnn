@@ -136,8 +136,8 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
         from .dipole import Dipole
 
         for i, trial_data in enumerate(data):
-            trial_data['simData']['dipole']['L2'][0] = 0
-            trial_data['simData']['dipole']['L5'][0] = 0
+            for k in trial_data['simData']['dipole']:
+                trial_data['simData']['dipole'][k][0] = 0
             
             dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
                         np.array(trial_data['simData']['dipole']['L2']), 
@@ -153,8 +153,70 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
     return data    
 
 
+
+def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_read=False):
+
+    from netpyne import sim
+    from netpyne.batch import Batch
+    
+    try:
+        sim.clearAll()
+    except:
+        pass
+    
+    model_folder = cfg_params.model_folder
+    
+    # setup and run netpyne batch with different seeds
+
+    params = specs.ODict(params_explore)
+ 
+    b = Batch(params=params, 
+             cfgFile=model_folder+'/cfg.py', 
+             netParamsFile=model_folder+'/netParams.py', 
+             cfg=cfg_params)
+             
+    b.batchLabel = 'explore'
+    b.saveFolder = model_folder+'/data/'+b.batchLabel
+    b.method = 'grid'
+    b.runCfg = {'type': 'mpi_direct', 
+                'script': model_folder+'/init.py',
+                'cores': n_cores, 
+                'skip': False}
+
+    if not only_read:
+        b.run() 
+
+    # read data from batch output files 
+    params, data = read_batch_data(model_folder+'/data/', b.batchLabel)
+
+    # postprocess dipole data
+    '''
+    if postproc:
+        from .dipole import Dipole
+
+        for i, trial_data in enumerate(data):
+            trial_data['simData']['dipole']['L2'][0] = 0
+            trial_data['simData']['dipole']['L5'][0] = 0
+            
+            dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
+                        np.array(trial_data['simData']['dipole']['L2']), 
+                        np.array(trial_data['simData']['dipole']['L5'])]
+            dpl_trial = Dipole(np.array(trial_data['simData']['t']), np.array(dpl_data).T)
+            dpl_trial.post_proc(cfg_params.hnn_params['N_pyr_x'],
+                                cfg_params.hnn_params['N_pyr_y'], 
+                                cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
+                                cfg_params.hnn_params['dipole_scalefctr'])
+            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
+            trial_data['dpl'] = dpl_trial
+    '''
+    return data    
+
+
+
 def read_trials_data(dataFolder, batchLabel, n_trials):
     
+    from netpyne import specs
+
     data = []
     
     # read vars from all files - store in dict 
@@ -205,14 +267,17 @@ def mean_rates(trials_data, mean_type='all'):
     return mean_rates
 
 
-'''
-def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None, maxCombs=None, listCombs=None):
+
+def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None, maxCombs=None, listCombs=None):
+
+    from netpyne import specs
+
     # load from previously saved file with all data
     if loadAll:
         print('\nLoading single file with all data...')
         filename = '%s/%s/%s_allData.json' % (dataFolder, batchLabel, batchLabel)
         with open(filename, 'r') as fileObj:
-            dataLoad = json.load(fileObj, object_pairs_hook=OrderedDict)
+            dataLoad = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
         params = dataLoad['params']
         data = dataLoad['data']
         return params, data
@@ -255,7 +320,7 @@ def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None
                 if os.path.isfile(outFile+'.json'):
                     outFile = outFile + '.json'
                     with open(outFile, 'rb') as fileObj:
-                        output = json.load(fileObj, object_pairs_hook=OrderedDict)
+                        output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
                 elif os.path.isfile(outFile+'.pkl'):
                     outFile = outFile + '.pkl'
                     with open(outFile, 'rb') as fileObj:
@@ -302,4 +367,3 @@ def readBatchData(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=None
                 json.dump(dataSave, fileObj)
         
         return params, data
-'''
