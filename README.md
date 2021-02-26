@@ -59,7 +59,7 @@ Dependencies
 Installation
 ============
 
-We recommend the `Anaconda Python distribution <https://www.continuum.io/downloads>`_. To install ``hnn-core``, you first need to install its dependencies::
+We recommend the `Anaconda Python distribution <https://www.continuum.io/downloads>`_. To install ``hnn-core``, you first need to install its dependencies:
 
 	$ conda install numpy matplotlib scipy
 
@@ -74,6 +74,10 @@ You will then need to install NetPyNE:
 To obtain the latest version of the hnn2 code you will need to clone the "hnn2" branch of this repo::
 
 	$ git clone --single-branch --branch hnn2 https://github.com/jonescompneurolab/hnn.git hnn2
+
+Add hnn2 to PYTHONPATH, e.g.:
+
+	$ export PYTHONPATH=~/hnn2:$PYTHONPATH
 
 Compile the mod files of any model you are going to use, e.g.:
 
