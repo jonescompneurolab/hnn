@@ -10,7 +10,7 @@ HNN-core.
 
 # Let us import hnn_api
 from hnn_api import read_params, create_network, simulate_trials, mean_rates
-from hnn_api.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print #, plot_raster, plot_spike_hist, mean_rates
+from hnn_api.viz import plot_cells, plot_dipole, plot_spike_raster, plot_spike_hist, netpyne_plot, print 
 
 
 cfg_params = read_params(model_folder='../hnn_models/hnn_neocortex', params_fname='param/ERPYes1Trial.param') 
@@ -42,7 +42,6 @@ hnn_params.update({
 # Now let's simulate the dipole and plot it
 trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=2)
 plot_dipole(trials_data)
-
 
 ###############################################################################
 # We can confirm that what we simulate is indeed 10 Hz activity.
