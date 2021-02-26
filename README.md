@@ -14,20 +14,37 @@ circuit-level origin of some of the most commonly measured MEG/EEG and ECoG sign
 potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 
 
-hnn-netpyne
+hnn2
 ========
 
-This is the NetPyNE (www.netpyne.org) version of the HNN thalamocortical network model in the master branch of the HNN repository (https://github.com/jonescompneurolab/hnn).
+This is the proof-of-concept implementation of a NetPyNE-based HNN that enables it to work with any arbitrary model defined in NetPyNE (www.netpyne.org)  
 
-Advantages of the NetPyNE version include:
+Advantages of this NetPyNE-based HNN version include:
 
-1. Standardized clean model definition using a declarative language
-2. Easier to modify and extend (e.g. add a population, change connectivity, )
-3. Built-in visualization/analysis plots: connectivity, spike statistics, Granger causality, ...
-4. Record and plot LFP and CSD (raw signal, spectrogram, ...)
-5. Use NetPyNE GUI to modify/visualize model
-6. Automated parameter optimization/exploration (eg on HPCs via SLURM)
-7. Export to NeuroML and SONATA formats for sharing
+1. Disentangles HNN API from 2-layer neocortical model
+
+2. Can be used with other existing and customizable models (e.g. A1, M1, etc)
+
+3. Uses NetPyNE for model building/simulating (instead of NEURON directly) 
+	a. Standardized clean model definition using a declarative language
+	b. Easier to modify and extend (e.g. add a population, change connectivity, )
+	c. Built-in visualization/analysis plots: connectivity, spike statistics, Granger causality, ...
+	d. Record and plot LFP and CSD (raw signal, spectrogram, ...)
+	e. Use NetPyNE GUI to modify/visualize model
+	f. Automated parameter optimization/exploration (eg on HPCs via SLURM)
+	g. Export to NeuroML and SONATA formats for sharing
+
+
+The current proof-of-concept HNN API (hnn_api):
+
+- uses similar function calls to HNN-Core  
+- reproduces HNN-Core examples (e.g. /examples/plot_simulated_evoked.py)
+- works with new models: 
+	a. neocortex with divergence (/examples/plot_simulated_evoked_divergence.py) and 
+	b. auditory thalamocortical network (/examples/plot_simulated_A1.py))  
+- adds new features: plotting/analysis, parameter exploration, ...
+- can reuse much of the existing HNN-Core code (e.g. dipole, backends, …) 
+
 
 
 Dependencies
@@ -56,29 +73,18 @@ You will then need to install the 'dipole' branch of NetPyNE (this branch will s
 
 Finally, to obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
 
-	$ git clone --single-branch --branch netpyne https://github.com/jonescompneurolab/hnn.git 
+	$ git clone --single-branch --branch hnn2 https://github.com/jonescompneurolab/hnn.git 
 
-To check if everything worked fine, you can do::
+Compile the mod files of any model you are going to use, e.g.:
+    $ cd hnn2/hnn_models/hnn_neocortex/mod
+    $ nrnivmodl .
+	$ cd ..; ln -s mod/x86_64 x86_64
 
-    $ cd hnn/hnn-netpyne
-    $ nrnivmodl ../mod
-	$ python -i init.py
+Run any of the examples in the /examples folder:
+	$ cd hnn2/examples
+	$ python -i plot_simulate_examples.py
 
 which should run the simulation and produce some plots.
-
-Usage
-============
-
-The NetPyNE model is inside the */hnn-netpyne* folder, containing just 6 files:
-
-- *init.py*: code to run a single simulation  
-- *batch.py*: code to run multiple simulations for parameter exploration/optimization
-- *cfg.py*: simulation configuration options
-- *cellParams.py*: cell parameters 
-- *netParams.py*: network parameters
-- *utils.py*: utility functions 
-
-You can select what set of parameters (.param file) to run by modifying init.py, e.g. replace *cfgFile='../param/ERPYes100Trials.param'* with *cfgFile='../param/AlphaAndBeta.param'* . This will allow you to replicate the different HNN tutorials. 
 
 
 Bug reports
