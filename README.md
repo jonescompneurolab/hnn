@@ -67,24 +67,29 @@ Additionally, you will need NEURON which is available here: `https://neuron.yale
 
 	$ pip install neuron
 
-You will then need to install the 'dipole' branch of NetPyNE (this branch will soon be merged into the master branch of NetPyNE):
+You will then need to install NetPyNE:
 
     $ pip install netpyne
 
-Finally, to obtain the latest version of the hnn-netpyne code you will need to clone the "netpyne" branch of this repo::
+To obtain the latest version of the hnn2 code you will need to clone the "hnn2" branch of this repo::
 
-	$ git clone --single-branch --branch hnn2 https://github.com/jonescompneurolab/hnn.git 
+	$ git clone --single-branch --branch hnn2 https://github.com/jonescompneurolab/hnn.git hnn2
 
 Compile the mod files of any model you are going to use, e.g.:
+
     $ cd hnn2/hnn_models/hnn_neocortex/mod
+
     $ nrnivmodl .
+
 	$ cd ..; ln -s mod/x86_64 x86_64
 
 Run any of the examples in the /examples folder:
+
 	$ cd hnn2/examples
+
 	$ python -i plot_simulate_examples.py
 
-which should run the simulation and produce some plots.
+which should run the simulations and produce some plots.
 
 
 Bug reports
