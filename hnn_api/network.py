@@ -80,9 +80,9 @@ def load_custom_mechanisms(folder=''):
         return
 
     if platform.system() == 'Windows':
-        mech_fname = op.join(root+folder, 'mod', 'nrnmech.dll')
+        mech_fname = op.join(root+folder, 'nrnmech.dll')
     else:
-        mech_fname = op.join(root+folder, 'mod', 'x86_64',
+        mech_fname = op.join(root+folder, 'x86_64',
                              '.libs', 'libnrnmech.so')
     if not op.exists(mech_fname):
         raise FileNotFoundError(f'The file {mech_fname} could not be found')

@@ -81,11 +81,9 @@ Add hnn2 to PYTHONPATH, e.g.:
 
 Compile the mod files of any model you are going to use, e.g.:
 
-    $ cd hnn2/hnn_models/hnn_neocortex/mod
+    $ cd hnn2/hnn_models/hnn_neocortex
 
-    $ nrnivmodl .
-
-	$ cd ..; ln -s mod/x86_64 x86_64
+    $ nrnivmodl mod
 
 Run any of the examples in the /examples folder:
 
