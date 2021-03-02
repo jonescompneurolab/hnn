@@ -25,10 +25,23 @@ drawavgdpl = 1
 fontsize = plt.rcParams['font.size'] = 10
 
 
-def read_dpltrials(sim_dir):
-    """read dipole data files for individual trials"""
-    ldpl = []
+def get_dipoles_from_disk(sim_dir, ntrials):
+    """Read dipole trial data from disk
 
+    Parameters
+    ----------
+    sim_dir : str
+        Path of simulation data directory
+    ntrials : int
+        Number of trials expected to be read from disk
+
+    Returns
+    ----------
+    dpls: list of Dipole objects
+        List containing Dipoles of each trial
+    """
+
+    dpls = []
     dpl_fname_pattern = os.path.join(sim_dir, 'dpl_*.txt')
     glob_list = sorted(glob(str(dpl_fname_pattern)))
     if len(glob_list) == 0:
@@ -46,9 +59,16 @@ def read_dpltrials(sim_dir):
             if os.path.exists(sim_dir):
                 print('Warning: could not read file:', dipole_fn)
 
-        ldpl.append(dpl_trial)
+        dpls.append(dpl_trial)
 
-    return ldpl
+    if len(dpls) == 0:
+        print("Warning: no dipole(s) read from %s" % sim_dir)
+
+    if len(dpls) < ntrials:
+        print("Warning: only read %d of %d dipole files in %s" %
+              (len(dpls), ntrials, sim_dir))
+
+    return dpls
 
 
 def read_spectrials(sim_dir):
@@ -91,6 +111,7 @@ def read_spktrials(sim_dir, gid_ranges):
         print('Warning: could not read file:', spk_fname_pattern)
 
     return spikes
+
 
 def check_feeds_to_plot(feeds_from_spikes, params):
     # ensures synaptic weight > 0
@@ -247,7 +268,7 @@ class SimData(object):
         Parameters
         ----------
         paramfn : str
-            Simulation paramter filename
+            Simulation parameter filename
         params : dict
             Dictionary containing parameters
 
@@ -262,12 +283,8 @@ class SimData(object):
             self.update_sim_data(paramfn, params, None, None, None, None)
             return False
 
-        warning_message = 'Warning: could not read file:'
-
-        # dipoles
-        dpls = read_dpltrials(sim_dir)
+        dpls = get_dipoles_from_disk(sim_dir, params['N_trials'])
         if len(dpls) == 0:
-            print("Warning: no dipole(s) read from %s" % sim_dir)
             self.update_sim_data(paramfn, params, None, None, None, None)
             return False
         elif len(dpls) == 1:
@@ -275,10 +292,7 @@ class SimData(object):
         else:
             avg_dpl = average_dipoles(dpls)
 
-        if len(dpls) < params['N_trials']:
-            print("Warning: only read %d of %d dipole files in %s" %
-                  (len(dpls), params['N_trials'], sim_dir))
-
+        warning_message = 'Warning: could not read file:'
         # gid_ranges
         paramtxt_fn = get_fname(sim_dir, 'param')
         try:
@@ -304,7 +318,7 @@ class SimData(object):
                 print("Warning: no spec data read from %s" % sim_dir)
             elif len(spec) < params['N_trials']:
                 print("Warning: only read %d of %d spec files in %s" %
-                    (len(spec), params['N_trials'], sim_dir))
+                      (len(spec), params['N_trials'], sim_dir))
 
         self.update_sim_data(paramfn, params, dpls, avg_dpl, spikes,
                              gid_ranges, spec)
@@ -503,7 +517,7 @@ class SimData(object):
             dpl.plot(axdipole, 'agg', show=False)
             axdipole.set_xlim(xlim)
 
-            spec_fig_fn = get_fname(sim_dir, 'figspec', trial_idx, ntrial)
+            spec_fig_fn = get_fname(sim_dir, 'figspec', trial_idx)
             f.savefig(spec_fig_fn, dpi=300)
             plt.close(f)
 
@@ -549,7 +563,7 @@ class SimData(object):
             dpl.plot(axdipole, 'agg', show=False)
             axdipole.set_xlim(xlim)
 
-            dipole_fig_fn = get_fname(sim_dir, 'figdpl', trial_idx, ntrial)
+            dipole_fig_fn = get_fname(sim_dir, 'figdpl', trial_idx)
             f.savefig(dipole_fig_fn, dpi=300)
             plt.close(f)
 

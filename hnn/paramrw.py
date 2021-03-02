@@ -20,7 +20,7 @@ def get_output_dir():
     return os.path.join(base_dir, 'hnn_out')
 
 
-def get_fname(sim_dir, key, trial=0, ntrial=0):
+def get_fname(sim_dir, key, trial=None):
     """Build the file names using the old HNN scheme
 
     Parameters
@@ -31,11 +31,7 @@ def get_fname(sim_dir, key, trial=0, ntrial=0):
         A string describing the type of file (HNN specific)
     trial : int | None
         Trial number for which to generate files (separate files per trial).
-        If None is given, then trial number 0 is assumed.
-    ntrial : int | None
-        The total number of trials that are part of this simulation. If None
-        is given, then ntrial will be 0, which creates filenames without
-        the trial number suffix.
+        If None is given, then will use filename with trial suffix
 
     Returns
     ----------
@@ -59,12 +55,14 @@ def get_fname(sim_dir, key, trial=0, ntrial=0):
                  'param': ('param', '.txt'),
                  'vsoma': ('vsoma', '.pkl')}
 
-    if ntrial == 0 or key == 'param':
+    if trial == None or key == 'param':
         # param file currently identical for all trials
-        return os.path.join(sim_dir, datatypes[key][0] + datatypes[key][1])
+        fname = os.path.join(sim_dir, datatypes[key][0] + datatypes[key][1])
     else:
-        return os.path.join(sim_dir, datatypes[key][0] + '_' + str(trial) +
+        fname = os.path.join(sim_dir, datatypes[key][0] + '_' + str(trial) +
                        datatypes[key][1])
+
+    return fname
 
 
 def get_inputs(params):

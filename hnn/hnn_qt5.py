@@ -13,6 +13,7 @@ import traceback
 from subprocess import Popen
 from collections import namedtuple, OrderedDict
 from copy import deepcopy
+from glob import glob
 
 # External libraries
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication
@@ -38,6 +39,9 @@ from .run import RunSimThread, ParamSignal
 from .qt_lib import setscalegeom, setscalegeomcenter, getmplDPI, getscreengeom
 from .qt_lib import lookupresource, ClickLabel
 from .qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
+from .DataViewGUI import DataViewGUI
+from .visdipole import DipoleCanvas
+from .visspec import SpecViewGUI, SpecCanvas
 
 # TODO: These globals should be made configurable via the GUI
 drawindivrast = 0
@@ -908,7 +912,7 @@ class HelpDialog (QDialog):
     self.layout.addStretch(1)
 
     setscalegeom(self, 100, 100, 300, 100)
-    self.setWindowTitle('Help')    
+    self.setWindowTitle('Help')
 
 class SchematicDialog (QDialog):
   # class for holding model schematics (and parameter shortcuts)
@@ -1423,13 +1427,7 @@ class HNNGUI (QMainWindow):
       Popen(lcmd)  # nonblocking
 
     def showSpecPlot(self):
-      # start the spectrogram visualization process (separate window)
-      outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
-      outparamf = os.path.join(outdir,
-                              self.baseparamwin.params['sim_prefix'] +
-                              '.param')
-      lcmd = [getPyComm(), 'visspec.py',outparamf]
-      Popen(lcmd)  # nonblocking
+        SpecViewGUI(SpecCanvas, self.baseparamwin.params,'Spectrogram Viewer')
 
     def showRasterPlot(self):
       # start the raster plot visualization process (separate window)
@@ -1451,20 +1449,7 @@ class HNNGUI (QMainWindow):
       Popen(lcmd)  # nonblocking
 
     def showDipolePlot(self):
-      # start the dipole visualization process (separate window)
-
-      outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
-      dipole_file = os.path.join(outdir,'dpl.txt')
-      if os.path.isfile(dipole_file):
-        outparamf = os.path.join(outdir,
-                                self.baseparamwin.params['sim_prefix'] +
-                                '.param')
-        lcmd = [getPyComm(), 'visdipole.py',outparamf,dipole_file]
-      else:
-        QMessageBox.information(self, "HNN", "WARNING: no dipole data at %s" % dipole_file)
-        return
-
-      Popen(lcmd)  # nonblocking
+        DataViewGUI(DipoleCanvas, self.baseparamwin.params, 'Dipole Viewer')
 
     def showwaitsimwin(self):
       # show the wait sim window (has simulation log)
@@ -2097,13 +2082,11 @@ class HNNGUI (QMainWindow):
         spec_fns = []
         # save dipole for each trial and perform spectral analysis
         for trial_idx, dpl in enumerate(sim_data['dpls']):
-            dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx,
-                                  ntrial)
+            dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx)
             dpl.write(dipole_fn)
 
             if params['save_dpl']:
-                raw_dipole_fn = get_fname(sim_dir, 'rawdpl', trial_idx,
-                                          ntrial)
+                raw_dipole_fn = get_fname(sim_dir, 'rawdpl', trial_idx)
                 sim_data['raw_dpls'][trial_idx].write(raw_dipole_fn)
 
             if params['save_spec_data'] or \
@@ -2112,7 +2095,7 @@ class HNNGUI (QMainWindow):
                             'f_max': params['f_max_spec'],
                             'save_data': 1,
                             'runtype': 'parallel'}
-                spec_fn = get_fname(sim_dir, 'rawspec', trial_idx, ntrial)
+                spec_fn = get_fname(sim_dir, 'rawspec', trial_idx)
                 spec_fns.append(spec_fn)
 
                 # run the spectral analysis and save to spec_fn
