@@ -42,9 +42,9 @@ from .qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
 from .DataViewGUI import DataViewGUI
 from .visdipole import DipoleCanvas
 from .visspec import SpecViewGUI, SpecCanvas
+from .visrast import SpikeViewGUI, SpikeCanvas
 
 # TODO: These globals should be made configurable via the GUI
-drawindivrast = 0
 drawavgdpl = 0
 fontsize = plt.rcParams['font.size'] = 10
 
@@ -1427,29 +1427,16 @@ class HNNGUI (QMainWindow):
       Popen(lcmd)  # nonblocking
 
     def showSpecPlot(self):
-        SpecViewGUI(SpecCanvas, self.baseparamwin.params,'Spectrogram Viewer')
+        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        SpecViewGUI(SpecCanvas, self.baseparamwin.params, sim_data, 'Spectrogram Viewer')
 
     def showRasterPlot(self):
-      # start the raster plot visualization process (separate window)
-      global drawindivrast
-
-      outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
-      spikefile = os.path.join(outdir,'spk.txt')
-      if os.path.isfile(spikefile):
-        outparamf = os.path.join(outdir,
-                                self.baseparamwin.params['sim_prefix'] +
-                                '.param')
-        lcmd = [getPyComm(), 'visrast.py',outparamf,spikefile]
-      else:
-        QMessageBox.information(self, "HNN", "WARNING: no spiking data at %s" % spikefile)
-        return
-
-      if drawindivrast:
-        lcmd.append('indiv')
-      Popen(lcmd)  # nonblocking
+        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        SpikeViewGUI(SpikeCanvas, self.baseparamwin.params, sim_data, 'Spike Viewer')
 
     def showDipolePlot(self):
-        DataViewGUI(DipoleCanvas, self.baseparamwin.params, 'Dipole Viewer')
+        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        DataViewGUI(DipoleCanvas, self.baseparamwin.params, sim_data, 'Dipole Viewer')
 
     def showwaitsimwin(self):
       # show the wait sim window (has simulation log)

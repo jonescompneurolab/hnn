@@ -1,4 +1,9 @@
-import sys, os
+import sys
+import os
+import numpy as np
+from numpy import hamming
+from math import ceil
+
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
@@ -6,59 +11,33 @@ from PyQt5.QtWidgets import QCheckBox, QInputDialog
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-import pylab as plt
 from pylab import convolve
-from numpy import hamming
 import matplotlib.gridspec as gridspec
-import paramrw
-import spikefn
-from math import ceil
-from qt_lib import getmplDPI
+
+from .DataViewGUI import DataViewGUI
+from .paramrw import usingEvokedInputs, usingOngoingInputs, usingPoissonInputs, get_output_dir
+from .spikefn import ExtInputs
+from .qt_lib import getmplDPI
 
 from hnn_core import read_params, read_spikes
 
 #plt.rcParams['lines.markersize'] = 15
 plt.rcParams['lines.linewidth'] = 1
-rastmarksz = 5 # raster dot size
 fontsize = plt.rcParams['font.size'] = 10
+rastmarksz = 5 # raster dot size
+binsz = 5.0
+smoothsz = 0 # no smoothing
 
 # colors for the different cell types
 dclr = {'L2_pyramidal' : 'g',
         'L5_pyramidal' : 'r',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
-
-ntrial = 1; tstop = -1; outparamf = spkpath = paramf = ''; EvokedInputs = OngoingInputs = PoissonInputs = False; 
-
-for i in range(len(sys.argv)):
-  if sys.argv[i].endswith('.txt'):
-    spkpath = sys.argv[i]
-  elif sys.argv[i].endswith('.param'):
-    paramf = sys.argv[i]
-    print(paramf)
-    params = read_params(paramf)
-    tstop = params['tstop']
-    ntrial = params['N_trials']
-    EvokedInputs = paramrw.usingEvokedInputs(params)
-    OngoingInputs = paramrw.usingOngoingInputs(params)
-    PoissonInputs = paramrw.usingPoissonInputs(params)
-    outparamf = os.path.join(paramrw.get_output_dir(), 'data',
-                             params['sim_prefix'], 'param.txt')
-
-extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
-
-alldat = {}
-
-binsz = 5.0
-smoothsz = 0 # no smoothing
-
-bDrawHist = True # whether to draw histograms (spike counts per time)
 
 # box filter
 def boxfilt (x, winsz):
@@ -85,17 +64,13 @@ def adjustinputgid (extinputs, gid):
   return gid
 
 def gid_to_type(extinputs, gid):
-  for gidtype, gids in extinputs.gid_dict.items():
+  for gidtype, gids in extinputs.gid_ranges.items():
       if gid in gids:
           return gidtype
 
-def getdspk (fn):
+def getdspk(spikes, extinputs, tstop):
   ddat = {}
-  try:
-    spikes = read_spikes(fn)
-    ddat['spk'] = np.r_[spikes.spike_times, spikes.spike_gids].T
-  except ValueError:
-    ddat['spk'] = np.loadtxt(fn)
+  ddat['spk'] = np.r_[spikes.spike_times, spikes.spike_gids].T
 
   dspk = {'Cell':([],[],[]),'Input':([],[],[])}
   dhist = {}
@@ -127,7 +102,7 @@ def getdspk (fn):
       dhist[ty] = dhist[ty][0]
   return dspk,haveinputs,dhist
 
-def drawhist (dhist,fig,G):
+def drawhist(dhist, fig, G, ntrial, tstop):
   ax = fig.add_subplot(G[-4:-1,:])
   fctr = 1.0
   if ntrial > 0: fctr = 1.0 / ntrial
@@ -137,10 +112,8 @@ def drawhist (dhist,fig,G):
   ax.set_ylabel('Cell Spikes')
   return ax
 
-invertedax = False
 
-def drawrast (dspk, fig, G, sz=8):
-  global invertedax
+def drawrast(params, dspk, extinputs, haveinputs, fig, G, tstop, bDrawHist, sz=8):
   lax = []
   lk = ['Cell']
   row = 0
@@ -151,11 +124,14 @@ def drawrast (dspk, fig, G, sz=8):
 
   dinput = extinputs.inputs
 
-  for i,k in enumerate(lk):
+  for _, k in enumerate(lk):
     if k == 'Input': # input spiking
 
       bins = ceil(150. * tstop / 1000.) # bins needs to be an int
 
+      EvokedInputs = usingEvokedInputs(params)
+      OngoingInputs = usingOngoingInputs(params)
+      PoissonInputs = usingPoissonInputs(params)
       haveEvokedDist = (EvokedInputs and len(dinput['evdist'])>0)
       haveOngoingDist = (OngoingInputs and len(dinput['dist'])>0)
       haveEvokedProx = (EvokedInputs and len(dinput['evprox'])>0)
@@ -183,10 +159,10 @@ def drawrast (dspk, fig, G, sz=8):
         axp.set_ylabel('Poisson Input')
 
     else: # local circuit neuron spiking
-      ncell = len(extinputs.gid_dict['L2_pyramidal']) + \
-              len(extinputs.gid_dict['L2_basket']) + \
-              len(extinputs.gid_dict['L5_pyramidal']) + \
-              len(extinputs.gid_dict['L5_basket'])
+      ncell = len(extinputs.gid_ranges['L2_pyramidal']) + \
+              len(extinputs.gid_ranges['L2_basket']) + \
+              len(extinputs.gid_ranges['L5_pyramidal']) + \
+              len(extinputs.gid_ranges['L5_basket'])
 
       endrow = -1
       if bDrawHist: endrow = -4
@@ -207,15 +183,19 @@ def drawrast (dspk, fig, G, sz=8):
   return lax
 
 class SpikeCanvas (FigureCanvas):
-  def __init__ (self, paramf, index, parent=None, width=12, height=10, dpi=120, title='Spike Viewer'):
+  def __init__ (self, params, sim_data, index, parent=None, width=12, height=10, dpi=120, title='Spike Viewer'):
     FigureCanvas.__init__(self, Figure(figsize=(width, height), dpi=dpi))
     self.title = title
     self.setParent(parent)
     self.index = index
     FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
     FigureCanvas.updateGeometry(self)
-    self.paramf = paramf
+    self.params = params
+    self.sim_data = sim_data
+    self.alldat = {}
+
     self.invertedhistax = False
+    self.bDrawHist = True  # whether to draw histograms (spike counts per time)
     self.G = gridspec.GridSpec(16,1)
     self.plot()
 
@@ -224,194 +204,67 @@ class SpikeCanvas (FigureCanvas):
           ax.set_yticks([])
           ax.cla()
 
-  def loadspk (self,idx):
-    global haveinputs,extinputs,params
-    if idx in alldat: return
-    alldat[idx] = {}
-    if idx == 0:
-      try:
-        extinputs = spikefn.ExtInputs(spkpath, outparamf, params)
-      except ValueError:
-        print("Error: could not load spike timings from %s" % spkpath)
-        return
-      dspk,haveinputs,dhist = getdspk(spkpath)
-      alldat[idx]['dspk'] = dspk
-      alldat[idx]['haveinputs'] = haveinputs
-      alldat[idx]['dhist'] = dhist
-      alldat[idx]['extinputs'] = extinputs
-    else:
-      spkpathtrial = os.path.join(paramrw.get_output_dir(), 'data',
-                                  params['sim_prefix'],
-                                  'spk_' + str(self.index-1) + '.txt')
-      dspktrial, haveinputs, dhisttrial = getdspk(spkpathtrial)  # show spikes from first trial
-      try:
-        extinputs = spikefn.ExtInputs(spkpathtrial, outparamf, params)
-      except ValueError:
-        print("Error: could not load spike timings from %s" % spkpath)
-        return
-      alldat[idx]['dspk'] = dspktrial
-      alldat[idx]['haveinputs'] = haveinputs
-      alldat[idx]['dhist'] = dhisttrial
-      alldat[idx]['extinputs'] = extinputs
+  def loadspk(self, idx):
+    if idx in self.alldat:
+      return
+    self.alldat[idx] = {}
+
+    trials = [trial_idx for trial_idx in range(self.params['N_trials'])]
+    self.extinputs = ExtInputs(self.sim_data['spikes'],
+                               self.sim_data['gid_ranges'],
+                               trials, self.params)
+
+    dspk,haveinputs,dhist = getdspk(self.sim_data['spikes'],
+                                    self.extinputs, self.params['tstop'])
+    self.alldat[idx]['dspk'] = dspk
+    self.alldat[idx]['haveinputs'] = haveinputs
+    self.alldat[idx]['dhist'] = dhist
+    self.alldat[idx]['extinputs'] = self.extinputs
+
 
   def plot (self):
-    global haveinputs,extinputs
-
     self.loadspk(self.index)
 
     idx = self.index
-    dspk = alldat[idx]['dspk']
-    haveinputs = alldat[idx]['haveinputs']
-    dhist = alldat[idx]['dhist']
-    extinputs = alldat[idx]['extinputs']
+    dspk = self.alldat[idx]['dspk']
+    haveinputs = self.alldat[idx]['haveinputs']
+    dhist = self.alldat[idx]['dhist']
+    extinputs = self.alldat[idx]['extinputs']
 
-    self.lax = drawrast(dspk,self.figure, self.G, rastmarksz)
-
-    if bDrawHist: self.lax.append(drawhist(dhist,self.figure,self.G))
+    self.lax = drawrast(self.params, dspk, extinputs, haveinputs, self.figure, self.G, rastmarksz, self.params['tstop'], self.bDrawHist)
+    if self.bDrawHist: self.lax.append(drawhist(dhist,self.figure,self.G,self.params['N_trials'],self.params['tstop']))
 
     for ax in self.lax: 
       ax.set_facecolor('k')
       ax.grid(True)
-      if tstop != -1: ax.set_xlim((0,tstop))
+      if self.params['tstop'] != -1:
+        ax.set_xlim((0, self.params['tstop']))
 
-    if idx == 0: self.lax[0].set_title('All Trials')
-    else: self.lax[0].set_title('Trial '+str(self.index))
+    if idx == 0:
+      self.lax[0].set_title('All Trials')
+    else:
+      self.lax[0].set_title('Trial ' + str(self.index))
 
-    self.lax[-1].set_xlabel('Time (ms)');
+    self.lax[-1].set_xlabel('Time (ms)')
 
-    self.figure.subplots_adjust(bottom=0.0, left=0.06, right=1.0, top=0.97, wspace=0.1, hspace=0.09)
+    self.figure.subplots_adjust(bottom=0.0, left=0.06, right=1.0,
+                                top=0.97, wspace=0.1, hspace=0.09)
 
     self.draw()
 
-class SpikeGUI (QMainWindow):
-  def __init__ (self):
-    super().__init__()        
-    self.initUI()
+class SpikeViewGUI(DataViewGUI):
+  def __init__(self, CanvasType, params, sim_data, title):
+    super(SpikeViewGUI, self).__init__(CanvasType, params, sim_data, title)
+    self.addViewHistAction()
 
-    if "TRAVIS_TESTING" in os.environ and os.environ["TRAVIS_TESTING"] == "1":
-      print("Exiting gracefully with TRAVIS_TESTING=1")
-      qApp.quit()
-      exit(0)
-
-  def initMenu (self):
-    exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
-    exitAction.setShortcut('Ctrl+Q')
-    exitAction.setStatusTip('Exit HNN Spike Viewer.')
-    exitAction.triggered.connect(qApp.quit)
-
-    menubar = self.menuBar()
-    fileMenu = menubar.addMenu('&File')
-    menubar.setNativeMenuBar(False)
-    fileMenu.addAction(exitAction)
-
-    viewMenu = menubar.addMenu('&View')
+  def addViewHistAction(self):
+    """Add 'Toggle Histograms' to view menu"""
     drawHistAction = QAction('Toggle Histograms',self)
     drawHistAction.setStatusTip('Toggle Histogram Drawing.')
     drawHistAction.triggered.connect(self.toggleHist)
-    viewMenu.addAction(drawHistAction)
-    changeFontSizeAction = QAction('Change Font Size',self)
-    changeFontSizeAction.setStatusTip('Change Font Size.')
-    changeFontSizeAction.triggered.connect(self.changeFontSize)
-    viewMenu.addAction(changeFontSizeAction)
-    changeLineWidthAction = QAction('Change Line Width',self)
-    changeLineWidthAction.setStatusTip('Change Line Width.')
-    changeLineWidthAction.triggered.connect(self.changeLineWidth)
-    viewMenu.addAction(changeLineWidthAction)
-    changeMarkerSizeAction = QAction('Change Marker Size',self)
-    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
-    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-    viewMenu.addAction(changeMarkerSizeAction)
-
+    self.viewMenu.addAction(drawHistAction)
 
   def toggleHist (self):
-    global bDrawHist
-    bDrawHist = not bDrawHist
+    self.m.bDrawHist = not self.m.bDrawHist
     self.initCanvas()
     self.m.plot()
-
-  def changeFontSize (self):
-    global fontsize
-
-    i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
-    if okPressed:
-      plt.rcParams['font.size'] = fontsize = i
-      self.initCanvas()
-      self.m.plot()
-
-  def changeLineWidth (self):
-    i, okPressed = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
-    if okPressed:
-      plt.rcParams['lines.linewidth'] = i
-      self.initCanvas()
-      self.m.plot()
-
-  def changeMarkerSize (self):
-    global rastmarksz
-    i, okPressed = QInputDialog.getInt(self, "Set Marker Size","Font Size:", rastmarksz, 1, 100, 1)
-    if okPressed:
-      rastmarksz = i
-      self.initCanvas()
-      self.m.plot()
-
-  def initCanvas (self):
-    # to avoid memory leaks remove any pre-existing widgets before adding new ones
-    self.grid.removeWidget(self.m)
-    self.grid.removeWidget(self.toolbar)
-    self.m.setParent(None)
-    self.toolbar.setParent(None)
-    self.m = self.toolbar = None
-
-    self.m = SpikeCanvas(paramf, self.index, parent = self, width=12, height=10, dpi=getmplDPI())
-    # this is the Navigation widget
-    # it takes the Canvas widget and a parent
-    self.toolbar = NavigationToolbar(self.m, self)
-    self.grid.addWidget(self.toolbar, 0, 0, 1, 4); 
-    self.grid.addWidget(self.m, 1, 0, 1, 4);     
-
-  def initUI (self):
-    self.initMenu()
-    self.statusBar()
-    self.setGeometry(300, 300, 1300, 1100)
-    self.setWindowTitle('Spike Viewer - ' + paramf)
-    self.grid = grid = QGridLayout()
-    self.index = 0
-    self.initCanvas()
-    self.cb = QComboBox(self)
-    self.grid.addWidget(self.cb,2,0,1,4)
-
-    if ntrial > 1:
-      self.cb.addItem('Show All Trials')
-      for i in range(ntrial):
-        self.cb.addItem('Show Trial ' + str(i+1))
-    else:
-      self.cb.addItem('All Trials')
-    self.cb.activated[int].connect(self.onActivated) 
-
-    # need a separate widget to put grid on
-    widget = QWidget(self)
-    widget.setLayout(grid)
-    self.setCentralWidget(widget)
-
-    self.setWindowIcon(QIcon(os.path.join('res','icon.png')))
-
-    self.show()
-
-  def onActivated(self, idx):
-    if idx != self.index:
-      self.index = idx
-      if self.index == 0:
-        self.statusBar().showMessage('Loading data from all trials.')
-      else:
-        self.statusBar().showMessage('Loading data from trial ' + str(self.index) + '.')
-      self.m.index = self.index
-      self.initCanvas()
-      self.m.plot()
-      self.statusBar().showMessage('')
-
-if __name__ == '__main__':
-
-  app = QApplication(sys.argv)
-  ex = SpikeGUI()
-  sys.exit(app.exec_())  
-  
-

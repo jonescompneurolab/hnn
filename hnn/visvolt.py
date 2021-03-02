@@ -1,4 +1,7 @@
 import sys, os
+import numpy as np
+import pickle
+
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
 from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
@@ -6,19 +9,17 @@ from PyQt5.QtWidgets import QCheckBox, QInputDialog
 from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt5 import QtCore
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-import pylab as plt
 import matplotlib.gridspec as gridspec
-import pickle
-from qt_lib import getmplDPI
-from paramrw import get_output_dir
-
 from hnn_core import read_params
+
+from .qt_lib import getmplDPI
+from .paramrw import get_output_dir
+from .DataViewGUI import DataViewGUI
 
 fontsize = plt.rcParams['font.size'] = 10
 
@@ -28,19 +29,7 @@ dclr = {'L2_pyramidal' : 'g',
         'L2_basket' : 'w', 
         'L5_basket' : 'b'}
 
-ntrial = 1; tstop = -1; outparamf = voltpath = paramf = ''; 
-
 maxperty = 10 # how many cells of a type to draw
-
-for i in range(len(sys.argv)):
-  if sys.argv[i].endswith('.param'):
-    paramf = sys.argv[i]
-    params = read_params(paramf)
-    tstop = params['tstop']
-    ntrial = params['N_trials']
-    outparamf = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'param.txt')
-  elif sys.argv[i] == 'maxperty':
-    maxperty = int(sys.argv[i])
 
 if ntrial <= 1:
   voltpath = os.path.join(get_output_dir(), 'data', params['sim_prefix'], 'vsoma.pkl')
@@ -118,62 +107,12 @@ class VoltCanvas (FigureCanvas):
       self.lax=self.drawvolt(dvolttrial,self.figure, self.G, 5, ltextra='Trial '+str(self.index))
     self.draw()
 
-class VoltGUI (QMainWindow):
-  def __init__ (self):
-    global fontsize
-    super().__init__()        
-    self.fontsize = fontsize
-    self.linewidth = plt.rcParams['lines.linewidth'] = 1
-    self.markersize = plt.rcParams['lines.markersize'] = 5
-    self.initUI()
-
-  def changeFontSize (self):
-    global fontsize
-    i, okPressed = QInputDialog.getInt(self, "Set Font Size","Font Size:", plt.rcParams['font.size'], 1, 100, 1)
-    if okPressed:
-      self.fontsize = plt.rcParams['font.size'] = fontsize = i
-      self.initCanvas()
-      self.m.plot()
-
-  def changeLineWidth (self):
-    i, okPressed = QInputDialog.getInt(self, "Set Line Width","Line Width:", plt.rcParams['lines.linewidth'], 1, 20, 1)
-    if okPressed:
-      self.linewidth = plt.rcParams['lines.linewidth'] = i
-      self.initCanvas()
-      self.m.plot()
-
-  def changeMarkerSize (self):
-    i, okPressed = QInputDialog.getInt(self, "Set Marker Size","Font Size:", self.markersize, 1, 100, 1)
-    if okPressed:
-      self.markersize = plt.rcParams['lines.markersize'] = i
-      self.initCanvas()
-      self.m.plot()
-
-  def initMenu (self):
-    exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
-    exitAction.setShortcut('Ctrl+Q')
-    exitAction.setStatusTip('Exit HNN Volt Viewer.')
-    exitAction.triggered.connect(qApp.quit)
-
-    menubar = self.menuBar()
-    fileMenu = menubar.addMenu('&File')
-    menubar.setNativeMenuBar(False)
-    fileMenu.addAction(exitAction)
-
-    viewMenu = menubar.addMenu('&View')
-    changeFontSizeAction = QAction('Change Font Size',self)
-    changeFontSizeAction.setStatusTip('Change Font Size.')
-    changeFontSizeAction.triggered.connect(self.changeFontSize)
-    viewMenu.addAction(changeFontSizeAction)
-    changeLineWidthAction = QAction('Change Line Width',self)
-    changeLineWidthAction.setStatusTip('Change Line Width.')
-    changeLineWidthAction.triggered.connect(self.changeLineWidth)
-    viewMenu.addAction(changeLineWidthAction)
-    changeMarkerSizeAction = QAction('Change Marker Size',self)
-    changeMarkerSizeAction.setStatusTip('Change Marker Size.')
-    changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-    viewMenu.addAction(changeMarkerSizeAction)
-
+class VoltGUI(DataViewGUI):
+  def __init__(self, CanvasType, params, title):
+      self.params = params
+      super(VoltGUI, self).__init__(CanvasType, self.params, title)
+      self.addLoadDataActions()
+      self.loadDisplayData()
 
   def initCanvas (self):
     self.invertedax = False
@@ -222,10 +161,3 @@ class VoltGUI (QMainWindow):
       self.initCanvas()
       self.m.plot()
       self.statusBar().showMessage('')
-
-if __name__ == '__main__':
-
-  app = QApplication(sys.argv)
-  ex = VoltGUI()
-  sys.exit(app.exec_())  
-  

@@ -3,7 +3,6 @@
 # Authors: Sam Neymotin <samnemo@gmail.com>
 #          Blake Caldwell <blake_caldwell@brown.edu>
 
-import os
 import numpy as np
 
 from PyQt5.QtWidgets import QSizePolicy, QAction
@@ -12,23 +11,24 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from hnn_core.dipole import average_dipoles
 
 from .DataViewGUI import DataViewGUI
 from .specfn import MorletSpec
-from .simdat import get_dipoles_from_disk
-from .paramrw import get_output_dir
 
 fontsize = plt.rcParams['font.size'] = 10
 
 
-def extract_spec(params):
-    """Read dipoles and extract Mortlet spectrograms
+def extract_spec(params, dpls, avg_dpl):
+    """Extract Mortlet spectrograms from dipoles
 
     Parameters
     ----------
     params : dict
         Dictionary containing parameters
+    dpls: list of Dipole objects
+        List containing Dipoles of each trial
+    avg_dpl: Dipole object
+        Dipole object containing the average of individual trial Dipoles
 
     Returns
     ----------
@@ -36,20 +36,8 @@ def extract_spec(params):
         List containing spectrograms of each trial
     avg_spec: MortletSpec objects
         spectrogram averaged over all trials
-    dpls: list of Dipole objects
-        List containing Dipoles of each trial
-    avg_dpl: Dipole object
-        Dipole object containing the average of individual trial Dipoles
+
     """
-
-    sim_dir = os.path.join(get_output_dir(), 'data',
-                           params['sim_prefix'])
-
-    dpls = get_dipoles_from_disk(sim_dir, params['N_trials'])
-    if len(dpls) == 1:
-        avg_dpl = dpls[0]
-    else:
-        avg_dpl = average_dipoles(dpls)
 
     specs = []
     for dpltrial in dpls:
@@ -65,7 +53,7 @@ def extract_spec(params):
     npspec = np.array(ltfr)
     avg_spec.TFR = np.mean(npspec, axis=0)
 
-    return specs, avg_spec, dpls, avg_dpl
+    return specs, avg_spec
 
 
 class SpecCanvas(FigureCanvasQTAgg):
@@ -74,8 +62,8 @@ class SpecCanvas(FigureCanvasQTAgg):
     This is designed to be called from SpecViewGUI class to add functionality
     for loading and clearing data
     """
-    def __init__(self, params, index, parent=None, width=12, height=10,
-                 dpi=120, title='Spectrogram Viewer'):
+    def __init__(self, params, sim_data, index, parent=None, width=12,
+                 height=10, dpi=120, title='Spectrogram Viewer'):
         FigureCanvasQTAgg.__init__(self, Figure(figsize=(width, height),
                                    dpi=dpi))
         self.title = title
@@ -173,13 +161,14 @@ class SpecCanvas(FigureCanvasQTAgg):
 
 
 class SpecViewGUI(DataViewGUI):
-    def __init__(self, CanvasType, params, title):
+    def __init__(self, CanvasType, params, sim_data, title):
         self.specs = []  # external data spec
         self.dpls = None
         self.avg_dpl = []
         self.avg_spec = []
         self.params = params
-        super(SpecViewGUI, self).__init__(CanvasType, self.params, title)
+        super(SpecViewGUI, self).__init__(CanvasType, self.params, sim_data,
+                                          title)
         self.addLoadDataActions()
         self.loadDisplayData()
 
@@ -204,10 +193,11 @@ class SpecViewGUI(DataViewGUI):
         self.fileMenu.addAction(clearDataFileAct)
 
     def loadDisplayData(self):
-        specs, avg_spec, dpls, avg_dpl = extract_spec(self.params)
-        self.m.dpls = dpls
+        specs, avg_spec = extract_spec(self.params, self.sim_data['dpls'],
+                                       self.sim_data['avg_dpl'])
+        self.m.dpls = self.sim_data['dpls']
         self.m.specs = specs
-        self.m.avg_dpl = avg_dpl
+        self.m.avg_dpl = self.sim_data['avg_dpl']
         self.m.avg_spec = avg_spec
 
         self.updateCB()

@@ -18,7 +18,7 @@ fontsize = plt.rcParams['font.size'] = 10
 
 
 class DataViewGUI(QMainWindow):
-    def __init__(self, CanvasType, params, title):
+    def __init__(self, CanvasType, params, sim_data, title):
         super().__init__()
 
         global fontsize
@@ -29,6 +29,7 @@ class DataViewGUI(QMainWindow):
         self.CanvasType = CanvasType
         self.ntrial = params['N_trials']
         self.params = params
+        self.sim_data = sim_data
         self.title = title
         self.initUI()
 
@@ -43,19 +44,19 @@ class DataViewGUI(QMainWindow):
         menubar.setNativeMenuBar(False)
         self.fileMenu.addAction(exitAction)
 
-        viewMenu = menubar.addMenu('&View')
+        self.viewMenu = menubar.addMenu('&View')
         changeFontSizeAction = QAction('Change Font Size', self)
         changeFontSizeAction.setStatusTip('Change Font Size.')
         changeFontSizeAction.triggered.connect(self.changeFontSize)
-        viewMenu.addAction(changeFontSizeAction)
+        self.viewMenu.addAction(changeFontSizeAction)
         changeLineWidthAction = QAction('Change Line Width', self)
         changeLineWidthAction.setStatusTip('Change Line Width.')
         changeLineWidthAction.triggered.connect(self.changeLineWidth)
-        viewMenu.addAction(changeLineWidthAction)
+        self.viewMenu.addAction(changeLineWidthAction)
         changeMarkerSizeAction = QAction('Change Marker Size', self)
         changeMarkerSizeAction.setStatusTip('Change Marker Size.')
         changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-        viewMenu.addAction(changeMarkerSizeAction)
+        self.viewMenu.addAction(changeMarkerSizeAction)
 
     def changeFontSize(self):
         global fontsize
@@ -106,8 +107,9 @@ class DataViewGUI(QMainWindow):
         self.m = self.toolbar = None
         """
 
-        self.m = self.CanvasType(self.params, self.index, parent=self,
-                                 width=12, height=10, dpi=getmplDPI())
+        self.m = self.CanvasType(self.params, self.sim_data, self.index,
+                                 parent=self, width=12, height=10,
+                                 dpi=getmplDPI())
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar2QT(self.m, self)
