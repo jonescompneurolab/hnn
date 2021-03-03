@@ -1,5 +1,5 @@
 """
-network.py 
+network.py
 
 Network-related functions in NetPyNE-based version of HNN
 
@@ -14,30 +14,32 @@ import os
 from neuron import h
 from netpyne import sim, specs
 
+from .npencoder import NumpyEncoder
+
 
 def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=100):
 
-    # option to create NEURON objects or just 
+    # option to create NEURON objects or just
     if createNEURONObj:
         cfg_params.createNEURONObj = True
         load_custom_mechanisms(cfg_params.model_folder)
     else:
         cfg_params.createNEURONObj = False
-    
+
     # ensure cell sections are stored so can be plotted
-    saveCellSecs_orig = cfg_params.saveCellSecs  
-    cfg_params.saveCellSecs = True  
-    
-    # param to fix hnn model horizontal spacing of 1um (hack for visualization) 
-    xzScaling_orig = cfg_params.xzScaling    
-    cfg_params.xzScaling = xzScaling  
+    saveCellSecs_orig = cfg_params.saveCellSecs
+    cfg_params.saveCellSecs = True
+
+    # param to fix hnn model horizontal spacing of 1um (hack for visualization)
+    xzScaling_orig = cfg_params.xzScaling
+    cfg_params.xzScaling = xzScaling
 
     # create network
     from netParams import netParams as net_params
-    sim.initialize(simConfig=cfg_params, netParams=net_params)  
+    sim.initialize(simConfig=cfg_params, netParams=net_params)
     sim.net.createPops()
     sim.net.createCells()
-    if addConns: 
+    if addConns:
         sim.cfg.saveCellConns = True
         sim.net.connectCells()
     sim.gatherData()
@@ -46,7 +48,7 @@ def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=1
     cfg_params.xzScaling = xzScaling_orig
     cfg_params.saveCellSecs = saveCellSecs_orig
 
-    
+
     return sim.net
 
 
@@ -63,8 +65,8 @@ def _is_loaded_mechanisms():
 
     # note this check only works for the original hnn model
     # need to generalize for any model
-    
-    if 'hh2' not in mnames:  
+
+    if 'hh2' not in mnames:
         return False
     else:
         return True
@@ -98,37 +100,37 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
 
     from netpyne import sim
     from netpyne.batch import Batch
-    
+
     try:
         sim.clearAll()
     except:
         pass
-    
+
     model_folder = cfg_params.model_folder
-    
+
     # setup and run netpyne batch with different seeds
     seeds = range(n_trials)
 
     params = specs.ODict()
     params[('hnn_params','prng_seedcore')] = list(seeds)
- 
-    b = Batch(params=params, 
-             cfgFile=model_folder+'/cfg.py', 
-             netParamsFile=model_folder+'/netParams.py', 
+
+    b = Batch(params=params,
+             cfgFile=model_folder+'/cfg.py',
+             netParamsFile=model_folder+'/netParams.py',
              cfg=cfg_params)
-             
+
     b.batchLabel = 'trials'
     b.saveFolder = model_folder+'/data/'+b.batchLabel
     b.method = 'grid'
-    b.runCfg = {'type': 'mpi_direct', 
+    b.runCfg = {'type': 'mpi_direct',
                 'script': model_folder+'/init.py',
-                'cores': n_cores, 
+                'cores': n_cores,
                 'skip': False}
 
     if not only_read:
-        b.run() 
+        b.run()
 
-    # read data from batch output files 
+    # read data from batch output files
     data = read_trials_data(model_folder+'/data/', b.batchLabel, n_trials)
 
     # postprocess dipole data
@@ -138,19 +140,19 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
         for i, trial_data in enumerate(data):
             for k in trial_data['simData']['dipole']:
                 trial_data['simData']['dipole'][k][0] = 0
-            
+
             dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
-                        np.array(trial_data['simData']['dipole']['L2']), 
+                        np.array(trial_data['simData']['dipole']['L2']),
                         np.array(trial_data['simData']['dipole']['L5'])]
             dpl_trial = Dipole(np.array(trial_data['simData']['t']), np.array(dpl_data).T)
             dpl_trial.post_proc(cfg_params.hnn_params['N_pyr_x'],
-                                cfg_params.hnn_params['N_pyr_y'], 
+                                cfg_params.hnn_params['N_pyr_y'],
                                 cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
                                 cfg_params.hnn_params['dipole_scalefctr'])
-            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
+            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0
             trial_data['dpl'] = dpl_trial
 
-    return data    
+    return data
 
 
 
@@ -158,35 +160,35 @@ def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_re
 
     from netpyne import sim
     from netpyne.batch import Batch
-    
+
     try:
         sim.clearAll()
     except:
         pass
-    
+
     model_folder = cfg_params.model_folder
-    
+
     # setup and run netpyne batch with different seeds
 
     params = specs.ODict(params_explore)
- 
-    b = Batch(params=params, 
-             cfgFile=model_folder+'/cfg.py', 
-             netParamsFile=model_folder+'/netParams.py', 
+
+    b = Batch(params=params,
+             cfgFile=model_folder+'/cfg.py',
+             netParamsFile=model_folder+'/netParams.py',
              cfg=cfg_params)
-             
+
     b.batchLabel = 'explore'
     b.saveFolder = model_folder+'/data/'+b.batchLabel
     b.method = 'grid'
-    b.runCfg = {'type': 'mpi_direct', 
+    b.runCfg = {'type': 'mpi_direct',
                 'script': model_folder+'/init.py',
-                'cores': n_cores, 
+                'cores': n_cores,
                 'skip': False}
 
     if not only_read:
-        b.run() 
+        b.run()
 
-    # read data from batch output files 
+    # read data from batch output files
     params, data = read_batch_data(model_folder+'/data/', b.batchLabel)
 
     # postprocess dipole data
@@ -197,29 +199,29 @@ def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_re
         for i, trial_data in enumerate(data):
             trial_data['simData']['dipole']['L2'][0] = 0
             trial_data['simData']['dipole']['L5'][0] = 0
-            
+
             dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
-                        np.array(trial_data['simData']['dipole']['L2']), 
+                        np.array(trial_data['simData']['dipole']['L2']),
                         np.array(trial_data['simData']['dipole']['L5'])]
             dpl_trial = Dipole(np.array(trial_data['simData']['t']), np.array(dpl_data).T)
             dpl_trial.post_proc(cfg_params.hnn_params['N_pyr_x'],
-                                cfg_params.hnn_params['N_pyr_y'], 
+                                cfg_params.hnn_params['N_pyr_y'],
                                 cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
                                 cfg_params.hnn_params['dipole_scalefctr'])
-            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
+            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0
             trial_data['dpl'] = dpl_trial
     '''
-    return data    
+    return data
 
 
 
 def read_trials_data(dataFolder, batchLabel, n_trials):
-    
+
     from netpyne import specs
 
     data = []
-    
-    # read vars from all files - store in dict 
+
+    # read vars from all files - store in dict
     for i in range(n_trials):
         # read output file
         simLabel = batchLabel+'_'+str(i)
@@ -236,7 +238,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
 
         try:
             # save output file in data dict
-            trial_data = {}  
+            trial_data = {}
 
             for key in output.keys():
                 if isinstance(key, tuple):
@@ -245,7 +247,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
                         container = container[key[ikey]]
                     trial_data[key[1]] = container[key[-1]]
 
-                elif isinstance(key, str): 
+                elif isinstance(key, str):
                     trial_data[key] = output[key]
 
             data.append(trial_data)
@@ -255,15 +257,15 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
     return data
 
 
-def mean_rates(trials_data, mean_type='all'): 
+def mean_rates(trials_data, mean_type='all'):
 
     if mean_type == 'all':
         mean_rates_values = np.mean([list(trial_data['simData']['popRates'].values()) for trial_data in trials_data], 0)
-        mean_rates = dict(zip(trials_data[0]['simData']['popRates'].keys(), mean_rates_values)) 
+        mean_rates = dict(zip(trials_data[0]['simData']['popRates'].keys(), mean_rates_values))
 
     elif mean_type == 'trial':
         mean_rates = [trial_data['simData']['popRates'] for trial_data in trials_data]
-        
+
     return mean_rates
 
 
@@ -302,7 +304,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
         if p not in preorder: preorder.append(p)
     params = preorder
 
-    # read vars from all files - store in dict 
+    # read vars from all files - store in dict
     if b['method'] == 'grid':
         labelList, valuesList = zip(*[(p['label'], p['values']) for p in params])
         valueCombinations = product(*(valuesList))
@@ -333,7 +335,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
 
                 try:
                     # save output file in data dict
-                    data[iCombStr] = {}  
+                    data[iCombStr] = {}
                     data[iCombStr]['paramValues'] = pComb  # store param values
                     if not vars: vars = output.keys()
 
@@ -344,7 +346,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
                                 container = container[key[ikey]]
                             data[iCombStr][key[1]] = container[key[-1]]
 
-                        elif isinstance(key, str): 
+                        elif isinstance(key, str):
                             data[iCombStr][key] = output[key]
                 except:
                     print('... file missing')
@@ -364,6 +366,6 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
             filename = '%s/%s/%s_allData.json' % (dataFolder, batchLabel, batchLabel)
             dataSave = {'params': params, 'data': data}
             with open(filename, 'w') as fileObj:
-                json.dump(dataSave, fileObj)
-        
+                json.dump(dataSave, fileObj, cls=NumpyEncoder)
+
         return params, data
