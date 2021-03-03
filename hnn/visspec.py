@@ -76,11 +76,11 @@ class SpecCanvas(FigureCanvasQTAgg):
         self.params = params
         self.invertedhistax = False
         self.G = gridspec.GridSpec(10, 1)
-        self.dpls = []
-        self.specs = []
+        self.dpls = self.gui.dpls
+        self.specs = self.gui.specs
+        self.avg_dpl = self.gui.avg_dpl
+        self.avg_spec = self.gui.avg_spec
         self.lax = []
-        self.avg_dpl = []
-        self.avg_spec = []
 
         if 'spec_cmap' in self.params:
             self.spec_cmap = self.params['spec_cmap']
@@ -101,7 +101,7 @@ class SpecCanvas(FigureCanvasQTAgg):
                 o.set_visible(False)
             del self.lextdatobj
 
-    def drawspec(self, dpls, lspec, sdx, avgdipole, avgspec, fig, G,
+    def drawspec(self, dpls, lspec, avgdipole, avgspec, fig, G,
                  ltextra=''):
         if len(lspec) == 0:
             return
@@ -114,14 +114,14 @@ class SpecCanvas(FigureCanvasQTAgg):
         lax = [ax]
         tvec = avgdipole.times
 
-        if sdx == 0:
+        if self.index == 0:
             for dpltrial in dpls:
                 ax.plot(tvec, dpltrial.data['agg'],
                         linewidth=self.gui.linewidth, color='gray')
             ax.plot(tvec, avgdipole.data['agg'],
                     linewidth=self.gui.linewidth + 1, color='black')
         else:
-            ax.plot(tvec, dpls[sdx].data['agg'],
+            ax.plot(tvec, dpls[self.index-1].data['agg'],
                     linewidth=self.gui.linewidth + 1, color='gray')
 
         ax.set_xlim(tvec[0], tvec[-1])
@@ -131,10 +131,10 @@ class SpecCanvas(FigureCanvasQTAgg):
 
         ax = fig.add_subplot(gdx)
 
-        if sdx == 0:
+        if self.index == 0:
             ms = avgspec
         else:
-            ms = lspec[sdx - 1]
+            ms = lspec[self.index - 1]
 
         ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]],
                   aspect='auto', origin='upper',
@@ -152,7 +152,7 @@ class SpecCanvas(FigureCanvasQTAgg):
         ltextra = 'Trial ' + str(self.index)
         if self.index == 0:
             ltextra = 'All Trials'
-        self.lax = self.drawspec(self.dpls, self.specs, self.index,
+        self.lax = self.drawspec(self.dpls, self.specs,
                                  self.avg_dpl, self.avg_spec, self.figure,
                                  self.G, ltextra=ltextra)
         self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98,
@@ -172,10 +172,6 @@ class SpecViewGUI(DataViewGUI):
         self.addLoadDataActions()
         self.loadDisplayData()
 
-    def initCanvas(self):
-        super(SpecViewGUI, self).initCanvas()
-        self.m.specs = self.specs
-
     def addLoadDataActions(self):
         loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data.', self)
         loadDataFile.setShortcut('Ctrl+D')
@@ -193,12 +189,18 @@ class SpecViewGUI(DataViewGUI):
         self.fileMenu.addAction(clearDataFileAct)
 
     def loadDisplayData(self):
-        specs, avg_spec = extract_spec(self.params, self.sim_data['dpls'],
-                                       self.sim_data['avg_dpl'])
-        self.m.dpls = self.sim_data['dpls']
-        self.m.specs = specs
-        self.m.avg_dpl = self.sim_data['avg_dpl']
-        self.m.avg_spec = avg_spec
+        # store copy of data in this object, that can be reused by canvas (self.m)
+        # on re-instantiation
+        self.avg_dpl = self.sim_data['avg_dpl']
+        self.dpls = self.sim_data['dpls']
+        self.specs, self.avg_spec = extract_spec(self.params, self.dpls,
+                                                 self.avg_dpl)
+
+        # populate the data inside canvas object before calling self.m.plot()
+        self.m.avg_dpl = self.avg_dpl
+        self.m.dpls = self.dpls
+        self.m.specs = self.specs
+        self.m.avg_spec = self.avg_spec
 
         self.updateCB()
         self.printStat('Extracted ' + str(len(self.m.specs)) +
