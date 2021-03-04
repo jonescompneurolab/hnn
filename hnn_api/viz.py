@@ -84,7 +84,8 @@ def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core')
     return ax.get_figure()
 
 
-def plot_spike_raster(trials_data, **kwargs):
+def plot_spike_raster(trials_data, interactive=False, **kwargs):
+    
     if len(trials_data) > 0:
 
         if 'include' not in kwargs:
@@ -116,7 +117,10 @@ def plot_spike_raster(trials_data, **kwargs):
         for trial_data in trials_data:
             sim.loadSimData(filename=None, data=trial_data)
             try:
-                fig, data = sim.analysis.iplotRaster(**kwargs)
+                if interactive:
+                    fig, data = sim.analysis.iplotRaster(**kwargs)
+                else:
+                    fig, data = sim.analysis.plotRaster(**kwargs)
             except:
                 fig, data = -1, {}
 

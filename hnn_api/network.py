@@ -138,8 +138,6 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
         from .dipole import Dipole
 
         for i, trial_data in enumerate(data):
-            for k in trial_data['simData']['dipole']:
-                trial_data['simData']['dipole'][k][0] = 0
 
             dpl_data = [np.array(trial_data['simData']['dipole']['L2'])+np.array(trial_data['simData']['dipole']['L5']),
                         np.array(trial_data['simData']['dipole']['L2']),
@@ -149,7 +147,6 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
                                 cfg_params.hnn_params['N_pyr_y'],
                                 cfg_params.hnn_params['dipole_smooth_win'] / cfg_params.dt,
                                 cfg_params.hnn_params['dipole_scalefctr'])
-            dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0
             trial_data['dpl'] = dpl_trial
 
     return data
