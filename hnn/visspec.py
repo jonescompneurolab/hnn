@@ -8,6 +8,7 @@ import os
 
 from PyQt5.QtWidgets import QSizePolicy, QAction, QFileDialog
 from PyQt5.QtGui import QIcon
+
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg

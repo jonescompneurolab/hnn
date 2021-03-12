@@ -6,6 +6,7 @@
 import numpy as np
 
 from PyQt5.QtWidgets import QSizePolicy
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg

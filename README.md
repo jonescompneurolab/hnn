@@ -25,6 +25,14 @@ potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
 
 Please follow the links on our [installation page](installer) to find instructions for your operating system.
 
+## Quickstart
+
+Just do:
+
+    $ ./hnn.sh
+
+to start the HNN graphical user interface
+
 ## Command-line usage
 
 HNN is not designed to be invoked from the command line, but we have started

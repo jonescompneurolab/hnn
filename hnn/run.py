@@ -11,11 +11,11 @@ from time import sleep
 from copy import deepcopy
 from math import ceil, isclose
 from contextlib import redirect_stdout
+from psutil import wait_procs, process_iter, NoSuchProcess
 
+import nlopt
 from PyQt5 import QtCore
 from hnn_core import simulate_dipole, Network, MPIBackend
-import nlopt
-from psutil import wait_procs, process_iter, NoSuchProcess
 
 from .paramrw import write_legacy_paramf, get_output_dir
 
