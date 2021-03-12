@@ -50,6 +50,8 @@ class ExtInputs(object):
         elif 'extinput' in self.gid_ranges:
             # hnn legacy
             extinput_key = 'extinput'
+        elif 'bursty1' in self.gid_ranges or 'bursty2' in self.gid_ranges:
+            extinput_key = ['bursty1', 'bursty2']
         else:
             print(self.gid_ranges)
             raise ValueError("Unable to find key for external inputs")
@@ -76,7 +78,13 @@ class ExtInputs(object):
         feed
         """
 
-        if len(self.gid_ranges[extinput_key]) == 2:
+        if isinstance(extinput_key, list):
+            gids = list()
+            for val in extinput_key:
+                gids.extend(self.gid_ranges[val])
+            # the order here is defined by create_pext to be prox, dist
+            return gids
+        elif len(self.gid_ranges[extinput_key]) == 2:
             return self.gid_ranges[extinput_key]
         elif len(self.gid_ranges[extinput_key]) > 0:
             # Otherwise, only one feed exists in this sim

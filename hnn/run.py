@@ -103,7 +103,7 @@ def simulate(params, n_procs=None):
 
     # create the network from the parameter file. note, NEURON objects haven't
     # been created yet
-    net = Network(params)
+    net = Network(params, add_drives_from_params=True)
 
     sim_data = {}
     # run the simulation with MPIBackend for faster completion time

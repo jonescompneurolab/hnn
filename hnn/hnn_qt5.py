@@ -2061,9 +2061,15 @@ class HNNGUI (QMainWindow):
         for trial_idx in range(ntrial):
             N_pyr_x = params['N_pyr_x']
             N_pyr_y = params['N_pyr_y']
-            winsz = params['dipole_smooth_win'] / params['dt']
+            sim_data['dpls'][trial_idx]._baseline_renormalize(N_pyr_x, N_pyr_y)
+            sim_data['dpls'][trial_idx]._convert_fAm_to_nAm()
+
+            window_len = params['dipole_smooth_win']  # specified in ms
             fctr = params['dipole_scalefctr']
-            sim_data['dpls'][trial_idx].post_proc(N_pyr_x, N_pyr_y, winsz, fctr)
+            if window_len > 0:  # param files set this to zero for no smoothing
+                sim_data['dpls'][trial_idx].smooth(window_len=window_len)
+            if fctr > 0:
+                sim_data['dpls'][trial_idx].scale(fctr)
 
         # save average dipole from individual trials in a single file
         if ntrial > 1:
