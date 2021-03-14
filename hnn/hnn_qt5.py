@@ -2059,11 +2059,6 @@ class HNNGUI (QMainWindow):
         sim_data['dpls'] = deepcopy(sim_data['raw_dpls'])
         ntrial = len(sim_data['raw_dpls'])
         for trial_idx in range(ntrial):
-            N_pyr_x = params['N_pyr_x']
-            N_pyr_y = params['N_pyr_y']
-            sim_data['dpls'][trial_idx]._baseline_renormalize(N_pyr_x, N_pyr_y)
-            sim_data['dpls'][trial_idx]._convert_fAm_to_nAm()
-
             window_len = params['dipole_smooth_win']  # specified in ms
             fctr = params['dipole_scalefctr']
             if window_len > 0:  # param files set this to zero for no smoothing
