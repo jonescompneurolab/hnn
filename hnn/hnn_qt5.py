@@ -33,7 +33,7 @@ from hnn_core.dipole import average_dipoles
 # HNN modules
 from .paramrw import usingOngoingInputs, usingEvokedInputs, get_output_dir
 from .paramrw import write_gids_param, get_fname
-from .specfn import analysis_simp
+from .specfn import spec_dpl_kernel, save_spec_data
 from .simdat import SIMCanvas, SimData
 from .run import RunSimThread, ParamSignal
 from .qt_lib import setscalegeom, setscalegeomcenter, getmplDPI, getscreengeom
@@ -43,6 +43,7 @@ from .DataViewGUI import DataViewGUI
 from .visdipole import DipoleCanvas
 from .visspec import SpecViewGUI, SpecCanvas
 from .visrast import SpikeViewGUI, SpikeCanvas
+from .vispsd import PSDViewGUI, PSDCanvas
 
 # TODO: These globals should be made configurable via the GUI
 drawavgdpl = 0
@@ -1308,9 +1309,11 @@ class HNNGUI (QMainWindow):
       self.baseparamwin.updateDispParam(params)
       self.setWindowTitle(self.baseparamwin.paramfn)
 
-      self.initSimCanvas() # recreate canvas
+      self.initSimCanvas()  # recreate canvas
 
-      self.populateSimCB() # populate the combobox
+      # check if param file exists in combo box already
+      cb_index = self.cbsim.findText(self.baseparamwin.paramfn)
+      self.populateSimCB(cb_index)  # populate the combobox
 
       if self.sim_data.get_exp_data_size() > 0:
         self.toggleEnableOptimization(True)
@@ -1418,24 +1421,39 @@ class HNNGUI (QMainWindow):
         Popen(lcmd)  # nonblocking
 
     def showPSDPlot(self):
-      # start the PSD visualization process (separate window)
-      outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
-      outparamf = os.path.join(outdir,
-                              self.baseparamwin.params['sim_prefix'] +
-                              '.param')
-      lcmd = [getPyComm(), 'vispsd.py',outparamf]
-      Popen(lcmd)  # nonblocking
+        if self.baseparamwin.paramfn is None:
+            return
+        if self.baseparamwin.paramfn in self.sim_data._sim_data:
+            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        else:
+            sim_data = None
+        PSDViewGUI(PSDCanvas, self.baseparamwin.params, sim_data, 'PSD Viewer')
 
     def showSpecPlot(self):
-        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        if self.baseparamwin.paramfn is None:
+            return
+        if self.baseparamwin.paramfn in self.sim_data._sim_data:
+            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        else:
+            sim_data = None
         SpecViewGUI(SpecCanvas, self.baseparamwin.params, sim_data, 'Spectrogram Viewer')
 
     def showRasterPlot(self):
-        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        if self.baseparamwin.paramfn is None:
+            return
+        if self.baseparamwin.paramfn in self.sim_data._sim_data:
+            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        else:
+            sim_data = None
         SpikeViewGUI(SpikeCanvas, self.baseparamwin.params, sim_data, 'Spike Viewer')
 
     def showDipolePlot(self):
-        sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        if self.baseparamwin.paramfn is None:
+            return
+        if self.baseparamwin.paramfn in self.sim_data._sim_data:
+            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
+        else:
+            sim_data = None
         DataViewGUI(DipoleCanvas, self.baseparamwin.params, sim_data, 'Dipole Viewer')
 
     def showwaitsimwin(self):
@@ -1808,7 +1826,13 @@ class HNNGUI (QMainWindow):
       gRow += 2
 
       self.cbsim = QComboBox(self)
-      self.populateSimCB() # populate the combobox
+      try:
+        self.populateSimCB()
+      except ValueError:
+        # If no simulations could be loaded into combobox
+        # don't crash the initialization process
+        print("Warning: no simulations to load")
+        pass
       self.cbsim.activated[str].connect(self.onActivateSimCB)
       self.grid.addWidget(self.cbsim, gRow, 0, 1, 8)#, 1, 3)
       self.btnrmsim = QPushButton('Remove Simulation',self)
@@ -1862,7 +1886,7 @@ class HNNGUI (QMainWindow):
       if self.cbsim.count() == 0:
         raise ValueError("No simulations to add to combo box")
 
-      if index is None:
+      if index is None or index < 0:
         # set to last entry
         self.cbsim.setCurrentIndex(self.cbsim.count() - 1)
       else:
@@ -2066,7 +2090,6 @@ class HNNGUI (QMainWindow):
         glob = os.path.join(sim_dir, 'spk_%d.txt')
         sim_data['spikes'].write(glob)
 
-        spec_fns = []
         # save dipole for each trial and perform spectral analysis
         for trial_idx, dpl in enumerate(sim_data['dpls']):
             dipole_fn = get_fname(sim_dir, 'normdpl', trial_idx)
@@ -2078,16 +2101,13 @@ class HNNGUI (QMainWindow):
 
             if params['save_spec_data'] or \
                     usingOngoingInputs(params):
-                spec_opts = {'type': 'dpl_laminar',
-                            'f_max': params['f_max_spec'],
-                            'save_data': 1,
-                            'runtype': 'parallel'}
-                spec_fn = get_fname(sim_dir, 'rawspec', trial_idx)
-                spec_fns.append(spec_fn)
-
-                # run the spectral analysis and save to spec_fn
-                spec_results = analysis_simp(spec_opts, params, dpl, spec_fn)
+                spec_results = spec_dpl_kernel(dpl, params['f_max_spec'],
+                                               params['dt'], params['tstop'])
                 sim_data['spec'].append(spec_results)
+
+                if params['save_spec_data']:
+                    spec_fn = get_fname(sim_dir, 'rawspec', trial_idx)
+                    save_spec_data(spec_fn, spec_results)
 
         paramfn = os.path.join(get_output_dir(), 'param',
                                 params['sim_prefix'] + '.param')
@@ -2146,7 +2166,7 @@ class HNNGUI (QMainWindow):
                                     '. Saved data/figures in: ' + sim_dir)
         self.setWindowTitle(self.baseparamwin.paramfn)
 
-        self.populateSimCB() # populate the combobox
+        self.populateSimCB()  # populate the combobox
         cb_index = self.cbsim.findText(self.baseparamwin.paramfn)
         if cb_index < 0:
             raise ValueError("Couldn't find simulation in combobox: %s" %

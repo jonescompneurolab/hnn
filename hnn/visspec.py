@@ -4,56 +4,21 @@
 #          Blake Caldwell <blake_caldwell@brown.edu>
 
 import numpy as np
+import os
 
-from PyQt5.QtWidgets import QSizePolicy, QAction
+from PyQt5.QtWidgets import QSizePolicy, QAction, QFileDialog
 from PyQt5.QtGui import QIcon
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from hnn_core.dipole import average_dipoles, Dipole
 
 from .DataViewGUI import DataViewGUI
-from .specfn import MorletSpec
+from .specfn import plot_spec, extract_spec
 
 fontsize = plt.rcParams['font.size'] = 10
-
-
-def extract_spec(params, dpls, avg_dpl):
-    """Extract Mortlet spectrograms from dipoles
-
-    Parameters
-    ----------
-    params : dict
-        Dictionary containing parameters
-    dpls: list of Dipole objects
-        List containing Dipoles of each trial
-    avg_dpl: Dipole object
-        Dipole object containing the average of individual trial Dipoles
-
-    Returns
-    ----------
-    specs: list of MortletSpec objects
-        List containing spectrograms of each trial
-    avg_spec: MortletSpec objects
-        spectrogram averaged over all trials
-
-    """
-
-    specs = []
-    for dpltrial in dpls:
-        ms = MorletSpec(dpltrial.times, dpltrial.data['agg'], None,
-                        p_dict=params)
-        specs.append(ms)
-
-    # !!should fix to average of individual spectrograms!!
-    avg_spec = MorletSpec(avg_dpl.times, avg_dpl.data['agg'], None,
-                          p_dict=params)
-
-    ltfr = [ms.TFR for ms in specs]
-    npspec = np.array(ltfr)
-    avg_spec.TFR = np.mean(npspec, axis=0)
-
-    return specs, avg_spec
+random_label = np.random.rand(100)
 
 
 class SpecCanvas(FigureCanvasQTAgg):
@@ -79,7 +44,6 @@ class SpecCanvas(FigureCanvasQTAgg):
         self.dpls = self.gui.dpls
         self.specs = self.gui.specs
         self.avg_dpl = self.gui.avg_dpl
-        self.avg_spec = self.gui.avg_spec
         self.lax = []
 
         if 'spec_cmap' in self.params:
@@ -95,54 +59,51 @@ class SpecCanvas(FigureCanvasQTAgg):
             ax.set_yticks([])
             ax.cla()
 
-    def clearlextdatobj(self):
-        if hasattr(self, 'lextdatobj'):
-            for o in self.lextdatobj:
-                o.set_visible(False)
-            del self.lextdatobj
-
-    def drawspec(self, dpls, lspec, avgdipole, avgspec, fig, G,
+    def drawspec(self, dpls, avgdipole, spec_data, fig, G,
                  ltextra=''):
-        if len(lspec) == 0:
+        global random_label
+
+        ntrial = len(spec_data)
+        if ntrial == 0:
             return
+
+        if self.index == 0:
+            ntrial = 1
 
         plt.ion()
 
         gdx = 211
 
-        ax = fig.add_subplot(gdx)
+        ax = fig.add_subplot(gdx, label=random_label)
+        random_label += 1
         lax = [ax]
-        tvec = avgdipole.times
+
+        # use spectogram limits (missing first 50 ms b/c edge effects)
+        xlim = (spec_data[0]['time'][0],
+                spec_data[0]['time'][-1])
 
         if self.index == 0:
             for dpltrial in dpls:
-                ax.plot(tvec, dpltrial.data['agg'],
+                ax.plot(dpltrial.times, dpltrial.data['agg'],
                         linewidth=self.gui.linewidth, color='gray')
-            ax.plot(tvec, avgdipole.data['agg'],
+            ax.plot(avgdipole.times, avgdipole.data['agg'],
                     linewidth=self.gui.linewidth + 1, color='black')
         else:
-            ax.plot(tvec, dpls[self.index-1].data['agg'],
-                    linewidth=self.gui.linewidth + 1, color='gray')
+            ax.plot(dpls[self.index - 1].times,
+                    dpls[self.index - 1].data['agg'],
+                    linewidth=self.gui.linewidth + 1,
+                    color='gray')
 
-        ax.set_xlim(tvec[0], tvec[-1])
+        ax.set_xlim(xlim)
         ax.set_ylabel('Dipole (nAm)')
 
         gdx = 212
 
-        ax = fig.add_subplot(gdx)
+        ax = fig.add_subplot(gdx, label=random_label)
+        random_label += 1
+        ntrial = len(dpls)
 
-        if self.index == 0:
-            ms = avgspec
-        else:
-            ms = lspec[self.index - 1]
-
-        ax.imshow(ms.TFR, extent=[tvec[0], tvec[-1], ms.f[-1], ms.f[0]],
-                  aspect='auto', origin='upper',
-                  cmap=plt.get_cmap(self.spec_cmap))
-
-        ax.set_xlim(tvec[0], tvec[-1])
-        ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Frequency (Hz)')
+        plot_spec(ax, spec_data, ntrial, self.spec_cmap, xlim)
 
         lax.append(ax)
 
@@ -152,31 +113,36 @@ class SpecCanvas(FigureCanvasQTAgg):
         ltextra = 'Trial ' + str(self.index)
         if self.index == 0:
             ltextra = 'All Trials'
-        self.lax = self.drawspec(self.dpls, self.specs,
-                                 self.avg_dpl, self.avg_spec, self.figure,
-                                 self.G, ltextra=ltextra)
+        self.lax = self.drawspec(self.dpls, self.avg_dpl, self.specs,
+                                 self.figure, self.G, ltextra=ltextra)
         self.figure.subplots_adjust(bottom=0.06, left=0.06, right=0.98,
                                     top=0.97, wspace=0.1, hspace=0.09)
         self.draw()
 
 
 class SpecViewGUI(DataViewGUI):
+    """Class for displaying spectrogram viewer
+
+    Required parameters in params dict: f_max_spec, sim_prefix, spec_cmap
+    """
     def __init__(self, CanvasType, params, sim_data, title):
-        self.specs = []  # external data spec
+        self.specs = []
+        self.lextfiles = []  # external data files
         self.dpls = None
         self.avg_dpl = []
-        self.avg_spec = []
         self.params = params
+
+        # used by loadSimData
+        self.sim_data = sim_data
         super(SpecViewGUI, self).__init__(CanvasType, self.params, sim_data,
                                           title)
-        self.addLoadDataActions()
-        self.loadDisplayData()
+        self._addLoadDataActions()
+        self.loadSimData(self.params['sim_prefix'], self.params['f_max_spec'])
 
-    def addLoadDataActions(self):
+    def _addLoadDataActions(self):
         loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data.', self)
         loadDataFile.setShortcut('Ctrl+D')
-        loadDataFile.setStatusTip('Load experimental (.txt) / ' +
-                                  'simulation (.param) data.')
+        loadDataFile.setStatusTip('Load experimental (.txt) data.')
         loadDataFile.triggered.connect(self.loadDisplayData)
 
         clearDataFileAct = QAction(QIcon.fromTheme('close'), 'Clear data.',
@@ -188,23 +154,29 @@ class SpecViewGUI(DataViewGUI):
         self.fileMenu.addAction(loadDataFile)
         self.fileMenu.addAction(clearDataFileAct)
 
-    def loadDisplayData(self):
-        # store copy of data in this object, that can be reused by canvas (self.m)
-        # on re-instantiation
-        self.avg_dpl = self.sim_data['avg_dpl']
-        self.dpls = self.sim_data['dpls']
-        self.specs, self.avg_spec = extract_spec(self.params, self.dpls,
-                                                 self.avg_dpl)
+    def loadSimData(self, sim_prefix, f_max_spec):
+        """Load and plot from SimData"""
 
-        # populate the data inside canvas object before calling self.m.plot()
-        self.m.avg_dpl = self.avg_dpl
-        self.m.dpls = self.dpls
-        self.m.specs = self.specs
-        self.m.avg_spec = self.avg_spec
+        # store copy of data in this object, that can be reused by
+        # canvas (self.m) on re-instantiation
+        if self.sim_data is not None:
+            self.avg_dpl = self.sim_data['avg_dpl']
+            self.dpls = self.sim_data['dpls']
+            self.specs = self.sim_data['spec']
+            if self.specs is None or len(self.specs) == 0:
+                self.specs = extract_spec(self.dpls, f_max_spec)
+
+            # populate the data inside canvas object before calling
+            # self.m.plot()
+            self.m.avg_dpl = self.avg_dpl
+            self.m.dpls = self.dpls
+            self.m.specs = self.specs
+
+            self.ntrial = len(self.specs)
 
         self.updateCB()
         self.printStat('Extracted ' + str(len(self.m.specs)) +
-                       ' spectrograms for ' + self.params['sim_prefix'])
+                       ' spectrograms for ' + sim_prefix)
 
         if len(self.m.specs) > 0:
             self.printStat('Plotting Spectrograms.')
@@ -212,7 +184,67 @@ class SpecViewGUI(DataViewGUI):
             self.m.draw()  # make sure new lines show up in plot
             self.printStat('')
 
+    def loadDisplayData(self):
+        """Load dipole(s) from .txt file and plot spectrograms"""
+        fname = QFileDialog.getOpenFileName(self, 'Open .txt file', 'data')
+        fname = os.path.abspath(fname[0])
+
+        if not os.path.isfile(fname):
+            return
+
+        self.m.index = 0
+        file_data = np.loadtxt(fname, dtype=float)
+        if file_data.shape[1] > 2:
+            # Multiple trials contained in this file. Only 'agg' dipole is
+            # present for each trial
+            dpls = []
+            ntrials = file_data.shape[1]
+            for trial in range(1, ntrials):
+                dpl_data = np.c_[file_data[:, trial],
+                                 np.zeros(len(file_data[:, trial])),
+                                 np.zeros(len(file_data[:, trial]))]
+                dpl = Dipole(file_data[:, 0], dpl_data)
+                dpls.append(dpl)
+            self.dpls = dpls
+            self.avg_dpl = average_dipoles(dpls)
+        else:
+            # Normal dipole file saved by HNN. There is a single trial with
+            # column 0: times, column 1: 'agg' dipole, column 2: 'L2' dipole
+            # and column 3: 'L5' dipole
+
+            ntrials = 1
+            dpl_data = np.c_[file_data[:, 1],
+                             file_data[:, 1],
+                             file_data[:, 1]]
+            dpl = Dipole(file_data[:, 0], dpl_data)
+
+            self.avg_dpl = dpl
+            self.dpls = [self.avg_dpl]
+
+        print('Loaded data from %s: %d trials.' % (fname, ntrials))
+        print('Extracting Spectrograms...')
+        # a progress bar would be helpful right here!
+        self.specs = extract_spec(self.dpls, self.params['f_max_spec'])
+
+        # updateCB depends on ntrial being set
+        self.ntrial = len(self.specs)
+        self.updateCB()
+        self.printStat('Extracted ' + str(len(self.specs)) +
+                       ' spectrograms from ' + fname)
+        self.lextfiles.append(fname)
+
+        if len(self.specs) > 0:
+            self.printStat('Plotting Spectrograms.')
+            self.m.specs = self.specs
+            self.m.dpls = self.dpls
+            self.m.avg_dpl = self.avg_dpl
+            self.m.plot()
+            self.m.draw()  # make sure new lines show up in plot
+            self.printStat('')
+
     def clearDataFile(self):
-        self.m.clearlextdatobj()
+        """Clear data from file and revert to SimData"""
         self.specs = []
-        self.m.draw()
+        self.lextfiles = []
+        self.m.index = 0
+        self.loadSimData(self.params['sim_prefix'], self.params['f_max_spec'])

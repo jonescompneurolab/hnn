@@ -2,7 +2,6 @@ import os
 import numpy as np
 from math import ceil
 from glob import glob
-from copy import deepcopy
 
 from scipy import signal
 from PyQt5 import QtWidgets
@@ -16,6 +15,7 @@ from hnn_core import read_spikes
 from hnn_core.dipole import read_dipole, average_dipoles
 
 from .spikefn import ExtInputs
+from .specfn import plot_spec
 from .paramrw import get_output_dir, get_fname, get_inputs
 from .paramrw import countEvokedInputs, read_gids_param
 from .qt_lib import getscreengeom
@@ -275,7 +275,7 @@ class SimData(object):
         Returns
         ----------
         found: bool
-            Whether simulation data directory exists or not
+            Whether simulation data could be read
         """
 
         sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
@@ -299,6 +299,7 @@ class SimData(object):
             gid_ranges = read_gids_param(paramtxt_fn)
         except FileNotFoundError:
             print(warning_message, paramtxt_fn)
+            return False
 
         # spikes
         spikes = read_spktrials(sim_dir, gid_ranges)
@@ -434,32 +435,6 @@ class SimData(object):
 
         return dpltrial
 
-    def _plot_spec(self, ax, paramfn, ntrial, spec_cmap, xlim, fontsize):
-        """Use SimData to plot spectrogram"""
-
-        # calculate TFR from spec trial data
-        # start with data from the first trial
-        spec_TFR = deepcopy(self._sim_data[paramfn]['data']['spec'][0])
-        for key in ['TFR', 'TFR_L5', 'TFR_L2']:
-            spec_list = [self._sim_data[paramfn]['data']['spec'][i][key]
-                         for i in range(ntrial)]
-            spec_TFR[key] = np.mean(np.array(spec_list), axis=0)
-
-        # Plot TFR data and add colorbar
-        plot = ax.imshow(spec_TFR['TFR'],
-                         extent=(spec_TFR['time'][0],
-                                 spec_TFR['time'][-1],
-                                 spec_TFR['freq'][-1],
-                                 spec_TFR['freq'][0]),
-                         aspect='auto', origin='upper',
-                         cmap=plt.get_cmap(spec_cmap))
-        ax.set_ylabel('Frequency (Hz)', fontsize=fontsize)
-        ax.set_xlabel('Time (ms)', fontsize=fontsize)
-        ax.set_xlim(xlim)
-        ax.set_ylim(spec_TFR['freq'][-1], spec_TFR['freq'][0])
-
-        return plot
-
     def save_spec_with_hist(self, paramfn, params):
         sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
         ntrial = params['N_trials']
@@ -503,8 +478,9 @@ class SimData(object):
             axspec = f.add_subplot(gs0[:, :])
             axdipole = f.add_subplot(gs1[:, :])
 
-            cax = self._plot_spec(axspec, paramfn, ntrial,
-                                  params['spec_cmap'], xlim, fontsize)
+            spec_data = self._sim_data[paramfn]['data']['spec']
+            cax = plot_spec(axspec, spec_data, ntrial,
+                            params['spec_cmap'], xlim, fontsize)
             f.colorbar(cax, ax=axspec)
 
             # set xlim based on TFR plot
@@ -742,9 +718,10 @@ class SIMCanvas (FigureCanvasQTAgg):
 
     def _has_simdata(self):
         """check if any simulation data available"""
-        avg_dpl = self.sim_data._sim_data[self.paramfn]['data']['avg_dpl']
-        if avg_dpl is not None:
-            return True
+        if self.paramfn in self.sim_data._sim_data:
+            avg_dpl = self.sim_data._sim_data[self.paramfn]['data']['avg_dpl']
+            if avg_dpl is not None:
+                return True
 
         return False
 
@@ -892,34 +869,36 @@ class SIMCanvas (FigureCanvasQTAgg):
                     self.gRow = len(axes)
                     only_create_axes = True
 
-        if not only_create_axes:
-            tstop = self.params['tstop']
-            xlim = (0.0, tstop)
+            if not only_create_axes:
+                tstop = self.params['tstop']
+                xlim = (0.0, tstop)
 
-            sim_data = self.sim_data._sim_data[self.paramfn]['data']
-            trials = [trial_idx for trial_idx in range(ntrial)]
-            extinputs = ExtInputs(sim_data['spikes'], sim_data['gid_ranges'],
-                                  trials, self.params)
+                sim_data = self.sim_data._sim_data[self.paramfn]['data']
+                trials = [trial_idx for trial_idx in range(ntrial)]
+                extinputs = ExtInputs(sim_data['spikes'],
+                                      sim_data['gid_ranges'],
+                                      trials, self.params)
 
-            feeds_to_plot = check_feeds_to_plot(extinputs.inputs,
-                                                self.params)
-            axes = self.plotinputhist(extinputs, feeds_to_plot)
-            self.gRow = len(axes)
+                feeds_to_plot = check_feeds_to_plot(extinputs.inputs,
+                                                    self.params)
+                axes = self.plotinputhist(extinputs, feeds_to_plot)
+                self.gRow = len(axes)
 
-            # check that dipole data is present
-            single_sim = self.sim_data._sim_data[self.paramfn]['data']
-            if single_sim['avg_dpl'] is None:
-                failed_loading_dpl = True
+                # check that dipole data is present
+                single_sim = self.sim_data._sim_data[self.paramfn]['data']
+                if single_sim['avg_dpl'] is None:
+                    failed_loading_dpl = True
 
-            if single_sim['spec'] is None or len(single_sim['spec']) == 0:
-                failed_loading_spec = True
-            # whether to draw the specgram - should draw if user saved it or
-            # have ongoing, poisson, or tonic inputs
-            if (not failed_loading_spec) and single_sim['spec'] is not None \
-                    and (self.params['save_spec_data'] or
-                         feeds_to_plot['ongoing'] or
-                         feeds_to_plot['pois'] or feeds_to_plot['tonic']):
-                DrawSpec = True
+                if single_sim['spec'] is None or len(single_sim['spec']) == 0:
+                    failed_loading_spec = True
+                # whether to draw the specgram - should draw if user saved
+                # it or have ongoing, poisson, or tonic inputs
+                if (not failed_loading_spec) and single_sim['spec'] is \
+                        not None \
+                        and (self.params['save_spec_data'] or
+                             feeds_to_plot['ongoing'] or
+                             feeds_to_plot['pois'] or feeds_to_plot['tonic']):
+                    DrawSpec = True
 
         if DrawSpec:  # dipole axis takes fewer rows if also drawing specgram
             self.axdipole = self.figure.add_subplot(self.G[self.gRow:5, 0])
@@ -939,7 +918,7 @@ class SIMCanvas (FigureCanvasQTAgg):
         self.figure.subplots_adjust(left=left, right=0.99, bottom=bottom,
                                     top=0.99, hspace=0.1, wspace=0.1)
 
-        if failed_loading_dpl or only_create_axes:
+        if failed_loading_dpl or only_create_axes or self.params is None:
             return
 
         # get spectrogram if it exists, then adjust axis limits but only
@@ -1038,9 +1017,10 @@ class SIMCanvas (FigureCanvasQTAgg):
         if DrawSpec:
             gRow = 6
             self.axspec = self.figure.add_subplot(self.G[gRow:10, 0])
-            cax = self.sim_data._plot_spec(self.axspec, self.paramfn, ntrial,
-                                           self.params['spec_cmap'], xlim,
-                                           fontsize)
+            spec_data = sim_data['spec']
+            cax = plot_spec(self.axspec, spec_data, ntrial,
+                            self.params['spec_cmap'], xlim,
+                            fontsize)
             cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
             # plot colorbar horizontally to save space
             plt.colorbar(cax, cax=cbaxes, orientation='horizontal')
