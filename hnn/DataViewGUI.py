@@ -5,7 +5,7 @@
 
 import os
 
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QWidget, QComboBox
+from PyQt5.QtWidgets import QMainWindow, QAction, QWidget, QComboBox
 from PyQt5.QtWidgets import QGridLayout, QInputDialog
 from PyQt5.QtGui import QIcon
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -29,15 +29,17 @@ class DataViewGUI(QMainWindow):
         self.CanvasType = CanvasType
         self.ntrial = params['N_trials']
         self.params = params
-        self.sim_data = sim_data
         self.title = title
+        self.m = None
+        self.toolbar = None
+        self.sim_data = sim_data
         self.initUI()
 
     def initMenu(self):
-        exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit ' + self.title + '.')
-        exitAction.triggered.connect(qApp.quit)
+        exitAction = QAction(QIcon.fromTheme('close'), 'Close', self)
+        exitAction.setShortcut('Ctrl+W')
+        exitAction.setStatusTip('Close ' + self.title + '.')
+        exitAction.triggered.connect(self.close)
 
         menubar = self.menuBar()
         self.fileMenu = menubar.addMenu('&File')
@@ -93,20 +95,24 @@ class DataViewGUI(QMainWindow):
         print(s)
         self.statusBar().showMessage(s)
 
-    def initCanvas(self):
+    def initCanvas(self, first_init=False):
         """Initialize canvas
 
-        This function will add widgets, which may create a memory leak if it
-        is called repeatedly (according to a comment in the previous code).
-        The previous code addressed it with the following:
-
-        self.grid.removeWidget(self.m)
-        self.grid.removeWidget(self.toolbar)
-        self.m.setParent(None)
-        self.toolbar.setParent(None)
-        self.m = self.toolbar = None
+        Parameters
+        ----------
+        first_init: bool | None
+            Whether canvas is being initialized for the first time
+            or if member objects have already been instantiated. If None,
+            then False is assumed.
         """
 
+        if not first_init:
+            self.m.setParent(None)
+            self.toolbar.setParent(None)
+            self.grid.removeWidget(self.m)
+            self.grid.removeWidget(self.toolbar)
+
+        self.grid.removeWidget(self.toolbar)
         self.m = self.CanvasType(self.params, self.sim_data, self.index,
                                  parent=self, width=12, height=10,
                                  dpi=getmplDPI())
@@ -136,7 +142,7 @@ class DataViewGUI(QMainWindow):
                                          '.param'))
         self.grid = grid = QGridLayout()
         self.index = 0
-        self.initCanvas()
+        self.initCanvas(True)
         self.cb = QComboBox(self)
         self.grid.addWidget(self.cb, 2, 0, 1, 4)
 
