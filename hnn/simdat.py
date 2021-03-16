@@ -490,7 +490,7 @@ class SimData(object):
             dpl = self._read_dpl(paramfn, trial_idx, ntrial)
             if dpl is None:
                 break
-            dpl.plot(axdipole, 'agg', show=False)
+            dpl.plot(layer='agg', ax=axdipole, show=False)
             axdipole.set_xlim(xlim)
 
             spec_fig_fn = get_fname(sim_dir, 'figspec', trial_idx)
@@ -536,7 +536,7 @@ class SimData(object):
             dpl = self._read_dpl(paramfn, trial_idx, ntrial)
             if dpl is None:
                 break
-            dpl.plot(axdipole, 'agg', show=False)
+            dpl.plot(layer='agg', ax=axdipole, show=False)
             axdipole.set_xlim(xlim)
 
             dipole_fig_fn = get_fname(sim_dir, 'figdpl', trial_idx)
