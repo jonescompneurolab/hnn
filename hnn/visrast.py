@@ -232,11 +232,12 @@ class SpikeCanvas(FigureCanvasQTAgg):
 
         if idx == 0 and self.params['N_trials'] > 1:
             # combine spikes into a single list for all trials
-            spike_times = np.array(sum(self.sim_data['spikes'].spike_times, []))
+            spike_times = np.array(sum(self.sim_data['spikes'].spike_times,
+                                       []))
             spike_gids = np.array(sum(self.sim_data['spikes'].spike_gids, []))
         else:
-            spike_times = self.sim_data['spikes'].spike_times[idx-1]
-            spike_gids = self.sim_data['spikes'].spike_gids[idx-1]
+            spike_times = self.sim_data['spikes'].spike_times[idx - 1]
+            spike_gids = self.sim_data['spikes'].spike_gids[idx - 1]
 
         empty_array = np.empty((len(spike_times), 0), np.float64)
         spike_arr = np.array([spike_times, spike_gids])
@@ -286,13 +287,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
 class SpikeViewGUI(DataViewGUI):
     def __init__(self, CanvasType, params, sim_data, title):
         self.params = params
-        self.sim_data = sim_data
         super(SpikeViewGUI, self).__init__(CanvasType, params, sim_data, title)
         self.addViewHistAction()
-
-    def initCanvas(self):
-        super(SpikeViewGUI, self).initCanvas()
-        self.m.sim_data = self.sim_data
 
     def addViewHistAction(self):
         """Add 'Toggle Histograms' to view menu"""
