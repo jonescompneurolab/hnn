@@ -8,6 +8,7 @@ import os
 from PyQt5.QtWidgets import QMainWindow, QAction, QWidget, QComboBox
 from PyQt5.QtWidgets import QGridLayout, QInputDialog
 from PyQt5.QtGui import QIcon
+
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 

@@ -8,12 +8,14 @@ from numpy import hamming
 from math import ceil
 
 from PyQt5.QtWidgets import QAction, QSizePolicy
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from pylab import convolve
 import matplotlib.gridspec as gridspec
+
+from pylab import convolve
 
 from .DataViewGUI import DataViewGUI
 from .paramrw import usingEvokedInputs, usingOngoingInputs, usingPoissonInputs

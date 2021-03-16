@@ -36,4 +36,6 @@ if __name__ == "__main__":
           platforms='any',
           packages=find_packages(),
           package_data={'hnn':
-                        ['../param/*.param']})
+                        ['../param/*.param']},
+          install_requires=['hnn-core']
+        )

@@ -2,19 +2,17 @@ import sys, os
 import numpy as np
 import pickle
 
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QToolTip, QPushButton, QFormLayout
-from PyQt5.QtWidgets import QMenu, QSizePolicy, QMessageBox, QWidget, QFileDialog, QComboBox, QTabWidget
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGroupBox, QDialog, QGridLayout, QLineEdit, QLabel
-from PyQt5.QtWidgets import QCheckBox, QInputDialog
-from PyQt5.QtGui import QIcon, QFont, QPixmap
-from PyQt5.QtCore import QCoreApplication, QThread, pyqtSignal, QObject, pyqtSlot
-from PyQt5 import QtCore
+from PyQt5.QtWidgets import (QSizePolicy, QGridLayout, QWidget,
+                             QComboBox)
+from PyQt5.QtGui import QIcon
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
+
 from hnn_core import read_params
 
 from .qt_lib import getmplDPI
