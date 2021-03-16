@@ -29,7 +29,7 @@ Please follow the links on our [installation page](installer) to find instructio
 
 Just do:
 
-    $ ./hnn.sh
+    $ python hnn.py
 
 to start the HNN graphical user interface
 
