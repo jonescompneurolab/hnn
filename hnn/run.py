@@ -7,7 +7,6 @@
 import os.path as op
 import os
 import sys
-import numpy as np
 from time import sleep
 from copy import deepcopy
 from math import ceil, isclose
@@ -109,12 +108,14 @@ def simulate(params, n_procs=None):
     sim_data = {}
     # run the simulation with MPIBackend for faster completion time
     with MPIBackend(n_procs=n_procs, mpi_cmd='mpiexec'):
-        sim_data['raw_dpls'] = simulate_dipole(net, params['N_trials'], postproc=False)
+        sim_data['raw_dpls'] = simulate_dipole(net, params['N_trials'],
+                                               postproc=False)
 
     sim_data['gid_ranges'] = net.gid_ranges
     sim_data['spikes'] = net.cell_response
 
     return sim_data
+
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread(QtCore.QThread):
@@ -244,7 +245,7 @@ class RunSimThread(QtCore.QThread):
             except RuntimeError as e:
                 msg = str(e)
                 self.baseparamwin.optparamwin.toggleEnableUserFields(
-                  self.cur_step, enable=True)
+                    self.cur_step, enable=True)
                 self.baseparamwin.optparamwin.clear_initial_opt_ranges()
                 self.baseparamwin.optparamwin.optimization_running = False
         else:
@@ -284,7 +285,7 @@ class RunSimThread(QtCore.QThread):
                 # exit using RuntimeError
                 raise RuntimeError("Terminated")
 
-            self.ncore = ceil(self.ncore/2)
+            self.ncore = ceil(self.ncore / 2)
             txt = "INFO: Failed starting simulation, retrying with %d cores" \
                 % self.ncore
             print(txt)
@@ -446,7 +447,7 @@ class RunSimThread(QtCore.QThread):
 
             print(txt)
             self._updatewaitsimwin(os.linesep + 'Simulation finished: ' + txt +
-                                  os.linesep)
+                                   os.linesep)
 
             data_dir = op.join(get_output_dir(), 'data')
             sim_dir = op.join(data_dir, self.params['sim_prefix'])
@@ -531,4 +532,4 @@ class RunSimThread(QtCore.QThread):
                 self.step_ranges[var_name]['final'] = new_value
             else:
                 self.step_ranges[var_name]['final'] = \
-                  self.step_ranges[var_name]['initial']
+                    self.step_ranges[var_name]['initial']
