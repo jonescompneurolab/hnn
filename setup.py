@@ -38,4 +38,4 @@ if __name__ == "__main__":
           package_data={'hnn':
                         ['../param/*.param']},
           install_requires=['hnn-core']
-        )
+          )

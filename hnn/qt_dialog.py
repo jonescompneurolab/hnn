@@ -5,7 +5,6 @@
 
 import os
 from collections import OrderedDict
-from glob import glob
 
 import multiprocessing
 from psutil import cpu_count
@@ -16,10 +15,11 @@ from PyQt5.QtWidgets import (QDialog, QToolTip, QTabWidget, QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 
-from hnn_core import CellResponse, read_params
+from hnn_core import read_params
 
 from .paramrw import usingOngoingInputs, usingEvokedInputs, get_output_dir
-from .qt_lib import setscalegeom, setscalegeomcenter, lookupresource, ClickLabel
+from .qt_lib import (setscalegeom, setscalegeomcenter, lookupresource,
+                     ClickLabel)
 from .qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
 
 
@@ -604,8 +604,9 @@ class RunParamDialog(DictDialog):
             elif k == 'spec_cmap':
                 self.spec_cmap = v
 
-        # for spec_cmap we want the user to be able to change (e.g. 'viridis'), but the
-        # default is 'jet' to be consistent with prior publications on HNN
+        # for spec_cmap we want the user to be able to change
+        # (e.g. 'viridis'), but the default is 'jet' to be consistent with
+        # prior publications on HNN
         if 'spec_cmap' not in din:
             self.spec_cmap = 'jet'
 
@@ -619,7 +620,8 @@ class RunParamDialog(DictDialog):
         s += 'spec_cmap: ' + self.spec_cmap + os.linesep
         return s
 
-# widget to specify (pyramidal) cell parameters (geometry, synapses, biophysics)
+# widget to specify (pyramidal) cell parameters (geometry, synapses,
+# biophysics)
 
 
 class CellParamDialog (DictDialog):
@@ -664,17 +666,18 @@ class CellParamDialog (DictDialog):
                                       ('L2Pyr_gabab_tau1', 1.),
                                       ('L2Pyr_gabab_tau2', 20.)])
 
-        self.dL2PyrBiophys = OrderedDict([('L2Pyr_soma_gkbar_hh2', 0.01),  # Biophysics soma
-                                          ('L2Pyr_soma_gnabar_hh2', 0.18),
-                                          ('L2Pyr_soma_el_hh2', -65.),
-                                          ('L2Pyr_soma_gl_hh2', 4.26e-5),
-                                          ('L2Pyr_soma_gbar_km', 250.),
-                                          # Biophysics dends
-                                          ('L2Pyr_dend_gkbar_hh2', 0.01),
-                                          ('L2Pyr_dend_gnabar_hh2', 0.15),
-                                          ('L2Pyr_dend_el_hh2', -65.),
-                                          ('L2Pyr_dend_gl_hh2', 4.26e-5),
-                                          ('L2Pyr_dend_gbar_km', 250.)])
+        self.dL2PyrBiophys = OrderedDict([  # Biophysics soma
+                                         ('L2Pyr_soma_gkbar_hh2', 0.01),
+                                         ('L2Pyr_soma_gnabar_hh2', 0.18),
+                                         ('L2Pyr_soma_el_hh2', -65.),
+                                         ('L2Pyr_soma_gl_hh2', 4.26e-5),
+                                         ('L2Pyr_soma_gbar_km', 250.),
+                                         # Biophysics dends
+                                         ('L2Pyr_dend_gkbar_hh2', 0.01),
+                                         ('L2Pyr_dend_gnabar_hh2', 0.15),
+                                         ('L2Pyr_dend_el_hh2', -65.),
+                                         ('L2Pyr_dend_gl_hh2', 4.26e-5),
+                                         ('L2Pyr_dend_gbar_km', 250.)])
 
         self.dL5PyrGeom = OrderedDict([('L5Pyr_soma_L', 39.),  # Soma
                                        ('L5Pyr_soma_diam', 28.9),
@@ -713,35 +716,40 @@ class CellParamDialog (DictDialog):
                                       ('L5Pyr_gabab_tau1', 1.),
                                       ('L5Pyr_gabab_tau2', 20.)])
 
-        self.dL5PyrBiophys = OrderedDict([('L5Pyr_soma_gkbar_hh2', 0.01),  # Biophysics soma
-                                          ('L5Pyr_soma_gnabar_hh2', 0.16),
-                                          ('L5Pyr_soma_el_hh2', -65.),
-                                          ('L5Pyr_soma_gl_hh2', 4.26e-5),
-                                          ('L5Pyr_soma_gbar_ca', 60.),
-                                          ('L5Pyr_soma_taur_cad', 20.),
-                                          ('L5Pyr_soma_gbar_kca', 2e-4),
-                                          ('L5Pyr_soma_gbar_km', 200.),
-                                          ('L5Pyr_soma_gbar_cat', 2e-4),
-                                          ('L5Pyr_soma_gbar_ar', 1e-6),
-                                          # Biophysics dends
-                                          ('L5Pyr_dend_gkbar_hh2', 0.01),
-                                          ('L5Pyr_dend_gnabar_hh2', 0.14),
-                                          ('L5Pyr_dend_el_hh2', -71.),
-                                          ('L5Pyr_dend_gl_hh2', 4.26e-5),
-                                          ('L5Pyr_dend_gbar_ca', 60.),
-                                          ('L5Pyr_dend_taur_cad', 20.),
-                                          ('L5Pyr_dend_gbar_kca', 2e-4),
-                                          ('L5Pyr_dend_gbar_km', 200.),
-                                          ('L5Pyr_dend_gbar_cat', 2e-4),
-                                          ('L5Pyr_dend_gbar_ar', 1e-6)])
+        self.dL5PyrBiophys = OrderedDict([  # Biophysics soma
+                                         ('L5Pyr_soma_gkbar_hh2', 0.01),
+                                         ('L5Pyr_soma_gnabar_hh2', 0.16),
+                                         ('L5Pyr_soma_el_hh2', -65.),
+                                         ('L5Pyr_soma_gl_hh2', 4.26e-5),
+                                         ('L5Pyr_soma_gbar_ca', 60.),
+                                         ('L5Pyr_soma_taur_cad', 20.),
+                                         ('L5Pyr_soma_gbar_kca', 2e-4),
+                                         ('L5Pyr_soma_gbar_km', 200.),
+                                         ('L5Pyr_soma_gbar_cat', 2e-4),
+                                         ('L5Pyr_soma_gbar_ar', 1e-6),
+                                         # Biophysics dends
+                                         ('L5Pyr_dend_gkbar_hh2', 0.01),
+                                         ('L5Pyr_dend_gnabar_hh2', 0.14),
+                                         ('L5Pyr_dend_el_hh2', -71.),
+                                         ('L5Pyr_dend_gl_hh2', 4.26e-5),
+                                         ('L5Pyr_dend_gbar_ca', 60.),
+                                         ('L5Pyr_dend_taur_cad', 20.),
+                                         ('L5Pyr_dend_gbar_kca', 2e-4),
+                                         ('L5Pyr_dend_gbar_km', 200.),
+                                         ('L5Pyr_dend_gbar_cat', 2e-4),
+                                         ('L5Pyr_dend_gbar_ar', 1e-6)])
 
         dtrans = {'gkbar': 'Kv', 'gnabar': 'Na', 'km': 'Km', 'gl': 'leak',
-                  'ca': 'Ca', 'kca': 'KCa', 'cat': 'CaT', 'ar': 'HCN', 'cad': 'Ca decay time',
-                  'dend': 'Dendrite', 'soma': 'Soma', 'apicaltrunk': 'Apical Dendrite Trunk',
-                  'apical1': 'Apical Dendrite 1', 'apical2': 'Apical Dendrite 2',
-                  'apical3': 'Apical Dendrite 3', 'apicaltuft': 'Apical Dendrite Tuft',
-                  'apicaloblique': 'Oblique Apical Dendrite', 'basal1': 'Basal Dendrite 1',
-                  'basal2': 'Basal Dendrite 2', 'basal3': 'Basal Dendrite 3'}
+                  'ca': 'Ca', 'kca': 'KCa', 'cat': 'CaT', 'ar': 'HCN',
+                  'cad': 'Ca decay time', 'dend': 'Dendrite', 'soma': 'Soma',
+                  'apicaltrunk': 'Apical Dendrite Trunk',
+                  'apical1': 'Apical Dendrite 1',
+                  'apical2': 'Apical Dendrite 2',
+                  'apical3': 'Apical Dendrite 3',
+                  'apicaltuft': 'Apical Dendrite Tuft',
+                  'apicaloblique': 'Oblique Apical Dendrite',
+                  'basal1': 'Basal Dendrite 1', 'basal2': 'Basal Dendrite 2',
+                  'basal3': 'Basal Dendrite 3'}
 
         for d in [self.dL2PyrGeom, self.dL5PyrGeom]:
             for k in d.keys():
@@ -775,7 +783,8 @@ class CellParamDialog (DictDialog):
             for k in d.keys():
                 lk = k.split('_')
                 if lk[2].count('g') > 0:
-                    if lk[3] == 'km' or lk[3] == 'ca' or lk[3] == 'kca' or lk[3] == 'cat' or lk[3] == 'ar':
+                    if lk[3] == 'km' or lk[3] == 'ca' or lk[3] == 'kca' \
+                                or lk[3] == 'cat' or lk[3] == 'ar':
                         nv = dtrans[lk[1]] + ' ' + \
                             dtrans[lk[3]] + ' ' + ' channel density '
                     else:
@@ -793,8 +802,9 @@ class CellParamDialog (DictDialog):
 
         self.ldict = [self.dL2PyrGeom, self.dL2PyrSyn, self.dL2PyrBiophys,
                       self.dL5PyrGeom, self.dL5PyrSyn, self.dL5PyrBiophys]
-        self.ltitle = ['L2/3 Pyr Geometry', 'L2/3 Pyr Synapses', 'L2/3 Pyr Biophysics',
-                       'L5 Pyr Geometry', 'L5 Pyr Synapses', 'L5 Pyr Biophysics']
+        self.ltitle = ['L2/3 Pyr Geometry', 'L2/3 Pyr Synapses',
+                       'L2/3 Pyr Biophysics', 'L5 Pyr Geometry',
+                       'L5 Pyr Synapses', 'L5 Pyr Biophysics']
         self.stitle = 'Cell Parameters'
 
 
@@ -849,10 +859,10 @@ class NetworkParamDialog (DictDialog):
                 sty1 = dtmp[lk[1][0:2]] + lk[1][2:]
                 sty2 = dtmp[lk[2][0:2]] + lk[2][2:]
                 if len(lk) == 3:
-                    self.addtransvar(k, sty1+' -> '+sty2+u' weight (µS)')
+                    self.addtransvar(k, sty1 + ' -> ' + sty2 + u' weight (µS)')
                 else:
-                    self.addtransvar(k, sty1+' -> '+sty2+' ' +
-                                     lk[3].upper()+u' weight (µS)')
+                    self.addtransvar(k, sty1 + ' -> ' + sty2 + ' ' +
+                                     lk[3].upper() + u' weight (µS)')
 
 
 class HelpDialog (QDialog):
@@ -886,19 +896,20 @@ class SchematicDialog (QDialog):
         gRow = 0
 
         self.locbtn = QPushButton(
-            'Local Network'+os.linesep+'Connections', self)
+            'Local Network' + os.linesep + 'Connections', self)
         self.locbtn.setIcon(QIcon(lookupresource('connfig')))
         self.locbtn.clicked.connect(self.parent().shownetparamwin)
         self.grid.addWidget(self.locbtn, gRow, 0, 1, 1)
 
         self.proxbtn = QPushButton(
-            'Proximal Drive'+os.linesep+'Thalamus', self)
+            'Proximal Drive' + os.linesep + 'Thalamus', self)
         self.proxbtn.setIcon(QIcon(lookupresource('proxfig')))
         self.proxbtn.clicked.connect(self.parent().showproxparamwin)
         self.grid.addWidget(self.proxbtn, gRow, 1, 1, 1)
 
         self.distbtn = QPushButton(
-            'Distal Drive NonLemniscal'+os.linesep+'Thal./Cortical Feedback', self)
+            'Distal Drive NonLemniscal' + os.linesep +
+            'Thal./Cortical Feedback', self)
         self.distbtn.setIcon(QIcon(lookupresource('distfig')))
         self.distbtn.clicked.connect(self.parent().showdistparamwin)
         self.grid.addWidget(self.distbtn, gRow, 2, 1, 1)
@@ -932,10 +943,16 @@ class SchematicDialog (QDialog):
 
 
 class BaseParamDialog (QDialog):
-    # base widget for specifying params (contains buttons to create other widgets
+    """Base widget for specifying params
+
+    contains buttons to create other widgets
+    """
     def __init__(self, parent, paramfn, optrun_func):
         super(BaseParamDialog, self).__init__(parent)
-        self.proxparamwin = self.distparamwin = self.netparamwin = self.syngainparamwin = None
+        self.proxparamwin = None
+        self.distparamwin = None
+        self.netparamwin = None
+        self.syngainparamwin = None
         self.runparamwin = RunParamDialog(self)
         self.cellparamwin = CellParamDialog(self)
         self.netparamwin = NetworkParamDialog(self)
@@ -948,7 +965,8 @@ class BaseParamDialog (QDialog):
         self.tonicparamwin = TonicInputParamDialog(self, None)
         self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin,
                         self.proxparamwin, self.distparamwin, self.evparamwin,
-                        self.poisparamwin, self.tonicparamwin, self.optparamwin]
+                        self.poisparamwin, self.tonicparamwin,
+                        self.optparamwin]
         self.paramfn = paramfn
         self.parent = parent
 
@@ -971,7 +989,7 @@ class BaseParamDialog (QDialog):
         self.params = params
 
         if usingEvokedInputs(self.params):
-           # default for evoked is to show average dipole
+            # default for evoked is to show average dipole
             drawavgdpl = True
         elif usingOngoingInputs(self.params):
             # default for ongoing is NOT to show average dipole
@@ -981,15 +999,32 @@ class BaseParamDialog (QDialog):
             dlg.setfromdin(self.params)  # update to values from file
         self.qle.setText(self.params['sim_prefix'])  # update simulation name
 
-    def setrunparam(self): bringwintotop(self.runparamwin)
-    def setcellparam(self): bringwintotop(self.cellparamwin)
-    def setnetparam(self): bringwintotop(self.netparamwin)
-    def setsyngainparam(self): bringwintotop(self.syngainparamwin)
-    def setproxparam(self): bringwintotop(self.proxparamwin)
-    def setdistparam(self): bringwintotop(self.distparamwin)
-    def setevparam(self): bringwintotop(self.evparamwin)
-    def setpoisparam(self): bringwintotop(self.poisparamwin)
-    def settonicparam(self): bringwintotop(self.tonicparamwin)
+    def setrunparam(self):
+        bringwintotop(self.runparamwin)
+
+    def setcellparam(self):
+        bringwintotop(self.cellparamwin)
+
+    def setnetparam(self):
+        bringwintotop(self.netparamwin)
+
+    def setsyngainparam(self):
+        bringwintotop(self.syngainparamwin)
+
+    def setproxparam(self):
+        bringwintotop(self.proxparamwin)
+
+    def setdistparam(self):
+        bringwintotop(self.distparamwin)
+
+    def setevparam(self):
+        bringwintotop(self.evparamwin)
+
+    def setpoisparam(self):
+        bringwintotop(self.poisparamwin)
+
+    def settonicparam(self):
+        bringwintotop(self.tonicparamwin)
 
     def initUI(self):
         grid = QGridLayout()
@@ -1118,7 +1153,10 @@ class BaseParamDialog (QDialog):
         return oktosave
 
     def updatesaveparams(self, dtest):
-        # update parameter values in GUI (so user can see and so GUI will save these param values)
+        """ Update parameter values in GUI
+
+        So user can see and so GUI will save these param values
+        """
         for win in self.lsubwin:
             win.setfromdin(dtest)
         # save parameters - do not ask if can over-write the param file

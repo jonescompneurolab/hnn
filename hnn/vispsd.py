@@ -1,9 +1,8 @@
-import sys 
 import os
 from math import sqrt
+from copy import deepcopy
 
-from PyQt5.QtWidgets import (QSizePolicy, QAction, QFileDialog,
-                             QApplication, qApp)
+from PyQt5.QtWidgets import QSizePolicy, QAction, QFileDialog
 from PyQt5.QtGui import QIcon
 
 import numpy as np
@@ -15,9 +14,6 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 
 from hnn_core.dipole import average_dipoles, Dipole
-
-from .specfn import MorletSpec
-from .paramrw import get_output_dir
 
 from .DataViewGUI import DataViewGUI
 from .specfn import spec_dpl_kernel, extract_spec
