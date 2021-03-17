@@ -35,7 +35,8 @@ from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
                         bringwintotop, _get_defncore)
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
-from .simdat import SIMCanvas, SimData
+from .simdata import SimData
+from .qt_canvas import SIMCanvas
 from .run import RunSimThread
 from .qt_lib import getmplDPI, getscreengeom, lookupresource, setscalegeomcenter
 from .specfn import spec_dpl_kernel, save_spec_data
