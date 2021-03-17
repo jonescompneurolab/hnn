@@ -31,8 +31,8 @@ from hnn_core.dipole import average_dipoles
 
 # HNN modules
 from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
-                     WaitSimDialog, HelpDialog, SchematicDialog,
-                     bringwintotop, _get_defncore)
+                        WaitSimDialog, HelpDialog, SchematicDialog,
+                        bringwintotop, _get_defncore)
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdat import SIMCanvas, SimData
@@ -1076,5 +1076,5 @@ class HNNGUI (QMainWindow):
 
 if __name__ == '__main__':    
     app = QApplication(sys.argv)
-    ex = HNNGUI()
+    HNNGUI()
     sys.exit(app.exec_())

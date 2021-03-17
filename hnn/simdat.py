@@ -12,6 +12,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.gridspec as gridspec
+
 from hnn_core import read_spikes
 from hnn_core.dipole import read_dipole, average_dipoles
 
