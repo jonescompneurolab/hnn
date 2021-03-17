@@ -301,7 +301,6 @@ class SpikeViewGUI(DataViewGUI):
     Required parameters: tstop, N_trials
     """
     def __init__(self, CanvasType, params, sim_data, title):
-        self.params = params
         super(SpikeViewGUI, self).__init__(CanvasType, params, sim_data, title)
         self.addViewHistAction()
 

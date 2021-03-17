@@ -135,10 +135,6 @@ class VoltViewGUI(DataViewGUI):
 
     Required parameters in params dict: N_trials, tstop
     """
-    def __init__(self, CanvasType, params, sim_data, title):
-        self.params = params
-        super(VoltViewGUI, self).__init__(CanvasType, params, sim_data, title)
-
     def updateCB(self):
         self.cb.clear()
         for i in range(self.ntrial):
