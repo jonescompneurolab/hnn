@@ -195,6 +195,12 @@ class HNNGUI (QMainWindow):
                                 tmpfn)
         return
 
+      # check that valid number of trials was given
+      if 'N_trials' not in params or params['N_trials'] == 0:
+          print("Warning: invalid configured number of trials."
+                " Setting 'N_trials' to 1.")
+          params['N_trials'] = 1
+
       # Now update GUI components
       self.baseparamwin.paramfn = tmpfn
 
