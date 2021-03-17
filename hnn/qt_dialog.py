@@ -6,9 +6,6 @@
 import os
 from collections import OrderedDict
 
-import multiprocessing
-from psutil import cpu_count
-
 from PyQt5.QtWidgets import (QDialog, QToolTip, QTabWidget, QWidget,
                              QPushButton, QMessageBox, QComboBox, QLabel,
                              QLineEdit, QTextEdit, QFormLayout,
