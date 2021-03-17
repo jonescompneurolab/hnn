@@ -37,7 +37,7 @@ class ParamSignal(QtCore.QObject):
 
 class CanvSignal(QtCore.QObject):
     """for updating main GUI canvas"""
-    csig = QtCore.pyqtSignal(bool, bool)
+    csig = QtCore.pyqtSignal(bool)
 
 
 class ResultObj(QtCore.QObject):
@@ -131,17 +131,11 @@ class RunSimThread(QtCore.QThread):
         Number of cores to run this simulation over
     params : dict
         Dictionary of params describing simulation config
-    param_signal : ParamSignal
-        Signal to main process to send back params
-    done_signal : DoneSignal
-        Signal to main process that the simulation has finished
     waitsimwin : WaitSimDialog
         Handle to the Qt dialog during a simulation
-    baseparamwin : BaseParamDialog
-        Handle to the Qt dialog with parameter values
     mainwin : HNNGUI
         Handle to the main application window
-    opt : bool
+    is_optimization: bool
         Whether this simulation thread is running an optimization
 
     Attributes
@@ -150,14 +144,6 @@ class RunSimThread(QtCore.QThread):
         Number of cores to run this simulation over
     params : dict
         Dictionary of params describing simulation config
-    param_signal : ParamSignal
-        Signal to main process to send back params
-    done_signal : DoneSignal
-        Signal to main process that the simulation has finished
-    waitsimwin : WaitSimDialog
-        Handle to the Qt dialog during a simulation
-    baseparamwin : BaseParamDialog
-        Handle to the Qt dialog with parameter values
     mainwin : HNNGUI
         Handle to the main application window
     opt : bool
@@ -170,25 +156,27 @@ class RunSimThread(QtCore.QThread):
 
     result_signal = QtCore.pyqtSignal(object)
 
-    def __init__(self, ncore, params, param_signal, done_signal, waitsimwin,
-                 baseparamwin, result_callback, mainwin, opt=False):
+    def __init__(self, ncore, params, result_callback, mainwin,
+                 is_optimization=False):
         QtCore.QThread.__init__(self)
         self.ncore = ncore
         self.params = params
-        self.param_signal = param_signal
-        self.done_signal = done_signal
-        self.waitsimwin = waitsimwin
-        self.baseparamwin = baseparamwin
         self.mainwin = mainwin
+        self.baseparamwin = self.mainwin.baseparamwin
         self.result_signal.connect(result_callback)
-        self.opt = opt
         self.killed = False
 
         self.paramfn = os.path.join(get_output_dir(), 'param',
                                     self.params['sim_prefix'] + '.param')
 
         self.txtComm = TextSignal()
-        self.txtComm.tsig.connect(self.waitsimwin.updatetxt)
+        self.txtComm.tsig.connect(self.mainwin.waitsimwin.updatetxt)
+
+        self.param_signal = ParamSignal()
+        self.param_signal.psig.connect(self.baseparamwin.updateDispParam)
+
+        self.done_signal = TextSignal()
+        self.done_signal.tsig.connect(self.mainwin.done)
 
         self.prmComm = ParamSignal()
         self.prmComm.psig.connect(self.baseparamwin.updatesaveparams)
@@ -225,8 +213,8 @@ class RunSimThread(QtCore.QThread):
 
     def _updatedrawerr(self):
         """Signals mainwin to redraw canvas with RMSE"""
-        # When self.opt is false, do not recalculate error
-        self.canvComm.csig.emit(False, self.opt)
+        # When not running optimization, do not recalculate error
+        self.canvComm.csig.emit(False)
 
     def stop(self):
         """Terminate running simulation"""
@@ -242,7 +230,7 @@ class RunSimThread(QtCore.QThread):
 
         msg = ''
 
-        if self.opt:
+        if self.mainwin.is_optimization:
             try:
                 self.optmodel()  # run optimization
             except RuntimeError as e:
@@ -260,10 +248,10 @@ class RunSimThread(QtCore.QThread):
             except RuntimeError as e:
                 msg = str(e)
 
-        self.done_signal.finishSim.emit(self.opt, msg)
+        self.done_signal.tsig.emit(msg)
 
     # run sim command via mpi, then delete the temp file.
-    def _runsim(self, is_opt=False, banner=True, simlength=None):
+    def _runsim(self, banner=True, simlength=None):
         self.killed = False
 
         while True:
@@ -379,7 +367,7 @@ class RunSimThread(QtCore.QThread):
             self.first_step = False
 
         # one final sim with the best parameters to update display
-        self._runsim(is_opt=True, banner=False)
+        self._runsim(banner=False)
 
         # update lsimdat and its current sim index
         update_sim_data_from_disk(self.paramfn, self.params, ddat['dpl'])
@@ -431,7 +419,7 @@ class RunSimThread(QtCore.QThread):
             sleep(1)
 
             # run the simulation, but stop early if possible
-            self._runsim(is_opt=True, banner=False, simlength=self.opt_end)
+            self._runsim(banner=False, simlength=self.opt_end)
 
             # calculate wRMSE for all steps
             calcerr(self.paramfn, self.opt_end, tstart=self.opt_start,

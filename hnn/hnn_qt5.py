@@ -36,7 +36,7 @@ from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdat import SIMCanvas, SimData
-from .run import RunSimThread, ParamSignal
+from .run import RunSimThread
 from .qt_lib import getmplDPI, getscreengeom, lookupresource, setscalegeomcenter
 from .specfn import spec_dpl_kernel, save_spec_data
 from .DataViewGUI import DataViewGUI
@@ -79,11 +79,6 @@ def _add_missing_frames(tb):
         frame = frame.f_back
     return result
 
-
-class DoneSignal(QObject):
-    finishSim = pyqtSignal(bool, str)
-
-
 def bringwintobot(win):
     # win.show()
     # win.lower()
@@ -111,7 +106,7 @@ class HNNGUI (QMainWindow):
       self.sim_canvas = self.toolbar = None
       paramfn = os.path.join(hnn_root_dir, 'param', 'default.param')
       self.baseparamwin = BaseParamDialog(self, paramfn, self.startoptmodel)
-      self.optMode = False
+      self.is_optimization = False
       self.sim_data = SimData()
       self.initUI()
       self.helpwin = HelpDialog(self)
@@ -750,12 +745,6 @@ class HNNGUI (QMainWindow):
       widget.setLayout(grid)
       self.setCentralWidget(widget)
 
-      self.param_signal = ParamSignal()
-      self.param_signal.psig.connect(self.baseparamwin.updateDispParam)
-
-      self.done_signal = DoneSignal()
-      self.done_signal.finishSim.connect(self.done)
-
       self.setWindowIcon(QIcon(os.path.join('res', 'icon.png')))
 
       self.schemwin.show() # so it's underneath main window
@@ -793,7 +782,7 @@ class HNNGUI (QMainWindow):
       else:
         self.cbsim.setCurrentIndex(index)
 
-    def initSimCanvas(self, recalcErr=True, optMode=False, gRow=1, reInit=True):
+    def initSimCanvas(self, recalcErr=True, gRow=1, reInit=True):
       # initialize the simulation canvas, loading any required data
       gCol = 0
 
@@ -813,7 +802,7 @@ class HNNGUI (QMainWindow):
 
       self.sim_canvas = SIMCanvas(self.baseparamwin.paramfn, self.baseparamwin.params,
                         parent=self, width=10, height=1, dpi=getmplDPI(),
-                        optMode=optMode)
+                        is_optimization=self.is_optimization)
 
       # this is the Navigation widget
       # it takes the Canvas widget and a parent
@@ -846,7 +835,7 @@ class HNNGUI (QMainWindow):
       if self.runningsim:
         self.stopsim() # stop sim works but leaves subproc as zombie until this main GUI thread exits
       else:
-        self.optMode = True
+        self.is_optimization = True
         try:
           self.optmodel(self.baseparamwin.runparamwin.getncore())
         except RuntimeError:
@@ -859,7 +848,7 @@ class HNNGUI (QMainWindow):
             # thread exits
             self.stopsim()
         else:
-            self.optMode = False
+            self.is_optimization = False
             self.startsim(self.baseparamwin.runparamwin.getncore())
 
     def stopsim(self):
@@ -894,10 +883,8 @@ class HNNGUI (QMainWindow):
         self.statusBar().showMessage("Optimizing model. . .")
 
         self.runthread = RunSimThread(ncore, self.baseparamwin.params,
-                                      self.param_signal, self.done_signal,
-                                      self.waitsimwin, self.baseparamwin,
                                       self.result_callback,
-                                      mainwin=self, opt=True)
+                                      mainwin=self, is_optimization=True)
 
         # We have all the events we need connected we can start the thread
         self.runthread.start()
@@ -935,10 +922,8 @@ class HNNGUI (QMainWindow):
             params['N_trials'] = 1
 
         self.runthread = RunSimThread(ncore, params,
-                                      self.param_signal, self.done_signal,
-                                      self.waitsimwin, self.baseparamwin,
                                       self.result_callback,
-                                      mainwin=self, opt=False)
+                                      mainwin=self, is_optimization=False)
 
         # We have all the events we need connected we can start the thread
         self.runthread.start()
@@ -1019,7 +1004,7 @@ class HNNGUI (QMainWindow):
                                       sim_data['gid_ranges'],
                                       sim_data['spec'], sim_data['vsoma'])
 
-    def done(self, optMode, except_msg):
+    def done(self, except_msg):
         # called when the simulation completes running
         self.runningsim = False
         self.waitsimwin.hide()
@@ -1027,7 +1012,7 @@ class HNNGUI (QMainWindow):
         self.btnsim.setText("Run Simulation")
         self.qbtn.setEnabled(True)
         # recreate canvas (plots too) to avoid incorrect axes
-        self.initSimCanvas(optMode=optMode)
+        self.initSimCanvas()
         # self.sim_canvas.plot()
         self.setcursors(Qt.ArrowCursor)
 
@@ -1038,7 +1023,7 @@ class HNNGUI (QMainWindow):
         else:
             msg = "Finished "
 
-        if optMode:
+        if self.is_optimization:
             msg += "running optimization "
             self.baseparamwin.optparamwin.btnrunop.setText(
                 'Prepare for Another Optimization')
