@@ -303,7 +303,7 @@ class SimData(object):
 
         Returns
         ----------
-        found: bool
+        success: bool
             Whether simulation data could be read
         """
 
@@ -601,12 +601,103 @@ class SimData(object):
             with open(str(vsoma_outfn), 'wb') as f:
                 dump(vsoma, f)
 
-class SIMCanvas (FigureCanvasQTAgg):
+    def plot_dipole(self, paramfn, ax, linewidth, dipole_scalefctr, N_pyr_x=0,
+                    N_pyr_y=0, is_optimization=False):
+        """Plot the dipole(s) HNN style
+
+        Parameters
+        ----------
+        paramfn : str
+            Simulation parameter filename to lookup data from prior simulation
+        ax : axis object
+            Axis on which to plot dipoles(s)
+        linewidth : int
+            Base width for dipole lines. Averages will be one size larger
+        dipole_scalefctr : float
+            Scaling factor applied to dipole data
+        N_pyr_x : int
+            Nr of cells (x)
+        N_pyr_y : int
+            Nr of cells (y)
+        is_optimization : bool
+            True if plots should be specific for optimization results
+        """
+
+        yl = [0, 0]
+        dpl = self._sim_data[paramfn]['data']['avg_dpl']
+        yl[0] = min(yl[0], np.amin(dpl.data['agg']))
+        yl[1] = max(yl[1], np.amax(dpl.data['agg']))
+
+        if not is_optimization:
+            # plot average dipoles from prior simulations
+            old_dpl = self._sim_data[paramfn]['data']['avg_dpl']
+            ax.plot(old_dpl.times, old_dpl.data['agg'], '--', color='black',
+                    linewidth=linewidth)
+
+            sim_data = self._sim_data[paramfn]['data']
+            ntrial = len(sim_data['dpls'])
+            # plot dipoles from individual trials
+            if ntrial > 1 and drawindivdpl:
+                for dpltrial in sim_data['dpls']:
+                    ax.plot(dpltrial.times, dpltrial.data['agg'],
+                            color='gray',
+                            linewidth=linewidth)
+                    yl[0] = min(yl[0], dpltrial.data['agg'].min())
+                    yl[1] = max(yl[1], dpltrial.data['agg'].max())
+
+            if drawavgdpl or ntrial == 1:
+                # this is the average dipole (across trials)
+                # it's also the ONLY dipole when running a single trial
+                ax.plot(dpl.times, dpl.data['agg'], 'k',
+                                   linewidth=linewidth + 1)
+                yl[0] = min(yl[0], dpl.data['agg'].min())
+                yl[1] = max(yl[1], dpl.data['agg'].max())
+        else:
+            if self._opt_data['avg_dpl'] is not None:
+                # show optimized dipole as gray line
+                optdpl = self._opt_data['avg_dpl']
+                ax.plot(optdpl.times, optdpl.data['agg'], 'k',
+                                   color='gray',
+                                   linewidth=linewidth + 1)
+                yl[0] = min(yl[0], optdpl.data['agg'].min())
+                yl[1] = max(yl[1], optdpl.data['agg'].max())
+
+            if self._opt_data['initial_dpl'] is not None:
+                # show initial dipole in dotted black line
+                plot_data = self._opt_data['initial_dpl']
+                times = plot_data.times
+                plot_dpl = plot_data.data['agg']
+                ax.plot(times, plot_dpl, '--', color='black',
+                                   linewidth=linewidth)
+                dpl = self._opt_data['initial_dpl'].data['agg']
+                yl[0] = min(yl[0], dpl.min())
+                yl[1] = max(yl[1], dpl.max())
+
+        # get the number of pyramidal neurons used in the simulation and
+        # multiply by scale factor to get estimated number of pyramidal
+        # neurons for y-axis label
+        num_pyr = int(N_pyr_x * N_pyr_y * 2)
+        NEstPyr = int(num_pyr * float(dipole_scalefctr))
+        if NEstPyr > 0:
+            ax.set_ylabel(r'Dipole (nAm $\times$ ' +
+                                     str(dipole_scalefctr) +
+                                     ')\nFrom Estimated ' +
+                                     str(NEstPyr) + ' Cells',
+                                     fontsize=fontsize)
+        else:
+            # is this handling overflow?
+            ax.set_ylabel(r'Dipole (nAm $\times$ ' +
+                                     str(dipole_scalefctr) +
+                                     ')\n', fontsize=fontsize)
+        ax.set_ylim(yl)
+
+
+class SIMCanvas(FigureCanvasQTAgg):
     # matplotlib/pyqt-compatible canvas for drawing simulation & external data
     # based on https://pythonspot.com/en/pyqt5-matplotlib/
 
     def __init__(self, paramfn, params, parent=None, width=5, height=4,
-                 dpi=40, optMode=False, title='Simulation Viewer'):
+                 dpi=40, is_optimization=False, title='Simulation Viewer'):
         FigureCanvasQTAgg.__init__(self, Figure(figsize=(width, height),
                                                 dpi=dpi))
 
@@ -628,8 +719,8 @@ class SIMCanvas (FigureCanvasQTAgg):
         self.G = gridspec.GridSpec(10, 1)
         self._data_dir = os.path.join(get_output_dir(), 'data')
 
-        self.optMode = optMode
-        if not optMode:
+        self.is_optimization = is_optimization
+        if not is_optimization:
             self.sim_data.clear_opt_data()
 
         self.saved_exception = None
@@ -798,7 +889,7 @@ class SIMCanvas (FigureCanvasQTAgg):
                 self.lerr, self.errtot = self.sim_data.calcerr(self.paramfn,
                                                                tstop)
 
-            if self.optMode:
+            if self.is_optimization:
                 initial_err = self.sim_data._opt_data['initial_error']
 
         if self.axdipole is None:
@@ -828,7 +919,7 @@ class SIMCanvas (FigureCanvasQTAgg):
             if self.lerr:
                 tx, ty = dat[fx, 0], dat[fx, c]
                 txt = 'RMSE: %.2f' % round(self.lerr[ddx], 2)
-                if not self.optMode:
+                if not self.is_optimization:
                     self.axdipole.annotate(txt, xy=(dat[0, 0], dat[0, c]),
                                            xytext=(tx, ty), color=clr,
                                            fontweight='bold')
@@ -844,7 +935,7 @@ class SIMCanvas (FigureCanvasQTAgg):
 
         if self.errtot:
             tx, ty = 0, 0
-            if self.optMode and initial_err:
+            if self.is_optimization and initial_err:
                 clr = 'black'
                 txt = 'RMSE: %.2f' % round(initial_err, 2)
                 textcoords = 'axes fraction'
@@ -887,7 +978,7 @@ class SIMCanvas (FigureCanvasQTAgg):
         self.lpatch = []  # reset legend
         self.clridx = 5  # reset index for next color for drawing ext data
 
-        if self.optMode:
+        if self.is_optimization:
             self.lpatch.append(mpatches.Patch(color='grey',
                                               label='Optimization'))
             self.lpatch.append(mpatches.Patch(color='black', label='Initial'))
@@ -903,33 +994,34 @@ class SIMCanvas (FigureCanvasQTAgg):
 
         global drawindivdpl, drawavgdpl, fontsize
 
-        self.gRow = 0
-        bottom = 0.0
-
-        failed_loading_dpl = False
-        failed_loading_spec = False
-        only_create_axes = False
-
         DrawSpec = False
         xlim = (0.0, 1.0)
-        only_create_axes = False
+        ylim = (-0.001, 0.001)
 
-        if self.params is not None:
+        if self.params is None:
+            data_to_plot = False
+            gRow = 0
+        else:
+            # for later
             ntrial = self.params['N_trials']
+            tstop = self.params['tstop']
+            dipole_scalefctr = self.params['dipole_scalefctr']
+            N_pyr_x = self.params['N_pyr_x']
+            N_pyr_y = self.params['N_pyr_y']
+
+            # update xlim to tstop
+            xlim = (0.0, tstop)
+
             # for trying to plot a simulation read from disk (e.g. default)
-            if self.paramfn not in self.sim_data._sim_data:
-                found = self.sim_data.update_sim_data_from_disk(self.paramfn,
-                                                                self.params)
-                if not found:
-                    # best we can do is plot the distributions of the inputs
-                    axes = self.plotinputhist()
-                    self.gRow = len(axes)
-                    only_create_axes = True
+            if self.paramfn in self.sim_data._sim_data:
+                data_to_plot = True
+                pass
+            else:
+                # load simulation data from disk
+                data_to_plot = self.sim_data.update_sim_data_from_disk(
+                    self.paramfn, self.params)
 
-            if not only_create_axes:
-                tstop = self.params['tstop']
-                xlim = (0.0, tstop)
-
+            if data_to_plot:
                 sim_data = self.sim_data._sim_data[self.paramfn]['data']
                 trials = [trial_idx for trial_idx in range(ntrial)]
                 extinputs = ExtInputs(sim_data['spikes'],
@@ -938,32 +1030,44 @@ class SIMCanvas (FigureCanvasQTAgg):
 
                 feeds_to_plot = check_feeds_to_plot(extinputs.inputs,
                                                     self.params)
-                axes = self.plotinputhist(extinputs, feeds_to_plot)
-                self.gRow = len(axes)
+            else:
+                # best we can do is plot the distributions of the inputs
+                extinputs = feeds_to_plot = None
 
+            axes = self.plotinputhist(extinputs, feeds_to_plot)
+            gRow = len(axes)
+
+            if data_to_plot:
                 # check that dipole data is present
                 single_sim = self.sim_data._sim_data[self.paramfn]['data']
                 if single_sim['avg_dpl'] is None:
-                    failed_loading_dpl = True
+                    data_to_plot = False
 
-                if single_sim['spec'] is None or len(single_sim['spec']) == 0:
-                    failed_loading_spec = True
                 # whether to draw the specgram - should draw if user saved
                 # it or have ongoing, poisson, or tonic inputs
-                if (not failed_loading_spec) and single_sim['spec'] is \
-                        not None \
+                if single_sim['spec'] is not None \
+                        and len(single_sim['spec']) > 0 \
                         and (self.params['save_spec_data'] or
                              feeds_to_plot['ongoing'] or
                              feeds_to_plot['pois'] or feeds_to_plot['tonic']):
                     DrawSpec = True
 
+                    first_spec_trial = single_sim['spec'][0]
+
+                    # adjust dipole to match spectogram limits (e.g. missing first
+                    # 50 ms b/c edge effects)
+                    xlim = (first_spec_trial['time'][0],
+                            first_spec_trial['time'][-1])
+
         if DrawSpec:  # dipole axis takes fewer rows if also drawing specgram
-            self.axdipole = self.figure.add_subplot(self.G[self.gRow:5, 0])
+            self.axdipole = self.figure.add_subplot(self.G[gRow:5, 0])
             bottom = 0.08
         else:
-            self.axdipole = self.figure.add_subplot(self.G[self.gRow:-1, 0])
+            self.axdipole = self.figure.add_subplot(self.G[gRow:-1, 0])
+            # there is no spec plot below, so label dipole with time on x-axis
+            self.axdipole.set_xlabel('Time (ms)', fontsize=fontsize)
+            bottom = 0.0
 
-        ylim = (-0.001, 0.001)
         self.axdipole.set_ylim(ylim)
         self.axdipole.set_xlim(xlim)
 
@@ -975,114 +1079,23 @@ class SIMCanvas (FigureCanvasQTAgg):
         self.figure.subplots_adjust(left=left, right=0.99, bottom=bottom,
                                     top=0.99, hspace=0.1, wspace=0.1)
 
-        if failed_loading_dpl or only_create_axes or self.params is None:
+        if not data_to_plot:
+            # no dipole or spec data to plot
             return
 
-        # get spectrogram if it exists, then adjust axis limits but only
-        # if drawing spectrogram
-        if DrawSpec:
-            single_sim = self.sim_data._sim_data[self.paramfn]['data']
-            if single_sim['spec'] is not None:
-                first_spec_trial = single_sim['spec'][0]
-                # use spectogram limits (missing first 50 ms b/c edge effects)
-                xlim = (first_spec_trial['time'][0],
-                        first_spec_trial['time'][-1])
-            else:
-                DrawSpec = False
-
-        yl = [0, 0]
-        dpl = self.sim_data._sim_data[self.paramfn]['data']['avg_dpl']
-        yl[0] = min(yl[0], np.amin(dpl.data['agg']))
-        yl[1] = max(yl[1], np.amax(dpl.data['agg']))
-
-        if not self.optMode:
-            # skip for optimization
-            # plot average dipoles from prior simulations
-            for paramfn in self.sim_data._sim_data.keys():
-                old_data = self.sim_data._sim_data[paramfn]['data']['avg_dpl']
-                if old_data is None:
-                    continue
-                times = old_data.times
-                old_dpl = old_data.data['agg']
-                self.axdipole.plot(times, old_dpl, '--', color='black',
-                                   linewidth=self.linewidth)
-
-            sim_data = self.sim_data._sim_data[self.paramfn]['data']
-            # plot dipoles from individual trials
-            if ntrial > 1 and drawindivdpl and \
-                    len(sim_data['dpls']) > 0:
-                for dpltrial in sim_data['dpls']:
-                    self.axdipole.plot(dpltrial.times, dpltrial.data['agg'],
-                                       color='gray',
-                                       linewidth=self.linewidth)
-                    yl[0] = min(yl[0], dpltrial.data['agg'].min())
-                    yl[1] = max(yl[1], dpltrial.data['agg'].max())
-
-            if drawavgdpl or ntrial <= 1:
-                # this is the average dipole (across trials)
-                # it's also the ONLY dipole when running a single trial
-                self.axdipole.plot(dpl.times, dpl.data['agg'], 'k',
-                                   linewidth=self.linewidth + 1)
-                yl[0] = min(yl[0], dpl.data['agg'].min())
-                yl[1] = max(yl[1], dpl.data['agg'].max())
-        else:
-            if self.sim_data._opt_data['avg_dpl'] is not None:
-                # show optimized dipole as gray line
-                optdpl = self.sim_data._opt_data['avg_dpl']
-                self.axdipole.plot(optdpl.times, optdpl.data['agg'], 'k',
-                                   color='gray',
-                                   linewidth=self.linewidth + 1)
-                yl[0] = min(yl[0], optdpl.data['agg'].min())
-                yl[1] = max(yl[1], optdpl.data['agg'].max())
-
-            if self.sim_data._opt_data['initial_dpl'] is not None:
-                # show initial dipole in dotted black line
-                plot_data = self.sim_data._opt_data['initial_dpl']
-                times = plot_data.times
-                plot_dpl = plot_data.data['agg']
-                self.axdipole.plot(times, plot_dpl, '--', color='black',
-                                   linewidth=self.linewidth)
-                dpl = self.sim_data._opt_data['initial_dpl'].data['agg']
-                yl[0] = min(yl[0], dpl.min())
-                yl[1] = max(yl[1], dpl.max())
-
-        scalefctr = float(self.params['dipole_scalefctr'])
-
-        # get the number of pyramidal neurons used in the simulation
-        try:
-            x = self.params['N_pyr_x']
-            y = self.params['N_pyr_y']
-            num_pyr = int(x * y * 2)
-        except KeyError:
-            num_pyr = 0
-
-        NEstPyr = int(num_pyr * scalefctr)
-
-        if NEstPyr > 0:
-            self.axdipole.set_ylabel(r'Dipole (nAm $\times$ ' +
-                                     str(scalefctr) +
-                                     ')\nFrom Estimated ' +
-                                     str(NEstPyr) + ' Cells',
-                                     fontsize=fontsize)
-        else:
-            self.axdipole.set_ylabel(r'Dipole (nAm $\times$ ' +
-                                     str(scalefctr) +
-                                     ')\n', fontsize=fontsize)
-        self.axdipole.set_xlim(xlim)
-        self.axdipole.set_ylim(yl)
+        self.sim_data.plot_dipole(self.paramfn, self.axdipole, self.linewidth,
+                                  dipole_scalefctr, N_pyr_x, N_pyr_y,
+                                  self.is_optimization)
 
         if DrawSpec:
-            gRow = 6
-            self.axspec = self.figure.add_subplot(self.G[gRow:10, 0])
-            spec_data = sim_data['spec']
-            cax = plot_spec(self.axspec, spec_data, ntrial,
+            self.axspec = self.figure.add_subplot(self.G[6:10, 0])
+            cax = plot_spec(self.axspec, sim_data['spec'], ntrial,
                             self.params['spec_cmap'], xlim,
                             fontsize)
-            cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
+
             # plot colorbar horizontally to save space
+            cbaxes = self.figure.add_axes([0.6, 0.49, 0.3, 0.005])
             plt.colorbar(cax, cax=cbaxes, orientation='horizontal')
-        else:
-            self.axdipole.set_xlabel('Time (ms)', fontsize=fontsize)
 
     def plotarrows(self):
         # run after scales have been updated
