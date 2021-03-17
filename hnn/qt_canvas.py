@@ -361,8 +361,8 @@ class SIMCanvas(FigureCanvasQTAgg):
                 # best we can do is plot the distributions of the inputs
                 extinputs = feeds_to_plot = None
 
-            axes = self.plotinputhist(extinputs, feeds_to_plot)
-            gRow = len(axes)
+            hist_axes = self.plotinputhist(extinputs, feeds_to_plot)
+            gRow = len(hist_axes)
 
             if data_to_plot:
                 # check that dipole data is present
@@ -389,6 +389,11 @@ class SIMCanvas(FigureCanvasQTAgg):
         if DrawSpec:  # dipole axis takes fewer rows if also drawing specgram
             self.axdipole = self.figure.add_subplot(self.G[gRow:5, 0])
             bottom = 0.08
+
+            # set the axes of input histograms to match dipole and spec plots
+            for ax in hist_axes:
+                ax.set_xlim(xlim)
+
         else:
             self.axdipole = self.figure.add_subplot(self.G[gRow:-1, 0])
             # there is no spec plot below, so label dipole with time on x-axis
