@@ -10,7 +10,7 @@ fi
 # first check code style with flake8 (ignored currently)
 echo "Checking code style compliance with flake8..."
 flake8 --quiet --count \
-    --exclude hnn_qt5.py,qt_evoked.py,run.py,paramrw.py,visdipole.py,visrast.py,visvolt.py,visspec.py,vispsd.py,DataViewGUI.py \
+    --exclude  __init__.py,qt_main.py,qt_evoked.py,run.py,paramrw.py \
     hnn
 
 echo "Running unit tests with pytest..."
