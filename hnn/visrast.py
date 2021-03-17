@@ -26,6 +26,7 @@ fontsize = plt.rcParams['font.size'] = 10
 rastmarksz = 5  # raster dot size
 binsz = 5.0
 smoothsz = 0  # no smoothing
+random_label = np.random.rand(100)
 
 # colors for the different cell types
 dclr = {'L2_pyramidal': 'g',
@@ -127,7 +128,9 @@ class SpikeCanvas(FigureCanvasQTAgg):
             ax.cla()
 
     def drawhist(self, dhist, ntrial, tstop):
-        ax = self.figure.add_subplot(self.G[-4:-1, :])
+        global random_label
+        ax = self.figure.add_subplot(self.G[-4:-1, :], label=random_label)
+        random_label += 1
         fctr = 1.0
         if ntrial > 0:
             fctr = 1.0 / ntrial
@@ -139,6 +142,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
         return ax
 
     def drawrast(self, dspk, extinputs, haveinputs, fig, G, sz=8):
+        global random_label
+
         lax = []
         lk = ['Cell']
         row = 0
@@ -163,7 +168,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                 haveOngoingProx = (OngoingInputs and len(dinput['prox']) > 0)
 
                 if haveEvokedDist or haveOngoingDist:
-                    ax = fig.add_subplot(G[row:row + 2, :])
+                    ax = fig.add_subplot(G[row:row + 2, :], label=random_label)
+                    random_label += 1
                     row += 2
                     lax.append(ax)
                     if haveEvokedDist:
@@ -176,7 +182,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                     ax.set_ylabel('Distal Input')
 
                 if haveEvokedProx or haveOngoingProx:
-                    ax2 = fig.add_subplot(G[row:row + 2, :])
+                    ax2 = fig.add_subplot(G[row:row + 2, :], label=random_label)
+                    random_label += 1
                     row += 2
                     lax.append(ax2)
                     if haveEvokedProx:
@@ -188,7 +195,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                     ax2.set_ylabel('Proximal Input')
 
                 if PoissonInputs and len(dinput['pois']):
-                    axp = fig.add_subplot(G[row:row + 2, :])
+                    axp = fig.add_subplot(G[row:row + 2, :], label=random_label)
+                    random_label += 1
                     row += 2
                     lax.append(axp)
                     extinputs.plot_hist(axp, 'pois', 0, bins, (0, tstop),
@@ -205,7 +213,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                 if self.bDrawHist:
                     endrow = -4
 
-                ax = fig.add_subplot(G[row:endrow, :])
+                ax = fig.add_subplot(G[row:endrow, :], label=random_label)
+                random_label += 1
                 lax.append(ax)
 
                 ax.scatter(dspk[k][0], dspk[k][1], c=dspk[k][2], s=sz**2)
@@ -287,6 +296,10 @@ class SpikeCanvas(FigureCanvasQTAgg):
 
 
 class SpikeViewGUI(DataViewGUI):
+    """Class for displaying spiking raster plot viewer
+
+    Required parameters: tstop, N_trials
+    """
     def __init__(self, CanvasType, params, sim_data, title):
         self.params = params
         super(SpikeViewGUI, self).__init__(CanvasType, params, sim_data, title)

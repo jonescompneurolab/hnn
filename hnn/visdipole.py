@@ -13,9 +13,15 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 fontsize = plt.rcParams['font.size'] = 10
+random_label = np.random.rand(100)
 
 
 class DipoleCanvas(FigureCanvasQTAgg):
+    """Class for displaying Dipole Viewer
+
+    Required parameters: dipole_scalefctr, tstop, N_trials
+    """
+
     def __init__(self, params, sim_data, index, parent=None, width=12,
                  height=10, dpi=120, title='Dipole Viewer'):
         FigureCanvasQTAgg.__init__(self, Figure(figsize=(width, height),
@@ -38,12 +44,9 @@ class DipoleCanvas(FigureCanvasQTAgg):
 
         self.plot()
 
-    def clearaxes(self):
-        for ax in self.lax:
-            ax.set_yticks([])
-            ax.cla()
+    def plot(self):
+        global random_label
 
-    def drawdipole(self, fig):
         gdx = 311
 
         ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
@@ -68,11 +71,9 @@ class DipoleCanvas(FigureCanvasQTAgg):
                     yl[1] = max(yl[1], np.amax(dpltrial.data[key]))
         yl = tuple(yl)
 
-        self.lax = []
-
         for key, title in zip(dipole_keys, ltitle):
-            ax = fig.add_subplot(gdx)
-            self.lax.append(ax)
+            ax = self.figure.add_subplot(gdx, label=random_label)
+            random_label += 1
 
             if key == 'agg':
                 ax.set_xlabel('Time (ms)')
@@ -112,6 +113,4 @@ class DipoleCanvas(FigureCanvasQTAgg):
         self.figure.subplots_adjust(bottom=0.06, left=0.06, right=1.0,
                                     top=0.97, wspace=0.1, hspace=0.09)
 
-    def plot(self):
-        self.drawdipole(self.figure)
         self.draw()

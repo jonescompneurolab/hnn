@@ -124,7 +124,8 @@ class SpecCanvas(FigureCanvasQTAgg):
 class SpecViewGUI(DataViewGUI):
     """Class for displaying spectrogram viewer
 
-    Required parameters in params dict: f_max_spec, sim_prefix, spec_cmap
+    Required parameters: N_trials, f_max_spec, sim_prefix,
+    spec_cmap
     """
     def __init__(self, CanvasType, params, sim_data, title):
         self.specs = []
