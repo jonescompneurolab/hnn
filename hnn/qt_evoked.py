@@ -525,8 +525,6 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
       if k.count(ksearch) > 0:
         self.dqline[k].setText(str(val))
 
-  def allOff (self): self.lines2val('gbar',0.0)
-
   def __str__ (self):
     s = ''
     for k,v in self.dqline.items(): s += k + ': ' + v.text().strip() + os.linesep
