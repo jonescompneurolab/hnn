@@ -32,7 +32,7 @@ from hnn_core.dipole import average_dipoles
 # HNN modules
 from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
                         WaitSimDialog, HelpDialog, SchematicDialog,
-                        bringwintotop, _get_defncore)
+                        bringwintotop)
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdata import SimData
@@ -50,6 +50,22 @@ from .vispsd import PSDViewGUI, PSDCanvas
 # TODO: These globals should be made configurable via the GUI
 drawavgdpl = 0
 fontsize = plt.rcParams['font.size'] = 10
+
+
+def _get_defncore():
+    """get default number of cores """
+
+    try:
+        defncore = len(os.sched_getaffinity(0))
+    except AttributeError:
+        defncore = cpu_count(logical=False)
+
+    if defncore is None or defncore == 0:
+        # in case psutil is not supported (e.g. BSD)
+        defncore = multiprocessing.cpu_count()
+
+    return defncore
+
 
 def isWindows():
     # are we on windows? or linux/mac ?
@@ -98,6 +114,7 @@ class HNNGUI (QMainWindow):
 
       hnn_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 
+      self.defncore = _get_defncore()
       self.runningsim = False
       self.runthread = None
       self.fontsize = fontsize

@@ -40,21 +40,6 @@ def bringwintotop(win):
     # win.show()
 
 
-def _get_defncore():
-    """get default number of cores """
-
-    try:
-        defncore = len(os.sched_getaffinity(0))
-    except AttributeError:
-        defncore = cpu_count(logical=False)
-
-    if defncore is None or defncore == 0:
-        # in case psutil is not supported (e.g. BSD)
-        defncore = multiprocessing.cpu_count()
-
-    return defncore
-
-
 class DictDialog(QDialog):
     """dictionary-based dialog with tabs
 
@@ -490,7 +475,8 @@ class PoissonInputParamDialog(DictDialog):
 
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog(DictDialog):
-    def __init__(self, parent, din=None):
+    def __init__(self, parent, mainwin, din=None):
+        self.mainwin = mainwin
         super(RunParamDialog, self).__init__(parent, din)
         self.addHideButton()
         self.parent = parent
@@ -555,8 +541,7 @@ class RunParamDialog(DictDialog):
     def initExtra(self):
         DictDialog.initExtra(self)
         self.dqextra['NumCores'] = QLineEdit(self)
-        self.defncore = _get_defncore()
-        self.dqextra['NumCores'].setText(str(self.defncore))
+        self.dqextra['NumCores'].setText(str(self.mainwin.defncore))
         self.addtransvar('NumCores', 'Number Cores')
         self.ltabs[0].layout.addRow('NumCores', self.dqextra['NumCores'])
 
@@ -588,6 +573,10 @@ class RunParamDialog(DictDialog):
         if ncore < 1:
             self.dqline['NumCores'].setText(str(1))
             ncore = 1
+
+        # update value in HNNGUI for persistence
+        self.mainwin.defncore = ncore
+
         return ncore
 
     def setfromdin(self, din):
@@ -595,7 +584,7 @@ class RunParamDialog(DictDialog):
             return
 
         # number of cores may have changed if the configured number failed
-        self.dqextra['NumCores'].setText(str(self.defncore))
+        self.dqextra['NumCores'].setText(str(self.mainwin.defncore))
 
         # update ordered dict of QLineEdit objects with new parameters
         for k, v in din.items():
@@ -953,7 +942,7 @@ class BaseParamDialog (QDialog):
         self.distparamwin = None
         self.netparamwin = None
         self.syngainparamwin = None
-        self.runparamwin = RunParamDialog(self)
+        self.runparamwin = RunParamDialog(self, parent)
         self.cellparamwin = CellParamDialog(self)
         self.netparamwin = NetworkParamDialog(self)
         self.syngainparamwin = SynGainParamDialog(self, self.netparamwin)
