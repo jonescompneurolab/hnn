@@ -30,7 +30,7 @@ from hnn_core import read_params
 from hnn_core.dipole import average_dipoles
 
 # HNN modules
-from .dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
+from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
                      WaitSimDialog, HelpDialog, SchematicDialog,
                      bringwintotop, _get_defncore)
 from .paramrw import (usingOngoingInputs, get_output_dir,
@@ -38,8 +38,10 @@ from .paramrw import (usingOngoingInputs, get_output_dir,
 from .simdat import SIMCanvas, SimData
 from .run import RunSimThread, ParamSignal
 from .qt_lib import getmplDPI, getscreengeom, lookupresource, setscalegeomcenter
+from .specfn import spec_dpl_kernel, save_spec_data
 from .DataViewGUI import DataViewGUI
 from .visdipole import DipoleCanvas
+from .visvolt import VoltViewGUI, VoltCanvas
 from .visspec import SpecViewGUI, SpecCanvas
 from .visrast import SpikeViewGUI, SpikeCanvas
 from .vispsd import PSDViewGUI, PSDCanvas
@@ -293,59 +295,61 @@ class HNNGUI (QMainWindow):
       # show the help dialog box
       bringwintotop(self.helpwin)
 
+    def show_plot(self, plot_type):
+        paramfn = self.baseparamwin.paramfn
+        if paramfn is None:
+            return
+        if paramfn in self.sim_data._sim_data:
+            sim_data = self.sim_data._sim_data[paramfn]['data']
+        else:
+            sim_data = None
+
+        if plot_type == 'dipole':
+            DataViewGUI(DipoleCanvas, self.baseparamwin.params, sim_data,
+                        'Dipole Viewer')
+        elif plot_type == 'volt':
+            VoltViewGUI(VoltCanvas, self.baseparamwin.params, sim_data,
+                        'Dipole Viewer')
+        elif plot_type == 'PSD':
+            PSDViewGUI(PSDCanvas, self.baseparamwin.params, sim_data,
+                      'PSD Viewer')
+        elif plot_type == 'spec':
+            SpecViewGUI(SpecCanvas, self.baseparamwin.params, sim_data,
+                        'Spectrogram Viewer')
+        elif plot_type == 'spike':
+            SpikeViewGUI(SpikeCanvas, self.baseparamwin.params, sim_data,
+                         'Spike Viewer')
+        else:
+          raise ValueError("Unknown plot type")
+
     def showSomaVPlot(self):
-      # start the somatic voltage visualization process (separate window)
-      if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
-        smsg='In order to view somatic voltages you must first rerun the simulation with saving somatic voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Somatic Voltages, enter a 1 and then rerun the simulation.'
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText(smsg)
-        msg.setWindowTitle('Rerun simulation')
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
-      else:
-        outdir = os.path.join(get_output_dir(), 'data', self.baseparamwin.params['sim_prefix'])
-        outparamf = os.path.join(outdir,
-                                self.baseparamwin.params['sim_prefix'] +
-                                '.param')
-        lcmd = [getPyComm(), 'visvolt.py',outparamf]
-        Popen(lcmd)  # nonblocking
+        # start the somatic voltage visualization process (separate window)
+        if not float(self.baseparamwin.params['record_vsoma']):
+            smsg='In order to view somatic voltages you must first rerun' + \
+                 ' the simulation with saving somatic voltages. To do so' + \
+                 ' from the main GUI, click on Set Parameters -> Run ->' + \
+                 ' Analysis -> Save Somatic Voltages, enter a 1 and then' + \
+                 ' rerun the simulation.'
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(smsg)
+            msg.setWindowTitle('Rerun simulation')
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+        else:
+            self.show_plot('volt')
 
     def showPSDPlot(self):
-        if self.baseparamwin.paramfn is None:
-            return
-        if self.baseparamwin.paramfn in self.sim_data._sim_data:
-            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
-        else:
-            sim_data = None
-        PSDViewGUI(PSDCanvas, self.baseparamwin.params, sim_data, 'PSD Viewer')
+        self.show_plot('PSD')
 
     def showSpecPlot(self):
-        if self.baseparamwin.paramfn is None:
-            return
-        if self.baseparamwin.paramfn in self.sim_data._sim_data:
-            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
-        else:
-            sim_data = None
-        SpecViewGUI(SpecCanvas, self.baseparamwin.params, sim_data, 'Spectrogram Viewer')
+        self.show_plot('spec')
 
     def showRasterPlot(self):
-        if self.baseparamwin.paramfn is None:
-            return
-        if self.baseparamwin.paramfn in self.sim_data._sim_data:
-            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
-        else:
-            sim_data = None
-        SpikeViewGUI(SpikeCanvas, self.baseparamwin.params, sim_data, 'Spike Viewer')
+        self.show_plot('spike')
 
     def showDipolePlot(self):
-        if self.baseparamwin.paramfn is None:
-            return
-        if self.baseparamwin.paramfn in self.sim_data._sim_data:
-            sim_data = self.sim_data._sim_data[self.baseparamwin.paramfn]['data']
-        else:
-            sim_data = None
-        DataViewGUI(DipoleCanvas, self.baseparamwin.params, sim_data, 'Dipole Viewer')
+        self.show_plot('dipole')
 
     def showwaitsimwin(self):
       # show the wait sim window (has simulation log)
@@ -1007,7 +1011,7 @@ class HNNGUI (QMainWindow):
         self.sim_data.update_sim_data(paramfn, params, sim_data['dpls'],
                                       sim_data['avg_dpl'], sim_data['spikes'],
                                       sim_data['gid_ranges'],
-                                      sim_data['spec'])
+                                      sim_data['spec'], sim_data['vsoma'])
 
     def done(self, optMode, except_msg):
         # called when the simulation completes running
@@ -1049,6 +1053,10 @@ class HNNGUI (QMainWindow):
                                                     self.baseparamwin.params)
                 self.sim_data.save_spec_with_hist(self.baseparamwin.paramfn,
                                                   self.baseparamwin.params)
+
+            if self.baseparamwin.params['record_vsoma']:
+                self.sim_data.save_vsoma(self.baseparamwin.paramfn,
+                                         self.baseparamwin.params)
 
             data_dir = os.path.join(get_output_dir(), 'data')
             sim_dir = os.path.join(data_dir,

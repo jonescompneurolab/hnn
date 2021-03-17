@@ -108,11 +108,14 @@ def simulate(params, n_procs=None):
     sim_data = {}
     # run the simulation with MPIBackend for faster completion time
     with MPIBackend(n_procs=n_procs, mpi_cmd='mpiexec'):
+        record_vsoma = bool(params['record_vsoma'])
         sim_data['raw_dpls'] = simulate_dipole(net, params['N_trials'],
-                                               postproc=False)
+                                               postproc=False,
+                                               record_vsoma=record_vsoma)
 
     sim_data['gid_ranges'] = net.gid_ranges
     sim_data['spikes'] = net.cell_response
+    sim_data['vsoma'] = net.cell_response.vsoma
 
     return sim_data
 

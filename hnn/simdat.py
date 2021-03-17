@@ -2,6 +2,7 @@ import os
 import numpy as np
 from math import ceil
 from glob import glob
+from pickle import dump, load
 
 from scipy import signal
 from PyQt5 import QtWidgets
@@ -97,6 +98,33 @@ def read_spectrials(sim_dir):
         spec_list.append(spec_trial)
 
     return spec_list
+
+
+def read_vsomatrials(sim_dir):
+    """read somatic voltage data files for individual trials"""
+    vsoma_list = []
+
+    vsoma_fname_pattern = os.path.join(sim_dir, 'vsoma_*.pkl')
+    glob_list = sorted(glob(str(vsoma_fname_pattern)))
+    if len(glob_list) == 0:
+        # get the old style filename
+        glob_list = [get_fname(sim_dir, 'vsoma')]
+
+    for vsoma_fn in glob_list:
+        vsoma_trial = None
+        try:
+            with open(vsoma_fn, 'rb') as f:
+                vsoma_trial = load(f)
+        except OSError:
+            if os.path.exists(sim_dir):
+                print('Warning: could not read file:', vsoma_fn)
+        except ValueError:
+            if os.path.exists(sim_dir):
+                print('Warning: could not read file:', vsoma_fn)
+
+        vsoma_list.append(vsoma_trial)
+
+    return vsoma_list
 
 
 def read_spktrials(sim_dir, gid_ranges):
@@ -221,13 +249,13 @@ class SimData(object):
         del self._sim_data[paramfn]
 
     def update_sim_data(self, paramfn, params, dpls, avg_dpl, spikes,
-                        gid_ranges, spec=None):
+                        gid_ranges, spec=None, vsoma=None):
         self._sim_data[paramfn] = {'params': params,
                                    'data': {'dpls': dpls,
                                             'avg_dpl': avg_dpl,
                                             'spikes': spikes,
                                             'gid_ranges': gid_ranges,
-                                            'spec': spec}}
+                                            'spec': spec, 'vsoma': vsoma}}
 
     def clear_exp_data(self):
         """Clear all experimental data from SimData"""
@@ -321,8 +349,18 @@ class SimData(object):
                 print("Warning: only read %d of %d spec files in %s" %
                       (len(spec), params['N_trials'], sim_dir))
 
+        # somatic voltages
+        vsoma = None
+        if params['record_vsoma']:
+            vsoma = read_vsomatrials(sim_dir)
+            if len(vsoma) == 0:
+                print("Warning: no somatic voltages read from %s" % sim_dir)
+            elif len(vsoma) < params['N_trials']:
+                print("Warning: only read %d of %d voltage files in %s" %
+                    (len(vsoma), params['N_trials'], sim_dir))
+
         self.update_sim_data(paramfn, params, dpls, avg_dpl, spikes,
-                             gid_ranges, spec)
+                             gid_ranges, spec, vsoma)
 
         return True
 
@@ -543,6 +581,24 @@ class SimData(object):
             f.savefig(dipole_fig_fn, dpi=300)
             plt.close(f)
 
+    def save_vsoma(self, paramfn, params):
+        ntrial = params['N_trials']
+        sim_dir = os.path.join(self._data_dir, params['sim_prefix'])
+        current_sim_data = self._sim_data[paramfn]['data']
+
+        for trial_idx in range(ntrial):
+            vsoma_outfn = get_fname(sim_dir, 'vsoma', trial_idx)
+
+            if trial_idx + 1 > len(current_sim_data['vsoma']):
+                raise ValueError("No vsoma data for trial %d" % trial_idx)
+
+            vsoma = current_sim_data['vsoma'][trial_idx]
+
+            # store tvec with voltages. it will be the same for
+            # all trials
+            vsoma['vtime'] = current_sim_data['dpls'][0].times
+            with open(str(vsoma_outfn), 'wb') as f:
+                dump(vsoma, f)
 
 class SIMCanvas (FigureCanvasQTAgg):
     # matplotlib/pyqt-compatible canvas for drawing simulation & external data
