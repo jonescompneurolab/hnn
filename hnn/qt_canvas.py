@@ -381,8 +381,8 @@ class SIMCanvas(FigureCanvasQTAgg):
 
                     first_spec_trial = single_sim['spec'][0]
 
-                    # adjust dipole to match spectogram limits (e.g. missing first
-                    # 50 ms b/c edge effects)
+                    # adjust dipole to match spectogram limits (e.g. missing
+                    # first 50 ms b/c edge effects)
                     xlim = (first_spec_trial['time'][0],
                             first_spec_trial['time'][-1])
 

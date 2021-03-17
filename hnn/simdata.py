@@ -353,7 +353,7 @@ class SimData(object):
                 print("Warning: no somatic voltages read from %s" % sim_dir)
             elif len(vsoma) < params['N_trials']:
                 print("Warning: only read %d of %d voltage files in %s" %
-                    (len(vsoma), params['N_trials'], sim_dir))
+                      (len(vsoma), params['N_trials'], sim_dir))
 
         self.update_sim_data(paramfn, params, dpls, avg_dpl, spikes,
                              gid_ranges, spec, vsoma)
@@ -644,16 +644,15 @@ class SimData(object):
                 # this is the average dipole (across trials)
                 # it's also the ONLY dipole when running a single trial
                 ax.plot(dpl.times, dpl.data['agg'], 'k',
-                                   linewidth=linewidth + 1)
+                        linewidth=linewidth + 1)
                 yl[0] = min(yl[0], dpl.data['agg'].min())
                 yl[1] = max(yl[1], dpl.data['agg'].max())
         else:
             if self._opt_data['avg_dpl'] is not None:
                 # show optimized dipole as gray line
                 optdpl = self._opt_data['avg_dpl']
-                ax.plot(optdpl.times, optdpl.data['agg'], 'k',
-                                   color='gray',
-                                   linewidth=linewidth + 1)
+                ax.plot(optdpl.times, optdpl.data['agg'], 'k', color='gray',
+                        linewidth=linewidth + 1)
                 yl[0] = min(yl[0], optdpl.data['agg'].min())
                 yl[1] = max(yl[1], optdpl.data['agg'].max())
 
@@ -663,7 +662,7 @@ class SimData(object):
                 times = plot_data.times
                 plot_dpl = plot_data.data['agg']
                 ax.plot(times, plot_dpl, '--', color='black',
-                                   linewidth=linewidth)
+                        linewidth=linewidth)
                 dpl = self._opt_data['initial_dpl'].data['agg']
                 yl[0] = min(yl[0], dpl.min())
                 yl[1] = max(yl[1], dpl.max())
@@ -675,13 +674,12 @@ class SimData(object):
         NEstPyr = int(num_pyr * float(dipole_scalefctr))
         if NEstPyr > 0:
             ax.set_ylabel(r'Dipole (nAm $\times$ ' +
-                                     str(dipole_scalefctr) +
-                                     ')\nFrom Estimated ' +
-                                     str(NEstPyr) + ' Cells',
-                                     fontsize=fontsize)
+                          str(dipole_scalefctr) +
+                          ')\nFrom Estimated ' +
+                          str(NEstPyr) + ' Cells', fontsize=fontsize)
         else:
             # is this handling overflow?
             ax.set_ylabel(r'Dipole (nAm $\times$ ' +
-                                     str(dipole_scalefctr) +
-                                     ')\n', fontsize=fontsize)
+                          str(dipole_scalefctr) +
+                          ')\n', fontsize=fontsize)
         ax.set_ylim(yl)

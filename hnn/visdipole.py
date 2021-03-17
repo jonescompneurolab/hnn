@@ -17,8 +17,10 @@ random_label = np.random.rand(100)
 
 
 class DipoleCanvas(FigureCanvasQTAgg):
+    """Class for displaying Dipole Viewer
 
-
+    Required parameters in params dict: N_trials, tstop, dipole_scalefctr
+    """
     def __init__(self, params, sim_data, index, parent=None, width=12,
                  height=10, dpi=120, title='Dipole Viewer'):
         FigureCanvasQTAgg.__init__(self, Figure(figsize=(width, height),

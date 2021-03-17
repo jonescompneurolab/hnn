@@ -182,7 +182,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                     ax.set_ylabel('Distal Input')
 
                 if haveEvokedProx or haveOngoingProx:
-                    ax2 = fig.add_subplot(G[row:row + 2, :], label=random_label)
+                    ax2 = fig.add_subplot(G[row:row + 2, :],
+                                          label=random_label)
                     random_label += 1
                     row += 2
                     lax.append(ax2)
@@ -195,7 +196,8 @@ class SpikeCanvas(FigureCanvasQTAgg):
                     ax2.set_ylabel('Proximal Input')
 
                 if PoissonInputs and len(dinput['pois']):
-                    axp = fig.add_subplot(G[row:row + 2, :], label=random_label)
+                    axp = fig.add_subplot(G[row:row + 2, :],
+                                          label=random_label)
                     random_label += 1
                     row += 2
                     lax.append(axp)

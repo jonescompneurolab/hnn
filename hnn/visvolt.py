@@ -145,7 +145,7 @@ class VoltViewGUI(DataViewGUI):
         if idx != self.index:
             self.index = idx
             self.statusBar().showMessage('Loading data from trial ' +
-                                          str(self.index) + '.')
+                                         str(self.index) + '.')
             self.m.index = self.index
             self.initCanvas()
             self.m.plot()
