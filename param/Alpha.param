@@ -10,7 +10,7 @@ save_spec_data: 1
 f_max_spec: 40.
 dipole_scalefctr: 300000.0
 dipole_smooth_win: 0
-save_vsoma: 0
+record_vsoma: 0
 prng_seedcore_input_prox: 13
 prng_seedcore_input_dist: 14
 prng_seedcore_extpois: 4

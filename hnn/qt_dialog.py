@@ -510,7 +510,7 @@ class RunParamDialog(DictDialog):
                                       ('f_max_spec', 40),
                                       ('dipole_scalefctr', 30e3),
                                       ('dipole_smooth_win', 15.0),
-                                      ('save_vsoma', 0)])
+                                      ('record_vsoma', 0)])
 
         self.drand = OrderedDict([('prng_seedcore_opt', 0),
                                   ('prng_seedcore_input_prox', 0),
@@ -537,7 +537,7 @@ class RunParamDialog(DictDialog):
         self.addtransvar('spec_cmap', 'Spectrogram Colormap')
         self.addtransvar('dipole_scalefctr', 'Dipole Scaling')
         self.addtransvar('dipole_smooth_win', 'Dipole Smooth Window (ms)')
-        self.addtransvar('save_vsoma', 'Save Somatic Voltages')
+        self.addtransvar('record_vsoma', 'Record Somatic Voltages')
         self.addtransvar('prng_seedcore_opt', 'Parameter Optimization')
         self.addtransvar('prng_seedcore_input_prox', 'Ongoing Proximal Input')
         self.addtransvar('prng_seedcore_input_dist', 'Ongoing Distal Input')
