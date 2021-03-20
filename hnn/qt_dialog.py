@@ -12,9 +12,10 @@ from PyQt5.QtWidgets import (QDialog, QToolTip, QTabWidget, QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout)
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 
-from hnn_core import read_params
+from hnn_core import read_params, Params
 
-from .paramrw import usingOngoingInputs, usingEvokedInputs, get_output_dir
+from .paramrw import (usingOngoingInputs, usingEvokedInputs, get_output_dir,
+                      legacy_param_str_to_dict)
 from .qt_lib import (setscalegeom, setscalegeomcenter, lookupresource,
                      ClickLabel)
 from .qt_evoked import EvokedInputParamDialog, OptEvokedInputParamDialog
@@ -495,7 +496,8 @@ class RunParamDialog(DictDialog):
                                       ('dipole_smooth_win', 15.0),
                                       ('record_vsoma', 0)])
 
-        self.drand = OrderedDict([('prng_seedcore_opt', 0),
+        self.drand = OrderedDict([('prng_seedcore_opt',
+                                   self.mainwin.prng_seedcore_opt),
                                   ('prng_seedcore_input_prox', 0),
                                   ('prng_seedcore_input_dist', 0),
                                   ('prng_seedcore_extpois', 0),
@@ -533,7 +535,7 @@ class RunParamDialog(DictDialog):
 
     def selectionchange(self, i):
         self.spec_cmap = self.cmaps[i]
-        self.parent.updatesaveparams({})
+        self.parent.update_gui_params({})
 
     def initExtra(self):
         DictDialog.initExtra(self)
@@ -575,6 +577,15 @@ class RunParamDialog(DictDialog):
         self.mainwin.defncore = ncore
 
         return ncore
+
+    def get_prng_seedcore_opt(self):
+        prng_seedcore_opt = self.dqline['prng_seedcore_opt'].text().strip()
+
+        # update value in HNNGUI for persistence
+        self.mainwin.prng_seedcore_opt = int(prng_seedcore_opt)
+
+        return int(self.mainwin.prng_seedcore_opt)
+
 
     def setfromdin(self, din):
         if not din:
@@ -931,9 +942,10 @@ class SchematicDialog (QDialog):
 class BaseParamDialog (QDialog):
     """Base widget for specifying params
 
-    contains buttons to create other widgets
+    The params dictionary is stored within this class. Other Dialogs access it
+    here.
     """
-    def __init__(self, parent, paramfn, optrun_func):
+    def __init__(self, parent, paramfn):
         super(BaseParamDialog, self).__init__(parent)
         self.proxparamwin = None
         self.distparamwin = None
@@ -946,7 +958,7 @@ class BaseParamDialog (QDialog):
         self.proxparamwin = OngoingInputParamDialog(self, 'Proximal')
         self.distparamwin = OngoingInputParamDialog(self, 'Distal')
         self.evparamwin = EvokedInputParamDialog(self, None)
-        self.optparamwin = OptEvokedInputParamDialog(self, optrun_func)
+        self.optparamwin = OptEvokedInputParamDialog(self, parent)
         self.poisparamwin = PoissonInputParamDialog(self, None)
         self.tonicparamwin = TonicInputParamDialog(self, None)
         self.lsubwin = [self.runparamwin, self.cellparamwin, self.netparamwin,
@@ -1126,8 +1138,10 @@ class BaseParamDialog (QDialog):
                 oktosave = False
 
         if oktosave:
-            os.makedirs(param_dir, exist_ok=True)
+            # update params dict with values from GUI
+            self.params = Params(legacy_param_str_to_dict(str(self)))
 
+            os.makedirs(param_dir, exist_ok=True)
             with open(tmpf, 'w') as fp:
                 fp.write(str(self))
 
@@ -1138,15 +1152,13 @@ class BaseParamDialog (QDialog):
 
         return oktosave
 
-    def updatesaveparams(self, dtest):
+    def update_gui_params(self, dtest):
         """ Update parameter values in GUI
 
         So user can see and so GUI will save these param values
         """
         for win in self.lsubwin:
             win.setfromdin(dtest)
-        # save parameters - do not ask if can over-write the param file
-        self.saveparams(checkok=False)
 
     def __str__(self):
         s = 'sim_prefix: ' + self.qle.text() + os.linesep
