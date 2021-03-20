@@ -35,17 +35,17 @@ from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdata import SimData
-from .qt_canvas import SIMCanvas
-from .run import SimThread, OptThread
+from .qt_sim import SIMCanvas
+from .qt_thread import SimThread, OptThread
 from .qt_lib import (getmplDPI, getscreengeom, lookupresource,
                      setscalegeomcenter)
 from .specfn import spec_dpl_kernel, save_spec_data
 from .DataViewGUI import DataViewGUI
-from .visdipole import DipoleCanvas
-from .visvolt import VoltViewGUI, VoltCanvas
-from .visspec import SpecViewGUI, SpecCanvas
-from .visrast import SpikeViewGUI, SpikeCanvas
-from .vispsd import PSDViewGUI, PSDCanvas
+from .qt_dipole import DipoleCanvas
+from .qt_vsoma import VSomaViewGUI, VSomaCanvas
+from .qt_spec import SpecViewGUI, SpecCanvas
+from .qt_spike import SpikeViewGUI, SpikeCanvas
+from .qt_psd import PSDViewGUI, PSDCanvas
 
 # TODO: These globals should be made configurable via the GUI
 drawavgdpl = 0
@@ -351,9 +351,9 @@ class HNNGUI(QMainWindow):
         if plot_type == 'dipole':
             DataViewGUI(DipoleCanvas, self.baseparamwin.params, sim_data,
                         'Dipole Viewer')
-        elif plot_type == 'volt':
-            VoltViewGUI(VoltCanvas, self.baseparamwin.params, sim_data,
-                        'Dipole Viewer')
+        elif plot_type == 'vsoma':
+            VSomaViewGUI(VSomaCanvas, self.baseparamwin.params, sim_data,
+                         'Somatic Voltages Viewer')
         elif plot_type == 'PSD':
             PSDViewGUI(PSDCanvas, self.baseparamwin.params, sim_data,
                        'PSD Viewer')
@@ -381,7 +381,7 @@ class HNNGUI(QMainWindow):
             msg.setStandardButtons(QMessageBox.Ok)
             msg.exec_()
         else:
-            self.show_plot('volt')
+            self.show_plot('vsoma')
 
     def showPSDPlot(self):
         self.show_plot('PSD')

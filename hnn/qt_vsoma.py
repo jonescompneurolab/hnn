@@ -19,15 +19,15 @@ fontsize = plt.rcParams['font.size'] = 10
 random_label = np.random.rand(100)
 
 
-class VoltCanvas(FigureCanvasQTAgg):
+class VSomaCanvas(FigureCanvasQTAgg):
     """Class for the somatic voltages viewer
 
-    This is designed to be called from VoltViewGUI class to add functionality
+    This is designed to be called from VSomaViewGUI class to add functionality
     for loading and clearing data
     """
 
     def __init__(self, params, sim_data, index, parent=None, width=12,
-                 height=10, dpi=120, title='Voltage Viewer'):
+                 height=10, dpi=120, title='Somatic Voltage Viewer'):
         FigureCanvasQTAgg.__init__(self, Figure(figsize=(width, height),
                                                 dpi=dpi))
         self.title = title
@@ -130,7 +130,7 @@ class VoltCanvas(FigureCanvasQTAgg):
         self.draw()
 
 
-class VoltViewGUI(DataViewGUI):
+class VSomaViewGUI(DataViewGUI):
     """Class for displaying somatic voltages viewer
 
     Required parameters in params dict: N_trials, tstop
