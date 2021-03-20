@@ -32,6 +32,8 @@ class SIMCanvas(FigureCanvasQTAgg):
         self.sim_data = parent.sim_data
         self.lextdatobj = []  # external data object
         self.clridx = 5  # index for next color for drawing external data
+        self.errtot = None
+        self.lerr = []
 
         # legend for dipole signals
         self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
@@ -200,24 +202,19 @@ class SIMCanvas(FigureCanvasQTAgg):
 
         return False
 
-    def plotextdat(self, recalcErr=True):
+    def plotextdat(self):
         global fontsize
 
         if self.sim_data._exp_data is None or \
                 len(self.sim_data._exp_data) == 0:
             return
 
-        initial_err = None
         # plot 'external' data (e.g. from experiment/other simulation)
         if self._has_simdata():  # has the simulation been run yet?
-            if recalcErr:
-                tstop = self.params['tstop']
-                # recalculate/save the error?
-                self.lerr, self.errtot = self.sim_data.calcerr(self.paramfn,
-                                                               tstop)
-
-            if self.is_optimization:
-                initial_err = self.sim_data._opt_data['initial_error']
+            tstop = self.params['tstop']
+            # recalculate/save the error
+            self.lerr, self.errtot = self.sim_data.calcerr(self.paramfn,
+                                                           tstop)
 
         if self.axdipole is None:
             self.axdipole = self.figure.add_subplot(self.G[0:-1, 0])
@@ -257,35 +254,33 @@ class SIMCanvas(FigureCanvasQTAgg):
         self.axdipole.set_xlim(xl)
         self.axdipole.set_ylim(yl)
 
-        if self.lpatch:
+        if len(self.lpatch) > 0:
             self.axdipole.legend(handles=self.lpatch, loc=2)
 
-        if self.errtot:
-            tx, ty = 0, 0
-            if self.is_optimization and initial_err:
-                clr = 'black'
-                txt = 'RMSE: %.2f' % round(initial_err, 2)
-                textcoords = 'axes fraction'
-                self.annot_avg = self.axdipole.annotate(txt, xy=(0, 0),
-                                                        xytext=(0.005, 0.005),
-                                                        textcoords=textcoords,
-                                                        color=clr,
-                                                        fontweight='bold')
-                clr = 'gray'
-                txt = 'RMSE: %.2f' % round(self.errtot, 2)
-                self.annot_avg = self.axdipole.annotate(txt, xy=(0, 0),
-                                                        xytext=(0.86, 0.005),
-                                                        textcoords=textcoords,
-                                                        color=clr,
-                                                        fontweight='bold')
-            else:
-                clr = 'black'
-                txt = 'Avg. RMSE: %.2f' % round(self.errtot, 2)
-                self.annot_avg = self.axdipole.annotate(txt, xy=(0, 0),
-                                                        xytext=(0.005, 0.005),
-                                                        textcoords=textcoords,
-                                                        color=clr,
-                                                        fontweight='bold')
+        if self.errtot is not None:
+            textcoords = 'axes fraction'
+            clr = 'black'
+            txt = 'Avg. RMSE: %.2f' % round(self.errtot, 2)
+            if self.is_optimization:
+                if 'initial_error' in self.sim_data._opt_data:
+                    initial_error = self.sim_data._opt_data['initial_error']
+                    txt = 'Initial RMSE: %.2f' % round(initial_error, 2)
+                    annot_initial = \
+                        self.axdipole.annotate(txt, xy=(0, 0),
+                                               xytext=(0.86, 0.005),
+                                               textcoords=textcoords,
+                                               color=clr,
+                                               fontweight='bold')
+                    self.lextdatobj.append(annot_initial)
+                    txt = 'Opt RMSE: %.2f' % round(self.errtot, 2)
+                    clr = 'gray'
+
+            annot_avg = self.axdipole.annotate(txt, xy=(0, 0),
+                                               xytext=(0.005, 0.005),
+                                               textcoords=textcoords,
+                                               color=clr,
+                                               fontweight='bold')
+            self.lextdatobj.append(annot_avg)
 
         if not self._has_simdata():  # need axis labels
             self.axdipole.set_xlabel('Time (ms)', fontsize=fontsize)
@@ -340,13 +335,12 @@ class SIMCanvas(FigureCanvasQTAgg):
             xlim = (0.0, tstop)
 
             # for trying to plot a simulation read from disk (e.g. default)
-            if self.paramfn in self.sim_data._sim_data:
-                data_to_plot = True
-                pass
-            else:
+            if self.paramfn not in self.sim_data._sim_data:
                 # load simulation data from disk
                 data_to_plot = self.sim_data.update_sim_data_from_disk(
                     self.paramfn, self.params)
+            else:
+                data_to_plot = True
 
             if data_to_plot:
                 sim_data = self.sim_data._sim_data[self.paramfn]['data']
@@ -440,14 +434,14 @@ class SIMCanvas(FigureCanvasQTAgg):
                                   (xl[1] - xl[0]) * .02,
                                   (yl[1] - yl[0]) * .02)
 
-    def plot(self, recalcErr=True):
+    def plot(self):
         self.clearaxes()
         plt.close(self.figure)
         self.figure.clf()
         self.axdipole = None
 
         self.plotsimdat()  # creates self.axdipole
-        self.plotextdat(recalcErr)
+        self.plotextdat()
         self.plotarrows()
 
         self.draw()
