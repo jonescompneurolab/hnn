@@ -30,7 +30,7 @@ def _consolidate_chunks(input_dict):
 
     consolidated_chunks = []
     for one_input in sorted_inputs:
-        if not 'opt_start' in one_input[1]:
+        if 'opt_start' not in one_input[1]:
             continue
 
         # extract info from sorted list
@@ -98,7 +98,6 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
     'opt_end'
     """
 
-    import re
     import scipy.stats as stats
     from math import ceil, floor
 
@@ -413,9 +412,9 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
 
         if 'dt' in din:
 
-            # Optimization feature introduces the case where din just contains optimization
-            # relevant parameters. In that case, we don't want to remove all inputs, just
-            # modify existing inputs.
+            # Optimization feature introduces the case where din just contains
+            # optimization relevant parameters. In that case, we don't want to
+            # remove all inputs, just modify existing inputs.
             self.removeAllInputs()  # turn off any previously set inputs
 
             nprox, ndist = countEvokedInputs(din)
@@ -473,12 +472,14 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
                 base_key_str = 'gbar_' + eloc + '_' + enum + '_'
                 if eloc == 'evprox':
                     for ct in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
-                        # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
+                        # ORIGINAL MODEL/PARAM: only ampa for prox evoked
+                        # inputs
                         key_str = base_key_str + ct + '_ampa'
                         self.set_qline_float(key_str, v)
                 elif eloc == 'evdist':
                     for ct in ['L2Pyr', 'L2Basket', 'L5Pyr']:
-                        # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
+                        # ORIGINAL MODEL/PARAM: both ampa and nmda for distal
+                        # evoked inputs
                         key_str = base_key_str + ct + '_ampa'
                         self.set_qline_float(key_str, v)
                         key_str = base_key_str + ct + '_nmda'
@@ -601,9 +602,9 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
         self.addFormToTab(dprox, self.addTab('Proximal ' + str(self.nprox)))
         self.ltabs[-1].layout.addRow(
             self.makePixLabel(lookupresource('proxfig')))
-        #print('index to', len(self.ltabs)-1)
+        # print('index to', len(self.ltabs)-1)
         self.tabs.setCurrentIndex(len(self.ltabs)-1)
-        #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+        # print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
         # self.addtips()
 
     def addDist(self):
@@ -614,9 +615,9 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
         self.addFormToTab(ddist, self.addTab('Distal ' + str(self.ndist)))
         self.ltabs[-1].layout.addRow(
             self.makePixLabel(lookupresource('distfig')))
-        #print('index to', len(self.ltabs)-1)
+        # print('index to', len(self.ltabs)-1)
         self.tabs.setCurrentIndex(len(self.ltabs)-1)
-        #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+        # print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
         # self.addtips()
 
 
@@ -709,7 +710,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         self.resize(self.minimumSizeHint())
 
     def toggle_enable_param(self, label):
-        import re
 
         widget_dict_list = [self.dqinitial_label, self.dqopt_label,
                             self.dqdiff_label, self.dqparam_name,
@@ -773,7 +773,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
     def addGridToTab(self, d, tab):
         from functools import partial
-        import re
 
         current_tab = len(self.ltabs)-1
         tab.layout = QGridLayout()
@@ -885,8 +884,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             row += 1
 
         # A spacer in the last row stretches to fill remaining space.
-        # For inputs with fewer parameters than the rest, this pushes parameters
-        # to the top with the same spacing as the other inputs.
+        # For inputs with fewer parameters than the rest, this pushes
+        # parameters to the top with the same spacing as the other inputs.
         tab.layout.addItem(QSpacerItem(0, 0), row, 0, 1, 9)
         tab.layout.setRowStretch(row, 1)
         tab.setLayout(tab.layout)
@@ -1043,7 +1042,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
     def runOptimization(self):
         self.current_opt_step = 0
 
-        # update the ranges to find which parameters have been disabled (unchecked)
+        # update the ranges to find which parameters have been disabled
+        # (unchecked)
         self.updateOptRanges(save_sliders=True)
 
         # update the opt info dict to capture num_sims from GUI
@@ -1341,8 +1341,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.opt_params[tab_name]['user_end'] = min(
                 self.simlength, value + timing_bound)
 
-            # add an empty dictionary so that rebuildOptStepInfo() can determine
-            # how many parameters
+            # add an empty dictionary so that rebuildOptStepInfo() can
+            # determine how many parameters
             for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
                 label = self.ltabkeys[tab_index][row_index]
                 self.opt_params[tab_name]['ranges'][label] = {'enabled': True}
@@ -1368,7 +1368,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 value = self.dparams[label]
 
                 # Calculate value to put in "Delta" column. When possible, use
-                # percentages, but when initial value is 0, use absolute changes
+                # percentages, but when initial value is 0, use absolute
+                # changes
                 if tab_name not in self.initial_opt_ranges or \
                    not self.dqchkbox[label].isChecked():
                     self.dqdiff_label[label].setEnabled(False)
@@ -1480,7 +1481,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 (k.count('evprox') > 0 or
                  k.count('evdist') > 0):
                 # NOTE: will be deprecated in future release
-                # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+                # for back-compat with old-style specification which didn't
+                # have ampa,nmda in evoked gbar
                 try:
                     new_value = float(v)
                 except ValueError:
@@ -1493,12 +1495,14 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 base_key_str = 'gbar_' + eloc + '_' + enum + '_'
                 if eloc == 'evprox':
                     for ct in ['L2Pyr', 'L2Basket', 'L5Pyr', 'L5Basket']:
-                        # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
+                        # ORIGINAL MODEL/PARAM: only ampa for prox evoked
+                        # inputs
                         key_str = base_key_str + ct + '_ampa'
                         self.dparams[key_str] = new_value
                 elif eloc == 'evdist':
                     for ct in ['L2Pyr', 'L2Basket', 'L5Pyr']:
-                        # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
+                        # ORIGINAL MODEL/PARAM: both ampa and nmda for distal
+                        # evoked inputs
                         key_str = base_key_str + ct + '_ampa'
                         self.dparams[key_str] = new_value
                         key_str = base_key_str + ct + '_nmda'

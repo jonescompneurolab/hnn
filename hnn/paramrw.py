@@ -4,10 +4,8 @@
 # rev 2016-05-01 (SL: removed dependence on cartesian, updated for python3)
 # last major: (SL: cleanup of self.p_all)
 
-import re
 import os
 import numpy as np
-import itertools as it
 
 
 def get_output_dir():
@@ -56,7 +54,7 @@ def get_fname(sim_dir, key, trial=None):
                  'param': ('param', '.txt'),
                  'vsoma': ('vsoma', '.pkl')}
 
-    if trial == None or key == 'param':
+    if trial is None or key == 'param':
         # param file currently identical for all trials
         fname = os.path.join(sim_dir, datatypes[key][0] + datatypes[key][1])
     else:
@@ -106,7 +104,7 @@ def usingOngoingInputs(params, lty=['_prox', '_dist']):
     dpref = {'_prox': 'input_prox_A_', '_dist': 'input_dist_A_'}
     for postfix in lty:
         if float(params['t0_input'+postfix]) <= tstop and \
-                float(params['tstop_input'+postfix]) >= float(params['t0_input'+postfix]) and \
+                float(params['tstop_input'+postfix]) >= float(params['t0_input' + postfix]) and \
                 float(params['f_input'+postfix]) > 0.:
             for k in ['weight_L2Pyr_ampa', 'weight_L2Pyr_nmda',
                       'weight_L5Pyr_ampa', 'weight_L5Pyr_nmda',
@@ -118,7 +116,8 @@ def usingOngoingInputs(params, lty=['_prox', '_dist']):
     return False
 
 # return number of evoked inputs (proximal, distal)
-# using dictionary d (or if d is a string, first load the dictionary from filename d)
+# using dictionary d (or if d is a string, first load the dictionary from
+#                     filename d)
 
 
 def countEvokedInputs(params):
