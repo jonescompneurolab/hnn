@@ -104,8 +104,7 @@ def usingOngoingInputs(params, lty=['_prox', '_dist']):
     dpref = {'_prox': 'input_prox_A_', '_dist': 'input_dist_A_'}
     for postfix in lty:
         if float(params['t0_input'+postfix]) <= tstop and \
-                float(params['tstop_input'+postfix]) >= float(params['t0_input' + postfix]) and \
-                float(params['f_input'+postfix]) > 0.:
+                float(params['tstop_input'+postfix]) >= float(params['t0_input' + postfix]) and float(params['f_input'+postfix]) > 0.:  # noqa: E501
             for k in ['weight_L2Pyr_ampa', 'weight_L2Pyr_nmda',
                       'weight_L5Pyr_ampa', 'weight_L5Pyr_nmda',
                       'weight_inh_ampa', 'weight_inh_nmda']:
