@@ -9,7 +9,6 @@ import sys
 from math import ceil, isclose
 from contextlib import redirect_stdout
 from psutil import wait_procs, process_iter, NoSuchProcess
-import threading
 import traceback
 from queue import Queue
 
@@ -418,7 +417,8 @@ class OptThread(SimThread):
 
         # check that optimization improved RMSE
         err_queue = Queue()
-        self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn, self.params['tstop'])
+        self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn,
+                                             self.params['tstop'])
         final_err = err_queue.get()
         if final_err > self.initial_err:
             txt = "Warning: optimization failed to improve RMSE below" + \
@@ -502,7 +502,8 @@ class OptThread(SimThread):
         self.update_opt_data_from_sim_data.tsig.emit(self.paramfn)
         self.update_initial_opt_data_from_sim_data.tsig.emit(self.paramfn)
         err_queue = Queue()
-        self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn, self.params['tstop'])
+        self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn,
+                                             self.params['tstop'])
         self.initial_err = err_queue.get()
 
     def opt_sim(self, new_params, grad=0):

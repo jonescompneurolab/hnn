@@ -197,82 +197,82 @@ class HNNGUI(QMainWindow):
             self.redraw()
 
     def selParamFileDialog(self):
-      """bring up window to select simulation parameter file"""
+        """bring up window to select simulation parameter file"""
 
-      relative_root_path = os.path.join(os.path.dirname(__file__), '..')
-      hnn_root_dir = os.path.realpath(relative_root_path)
+        relative_root_path = os.path.join(os.path.dirname(__file__), '..')
+        hnn_root_dir = os.path.realpath(relative_root_path)
 
-      qfd = QFileDialog()
-      qfd.setHistory([os.path.join(get_output_dir(), 'param'),
-                      os.path.join(hnn_root_dir, 'param')])
-      fn = qfd.getOpenFileName(self, 'Open param file',
-                               os.path.join(hnn_root_dir, 'param'),
-                               "Param files (*.param)")
-      if len(fn) > 0 and fn[0] == '':
-        # no file selected in dialog
-        return
+        qfd = QFileDialog()
+        qfd.setHistory([os.path.join(get_output_dir(), 'param'),
+                        os.path.join(hnn_root_dir, 'param')])
+        fn = qfd.getOpenFileName(self, 'Open param file',
+                                 os.path.join(hnn_root_dir, 'param'),
+                                 "Param files (*.param)")
+        if len(fn) > 0 and fn[0] == '':
+            # no file selected in dialog
+            return
 
-      tmpfn = os.path.abspath(fn[0])
+        tmpfn = os.path.abspath(fn[0])
 
-      try:
-        params = read_params(tmpfn)
-      except ValueError:
-        QMessageBox.information(self, "HNN", "WARNING: could not"
-                                "retrieve parameters from %s" %
-                                tmpfn)
-        return
+        try:
+            params = read_params(tmpfn)
+        except ValueError:
+            QMessageBox.information(self, "HNN", "WARNING: could not"
+                                    "retrieve parameters from %s" %
+                                    tmpfn)
+            return
 
-      # check that valid number of trials was given
-      if 'N_trials' not in params or params['N_trials'] == 0:
-          print("Warning: invalid configured number of trials."
-                " Setting 'N_trials' to 1.")
-          params['N_trials'] = 1
+        # check that valid number of trials was given
+        if 'N_trials' not in params or params['N_trials'] == 0:
+            print("Warning: invalid configured number of trials."
+                  " Setting 'N_trials' to 1.")
+            params['N_trials'] = 1
 
-      # Now update GUI components
-      self.baseparamwin.paramfn = tmpfn
+        # Now update GUI components
+        self.baseparamwin.paramfn = tmpfn
 
-      # now update the GUI components to reflect the param file selected
-      self.baseparamwin.updateDispParam(params)
-      self.setWindowTitle(self.baseparamwin.paramfn)
+        # now update the GUI components to reflect the param file selected
+        self.baseparamwin.updateDispParam(params)
+        self.setWindowTitle(self.baseparamwin.paramfn)
 
-      self.initSimCanvas()  # recreate canvas
+        self.initSimCanvas()  # recreate canvas
 
-      # check if param file exists in combo box already
-      cb_index = self.cbsim.findText(self.baseparamwin.paramfn)
-      self.populateSimCB(cb_index)  # populate the combobox
+        # check if param file exists in combo box already
+        cb_index = self.cbsim.findText(self.baseparamwin.paramfn)
+        self.populateSimCB(cb_index)  # populate the combobox
 
-      if self.sim_data.get_exp_data_size() > 0:
-        self.toggleEnableOptimization(True)
+        if self.sim_data.get_exp_data_size() > 0:
+            self.toggleEnableOptimization(True)
 
     def loadDataFile(self, fn):
-      """load a dipole data file"""
+        """load a dipole data file"""
 
-      extdata = None
-      try:
-        extdata = np.loadtxt(fn)
-      except ValueError:
-        # possible that data file is comma delimited instead of whitespace
-        # delimited
+        extdata = None
         try:
-          extdata = np.loadtxt(fn, delimiter=',')
+            extdata = np.loadtxt(fn)
         except ValueError:
-          QMessageBox.information(self, "HNN", "WARNING: could not load data"
-                                  " file %s" % fn)
-          return False
-      except IsADirectoryError:
-        QMessageBox.information(self, "HNN", "WARNING: could not load data"
-                                " file %s" % fn)
-        return False
+            # possible that data file is comma delimited instead of whitespace
+            # delimited
+            try:
+                extdata = np.loadtxt(fn, delimiter=',')
+            except ValueError:
+                QMessageBox.information(self, "HNN", "WARNING: could not load"
+                                        "  data file %s" % fn)
+                return False
+        except IsADirectoryError:
+            QMessageBox.information(self, "HNN", "WARNING: could not load data"
+                                    " file %s" % fn)
+            return False
 
-      self.sim_data.update_exp_data(fn, extdata)
-      print('Loaded data in ', fn)
+        self.sim_data.update_exp_data(fn, extdata)
+        print('Loaded data in ', fn)
 
-      self.sim_canvas.plot()
-      self.sim_canvas.draw()  # make sure new lines show up in plot
+        self.sim_canvas.plot()
+        self.sim_canvas.draw()  # make sure new lines show up in plot
 
-      if self.baseparamwin.paramfn:
-        self.toggleEnableOptimization(True)
-      return True
+        if self.baseparamwin.paramfn:
+            self.toggleEnableOptimization(True)
+        return True
 
     def loadDataFileDialog(self):
         """bring up window to select/load external dipole data"""
@@ -364,7 +364,7 @@ class HNNGUI(QMainWindow):
             SpikeViewGUI(SpikeCanvas, self.baseparamwin.params, sim_data,
                          'Spike Viewer')
         else:
-          raise ValueError("Unknown plot type")
+            raise ValueError("Unknown plot type")
 
     def showSomaVPlot(self):
         # start the somatic voltage visualization process (separate window)
@@ -396,336 +396,336 @@ class HNNGUI(QMainWindow):
         self.show_plot('dipole')
 
     def showwaitsimwin(self):
-      """show the wait sim window (has simulation log)"""
-      bringwintotop(self.waitsimwin)
+        """show the wait sim window (has simulation log)"""
+        bringwintotop(self.waitsimwin)
 
     def togAvgDpl(self):
-      """toggle drawing of the average (across trials) dipole"""
-      global drawavgdpl
+        """toggle drawing of the average (across trials) dipole"""
+        global drawavgdpl
 
-      drawavgdpl = not drawavgdpl
-      self.sim_canvas.plot()
-      self.sim_canvas.draw()
+        drawavgdpl = not drawavgdpl
+        self.sim_canvas.plot()
+        self.sim_canvas.draw()
 
     def hidesubwin(self):
-      """hide GUI's sub windows"""
-      self.baseparamwin.hide()
-      self.schemwin.hide()
-      self.baseparamwin.syngainparamwin.hide()
-      for win in self.baseparamwin.lsubwin:
-        win.hide()
-      self.activateWindow()
+        """hide GUI's sub windows"""
+        self.baseparamwin.hide()
+        self.schemwin.hide()
+        self.baseparamwin.syngainparamwin.hide()
+        for win in self.baseparamwin.lsubwin:
+            win.hide()
+        self.activateWindow()
 
     def distribsubwin(self):
-      """distribute GUI's sub-windows on screen"""
-      sw, sh = getscreengeom()
-      lwin = [win for win in self.baseparamwin.lsubwin if win.isVisible()]
-      if self.baseparamwin.isVisible():
-        lwin.insert(0, self.baseparamwin)
-      if self.schemwin.isVisible():
-        lwin.insert(0, self.schemwin)
-      if self.baseparamwin.syngainparamwin.isVisible():
-        lwin.append(self.baseparamwin.syngainparamwin)
-      curx, cury, maxh = 0, 0, 0
-      for win in lwin:
-        win.move(curx, cury)
-        curx += win.width()
-        maxh = max(maxh, win.height())
-        if curx >= sw:
-          curx = 0
-          cury += maxh
-          maxh = win.height()
-        if cury >= sh:
-          cury = cury = 0
+        """distribute GUI's sub-windows on screen"""
+        sw, sh = getscreengeom()
+        lwin = [win for win in self.baseparamwin.lsubwin if win.isVisible()]
+        if self.baseparamwin.isVisible():
+            lwin.insert(0, self.baseparamwin)
+        if self.schemwin.isVisible():
+            lwin.insert(0, self.schemwin)
+        if self.baseparamwin.syngainparamwin.isVisible():
+            lwin.append(self.baseparamwin.syngainparamwin)
+        curx, cury, maxh = 0, 0, 0
+        for win in lwin:
+            win.move(curx, cury)
+            curx += win.width()
+            maxh = max(maxh, win.height())
+            if curx >= sw:
+                curx = 0
+                cury += maxh
+                maxh = win.height()
+            if cury >= sh:
+                cury = cury = 0
 
     def updateDatCanv(self, params):
-      """update GUI to reflect param file selected"""
-      self.baseparamwin.updateDispParam(params)
-      self.initSimCanvas()  # recreate canvas
-      self.setWindowTitle(self.baseparamwin.paramfn)
+        """update GUI to reflect param file selected"""
+        self.baseparamwin.updateDispParam(params)
+        self.initSimCanvas()  # recreate canvas
+        self.setWindowTitle(self.baseparamwin.paramfn)
 
     def updateSelectedSim(self, sim_idx):
-      """Update the sim shown in the ComboBox"""
+        """Update the sim shown in the ComboBox"""
 
-      paramfn = self.cbsim.itemText(sim_idx)
-      try:
-        params = read_params(paramfn)
-      except ValueError:
-        QMessageBox.information(self, "HNN", "WARNING: could not"
-                                "retrieve parameters from %s" %
-                                paramfn)
-        return
-      self.baseparamwin.paramfn = paramfn
+        paramfn = self.cbsim.itemText(sim_idx)
+        try:
+            params = read_params(paramfn)
+        except ValueError:
+            QMessageBox.information(self, "HNN", "WARNING: could not"
+                                    "retrieve parameters from %s" %
+                                    paramfn)
+            return
+        self.baseparamwin.paramfn = paramfn
 
-      # update GUI
-      self.updateDatCanv(params)
-      self.cbsim.setCurrentIndex(sim_idx)
+        # update GUI
+        self.updateDatCanv(params)
+        self.cbsim.setCurrentIndex(sim_idx)
 
     def removeSim(self):
-      """Remove the currently selected simulation"""
+        """Remove the currently selected simulation"""
 
-      sim_idx = self.cbsim.currentIndex()
-      paramfn = self.cbsim.itemText(sim_idx)
-      if not paramfn == '':
-        self.sim_data.remove_sim_by_fn(paramfn)
+        sim_idx = self.cbsim.currentIndex()
+        paramfn = self.cbsim.itemText(sim_idx)
+        if not paramfn == '':
+            self.sim_data.remove_sim_by_fn(paramfn)
 
-      self.cbsim.removeItem(sim_idx)
+        self.cbsim.removeItem(sim_idx)
 
-      # go to last entry
-      new_simidx = self.cbsim.count() - 1
-      if new_simidx < 0:
-        self.clearSimulations()
-      else:
-        self.updateSelectedSim(new_simidx)
+        # go to last entry
+        new_simidx = self.cbsim.count() - 1
+        if new_simidx < 0:
+            self.clearSimulations()
+        else:
+            self.updateSelectedSim(new_simidx)
 
     def prevSim(self):
-      """Go to previous simulation"""
+        """Go to previous simulation"""
 
-      new_simidx = self.cbsim.currentIndex() - 1
-      if new_simidx < 0:
-        print("There is no previous simulation")
-        return
-      else:
-        self.updateSelectedSim(new_simidx)
+        new_simidx = self.cbsim.currentIndex() - 1
+        if new_simidx < 0:
+            print("There is no previous simulation")
+            return
+        else:
+            self.updateSelectedSim(new_simidx)
 
     def nextSim(self):
-      """go to next simulation"""
+        """go to next simulation"""
 
-      if self.cbsim.currentIndex() + 2 > self.cbsim.count():
-        print("There is no next simulation")
-        return
-      else:
-        new_simidx = self.cbsim.currentIndex() + 1
-        self.updateSelectedSim(new_simidx)
+        if self.cbsim.currentIndex() + 2 > self.cbsim.count():
+            print("There is no next simulation")
+            return
+        else:
+            new_simidx = self.cbsim.currentIndex() + 1
+            self.updateSelectedSim(new_simidx)
 
     def clearSimulationData(self):
-      """clear the simulation data"""
-      self.baseparamwin.params = None
-      self.baseparamwin.paramfn = None
+        """clear the simulation data"""
+        self.baseparamwin.params = None
+        self.baseparamwin.paramfn = None
 
-      self.sim_data.clear_sim_data()
-      self.cbsim.clear()  # un-populate the combobox
-      self.toggleEnableOptimization(False)
+        self.sim_data.clear_sim_data()
+        self.cbsim.clear()  # un-populate the combobox
+        self.toggleEnableOptimization(False)
 
     def clearSimulations(self):
-      """clear all simulation data
+        """clear all simulation data
 
-      erase simulations from canvas (does not clear external data)
-      """
-      self.clearSimulationData()
-      self.initSimCanvas()  # recreate canvas
-      self.sim_canvas.draw()
-      self.setWindowTitle('')
+        erase simulations from canvas (does not clear external data)
+        """
+        self.clearSimulationData()
+        self.initSimCanvas()  # recreate canvas
+        self.sim_canvas.draw()
+        self.setWindowTitle('')
 
     def clearCanvas(self):
-      # clear all simulation & external data and erase everything from the
-      # canvas
-      self.sim_canvas.clearlextdatobj()  # clear the external data
-      self.clearSimulationData()
-      self.sim_data.clear_exp_data()
-      self.initSimCanvas()  # recreate canvas
-      self.sim_canvas.draw()
-      self.setWindowTitle('')
+        # clear all simulation & external data and erase everything from the
+        # canvas
+        self.sim_canvas.clearlextdatobj()  # clear the external data
+        self.clearSimulationData()
+        self.sim_data.clear_exp_data()
+        self.initSimCanvas()  # recreate canvas
+        self.sim_canvas.draw()
+        self.setWindowTitle('')
 
     def initMenu(self):
-      """initialize the GUI's menu"""
-      exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)
-      exitAction.setShortcut('Ctrl+Q')
-      exitAction.setStatusTip('Exit HNN application')
-      exitAction.triggered.connect(qApp.quit)
+        """initialize the GUI's menu"""
+        exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit HNN application')
+        exitAction.triggered.connect(qApp.quit)
 
-      selParamFile = QAction(QIcon.fromTheme('open'), 'Load parameter file',
-                             self)
-      selParamFile.setShortcut('Ctrl+P')
-      selParamFile.setStatusTip('Load simulation parameter (.param) file')
-      selParamFile.triggered.connect(self.selParamFileDialog)
+        selParamFile = QAction(QIcon.fromTheme('open'), 'Load parameter file',
+                               self)
+        selParamFile.setShortcut('Ctrl+P')
+        selParamFile.setStatusTip('Load simulation parameter (.param) file')
+        selParamFile.triggered.connect(self.selParamFileDialog)
 
-      clearCanv = QAction('Clear canvas', self)
-      clearCanv.setShortcut('Ctrl+X')
-      clearCanv.setStatusTip('Clear canvas (simulation+data)')
-      clearCanv.triggered.connect(self.clearCanvas)
+        clearCanv = QAction('Clear canvas', self)
+        clearCanv.setShortcut('Ctrl+X')
+        clearCanv.setStatusTip('Clear canvas (simulation+data)')
+        clearCanv.triggered.connect(self.clearCanvas)
 
-      clearSims = QAction('Clear simulation(s)', self)
-      # clearSims.setShortcut('Ctrl+X')
-      clearSims.setStatusTip('Clear simulation(s)')
-      clearSims.triggered.connect(self.clearSimulations)
+        clearSims = QAction('Clear simulation(s)', self)
+        # clearSims.setShortcut('Ctrl+X')
+        clearSims.setStatusTip('Clear simulation(s)')
+        clearSims.triggered.connect(self.clearSimulations)
 
-      loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file',
-                             self)
-      loadDataFile.setShortcut('Ctrl+D')
-      loadDataFile.setStatusTip('Load (dipole) data file')
-      loadDataFile.triggered.connect(self.loadDataFileDialog)
+        loadDataFile = QAction(QIcon.fromTheme('open'), 'Load data file',
+                               self)
+        loadDataFile.setShortcut('Ctrl+D')
+        loadDataFile.setStatusTip('Load (dipole) data file')
+        loadDataFile.triggered.connect(self.loadDataFileDialog)
 
-      clearDataFileAct = QAction(QIcon.fromTheme('close'),
-                                 'Clear data file(s)', self)
-      clearDataFileAct.setShortcut('Ctrl+C')
-      clearDataFileAct.setStatusTip('Clear (dipole) data file(s)')
-      clearDataFileAct.triggered.connect(self.clearDataFile)
+        clearDataFileAct = QAction(QIcon.fromTheme('close'),
+                                   'Clear data file(s)', self)
+        clearDataFileAct.setShortcut('Ctrl+C')
+        clearDataFileAct.setStatusTip('Clear (dipole) data file(s)')
+        clearDataFileAct.triggered.connect(self.clearDataFile)
 
-      runSimAct = QAction('Run simulation', self)
-      runSimAct.setShortcut('Ctrl+S')
-      runSimAct.setStatusTip('Run simulation')
-      runSimAct.triggered.connect(self.controlsim)
+        runSimAct = QAction('Run simulation', self)
+        runSimAct.setShortcut('Ctrl+S')
+        runSimAct.setStatusTip('Run simulation')
+        runSimAct.triggered.connect(self.controlsim)
 
-      self.menubar = self.menuBar()
-      fileMenu = self.menubar.addMenu('&File')
-      self.menubar.setNativeMenuBar(False)
-      fileMenu.addAction(selParamFile)
-      fileMenu.addSeparator()
-      fileMenu.addAction(loadDataFile)
-      fileMenu.addAction(clearDataFileAct)
-      fileMenu.addSeparator()
-      fileMenu.addAction(exitAction)
+        self.menubar = self.menuBar()
+        fileMenu = self.menubar.addMenu('&File')
+        self.menubar.setNativeMenuBar(False)
+        fileMenu.addAction(selParamFile)
+        fileMenu.addSeparator()
+        fileMenu.addAction(loadDataFile)
+        fileMenu.addAction(clearDataFileAct)
+        fileMenu.addSeparator()
+        fileMenu.addAction(exitAction)
 
-      # part of edit menu for changing drawing properties (line thickness,
-      # font size, toggle avg dipole drawing)
-      editMenu = self.menubar.addMenu('&Edit')
-      viewAvgDplAction = QAction('Toggle Average Dipole Drawing', self)
-      viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
-      viewAvgDplAction.triggered.connect(self.togAvgDpl)
-      editMenu.addAction(viewAvgDplAction)
-      changeFontSizeAction = QAction('Change Font Size', self)
-      changeFontSizeAction.setStatusTip('Change Font Size.')
-      changeFontSizeAction.triggered.connect(self.changeFontSize)
-      editMenu.addAction(changeFontSizeAction)
-      changeLineWidthAction = QAction('Change Line Width', self)
-      changeLineWidthAction.setStatusTip('Change Line Width.')
-      changeLineWidthAction.triggered.connect(self.changeLineWidth)
-      editMenu.addAction(changeLineWidthAction)
-      changeMarkerSizeAction = QAction('Change Marker Size', self)
-      changeMarkerSizeAction.setStatusTip('Change Marker Size.')
-      changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-      editMenu.addAction(changeMarkerSizeAction)
-      editMenu.addSeparator()
-      editMenu.addAction(clearSims)
-      # need new act to avoid DBus warning
-      clearDataFileAct2 = QAction(QIcon.fromTheme('close'),
-                                  'Clear data file(s)', self)
-      clearDataFileAct2.setStatusTip('Clear (dipole) data file(s)')
-      clearDataFileAct2.triggered.connect(self.clearDataFile)
-      editMenu.addAction(clearDataFileAct2)
-      editMenu.addAction(clearCanv)
+        # part of edit menu for changing drawing properties (line thickness,
+        # font size, toggle avg dipole drawing)
+        editMenu = self.menubar.addMenu('&Edit')
+        viewAvgDplAction = QAction('Toggle Average Dipole Drawing', self)
+        viewAvgDplAction.setStatusTip('Toggle Average Dipole Drawing')
+        viewAvgDplAction.triggered.connect(self.togAvgDpl)
+        editMenu.addAction(viewAvgDplAction)
+        changeFontSizeAction = QAction('Change Font Size', self)
+        changeFontSizeAction.setStatusTip('Change Font Size.')
+        changeFontSizeAction.triggered.connect(self.changeFontSize)
+        editMenu.addAction(changeFontSizeAction)
+        changeLineWidthAction = QAction('Change Line Width', self)
+        changeLineWidthAction.setStatusTip('Change Line Width.')
+        changeLineWidthAction.triggered.connect(self.changeLineWidth)
+        editMenu.addAction(changeLineWidthAction)
+        changeMarkerSizeAction = QAction('Change Marker Size', self)
+        changeMarkerSizeAction.setStatusTip('Change Marker Size.')
+        changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
+        editMenu.addAction(changeMarkerSizeAction)
+        editMenu.addSeparator()
+        editMenu.addAction(clearSims)
+        # need new act to avoid DBus warning
+        clearDataFileAct2 = QAction(QIcon.fromTheme('close'),
+                                    'Clear data file(s)', self)
+        clearDataFileAct2.setStatusTip('Clear (dipole) data file(s)')
+        clearDataFileAct2.triggered.connect(self.clearDataFile)
+        editMenu.addAction(clearDataFileAct2)
+        editMenu.addAction(clearCanv)
 
-      # view menu - to view drawing/visualizations
-      viewMenu = self.menubar.addMenu('&View')
-      self.viewDipoleAction = QAction('View Simulation Dipoles',
-                                      self)
-      self.viewDipoleAction.setStatusTip('View Simulation Dipoles')
-      self.viewDipoleAction.triggered.connect(self.showDipolePlot)
-      viewMenu.addAction(self.viewDipoleAction)
-      self.viewRasterAction = QAction('View Simulation Spiking Activity',
-                                      self)
-      self.viewRasterAction.setStatusTip('View Simulation Raster Plot')
-      self.viewRasterAction.triggered.connect(self.showRasterPlot)
-      viewMenu.addAction(self.viewRasterAction)
-      self.viewPSDAction = QAction('View PSD', self)
-      self.viewPSDAction.setStatusTip('View PSD')
-      self.viewPSDAction.triggered.connect(self.showPSDPlot)
-      viewMenu.addAction(self.viewPSDAction)
+        # view menu - to view drawing/visualizations
+        viewMenu = self.menubar.addMenu('&View')
+        self.viewDipoleAction = QAction('View Simulation Dipoles',
+                                        self)
+        self.viewDipoleAction.setStatusTip('View Simulation Dipoles')
+        self.viewDipoleAction.triggered.connect(self.showDipolePlot)
+        viewMenu.addAction(self.viewDipoleAction)
+        self.viewRasterAction = QAction('View Simulation Spiking Activity',
+                                        self)
+        self.viewRasterAction.setStatusTip('View Simulation Raster Plot')
+        self.viewRasterAction.triggered.connect(self.showRasterPlot)
+        viewMenu.addAction(self.viewRasterAction)
+        self.viewPSDAction = QAction('View PSD', self)
+        self.viewPSDAction.setStatusTip('View PSD')
+        self.viewPSDAction.triggered.connect(self.showPSDPlot)
+        viewMenu.addAction(self.viewPSDAction)
 
-      self.viewSomaVAction = QAction('View Somatic Voltage', self)
-      self.viewSomaVAction.setStatusTip('View Somatic Voltage')
-      self.viewSomaVAction.triggered.connect(self.showSomaVPlot)
-      viewMenu.addAction(self.viewSomaVAction)
+        self.viewSomaVAction = QAction('View Somatic Voltage', self)
+        self.viewSomaVAction.setStatusTip('View Somatic Voltage')
+        self.viewSomaVAction.triggered.connect(self.showSomaVPlot)
+        viewMenu.addAction(self.viewSomaVAction)
 
-      self.viewSpecAction = QAction('View Spectrograms', self)
-      self.viewSpecAction.setStatusTip('View Spectrograms/Dipoles'
-                                       ' from Experimental Data')
-      self.viewSpecAction.triggered.connect(self.showSpecPlot)
-      viewMenu.addAction(self.viewSpecAction)
+        self.viewSpecAction = QAction('View Spectrograms', self)
+        self.viewSpecAction.setStatusTip('View Spectrograms/Dipoles'
+                                         ' from Experimental Data')
+        self.viewSpecAction.triggered.connect(self.showSpecPlot)
+        viewMenu.addAction(self.viewSpecAction)
 
-      viewMenu.addSeparator()
-      viewSchemAction = QAction('View Model Schematics', self)
-      viewSchemAction.setStatusTip('View Model Schematics')
-      viewSchemAction.triggered.connect(self.showschematics)
-      viewMenu.addAction(viewSchemAction)
-      viewSimLogAction = QAction('View Simulation Log', self)
-      viewSimLogAction.setStatusTip('View Detailed Simulation Log')
-      viewSimLogAction.triggered.connect(self.showwaitsimwin)
-      viewMenu.addAction(viewSimLogAction)
-      viewMenu.addSeparator()
-      distributeWindowsAction = QAction('Distribute Windows', self)
-      distributeWindowsAction.setStatusTip('Distribute Parameter Windows'
-                                           ' Across Screen.')
-      distributeWindowsAction.triggered.connect(self.distribsubwin)
-      viewMenu.addAction(distributeWindowsAction)
-      hideWindowsAction = QAction('Hide Windows', self)
-      hideWindowsAction.setStatusTip('Hide Parameter Windows.')
-      hideWindowsAction.triggered.connect(self.hidesubwin)
-      hideWindowsAction.setShortcut('Ctrl+H')
-      viewMenu.addAction(hideWindowsAction)
+        viewMenu.addSeparator()
+        viewSchemAction = QAction('View Model Schematics', self)
+        viewSchemAction.setStatusTip('View Model Schematics')
+        viewSchemAction.triggered.connect(self.showschematics)
+        viewMenu.addAction(viewSchemAction)
+        viewSimLogAction = QAction('View Simulation Log', self)
+        viewSimLogAction.setStatusTip('View Detailed Simulation Log')
+        viewSimLogAction.triggered.connect(self.showwaitsimwin)
+        viewMenu.addAction(viewSimLogAction)
+        viewMenu.addSeparator()
+        distributeWindowsAction = QAction('Distribute Windows', self)
+        distributeWindowsAction.setStatusTip('Distribute Parameter Windows'
+                                             ' Across Screen.')
+        distributeWindowsAction.triggered.connect(self.distribsubwin)
+        viewMenu.addAction(distributeWindowsAction)
+        hideWindowsAction = QAction('Hide Windows', self)
+        hideWindowsAction.setStatusTip('Hide Parameter Windows.')
+        hideWindowsAction.triggered.connect(self.hidesubwin)
+        hideWindowsAction.setShortcut('Ctrl+H')
+        viewMenu.addAction(hideWindowsAction)
 
-      simMenu = self.menubar.addMenu('&Simulation')
-      setParmAct = QAction('Set Parameters', self)
-      setParmAct.setStatusTip('Set Simulation Parameters')
-      setParmAct.triggered.connect(self.setparams)
-      simMenu.addAction(setParmAct)
-      simMenu.addAction(runSimAct)
-      setOptParamAct = QAction('Configure Optimization', self)
-      setOptParamAct.setShortcut('Ctrl+O')
-      setOptParamAct.setStatusTip('Set parameters for evoked input'
-                                  ' optimization')
-      setOptParamAct.triggered.connect(self.showoptparamwin)
-      simMenu.addAction(setOptParamAct)
-      self.toggleEnableOptimization(False)
-      prevSimAct = QAction('Go to Previous Simulation', self)
-      prevSimAct.setShortcut('Ctrl+Z')
-      prevSimAct.setStatusTip('Go Back to Previous Simulation')
-      prevSimAct.triggered.connect(self.prevSim)
-      simMenu.addAction(prevSimAct)
-      nextSimAct = QAction('Go to Next Simulation', self)
-      nextSimAct.setShortcut('Ctrl+Y')
-      nextSimAct.setStatusTip('Go Forward to Next Simulation')
-      nextSimAct.triggered.connect(self.nextSim)
-      simMenu.addAction(nextSimAct)
-      # need another QAction to avoid DBus warning
-      clearSims2 = QAction('Clear simulation(s)', self)
-      clearSims2.setStatusTip('Clear simulation(s)')
-      clearSims2.triggered.connect(self.clearSimulations)
-      simMenu.addAction(clearSims2)
+        simMenu = self.menubar.addMenu('&Simulation')
+        setParmAct = QAction('Set Parameters', self)
+        setParmAct.setStatusTip('Set Simulation Parameters')
+        setParmAct.triggered.connect(self.setparams)
+        simMenu.addAction(setParmAct)
+        simMenu.addAction(runSimAct)
+        setOptParamAct = QAction('Configure Optimization', self)
+        setOptParamAct.setShortcut('Ctrl+O')
+        setOptParamAct.setStatusTip('Set parameters for evoked input'
+                                    ' optimization')
+        setOptParamAct.triggered.connect(self.showoptparamwin)
+        simMenu.addAction(setOptParamAct)
+        self.toggleEnableOptimization(False)
+        prevSimAct = QAction('Go to Previous Simulation', self)
+        prevSimAct.setShortcut('Ctrl+Z')
+        prevSimAct.setStatusTip('Go Back to Previous Simulation')
+        prevSimAct.triggered.connect(self.prevSim)
+        simMenu.addAction(prevSimAct)
+        nextSimAct = QAction('Go to Next Simulation', self)
+        nextSimAct.setShortcut('Ctrl+Y')
+        nextSimAct.setStatusTip('Go Forward to Next Simulation')
+        nextSimAct.triggered.connect(self.nextSim)
+        simMenu.addAction(nextSimAct)
+        # need another QAction to avoid DBus warning
+        clearSims2 = QAction('Clear simulation(s)', self)
+        clearSims2.setStatusTip('Clear simulation(s)')
+        clearSims2.triggered.connect(self.clearSimulations)
+        simMenu.addAction(clearSims2)
 
-      aboutMenu = self.menubar.addMenu('&About')
-      aboutAction = QAction('About HNN', self)
-      aboutAction.setStatusTip('About HNN')
-      aboutAction.triggered.connect(self.showAboutDialog)
-      aboutMenu.addAction(aboutAction)
-      helpAction = QAction('Help', self)
-      helpAction.setStatusTip('Help on how to use HNN (parameters).')
-      helpAction.triggered.connect(self.showHelpDialog)
-      # aboutMenu.addAction(helpAction)
+        aboutMenu = self.menubar.addMenu('&About')
+        aboutAction = QAction('About HNN', self)
+        aboutAction.setStatusTip('About HNN')
+        aboutAction.triggered.connect(self.showAboutDialog)
+        aboutMenu.addAction(aboutAction)
+        helpAction = QAction('Help', self)
+        helpAction.setStatusTip('Help on how to use HNN (parameters).')
+        helpAction.triggered.connect(self.showHelpDialog)
+        # aboutMenu.addAction(helpAction)
 
-    def toggleEnableOptimization(self, toEnable):
-      for menu in self.menubar.findChildren(QMenu):
-        if menu.title() == '&Simulation':
-          for item in menu.actions():
-            if item.text() == 'Configure Optimization':
-              item.setEnabled(toEnable)
-              break
-          break
+      def toggleEnableOptimization(self, toEnable):
+        for menu in self.menubar.findChildren(QMenu):
+          if menu.title() == '&Simulation':
+            for item in menu.actions():
+              if item.text() == 'Configure Optimization':
+                item.setEnabled(toEnable)
+                break
+            break
 
-    def addButtons(self, gRow):
-      self.pbtn = pbtn = QPushButton('Set Parameters', self)
-      pbtn.setToolTip('Set Parameters')
-      pbtn.resize(pbtn.sizeHint())
-      pbtn.clicked.connect(self.setparams)
-      self.grid.addWidget(self.pbtn, gRow, 0, 1, 3)
+      def addButtons(self, gRow):
+        self.pbtn = pbtn = QPushButton('Set Parameters', self)
+        pbtn.setToolTip('Set Parameters')
+        pbtn.resize(pbtn.sizeHint())
+        pbtn.clicked.connect(self.setparams)
+        self.grid.addWidget(self.pbtn, gRow, 0, 1, 3)
 
-      self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
-      pfbtn.setToolTip('Set Parameters From File')
-      pfbtn.resize(pfbtn.sizeHint())
-      pfbtn.clicked.connect(self.selParamFileDialog)
-      self.grid.addWidget(self.pfbtn, gRow, 3, 1, 3)
+        self.pfbtn = pfbtn = QPushButton('Set Parameters From File', self)
+        pfbtn.setToolTip('Set Parameters From File')
+        pfbtn.resize(pfbtn.sizeHint())
+        pfbtn.clicked.connect(self.selParamFileDialog)
+        self.grid.addWidget(self.pfbtn, gRow, 3, 1, 3)
 
-      self.btnsim = btn = QPushButton('Run Simulation', self)
-      btn.setToolTip('Run Simulation')
-      btn.resize(btn.sizeHint())
-      btn.clicked.connect(self.controlsim)
-      self.grid.addWidget(self.btnsim, gRow, 6, 1, 3)
+        self.btnsim = btn = QPushButton('Run Simulation', self)
+        btn.setToolTip('Run Simulation')
+        btn.resize(btn.sizeHint())
+        btn.clicked.connect(self.controlsim)
+        self.grid.addWidget(self.btnsim, gRow, 6, 1, 3)
 
-      self.qbtn = qbtn = QPushButton('Quit', self)
-      qbtn.clicked.connect(QApplication.exit)
-      qbtn.resize(qbtn.sizeHint())
-      self.grid.addWidget(self.qbtn, gRow, 9, 1, 3)
+        self.qbtn = qbtn = QPushButton('Quit', self)
+        qbtn.clicked.connect(QApplication.exit)
+        qbtn.resize(qbtn.sizeHint())
+        self.grid.addWidget(self.qbtn, gRow, 9, 1, 3)
 
     def shownetparamwin(self):
         bringwintotop(self.baseparamwin.netparamwin)
