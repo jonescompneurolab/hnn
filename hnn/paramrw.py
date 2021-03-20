@@ -199,11 +199,12 @@ def usingTonicInputs (d):
         if t0 < t1 or t1 == -1.0: return True
   return False
 
-def read_gids_param (fparam):
+def read_gids_param(fparam):
     lines = clean_lines(fparam)
     gid_dict = {}
     for line in lines:
-        if line.startswith('#'): continue
+        if line.startswith('#'):
+            continue
         keystring, val = line.split(": ")
         key = keystring.strip()
         if val[0] == '[':
@@ -216,6 +217,32 @@ def read_gids_param (fparam):
                 gid_dict[key] = np.array([])
 
     return gid_dict
+
+
+def legacy_param_str_to_dict(param_str):
+    boolean_params = ['sync_evinput', 'record_vsoma', 'save_spec_data',
+                      'save_figs']
+
+    param_dict = {}
+    for line in param_str.splitlines():
+        keystring, val = line.split(': ')
+        key = keystring.strip()
+        if key == 'expmt_groups':
+            continue
+        elif key == 'sim_prefix' or key == 'spec_cmap':
+            param_dict[key] = val
+        elif key.startswith('N_') or key.startswith('numspikes_') or \
+                key.startswith('events_per_cycle_') or \
+                key.startswith('repeats_') or \
+                key.startswith('prng_seedcore_'):
+            param_dict[key] = int(val)
+        elif key in boolean_params:
+            param_dict[key] = int(val)
+        else:
+            param_dict[key] = float(val)
+
+    return param_dict
+
 
 # write the params to a filename
 def write_legacy_paramf(fparam, p):
