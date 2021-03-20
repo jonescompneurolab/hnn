@@ -11,4 +11,4 @@ fi
 echo "Checking code style compliance with flake8..."
 flake8 --count --exclude  __init__.py,qt_evoked.py
 echo "Running unit tests with pytest..."
-py.test --cov=. hnn/tests/
+py.test . --cov=hnn hnn/tests/  # --cov-report=xml

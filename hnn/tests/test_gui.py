@@ -8,13 +8,6 @@ from hnn import HNNGUI
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="does not run on windows")
-def test_HNNGUI(qtbot):
-    main = HNNGUI()
-    qtbot.addWidget(main)
-
-
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="does not run on windows")
 def test_exit_button(qtbot, monkeypatch):
     exit_calls = []
     monkeypatch.setattr(QtWidgets.QApplication, "exit",

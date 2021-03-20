@@ -8,7 +8,7 @@ from PyQt5 import QtWidgets, QtCore
 import pytest
 
 from hnn import HNNGUI
-from hnn.paramrw import get_output_dir
+from hnn.paramrw import get_output_dir, get_fname
 
 
 def run_hnn(qtbot, monkeypatch):
@@ -43,9 +43,8 @@ def test_hnn(qtbot, monkeypatch):
 
     run_hnn(qtbot, monkeypatch)
     dirname = op.join(get_output_dir(), 'data', 'default')
-
-    fname = "dpl.txt"
-    pr = loadtxt(op.join(dirname, fname))
+    dipole_fn = get_fname(dirname, 'normdpl', 0)
+    pr = loadtxt(op.join(dirname, dipole_fn))
     assert len(pr) > 0
 
 
@@ -56,8 +55,8 @@ def test_compare_hnn(qtbot, monkeypatch):
     # do we need to run a simulation?
     run_sim = False
     dirname = op.join(get_output_dir(), 'data', 'default')
-    for data_type in ['dpl', 'rawdpl', 'i']:
-        fname = "%s.txt" % (data_type)
+    for data_type in ['normdpl', 'rawspk']:
+        fname = get_fname(dirname, data_type, 0)
         if not op.exists(fname):
             run_sim = True
             break
@@ -67,8 +66,8 @@ def test_compare_hnn(qtbot, monkeypatch):
 
     data_dir = ('https://raw.githubusercontent.com/jonescompneurolab/'
                 'hnn/test_data/')
-    for data_type in ['dpl', 'rawdpl', 'i']:
-        fname = "%s.txt" % (data_type)
+    for data_type in ['normdpl', 'rawspk']:
+        fname = get_fname(dirname, data_type, 0)
         data_url = op.join(data_dir, fname)
         if not op.exists(fname):
             _fetch_file(data_url, fname)
@@ -77,7 +76,5 @@ def test_compare_hnn(qtbot, monkeypatch):
         master = loadtxt(fname)
 
         assert_allclose(pr[:, 1], master[:, 1], rtol=1e-4, atol=0)
-        if data_type in ['dpl', 'rawdpl', 'i']:
-            assert_allclose(pr[:, 2], master[:, 2], rtol=1e-4, atol=0)
-        if data_type in ['dpl', 'rawdpl']:
-            assert_allclose(pr[:, 3], master[:, 3], rtol=1e-4, atol=0)
+        assert_allclose(pr[:, 2], master[:, 2], rtol=1e-4, atol=0)
+        assert_allclose(pr[:, 3], master[:, 3], rtol=1e-4, atol=0)
