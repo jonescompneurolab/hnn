@@ -694,16 +694,16 @@ class HNNGUI(QMainWindow):
         helpAction.triggered.connect(self.showHelpDialog)
         # aboutMenu.addAction(helpAction)
 
-      def toggleEnableOptimization(self, toEnable):
+    def toggleEnableOptimization(self, toEnable):
         for menu in self.menubar.findChildren(QMenu):
-          if menu.title() == '&Simulation':
-            for item in menu.actions():
-              if item.text() == 'Configure Optimization':
-                item.setEnabled(toEnable)
+            if menu.title() == '&Simulation':
+                for item in menu.actions():
+                    if item.text() == 'Configure Optimization':
+                        item.setEnabled(toEnable)
+                        break
                 break
-            break
 
-      def addButtons(self, gRow):
+    def addButtons(self, gRow):
         self.pbtn = pbtn = QPushButton('Set Parameters', self)
         pbtn.setToolTip('Set Parameters')
         pbtn.resize(pbtn.sizeHint())
@@ -743,172 +743,175 @@ class HNNGUI(QMainWindow):
         bringwintotop(self.schemwin)
 
     def addParamImageButtons(self, gRow):
-      """add parameter image buttons to the GUI"""
+        """add parameter image buttons to the GUI"""
 
-      self.locbtn = QPushButton('Local Network' + os.linesep + 'Connections',
-                                self)
-      self.locbtn.setIcon(QIcon(lookupresource('connfig')))
-      self.locbtn.clicked.connect(self.shownetparamwin)
-      self.grid.addWidget(self.locbtn, gRow, 0, 1, 4)
+        self.locbtn = QPushButton('Local Network' + os.linesep
+                                  + 'Connections', self)
+        self.locbtn.setIcon(QIcon(lookupresource('connfig')))
+        self.locbtn.clicked.connect(self.shownetparamwin)
+        self.grid.addWidget(self.locbtn, gRow, 0, 1, 4)
 
-      self.proxbtn = QPushButton('Proximal Drive' + os.linesep + 'Thalamus',
-                                 self)
-      self.proxbtn.setIcon(QIcon(lookupresource('proxfig')))
-      self.proxbtn.clicked.connect(self.showproxparamwin)
-      self.grid.addWidget(self.proxbtn, gRow, 4, 1, 4)
+        self.proxbtn = QPushButton('Proximal Drive' + os.linesep
+                                   + 'Thalamus',
+                                   self)
+        self.proxbtn.setIcon(QIcon(lookupresource('proxfig')))
+        self.proxbtn.clicked.connect(self.showproxparamwin)
+        self.grid.addWidget(self.proxbtn, gRow, 4, 1, 4)
 
-      self.distbtn = QPushButton('Distal Drive NonLemniscal' + os.linesep +
-                                 'Thal./Cortical Feedback', self)
-      self.distbtn.setIcon(QIcon(lookupresource('distfig')))
-      self.distbtn.clicked.connect(self.showdistparamwin)
-      self.grid.addWidget(self.distbtn, gRow, 8, 1, 4)
+        self.distbtn = QPushButton('Distal Drive NonLemniscal' +
+                                   os.linesep +
+                                   'Thal./Cortical Feedback', self)
+        self.distbtn.setIcon(QIcon(lookupresource('distfig')))
+        self.distbtn.clicked.connect(self.showdistparamwin)
+        self.grid.addWidget(self.distbtn, gRow, 8, 1, 4)
 
-      gRow += 1
+        gRow += 1
 
     def initUI(self):
-      """initialize the user interface (UI)"""
+        """initialize the user interface (UI)"""
 
-      self.initMenu()
-      self.statusBar()
+        self.initMenu()
+        self.statusBar()
 
-      # start GUI in center of screenm, scale based on screen w x h
-      setscalegeomcenter(self, 1500, 1300)
+        # start GUI in center of screenm, scale based on screen w x h
+        setscalegeomcenter(self, 1500, 1300)
 
-      # move param windows to be offset from main GUI
-      new_x = max(0, self.x() - 300)
-      new_y = max(0, self.y() + 100)
-      self.baseparamwin.move(new_x, new_y)
-      self.baseparamwin.evparamwin.move(new_x+50, new_y+50)
-      self.baseparamwin.optparamwin.move(new_x+100, new_y+100)
-      self.setWindowTitle(self.baseparamwin.paramfn)
-      QToolTip.setFont(QFont('SansSerif', 10))
+        # move param windows to be offset from main GUI
+        new_x = max(0, self.x() - 300)
+        new_y = max(0, self.y() + 100)
+        self.baseparamwin.move(new_x, new_y)
+        self.baseparamwin.evparamwin.move(new_x+50, new_y+50)
+        self.baseparamwin.optparamwin.move(new_x+100, new_y+100)
+        self.setWindowTitle(self.baseparamwin.paramfn)
+        QToolTip.setFont(QFont('SansSerif', 10))
 
-      self.grid = grid = QGridLayout()
-      # grid.setSpacing(10)
+        self.grid = grid = QGridLayout()
+        # grid.setSpacing(10)
 
-      gRow = 0
+        gRow = 0
 
-      self.addButtons(gRow)
+        self.addButtons(gRow)
 
-      gRow += 1
+        gRow += 1
 
-      self.initSimCanvas(gRow=gRow, reInit=False)
-      gRow += 2
+        self.initSimCanvas(gRow=gRow, reInit=False)
+        gRow += 2
 
-      self.cbsim = QComboBox(self)
-      try:
-        self.populateSimCB()
-      except ValueError:
-        # If no simulations could be loaded into combobox
-        # don't crash the initialization process
-        print("Warning: no simulations to load")
-        pass
-      self.cbsim.activated[str].connect(self.onActivateSimCB)
-      self.grid.addWidget(self.cbsim, gRow, 0, 1, 8)
-      self.btnrmsim = QPushButton('Remove Simulation', self)
-      self.btnrmsim.resize(self.btnrmsim.sizeHint())
-      self.btnrmsim.clicked.connect(self.removeSim)
-      self.btnrmsim.setToolTip('Remove Currently Selected Simulation')
-      self.grid.addWidget(self.btnrmsim, gRow, 8, 1, 4)
+        self.cbsim = QComboBox(self)
+        try:
+            self.populateSimCB()
+        except ValueError:
+            # If no simulations could be loaded into combobox
+            # don't crash the initialization process
+            print("Warning: no simulations to load")
+            pass
+        self.cbsim.activated[str].connect(self.onActivateSimCB)
+        self.grid.addWidget(self.cbsim, gRow, 0, 1, 8)
+        self.btnrmsim = QPushButton('Remove Simulation', self)
+        self.btnrmsim.resize(self.btnrmsim.sizeHint())
+        self.btnrmsim.clicked.connect(self.removeSim)
+        self.btnrmsim.setToolTip('Remove Currently Selected Simulation')
+        self.grid.addWidget(self.btnrmsim, gRow, 8, 1, 4)
 
-      gRow += 1
-      self.addParamImageButtons(gRow)
+        gRow += 1
+        self.addParamImageButtons(gRow)
 
-      # need a separate widget to put grid on
-      widget = QWidget(self)
-      widget.setLayout(grid)
-      self.setCentralWidget(widget)
+        # need a separate widget to put grid on
+        widget = QWidget(self)
+        widget.setLayout(grid)
+        self.setCentralWidget(widget)
 
-      self.setWindowIcon(QIcon(os.path.join('res', 'icon.png')))
+        self.setWindowIcon(QIcon(os.path.join('res', 'icon.png')))
 
-      self.schemwin.show()  # so it's underneath main window
+        self.schemwin.show()  # so it's underneath main window
 
-      self.show()
+        self.show()
 
     def onActivateSimCB(self, paramfn):
-      """load simulation when activating simulation combobox"""
+        """load simulation when activating simulation combobox"""
 
-      if paramfn != self.baseparamwin.paramfn:
-        try:
-          params = read_params(paramfn)
-        except ValueError:
-          QMessageBox.information(self, "HNN", "WARNING: could not"
-                                  "retrieve parameters from %s" %
-                                  paramfn)
-          return
-        self.baseparamwin.paramfn = paramfn
+        if paramfn != self.baseparamwin.paramfn:
+            try:
+                params = read_params(paramfn)
+            except ValueError:
+                QMessageBox.information(self, "HNN", "WARNING: could not"
+                                        "retrieve parameters from %s" %
+                                        paramfn)
+                return
+            self.baseparamwin.paramfn = paramfn
 
-        self.updateDatCanv(params)
+            self.updateDatCanv(params)
 
     def populateSimCB(self, index=None):
-      """populate the simulation combobox"""
+        """populate the simulation combobox"""
 
-      self.cbsim.clear()
-      for paramfn in self.sim_data._sim_data.keys():
-        self.cbsim.addItem(paramfn)
+        self.cbsim.clear()
+        for paramfn in self.sim_data._sim_data.keys():
+            self.cbsim.addItem(paramfn)
 
-      if self.cbsim.count() == 0:
-        raise ValueError("No simulations to add to combo box")
+        if self.cbsim.count() == 0:
+            raise ValueError("No simulations to add to combo box")
 
-      if index is None or index < 0:
-        # set to last entry
-        self.cbsim.setCurrentIndex(self.cbsim.count() - 1)
-      else:
-        self.cbsim.setCurrentIndex(index)
+        if index is None or index < 0:
+            # set to last entry
+            self.cbsim.setCurrentIndex(self.cbsim.count() - 1)
+        else:
+            self.cbsim.setCurrentIndex(index)
 
     def initSimCanvas(self, gRow=1, reInit=True):
-      """initialize the simulation canvas, loading any required data"""
-      gCol = 0
+        """initialize the simulation canvas, loading any required data"""
+        gCol = 0
 
-      if reInit:
-        self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
-        self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
+        if reInit:
+            self.grid.itemAtPosition(gRow, gCol).widget().deleteLater()
+            self.grid.itemAtPosition(gRow + 1, gCol).widget().deleteLater()
 
-      # if just initialized or after clearSimulationData
-      if self.baseparamwin.paramfn and self.baseparamwin.params is None:
-        try:
-          self.baseparamwin.params = read_params(self.baseparamwin.paramfn)
-        except ValueError:
-          QMessageBox.information(self, "HNN", "WARNING: could not"
-                                  "retrieve parameters from %s" %
-                                  self.baseparamwin.paramfn)
-          return
+        # if just initialized or after clearSimulationData
+        if self.baseparamwin.paramfn and self.baseparamwin.params is None:
+            try:
+                self.baseparamwin.params = read_params(
+                    self.baseparamwin.paramfn)
+            except ValueError:
+                QMessageBox.information(self, "HNN", "WARNING: could not"
+                                        "retrieve parameters from %s" %
+                                        self.baseparamwin.paramfn)
+                return
 
-      self.sim_canvas = SIMCanvas(self.baseparamwin.paramfn,
-                                  self.baseparamwin.params,
-                                  parent=self, width=10, height=1,
-                                  dpi=getmplDPI(),
-                                  is_optimization=self.is_optimization)
+        self.sim_canvas = SIMCanvas(self.baseparamwin.paramfn,
+                                    self.baseparamwin.params,
+                                    parent=self, width=10, height=1,
+                                    dpi=getmplDPI(),
+                                    is_optimization=self.is_optimization)
 
-      # this is the Navigation widget
-      # it takes the Canvas widget and a parent
-      self.toolbar = NavigationToolbar2QT(self.sim_canvas, self)
-      gWidth = 12
-      self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth)
-      self.grid.addWidget(self.sim_canvas, gRow + 1, gCol, 1, gWidth)
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar2QT(self.sim_canvas, self)
+        gWidth = 12
+        self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth)
+        self.grid.addWidget(self.sim_canvas, gRow + 1, gCol, 1, gWidth)
 
-      if self.sim_canvas.saved_exception is not None:
-        raise self.sim_canvas.saved_exception
+        if self.sim_canvas.saved_exception is not None:
+            raise self.sim_canvas.saved_exception
 
     def setcursors(self, cursor):
-      """set cursors of self and children"""
+        """set cursors of self and children"""
 
-      self.setCursor(cursor)
-      self.update()
-      kids = self.children()
-      kids.append(self.sim_canvas)  # matplotlib simcanvas
-      for k in kids:
-          if type(k) == QLayout or type(k) == QAction:
-              # These types don't have setCursor()
-              continue
-          k.setCursor(cursor)
-          k.update()
+        self.setCursor(cursor)
+        self.update()
+        kids = self.children()
+        kids.append(self.sim_canvas)  # matplotlib simcanvas
+        for k in kids:
+            if type(k) == QLayout or type(k) == QAction:
+                # These types don't have setCursor()
+                continue
+            k.setCursor(cursor)
+            k.update()
 
     def startoptmodel(self, num_steps):
         """start model optimization"""
         if self.runningsim:
             raise ValueError("Optimization already running")
-        
+
         self.is_optimization = True
         if not self.baseparamwin.saveparams():
             # user may have pressed 'cancel'
@@ -923,7 +926,8 @@ class HNNGUI(QMainWindow):
         # write_legacy_paramf(param_out, self.params)
         seed = self.baseparamwin.runparamwin.get_prng_seedcore_opt()
         ncore = self.baseparamwin.runparamwin.getncore()
-        self.runthread = OptThread(ncore, self.baseparamwin.params, num_steps,
+        self.runthread = OptThread(ncore, self.baseparamwin.params,
+                                   num_steps,
                                    seed, self.sim_data,
                                    self.sim_result_callback,
                                    self.opt_callback, mainwin=self)
@@ -934,7 +938,8 @@ class HNNGUI(QMainWindow):
         self.baseparamwin.optparamwin.btnreset.setEnabled(False)
         self.baseparamwin.optparamwin.btnrunop.setText('Stop Optimization')
         self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
-        self.baseparamwin.optparamwin.btnrunop.clicked.connect(self.stopsim)
+        self.baseparamwin.optparamwin.btnrunop.clicked.connect(
+            self.stopsim)
 
         # update GUI
         self.statusBar().showMessage("Optimizing model. . .")
@@ -947,7 +952,8 @@ class HNNGUI(QMainWindow):
     def controlsim(self):
         """control the simulation"""
         if self.runningsim:
-            # stop sim works but leaves subproc as zombie until this main GUI
+            # stop sim works but leaves subproc as zombie until this main
+            #  GUI
             self.stopsim()
         else:
             self.is_optimization = False
@@ -986,7 +992,7 @@ class HNNGUI(QMainWindow):
             params = read_params(self.baseparamwin.paramfn)
         except ValueError:
             txt = "WARNING: could not retrieve parameters from %s" % \
-                  self.baseparamwin.paramfn
+                self.baseparamwin.paramfn
             QMessageBox.information(self, "HNN", txt)
             print(txt)
             return
@@ -1005,7 +1011,7 @@ class HNNGUI(QMainWindow):
             params['N_trials'] = 1
 
         self.runthread = SimThread(ncore, params, self.sim_result_callback,
-                                      mainwin=self)
+                                   mainwin=self)
 
         # We have all the events we need connected we can start the thread
         self.runthread.start()
@@ -1169,6 +1175,7 @@ class HNNGUI(QMainWindow):
             self.cbsim.setCurrentIndex(cb_index)
 
         self.is_optimization = False
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
