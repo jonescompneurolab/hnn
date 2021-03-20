@@ -15,7 +15,7 @@ sudo apt-get install -y git python3-dev python3-pip python3-psutil \
                     git vim iputils-ping net-tools iproute2 nano sudo \
                     telnet language-pack-en-base
 sudo pip3 install pip --upgrade
-sudo pip install matplotlib pyqt5 scipy numpy nlopt NEURON
+sudo pip install matplotlib pyqt5 nlopt hnn-core
 
 echo '# these lines define global session variables for HNN' >> ~/.bashrc
 echo 'export OMPI_MCA_btl_base_warn_component_unused=0' >> ~/.bashrc
@@ -24,8 +24,7 @@ export OMPI_MCA_btl_base_warn_component_unused=0
 
 cd $HOME && \
   git clone https://github.com/jonescompneurolab/hnn && \
-  cd hnn && \
-  make
+  cd hnn
 
 echo '#!/bin/bash' | sudo tee /usr/local/bin/hnn
 echo 'cd $HOME/hnn' | sudo tee -a /usr/local/bin/hnn

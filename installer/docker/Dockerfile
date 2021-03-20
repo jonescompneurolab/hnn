@@ -83,15 +83,16 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version=$VCS_TAG
 
-# install NEURON
-RUN sudo pip install NEURON
+# install hnn-core
+RUN sudo pip install hnn-core
 
 # install HNN
 RUN sudo apt-get update && \
     sudo apt-get install --no-install-recommends -y \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
         libx11-dev libreadline-dev g++ && \
-    git clone ${SOURCE_REPO} \
+    git clone --single-branch --branch maint/pre-hnn-core \
+    ${SOURCE_REPO} \
       --depth 1 --single-branch --branch $SOURCE_BRANCH \
       $HOME/hnn_source_code && \
     cd $HOME/hnn_source_code && \

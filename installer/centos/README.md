@@ -1,6 +1,6 @@
 # HNN "Python" install (CentOS)
 
-The script below assumes that it can update OS packages for python and prerequisites for NEURON and HNN.
+The script below assumes that it can update OS packages for python and prerequisites for HNN.
 
 * CentOS 7: [centos7-installer.sh](centos7-installer.sh)
 

@@ -399,7 +399,7 @@ if ($null -ne $script:VIRTUALENV) {
     # use pip3 for good measure
     Start-Process "$HOME\venv\hnn\Scripts\pip3" "install matplotlib scipy PyQt5 psutil nlopt" -Wait
     # get hnn-core, but skip NEURON dependency
-    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install --no-deps mpi4py https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master" -Wait
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install --no-deps mpi4py hnn-core" -Wait
   }
   else {
     Write-Warning "Virtualenv failed to create a valid python3 environment"
@@ -430,7 +430,7 @@ elseif ($null -ne $script:CONDA_PATH)  {
     # need to call the right pip to install in miniconda environment
     # get hnn-core, but skip NEURON dependency
     Set-Location $HOME
-    Miniconda3\envs\hnn\Scripts\pip install --no-deps mpi4py https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+    Miniconda3\envs\hnn\Scripts\pip install --no-deps mpi4py hnn-core
 
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null

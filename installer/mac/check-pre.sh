@@ -30,18 +30,6 @@ check_python_version () {
 echo "Performing pre-install checks for HNN"
 echo "--------------------------------------"
 
-echo -n "Checking if XQuartz is installed..."
-XQUARTZ_VERSION=$(mdls -name kMDItemVersion /Applications/Utilities/XQuartz.app)
-if [[ "$?" -eq "0" ]]; then
-  echo "ok"
-  echo "Xquartz version $(echo ${XQUARTZ_VERSION}|cut -d ' ' -f 3) is already installed"
-  echo "You can skip the XQuartz installation step"
-  echo
-else
-  echo "failed"
-  return=2
-fi
-
 echo -n "Checking for existing python..."
 PYTHON_VERSION=
 FOUND=

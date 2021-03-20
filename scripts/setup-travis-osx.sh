@@ -21,7 +21,4 @@ conda install -y -n hnn openmpi mpi4py
 conda install -y -n hnn -c conda-forge nlopt
 
 conda activate hnn
-# NEURON needs to be installed first (not in the same command) or the wheel
-# build in hnn-core will fail
-pip install NEURON
-pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+pip install hnn-core pyqt5

@@ -90,8 +90,7 @@ echo "Using python: $PYTHON with pip: $PIP" | tee -a "$LOGFILE"
 
 if [[ "$USE_CONDA" -eq 0 ]]; then
   echo "Downloading python packages for HNN with pip..." | tee -a "$LOGFILE"
-  $PIP download matplotlib PyOpenGL \
-                pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE" &
+  $PIP download pyqt5 nlopt psutil hnn-core &> "$LOGFILE" &
   PIP_PID=$!
 fi
 
@@ -105,20 +104,15 @@ if [[ "$USE_CONDA" -eq 0 ]]; then
   NAME="downloading python packages for HNN "
   wait_for_pid "${PIP_PID}" "$NAME"
 
-  $PIP install --no-cache-dir NEURON
+  # install hnn-core and prerequisites (e.g. NEURON)
+  echo "Installing python prequisites for HNN with pip..." | tee -a "$LOGFILE"
+  $PIP install --no-cache-dir pyqt5 nlopt psutil hnn-core &> "$LOGFILE"
 
   # WSL may not have nrnivmodl in PATH
   if ! which nrnivmodl &> /dev/null; then
     export PATH="$PATH:$HOME/.local/bin"
     echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
   fi
-
-  echo "Installing python packages for HNN with pip..." | tee -a "$LOGFILE"
-  $PIP install --no-cache-dir --user matplotlib PyOpenGL \
-    pyqt5 pyqtgraph scipy numpy nlopt psutil &> "$LOGFILE"
-
-  pip install \
-    https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
 else
   URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
   FILENAME="$HOME/miniconda.sh"
@@ -142,9 +136,8 @@ else
   sudo -E apt-get install --no-install-recommends -y \
           libopenmpi-dev &> "$LOGFILE"
 
-  pip install mpi4py NEURON
-  pip install \
-    https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+  # install hnn-core and prerequisites (e.g. NEURON)
+  pip install mpi4py pyqt5 hnn-core
 fi
 
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"

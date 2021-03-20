@@ -16,7 +16,7 @@ sudo yum -y install python34-setuptools
 sudo easy_install-3.4 pip
 pip3 install --upgrade matplotlib --user
 pip3 install --upgrade nlopt scipy --user
-pip3 install NEURON
+pip3 install hnn-core
 sudo yum -y install ncurses-devel
 sudo yum -y install openmpi openmpi-devel
 sudo yum -y install libXext libXext-devel
@@ -26,8 +26,6 @@ sudo PATH=$PATH:/usr/lib64/openmpi/bin pip3 install mpi4py
 # save dir installing hnn to
 startdir=$(pwd)
 echo $startdir
-
-pip install NEURON
 
 # move outside of nrn directories
 cd $startdir

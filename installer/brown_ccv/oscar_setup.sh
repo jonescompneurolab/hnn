@@ -9,7 +9,7 @@ cd $HOME/HNN
 git clone https://github.com/jonescompneurolab/hnn
 
 # Install python modules. Ignore the errors
-pip3 install --user psutil nlopt NEURON >/dev/null 2>&1
+pip3 install --user psutil nlopt hnn-core >/dev/null 2>&1
 
 # Build HNN
 cd $HOME/HNN/hnn && \
