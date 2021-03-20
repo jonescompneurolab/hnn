@@ -7,11 +7,8 @@ if [[ "${WSL_INSTALL}" -eq 1 ]]; then
     unset DISPLAY
 fi
 
-# first check code style with flake8 (ignored currently)
+# first check code style with flake8
 echo "Checking code style compliance with flake8..."
-flake8 --quiet --count \
-    --exclude  __init__.py,qt_main.py,qt_evoked.py,run.py,paramrw.py \
-    hnn
-
+flake8 --count --exclude  __init__.py,qt_evoked.py
 echo "Running unit tests with pytest..."
 py.test --cov=. hnn/tests/

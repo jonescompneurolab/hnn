@@ -586,7 +586,6 @@ class RunParamDialog(DictDialog):
 
         return int(self.mainwin.prng_seedcore_opt)
 
-
     def setfromdin(self, din):
         if not din:
             return
