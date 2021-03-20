@@ -597,7 +597,7 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
 
 
 class OptEvokedInputParamDialog (EvokedInputBaseDialog):
-  def __init__ (self, parent, optrun_func):
+  def __init__(self, parent, mainwin):
     super(OptEvokedInputParamDialog, self).__init__()
     self.nprox = self.ndist = 0 # number of proximal,distal inputs
     self.ld = [] # list of dictionaries for proximal/distal inputs
@@ -631,7 +631,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
     self.sim_dt = 0.0
     self.default_num_step_sims = 30
     self.default_num_total_sims = 50
-    self.optrun_func = optrun_func
+    self.mainwin = mainwin
     self.optimization_running = False
     self.initUI()
     self.parent = parent
@@ -1014,10 +1014,11 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
     # update the opt info dict to capture num_sims from GUI
     self.rebuildOptStepInfo()
     self.optimization_running = True
+    self.populate_initial_opt_ranges()
 
-    # run the actual optimization. optrun_func comes from HNNGUI.startoptmodel():
-    # passed to BaseParamDialog then finally OptEvokedInputParamDialog
-    self.optrun_func()
+    # run the actual optimization
+    num_steps = self.get_num_chunks()
+    self.mainwin.startoptmodel(num_steps)
 
   def get_chunk_start(self, step):
     return self.chunk_list[step]['opt_start']
@@ -1066,6 +1067,15 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
     return ranges
 
+  def get_initial_params(self):
+      initial_params = {}
+      for input_name in self.opt_params.keys():
+          for label in self.opt_params[input_name]['ranges'].keys():
+              initial_params[label] = \
+                  self.opt_params[input_name]['ranges'][label]['initial']
+
+      return initial_params
+
   def get_num_params(self, step):
     num_params = 0
 
@@ -1078,9 +1088,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
     return num_params
 
-  def push_chunk_ranges(self, step, ranges):
-    import re
-
+  def push_chunk_ranges(self, ranges):
     for label, value in ranges.items():
       for tab_name in self.opt_params.keys():
         if label in self.opt_params[tab_name]['ranges']:
@@ -1218,7 +1226,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
       self.dtab_names = temp_dtab_names
       self.dtab_idx = temp_dtab_idx
 
-  def toggleEnableUserFields(self, step, enable=True):
+  def toggle_enable_user_fields(self, step, enable=True):
     if not enable:
       # the optimization called this to disable parameters on
       # for the step passed in to this function

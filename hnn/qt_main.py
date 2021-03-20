@@ -36,7 +36,7 @@ from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdata import SimData
 from .qt_canvas import SIMCanvas
-from .run import RunSimThread
+from .run import SimThread, OptThread
 from .qt_lib import (getmplDPI, getscreengeom, lookupresource,
                      setscalegeomcenter)
 from .specfn import spec_dpl_kernel, save_spec_data
@@ -126,7 +126,8 @@ class HNNGUI(QMainWindow):
         self.schemwin = SchematicDialog(self)
         self.sim_canvas = self.toolbar = None
         paramfn = os.path.join(hnn_root_dir, 'param', 'default.param')
-        self.baseparamwin = BaseParamDialog(self, paramfn, self.startoptmodel)
+        self.prng_seedcore_opt = 0
+        self.baseparamwin = BaseParamDialog(self, paramfn)
         self.is_optimization = False
         self.sim_data = SimData()
         self.initUI()
@@ -162,6 +163,7 @@ class HNNGUI(QMainWindow):
             "include this output when opening an issue on GitHub: "
             "<a href=https://github.com/jonescompneurolab/hnn/issues>"
             "https://github.com/jonescompneurolab/hnn/issues</a>")
+        self.done('Exception')
 
     def redraw(self):
         """redraw simulation and external data"""
@@ -854,7 +856,7 @@ class HNNGUI(QMainWindow):
       else:
         self.cbsim.setCurrentIndex(index)
 
-    def initSimCanvas(self, recalcErr=True, gRow=1, reInit=True):
+    def initSimCanvas(self, gRow=1, reInit=True):
       """initialize the simulation canvas, loading any required data"""
       gCol = 0
 
@@ -884,9 +886,6 @@ class HNNGUI(QMainWindow):
       gWidth = 12
       self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth)
       self.grid.addWidget(self.sim_canvas, gRow + 1, gCol, 1, gWidth)
-      if self.sim_data.get_exp_data_size() > 0:
-        self.sim_canvas.plot(recalcErr)
-        self.sim_canvas.draw()
 
       if self.sim_canvas.saved_exception is not None:
         raise self.sim_canvas.saved_exception
@@ -905,24 +904,50 @@ class HNNGUI(QMainWindow):
           k.setCursor(cursor)
           k.update()
 
-    def startoptmodel(self):
+    def startoptmodel(self, num_steps):
         """start model optimization"""
         if self.runningsim:
-            # stop sim works but leaves subproc as zombie until this main GUI
-            # thread exits
-            self.stopsim()
-        else:
-            self.is_optimization = True
-            try:
-                self.optmodel(self.baseparamwin.runparamwin.getncore())
-            except RuntimeError:
-                print("ERR: Optimization aborted")
+            raise ValueError("Optimization already running")
+        
+        self.is_optimization = True
+        if not self.baseparamwin.saveparams():
+            # user may have pressed 'cancel'
+            return
+
+        # optimize the model
+        print('Starting model optimization. . .')
+        # save initial parameters file
+        # data_dir = op.join(get_output_dir(), 'data')
+        # sim_dir = op.join(data_dir, self.params['sim_prefix'])
+        # param_out = os.path.join(sim_dir, 'before_opt.param')
+        # write_legacy_paramf(param_out, self.params)
+        seed = self.baseparamwin.runparamwin.get_prng_seedcore_opt()
+        ncore = self.baseparamwin.runparamwin.getncore()
+        self.runthread = OptThread(ncore, self.baseparamwin.params, num_steps,
+                                   seed, self.sim_data,
+                                   self.sim_result_callback,
+                                   self.opt_callback, mainwin=self)
+        self.runningsim = True
+        self.runthread.start()
+
+        # update optimization dialog
+        self.baseparamwin.optparamwin.btnreset.setEnabled(False)
+        self.baseparamwin.optparamwin.btnrunop.setText('Stop Optimization')
+        self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+        self.baseparamwin.optparamwin.btnrunop.clicked.connect(self.stopsim)
+
+        # update GUI
+        self.statusBar().showMessage("Optimizing model. . .")
+        self.setcursors(Qt.WaitCursor)
+        self.btnsim.setText("Stop Optimization")
+        self.qbtn.setEnabled(False)
+        self.waitsimwin.updatetxt('Optimizing model. . .')
+        bringwintotop(self.waitsimwin)
 
     def controlsim(self):
         """control the simulation"""
         if self.runningsim:
             # stop sim works but leaves subproc as zombie until this main GUI
-            # thread exits
             self.stopsim()
         else:
             self.is_optimization = False
@@ -936,44 +961,24 @@ class HNNGUI(QMainWindow):
             self.statusBar().showMessage('Terminating sim. . .')
             self.runningsim = False
             self.runthread.stop()  # killed = True # terminate()
+            self.runthread.wait(1000)
+            self.runthread.terminate()
             self.btnsim.setText("Run Simulation")
             self.qbtn.setEnabled(True)
             self.statusBar().showMessage('')
             self.setcursors(Qt.ArrowCursor)
 
-    def optmodel(self, ncore):
-        """make sure params saved and ok to run"""
-        if not self.baseparamwin.saveparams():
-            return
-
-        self.baseparamwin.optparamwin.btnreset.setEnabled(False)
-        self.baseparamwin.optparamwin.btnrunop.setText('Stop Optimization')
-        self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
-        self.baseparamwin.optparamwin.btnrunop.clicked.connect(self.stopsim)
-
-        # optimize the model
-        self.setcursors(Qt.WaitCursor)
-        print('Starting model optimization. . .')
-
-        self.runningsim = True
-
-        self.statusBar().showMessage("Optimizing model. . .")
-
-        self.runthread = RunSimThread(ncore, self.baseparamwin.params,
-                                      self.result_callback,
-                                      mainwin=self, is_optimization=True)
-
-        # We have all the events we need connected we can start the thread
-        self.runthread.start()
-        # At this point we want to allow user to stop/terminate the thread
-        # so we enable that button
-        self.btnsim.setText("Stop Optimization")
-        self.qbtn.setEnabled(False)
-        bringwintotop(self.waitsimwin)
+        if self.is_optimization:
+            self.baseparamwin.optparamwin.btnrunop.setText(
+                'Run Optimization')
+            self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+            self.baseparamwin.optparamwin.btnrunop.clicked.connect(
+                self.baseparamwin.optparamwin.runOptimization)
+            self.is_optimization = False
 
     def startsim(self, ncore):
         """start the simulation"""
-        if not self.baseparamwin.saveparams(self.baseparamwin.paramfn):
+        if not self.baseparamwin.saveparams():
             return  # make sure params saved and ok to run
 
         # reread the params to get anything new
@@ -999,23 +1004,19 @@ class HNNGUI(QMainWindow):
                   " Setting to 1.")
             params['N_trials'] = 1
 
-        self.runthread = RunSimThread(ncore, params,
-                                      self.result_callback,
-                                      mainwin=self, is_optimization=False)
+        self.runthread = SimThread(ncore, params, self.sim_result_callback,
+                                      mainwin=self)
 
         # We have all the events we need connected we can start the thread
         self.runthread.start()
         # At this point we want to allow user to stop/terminate the thread
         # so we enable that button
         self.btnsim.setText("Stop Simulation")  # setEnabled(False)
-        # We don't want to enable user to start another thread while this one
-        # is running so we disable the start button.
-        # self.btn_start.setEnabled(False)
         self.qbtn.setEnabled(False)
 
         bringwintotop(self.waitsimwin)
 
-    def result_callback(self, result):
+    def sim_result_callback(self, result):
         sim_data = result.data
         sim_data['spec'] = []
         params = result.params
@@ -1082,41 +1083,62 @@ class HNNGUI(QMainWindow):
                                       sim_data['gid_ranges'],
                                       sim_data['spec'], sim_data['vsoma'])
 
-    def done(self, except_msg):
+    def opt_callback(self):
+        # re-enable all the range sliders (last step)
+        self.baseparamwin.optparamwin.toggle_enable_user_fields(
+            self.baseparamwin.optparamwin.get_num_chunks() - 1,
+            enable=True)
+
+        self.baseparamwin.optparamwin.clear_initial_opt_ranges()
+        self.baseparamwin.optparamwin.optimization_running = False
+        # self.done()
+
+    def done(self, except_msg=''):
         """called when the simulation completes running"""
         self.runningsim = False
         self.waitsimwin.hide()
         self.statusBar().showMessage("")
         self.btnsim.setText("Run Simulation")
         self.qbtn.setEnabled(True)
-        # recreate canvas (plots too) to avoid incorrect axes
-        self.initSimCanvas()
-        # self.sim_canvas.plot()
-        self.setcursors(Qt.ArrowCursor)
 
-        failed = False
         if len(except_msg) > 0:
             failed = True
-            msg = "%s: Failed " % except_msg
         else:
-            msg = "Finished "
-
-        if self.is_optimization:
-            msg += "running optimization "
-            self.baseparamwin.optparamwin.btnrunop.setText(
-                'Prepare for Another Optimization')
-            self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
-            self.baseparamwin.optparamwin.btnrunop.clicked.connect(
-                self.baseparamwin.optparamwin.prepareOptimization)
-        else:
-            msg += "running sim "
+            failed = False
 
         if failed:
+            msg = "%s: Failed " % except_msg
+
+            if self.is_optimization:
+                msg += "running optimization "
+                self.baseparamwin.optparamwin.btnrunop.setText(
+                    'Run Optimization')
+                self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+                self.baseparamwin.optparamwin.btnrunop.clicked.connect(
+                    self.baseparamwin.optparamwin.runOptimization)
+            else:
+                msg += "running sim "
+
             QMessageBox.critical(self, "Failed!", msg + "using " +
                                  self.baseparamwin.paramfn +
                                  '. Check simulation log or console for error '
                                  'messages')
         else:
+            # save params to file after successful completion
+            self.baseparamwin.saveparams(checkok=False)
+
+            msg = "Finished "
+
+            if self.is_optimization:
+                msg += "running optimization "
+                self.baseparamwin.optparamwin.btnrunop.setText(
+                    'Prepare for Another Optimization')
+                self.baseparamwin.optparamwin.btnrunop.clicked.disconnect()
+                self.baseparamwin.optparamwin.btnrunop.clicked.connect(
+                    self.baseparamwin.optparamwin.prepareOptimization)
+            else:
+                msg += "running sim "
+
             if self.baseparamwin.params['save_figs']:
                 self.sim_data.save_dipole_with_hist(self.baseparamwin.paramfn,
                                                     self.baseparamwin.params)
@@ -1133,15 +1155,20 @@ class HNNGUI(QMainWindow):
             QMessageBox.information(self, "Done!", msg + "using " +
                                     self.baseparamwin.paramfn +
                                     '. Saved data/figures in: ' + sim_dir)
+
+        # recreate canvas (plots too) to avoid incorrect axes
+        self.initSimCanvas()
+        # self.sim_canvas.plot()
+        self.setcursors(Qt.ArrowCursor)
+
         self.setWindowTitle(self.baseparamwin.paramfn)
 
         self.populateSimCB()  # populate the combobox
         cb_index = self.cbsim.findText(self.baseparamwin.paramfn)
-        if cb_index < 0:
-            raise ValueError("Couldn't find simulation in combobox: %s" %
-                             self.baseparamwin.paramfn)
-        self.cbsim.setCurrentIndex(cb_index)
+        if cb_index >= 0:
+            self.cbsim.setCurrentIndex(cb_index)
 
+        self.is_optimization = False
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

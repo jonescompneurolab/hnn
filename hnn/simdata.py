@@ -3,6 +3,7 @@ import numpy as np
 from math import ceil
 from glob import glob
 from pickle import dump, load
+from copy import deepcopy
 
 from scipy import signal
 import matplotlib as mpl
@@ -418,7 +419,7 @@ class SimData(object):
 
             for c in range(1, shp[1], 1):
                 sim_dpl = self._sim_data[paramfn]['data']['avg_dpl']
-                dpl1 = sim_dpl[sim_start_index:sim_end_index, 1]
+                dpl1 = sim_dpl.data['agg'][sim_start_index:sim_end_index]
                 dpl2 = dat[exp_start_index:exp_end_index, c]
 
                 if (sim_length > exp_length):
@@ -450,9 +451,82 @@ class SimData(object):
         self._initial_opt = {}
         self._opt_data = {}
 
-    def update_opt_data(self, paramfn, params, avg_dpl):
-        self._opt_data = {'paramfn': paramfn, 'params': params,
-                          'data': {'avg_dpl': avg_dpl}}
+    def in_sim_data(self, paramfn):
+        if paramfn in self._sim_data:
+            return True
+        return False
+
+    def update_opt_data(self, paramfn, params, avg_dpl, dpls=None,
+                        spikes=None, gid_ranges=None, spec=None,
+                        vsoma=None):
+        self._opt_data = {'paramfn': paramfn,
+                          'params': params,
+                          'data': {'dpls': None,
+                                   'avg_dpl': avg_dpl,
+                                   'spikes': None,
+                                   'gid_ranges': None,
+                                   'spec': None,
+                                   'vsoma': None}}
+
+    def update_initial_opt_data_from_sim_data(self, paramfn):
+        if paramfn not in self._sim_data:
+            raise ValueError("Simulation not in sim_data: %s" % paramfn)
+
+        single_sim_data = self._sim_data[paramfn]['data']
+        self._opt_data['initial_dpl'] = \
+            deepcopy(single_sim_data['avg_dpl'])
+        self._opt_data['initial_error'] = self.get_err(paramfn)
+
+    def get_err(self, paramfn, tstop=None):
+        if paramfn not in self._sim_data:
+            raise ValueError("Simulation not in sim_data: %s" % paramfn)
+
+        if tstop is None:
+            tstop = self._sim_data[paramfn]['params']['tstop']
+        _,  err = self.calcerr(paramfn, tstop)
+        return err
+
+    def get_err_wrapper(self, queue, paramfn, tstop=None):
+        err = self.get_err(paramfn, tstop)
+        queue.put(err)
+
+    def get_werr(self, paramfn, weights, tstop=None, tstart=None):
+        if paramfn not in self._sim_data:
+            raise ValueError("Simulation not in sim_data: %s" % paramfn)
+
+        if tstop is None:
+            tstop = self._sim_data[paramfn]['params']['tstop']
+        _,  werr = self.calcerr(paramfn, tstop, tstart, weights)
+        return werr
+
+    def update_opt_data_from_sim_data(self, paramfn):
+        if paramfn not in self._sim_data:
+            raise ValueError("Simulation not in sim_data: %s" % paramfn)
+
+        sim_params = self._sim_data[paramfn]
+        single_sim = self._sim_data[paramfn]['data']
+        self._opt_data = {'paramfn': paramfn,
+                          'params': deepcopy(sim_params),
+                          'data': {'dpls': deepcopy(single_sim['dpls']),
+                                   'avg_dpl': deepcopy(single_sim['avg_dpl']),
+                                   'spikes': deepcopy(single_sim['spikes']),
+                                   'gid_ranges':
+                                       deepcopy(single_sim['gid_ranges']),
+                                   'spec': deepcopy(single_sim['spec']),
+                                   'vsoma': deepcopy(single_sim['vsoma'])}}
+
+    def update_sim_data_from_opt_data(self, paramfn):
+        opt_data = self._opt_data['data']
+        single_sim = {'paramfn': paramfn,
+                      'params': deepcopy(self._opt_data['params']),
+                      'data': {'dpls': deepcopy(opt_data['dpls']),
+                               'avg_dpl': deepcopy(opt_data['avg_dpl']),
+                               'spikes': deepcopy(opt_data['spikes']),
+                               'gid_ranges':
+                                   deepcopy(opt_data['gid_ranges']),
+                               'spec': deepcopy(opt_data['spec']),
+                               'vsoma': deepcopy(opt_data['vsoma'])}}
+        self._sim_data[paramfn] = single_sim
 
     def _read_dpl(self, paramfn, trial_idx, ntrial):
         if ntrial == 1:
@@ -648,24 +722,33 @@ class SimData(object):
                 yl[0] = min(yl[0], dpl.data['agg'].min())
                 yl[1] = max(yl[1], dpl.data['agg'].max())
         else:
-            if self._opt_data['avg_dpl'] is not None:
-                # show optimized dipole as gray line
-                optdpl = self._opt_data['avg_dpl']
-                ax.plot(optdpl.times, optdpl.data['agg'], 'k', color='gray',
+            if 'avg_dpl' not in self._opt_data or \
+                    'initial_dpl' not in self._opt_data:
+                # if there was an exception running optimization
+                # still plot average dipole from sim
+                ax.plot(dpl.times, dpl.data['agg'], 'k',
                         linewidth=linewidth + 1)
-                yl[0] = min(yl[0], optdpl.data['agg'].min())
-                yl[1] = max(yl[1], optdpl.data['agg'].max())
+                yl[0] = min(yl[0], dpl.data['agg'].min())
+                yl[1] = max(yl[1], dpl.data['agg'].max())
+            else:
+                if self._opt_data['avg_dpl'] is not None:
+                    # show optimized dipole as gray line
+                    optdpl = self._opt_data['avg_dpl']
+                    ax.plot(optdpl.times, optdpl.data['agg'], 'k',
+                            color='gray', linewidth=linewidth + 1)
+                    yl[0] = min(yl[0], optdpl.data['agg'].min())
+                    yl[1] = max(yl[1], optdpl.data['agg'].max())
 
-            if self._opt_data['initial_dpl'] is not None:
-                # show initial dipole in dotted black line
-                plot_data = self._opt_data['initial_dpl']
-                times = plot_data.times
-                plot_dpl = plot_data.data['agg']
-                ax.plot(times, plot_dpl, '--', color='black',
-                        linewidth=linewidth)
-                dpl = self._opt_data['initial_dpl'].data['agg']
-                yl[0] = min(yl[0], dpl.min())
-                yl[1] = max(yl[1], dpl.max())
+                if self._opt_data['initial_dpl'] is not None:
+                    # show initial dipole in dotted black line
+                    plot_data = self._opt_data['initial_dpl']
+                    times = plot_data.times
+                    plot_dpl = plot_data.data['agg']
+                    ax.plot(times, plot_dpl, '--', color='black',
+                            linewidth=linewidth)
+                    dpl = self._opt_data['initial_dpl'].data['agg']
+                    yl[0] = min(yl[0], dpl.min())
+                    yl[1] = max(yl[1], dpl.max())
 
         # get the number of pyramidal neurons used in the simulation and
         # multiply by scale factor to get estimated number of pyramidal
