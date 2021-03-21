@@ -1040,8 +1040,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         self.btnrunop.clicked.connect(self.runOptimization)
 
     def runOptimization(self):
-        self.current_opt_step = 0
-
         # update the ranges to find which parameters have been disabled
         # (unchecked)
         self.updateOptRanges(save_sliders=True)
@@ -1273,11 +1271,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.dtab_idx = temp_dtab_idx
 
     def toggle_enable_user_fields(self, step, enable=True):
-        if not enable:
-            # the optimization called this to disable parameters on
-            # for the step passed in to this function
-            self.current_opt_step = step
-
         for input_name in self.chunk_list[step]['inputs']:
             tab_index = self.dtab_idx[input_name]
             tab = self.ltabs[tab_index]
