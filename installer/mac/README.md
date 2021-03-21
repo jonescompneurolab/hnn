@@ -25,9 +25,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
      - If you get the following error, you can skip this step.
       `xcode-select: error: command line tools are already installed, use "Software Update" to install updates`
 
-2. Then press `Install` in the pop-up dialog
-
-  <img src="install_pngs/xcode_tools.png" width="400" />
+2. Then press `Install` in the pop-up dialog.
 
 ## Prerequisite 2: Miniconda (Python 3)
 
@@ -82,11 +80,7 @@ cd hnn
 
 2. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 
-3. When you run simulations for the first time, the following dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.
-
-    <img src="install_pngs/nrniv_firewall.png" width="400" />
-
-    <img src="install_pngs/orterun_firewall.png" width="400" />
+3. When you run simulations for the first time, two dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.
 
 4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
 

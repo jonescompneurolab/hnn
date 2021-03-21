@@ -73,4 +73,4 @@ If you run into other issues with the installation, please [open an issue on our
 
 Another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
 
-* [Virtualbox install instructions](../virtualbox/README.md)
+- [Virtualbox install instructions](../virtualbox/README.md)
