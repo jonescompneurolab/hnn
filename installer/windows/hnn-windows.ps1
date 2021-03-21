@@ -6,7 +6,7 @@ install Miniconda:
  - Miniconda3-latest-Windows-x86_64.exe
 
 Additionally the following will be installed if they are not found:
- - nrn-7.7.w64-mingwsetup.exe
+ - nrn-7.8.w64-mingwsetup.exe
 
 Other requirements:
  - Only 64-bit installs are supported due to NEURON compatibility
@@ -310,8 +310,8 @@ if ($script:installMiniconda) {
 
 $program = "NEURON"
 if (!(Test-Installed($program))) {
-  $file = "nrn-7.7.w64-mingwsetup.exe"
-  $url = "https://neuron.yale.edu/ftp/neuron/versions/v7.7/$file"
+  $file = "nrn-7.8.w64-mingwsetup.exe"
+  $url = "https://neuron.yale.edu/ftp/neuron/versions/v7.8/$file"
   Download-Program $program $file $url
   $dirpath = $script:NEURON_PATH
   Write-Host "Installing $program to $dirpath..."
@@ -379,6 +379,13 @@ if ($proc1) {
   Write-Host "Miniconda is finished"
 }
 
+if ($proc2) {
+  Write-Host "Waiting for NEURON install to finish..."
+  $proc2.WaitForExit() 2>$null
+  Update-User-Paths("$script:NEURON_PATH\bin")
+  Write-Host "NEURON is finished"
+}
+
 # setup python with virtualenv or 'conda
 if ($null -ne $script:VIRTUALENV) {
   Write-Host "Creating Python virtualenv at $HOME\venv\hnn..."
@@ -390,7 +397,9 @@ if ($null -ne $script:VIRTUALENV) {
   $script:PYTHON = "$HOME\venv\hnn\Scripts\python.exe"
   if (Test-Python-3($script:PYTHON)) {
     # use pip3 for good measure
-    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install PyOpenGL pyqtgraph matplotlib scipy PyQt5 psutil nlopt" -Wait
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install matplotlib scipy PyQt5 psutil nlopt" -Wait
+    # get hnn-core, but skip NEURON dependency
+    Start-Process "$HOME\venv\hnn\Scripts\pip3" "install --no-deps mpi4py hnn-core" -Wait
   }
   else {
     Write-Warning "Virtualenv failed to create a valid python3 environment"
@@ -415,14 +424,21 @@ elseif ($null -ne $script:CONDA_PATH)  {
 
   if (!$script:env_exists) {
     Write-Host "Setting up anaconda hnn environment..."
-    conda create -y -n hnn python=3.7 PyOpenGL pyqtgraph matplotlib scipy conda psutil
+    conda env create -f environment.yml
     conda install -y -n hnn -c conda-forge nlopt
+
+    # need to call the right pip to install in miniconda environment
+    # get hnn-core, but skip NEURON dependency
+    Set-Location $HOME
+    Miniconda3\envs\hnn\Scripts\pip install --no-deps mpi4py hnn-core
+
     Set-Location $CONDA_ENV
     mkdir .\etc\conda\activate.d 2>&1>$null
     mkdir .\etc\conda\deactivate.d 2>&1>$null
 
-    #"set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
-    "set PYTHONHOME=$CONDA_ENV" | Add-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
+    # "set NRN_PYLIB=$script:PYTHON_DLL" | Set-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
+    "set PYTHONPATH=$script:NEURON_PATH\lib\python" | Add-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.bat"
+    "export PYTHONPATH=/c/nrn/lib/python" | Add-Content "$CONDA_ENV\etc\conda\activate.d\env_vars.sh"
   }
   else {
     Write-Host "Miniconda hnn environment already exists"
@@ -431,27 +447,6 @@ elseif ($null -ne $script:CONDA_PATH)  {
 else {
   # setup virtualenv
 
-}
-
-
-if ($proc2) {
-  Write-Host "Waiting for NEURON install to finish..."
-  $proc2.WaitForExit() 2>$null
-  Update-User-Paths("$script:NEURON_PATH\bin")
-  Write-Host "NEURON is finished"
-}
-
-if (!(Test-Path "$HNN_PATH\nrnmech.dll" -PathType Leaf)) {
-  Write-Host "Creating nrnmech.dll"
-  Set-Location $HNN_PATH\mod
-  Start-Process "$script:NEURON_PATH\mingw\usr\bin\sh.exe" "$script:NEURON_ESC_PATH/lib/mknrndll.sh C:\nrn\"
-  $obj = New-Object -com Wscript.Shell
-  sleep -s 10
-  $obj.SendKeys("{ENTER}")
-  Copy-Item $HNN_PATH\mod\nrnmech.dll -Destination $HNN_PATH
-}
-else {
-  Write-Host "nrnmech.dll already exists $HNN_PATH\nrnmech.dll"
 }
 
 Write-Host ""
