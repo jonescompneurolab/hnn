@@ -11,13 +11,14 @@ from contextlib import redirect_stdout
 from psutil import wait_procs, process_iter, NoSuchProcess
 import traceback
 from queue import Queue
+from threading import Event
+import numpy as np
 
 import nlopt
 from PyQt5 import QtCore
 from hnn_core import simulate_dipole, Network, MPIBackend
-from hnn_core.dipole import Dipole
 
-from .paramrw import get_output_dir
+from .paramrw import get_output_dir, hnn_core_compat_params
 
 
 class BasicSignal(QtCore.QObject):
@@ -31,8 +32,18 @@ class ObjectSignal(QtCore.QObject):
 
 
 class QueueSignal(QtCore.QObject):
-    """for synchronization"""
+    """for returning data"""
     qsig = QtCore.pyqtSignal(Queue, str, float)
+
+
+class QueueDataSignal(QtCore.QObject):
+    """for returning data"""
+    qsig = QtCore.pyqtSignal(Queue, str, np.ndarray, float, float)
+
+
+class EventSignal(QtCore.QObject):
+    """for synchronization"""
+    esig = QtCore.pyqtSignal(Event, str)
 
 
 class TextSignal(QtCore.QObject):
@@ -43,11 +54,6 @@ class TextSignal(QtCore.QObject):
 class DataSignal(QtCore.QObject):
     """for signalling data read"""
     dsig = QtCore.pyqtSignal(str, dict)
-
-
-class OptDataSignal(QtCore.QObject):
-    """for signalling update to opt_data"""
-    odsig = QtCore.pyqtSignal(str, dict, Dipole)
 
 
 class ParamSignal(QtCore.QObject):
@@ -222,13 +228,13 @@ class SimThread(QtCore.QThread):
         _kill_and_check_nrniv_procs()
         self.killed = True
 
-    def run(self, simlength=None):
+    def run(self, sim_length=None):
         """Start simulation"""
 
         msg = ''
         banner = not self.is_optimization
         try:
-            self._run(banner=banner, simlength=simlength)  # run simulation
+            self._run(banner=banner, sim_length=sim_length)  # run simulation
             # update params in all windows (optimization)
         except RuntimeError as e:
             msg = str(e)
@@ -239,8 +245,15 @@ class SimThread(QtCore.QThread):
             self.param_signal.psig.emit(self.params)
             self.done_signal.tsig.emit(msg)
 
-    def _run(self, banner=True, simlength=None):
+        # gracefully stop this thread
+        self.quit()
+
+    def _run(self, banner=True, sim_length=None):
         self.killed = False
+
+        sim_params = hnn_core_compat_params(self.params)
+        if sim_length is not None:
+            sim_params['tstop'] = sim_length
 
         while True:
             if self.ncore == 0:
@@ -249,7 +262,7 @@ class SimThread(QtCore.QThread):
             try:
                 sim_log = self._log_sim_status(parent=self)
                 with redirect_stdout(sim_log):
-                    sim_data = simulate(self.params, self.ncore)
+                    sim_data = simulate(sim_params, self.ncore)
                 break
             except RuntimeError as e:
                 if self.ncore == 1:
@@ -269,6 +282,7 @@ class SimThread(QtCore.QThread):
                 % self.ncore
             print(txt)
             self._updatewaitsimwin(txt)
+            _kill_and_check_nrniv_procs()
 
         # put sim_data into the val attribute of a ResultObj
         self.result_signal.sig.emit(ResultObj(sim_data, self.params))
@@ -323,23 +337,23 @@ class OptThread(SimThread):
         self.refresh_signal = BasicSignal()
         self.refresh_signal.sig.connect(self.mainwin.initSimCanvas)
 
-        self.update_opt_data = OptDataSignal()
-        self.update_opt_data.odsig.connect(sim_data.update_opt_data)
-
-        self.update_sim_data_from_opt_data = TextSignal()
-        self.update_sim_data_from_opt_data.tsig.connect(
+        self.update_sim_data_from_opt_data = EventSignal()
+        self.update_sim_data_from_opt_data.esig.connect(
             sim_data.update_sim_data_from_opt_data)
 
-        self.update_opt_data_from_sim_data = TextSignal()
-        self.update_opt_data_from_sim_data.tsig.connect(
+        self.update_opt_data_from_sim_data = EventSignal()
+        self.update_opt_data_from_sim_data.esig.connect(
             sim_data.update_opt_data_from_sim_data)
 
-        self.update_initial_opt_data_from_sim_data = TextSignal()
-        self.update_initial_opt_data_from_sim_data.tsig.connect(
+        self.update_initial_opt_data_from_sim_data = EventSignal()
+        self.update_initial_opt_data_from_sim_data.esig.connect(
             sim_data.update_initial_opt_data_from_sim_data)
 
         self.get_err_from_sim_data = QueueSignal()
         self.get_err_from_sim_data.qsig.connect(sim_data.get_err_wrapper)
+
+        self.get_werr_from_sim_data = QueueDataSignal()
+        self.get_werr_from_sim_data.qsig.connect(sim_data.get_werr_wrapper)
 
     def run(self):
         msg = ''
@@ -413,7 +427,10 @@ class OptThread(SimThread):
             self.optparamwin.push_chunk_ranges(push_values)
 
         # update opt_data with the final best
-        self.update_sim_data_from_opt_data.tsig.emit(self.paramfn)
+        update_event = Event()
+        self.update_sim_data_from_opt_data.esig.emit(update_event,
+                                                     self.paramfn)
+        update_event.wait()
 
         # check that optimization improved RMSE
         err_queue = Queue()
@@ -457,6 +474,7 @@ class OptThread(SimThread):
         txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
                                                     self.opt_end)
         self._updatewaitsimwin(txt)
+        print(txt)
 
         # weights calculated once per step
         self.opt_weights = \
@@ -499,8 +517,15 @@ class OptThread(SimThread):
 
         # store the initial fit for display in final dipole plot as
         # black dashed line.
-        self.update_opt_data_from_sim_data.tsig.emit(self.paramfn)
-        self.update_initial_opt_data_from_sim_data.tsig.emit(self.paramfn)
+        update_event = Event()
+        self.update_opt_data_from_sim_data.esig.emit(update_event,
+                                                     self.paramfn)
+        update_event.wait()
+        update_event.clear()
+        self.update_initial_opt_data_from_sim_data.esig.emit(update_event,
+                                                             self.paramfn)
+        update_event.wait()
+
         err_queue = Queue()
         self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn,
                                              self.params['tstop'])
@@ -529,17 +554,22 @@ class OptThread(SimThread):
                          self.step_ranges[param_name]['maxval']))
                 return 1e9  # invalid param value -> large error
 
-        # populate param values into GUI and save params to file
+        # populate param values into GUI
         self.baseparamwin.update_gui_params(opt_params)
 
+        sim_params = hnn_core_compat_params(self.params)
+        for param_name, param_value in opt_params.items():
+            sim_params[param_name] = param_value
+
         # run the simulation, but stop at self.opt_end
-        self.sim_thread = SimThread(self.ncore, self.params,
+        self.sim_thread = SimThread(self.ncore, sim_params,
                                     self.result_callback,
                                     mainwin=self.mainwin)
 
         self.sim_running = True
         try:
-            self.sim_thread.run(simlength=self.opt_end)
+            # may not need to run the entire simulation
+            self.sim_thread.run(sim_length=self.opt_end)
             self.sim_thread.wait()
             if self.killed:
                 self.quit()
@@ -550,8 +580,12 @@ class OptThread(SimThread):
                                "See previous traceback.")
 
         # calculate wRMSE for all steps
-        werr = self.sim_data.get_werr(self.paramfn, self.opt_weights,
-                                      self.opt_end, tstart=self.opt_start)
+        err_queue = Queue()
+        self.get_werr_from_sim_data.qsig.emit(err_queue, self.paramfn,
+                                              self.opt_weights, self.opt_end,
+                                              self.opt_start)
+        werr = err_queue.get()
+
         txt = "Weighted RMSE = %f" % werr
         print(txt)
         self._updatewaitsimwin(os.linesep + 'Simulation finished: ' + txt +
@@ -567,7 +601,10 @@ class OptThread(SimThread):
         if werr < self.best_step_werr:
             self._updatewaitsimwin("new best with RMSE %f" % werr)
 
-            self.update_opt_data_from_sim_data.tsig.emit(self.paramfn)
+            update_event = Event()
+            self.update_opt_data_from_sim_data.esig.emit(update_event,
+                                                         self.paramfn)
+            update_event.wait()
 
             self.best_step_werr = werr
             # save best param file

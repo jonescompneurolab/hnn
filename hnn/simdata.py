@@ -468,7 +468,7 @@ class SimData(object):
                                    'spec': None,
                                    'vsoma': None}}
 
-    def update_initial_opt_data_from_sim_data(self, paramfn):
+    def update_initial_opt_data_from_sim_data(self, event, paramfn):
         if paramfn not in self._sim_data:
             raise ValueError("Simulation not in sim_data: %s" % paramfn)
 
@@ -476,6 +476,8 @@ class SimData(object):
         self._opt_data['initial_dpl'] = \
             deepcopy(single_sim_data['avg_dpl'])
         self._opt_data['initial_error'] = self.get_err(paramfn)
+
+        event.set()
 
     def get_err(self, paramfn, tstop=None):
         if paramfn not in self._sim_data:
@@ -499,7 +501,12 @@ class SimData(object):
         _,  werr = self.calcerr(paramfn, tstop, tstart, weights)
         return werr
 
-    def update_opt_data_from_sim_data(self, paramfn):
+    def get_werr_wrapper(self, queue, paramfn, weights, tstop=None,
+                         tstart=None):
+        err = self.get_werr(paramfn, weights, tstop, tstart)
+        queue.put(err)
+
+    def update_opt_data_from_sim_data(self, event, paramfn):
         if paramfn not in self._sim_data:
             raise ValueError("Simulation not in sim_data: %s" % paramfn)
 
@@ -515,7 +522,9 @@ class SimData(object):
                                    'spec': deepcopy(single_sim['spec']),
                                    'vsoma': deepcopy(single_sim['vsoma'])}}
 
-    def update_sim_data_from_opt_data(self, paramfn):
+        event.set()
+
+    def update_sim_data_from_opt_data(self, event, paramfn):
         opt_data = self._opt_data['data']
         single_sim = {'paramfn': paramfn,
                       'params': deepcopy(self._opt_data['params']),
@@ -527,6 +536,8 @@ class SimData(object):
                                'spec': deepcopy(opt_data['spec']),
                                'vsoma': deepcopy(opt_data['vsoma'])}}
         self._sim_data[paramfn] = single_sim
+
+        event.set()
 
     def _read_dpl(self, paramfn, trial_idx, ntrial):
         if ntrial == 1:

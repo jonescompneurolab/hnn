@@ -244,14 +244,15 @@ def read_gids_param(fparam):
 def legacy_param_str_to_dict(param_str):
     boolean_params = ['sync_evinput', 'record_vsoma', 'save_spec_data',
                       'save_figs']
-
+    string_params = ['sim_prefix', 'spec_cmap', 'distribution_prox',
+                     'distribution_dist']
     param_dict = {}
     for line in param_str.splitlines():
         keystring, val = line.split(': ')
         key = keystring.strip()
         if key == 'expmt_groups':
             continue
-        elif key == 'sim_prefix' or key == 'spec_cmap':
+        elif key in string_params:
             param_dict[key] = val
         elif key.startswith('N_') or key.startswith('numspikes_') or \
                 key.startswith('events_per_cycle_') or \
@@ -296,3 +297,27 @@ def write_gids_param(fparam, gid_list):
             else:
                 f.write('[]')
             f.write('\n')
+
+def hnn_core_compat_params(params):
+    boolean_params = ['sync_evinput', 'record_vsoma', 'save_spec_data',
+                      'save_figs']
+    string_params = ['sim_prefix', 'spec_cmap', 'distribution_prox',
+                     'distribution_dist']
+
+    param_dict = {}
+    for key, val in params.items():
+        if key == 'expmt_groups':
+            continue
+        elif key in string_params:
+            param_dict[key] = val
+        elif key.startswith('N_') or key.startswith('numspikes_') or \
+                key.startswith('events_per_cycle_') or \
+                key.startswith('repeats_') or \
+                key.startswith('prng_seedcore_'):
+            param_dict[key] = int(val)
+        elif key in boolean_params:
+            param_dict[key] = bool(val)
+        else:
+            param_dict[key] = float(val)
+
+    return param_dict

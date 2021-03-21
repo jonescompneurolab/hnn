@@ -984,18 +984,10 @@ class HNNGUI(QMainWindow):
 
     def startsim(self, ncore):
         """start the simulation"""
+        # update self.self.baseparamwin.params with values from GUI
+        # and save to file
         if not self.baseparamwin.saveparams():
             return  # make sure params saved and ok to run
-
-        # reread the params to get anything new
-        try:
-            params = read_params(self.baseparamwin.paramfn)
-        except ValueError:
-            txt = "WARNING: could not retrieve parameters from %s" % \
-                self.baseparamwin.paramfn
-            QMessageBox.information(self, "HNN", txt)
-            print(txt)
-            return
 
         self.setcursors(Qt.WaitCursor)
 
@@ -1005,13 +997,26 @@ class HNNGUI(QMainWindow):
         self.statusBar().showMessage("Running simulation. . .")
 
         # check that valid number of trials was given
-        if 'N_trials' not in params or params['N_trials'] == 0:
+        if 'N_trials' not in self.baseparamwin.params or \
+                self.baseparamwin.params['N_trials'] == 0:
             print("Warning: invalid configured number of trials."
                   " Setting to 1.")
-            params['N_trials'] = 1
+            self.baseparamwin.params['N_trials'] = 1
 
-        self.runthread = SimThread(ncore, params, self.sim_result_callback,
-                                   mainwin=self)
+        if self.baseparamwin.params['record_vsoma'] and ncore > 1:
+            txt = 'A bug currently prevents recording somatic voltages' + \
+                  ' for simulatioins run on more than one core. This' + \
+                  ' simulation will proceed using only a single core.'
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(txt)
+            msg.setWindowTitle('Rerun simulation')
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+            ncore = 1
+
+        self.runthread = SimThread(ncore, self.baseparamwin.params,
+                                   self.sim_result_callback, mainwin=self)
 
         # We have all the events we need connected we can start the thread
         self.runthread.start()
