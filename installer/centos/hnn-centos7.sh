@@ -9,7 +9,7 @@ sudo yum -y install automake gcc gcc-c++ flex bison libtool git \
 
 # the system version of pip installs nlopt in the wrong directory
 sudo pip3 install --upgrade pip
-sudo /usr/local/bin/pip3 install NEURON PyOpenGL matplotlib pyqt5 pyqtgraph scipy numpy nlopt
+sudo /usr/local/bin/pip3 install hnn-core matplotlib pyqt5 nlopt
 
 export PATH=$PATH:/usr/lib64/openmpi/bin
 

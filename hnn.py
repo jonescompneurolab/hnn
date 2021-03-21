@@ -1,40 +1,19 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+"""Main file to launch HNN GUI"""
+
+# Authors: Sam Neymotin <samnemo@gmail.com>
+#          Blake Caldwell <blake_caldwell@brown.edu>
 
 import sys
-import os
-import shlex
-from subprocess import Popen, PIPE, call
-from time import sleep
+from PyQt5 import QtWidgets
 
-from hnn_qt5 import *
+from hnn import HNNGUI
 
-#
-def runnrnui ():
-  pnrnui = Popen(shlex.split(os.path.join('NEURON-UI','NEURON-UI')),cwd=os.getcwd())
-  sleep(5) # make sure NEURON-UI had a chance to start
-  pjup = Popen(shlex.split('jupyter run loadmodel_nrnui.py --existing'),cwd=os.getcwd())
-  lproc = [pnrnui, pjup]; done = [False, False]
-  while pnrnui.poll() is None or pjup.poll() is None: sleep(1)
-  for p in lproc:
-    try: p.communicate()
-    except: pass
-  return lproc
 
-def runqt5 ():
-  app = QApplication(sys.argv)
-  ex = HNNGUI()
-  sys.exit(app.exec_())
-  # app.exec_()
-  # print('\n'.join(repr(w) for w in app.allWidgets()))
+def runqt5():
+    app = QtWidgets.QApplication(sys.argv)
+    HNNGUI()
+    sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
-  useqt5 = True
-  for s in sys.argv:
-    if s == 'nrnui':
-      useqt5 = False
-  if useqt5:
     runqt5()
-  else:
-    lproc = runnrnui()
-

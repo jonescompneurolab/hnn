@@ -45,7 +45,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 1. Create a conda environment with the Python prerequisites for HNN.
 
     ```bash
-    conda create -y -n hnn python=3.7 openmpi pyqtgraph pyopengl matplotlib scipy psutil
+    conda env create -f environment.yml
     ```
 
 2. Activate the HNN conda environment and install nlopt and NEURON

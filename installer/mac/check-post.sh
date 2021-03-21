@@ -26,15 +26,6 @@ check_python_version () {
 echo "Performing post-install checks for HNN"
 echo "--------------------------------------"
 
-
-echo -n "Checking for XQuartz..."
-XQUARTZ_VERSION=$(mdls -name kMDItemVersion /Applications/Utilities/XQuartz.app)
-if [[ "$?" -eq "0" ]]; then
-  echo "ok"
-else
-  echo "failed"
-fi
-
 CUR_DIR=$(pwd)
 
 echo -n "Checking if HNN is compiled..."
@@ -211,7 +202,7 @@ else
 fi
 
 PREREQS_INSTALLED=1
-for prereq in "pyqtgraph" "matplotlib" "scipy" "psutil" "numpy" "nlopt" "neuron"; do
+for prereq in "matplotlib" "scipy" "psutil" "numpy" "nlopt" "neuron"; do
   echo -n "Checking Python can import $prereq module..."
   $PYTHON -c "import $prereq" > /dev/null 2>&1
   if [[ "$?" -eq "0" ]]; then

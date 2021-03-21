@@ -16,6 +16,7 @@ sudo yum -y install python34-setuptools
 sudo easy_install-3.4 pip
 pip3 install --upgrade matplotlib --user
 pip3 install --upgrade nlopt scipy --user
+pip3 install hnn-core
 sudo yum -y install ncurses-devel
 sudo yum -y install openmpi openmpi-devel
 sudo yum -y install libXext libXext-devel
@@ -25,8 +26,6 @@ sudo PATH=$PATH:/usr/lib64/openmpi/bin pip3 install mpi4py
 # save dir installing hnn to
 startdir=$(pwd)
 echo $startdir
-
-pip install NEURON
 
 # move outside of nrn directories
 cd $startdir
@@ -40,7 +39,7 @@ cd ..
 # create the global session variables, make available for all users
 echo '# these lines define global session variables for HNN' | sudo tee -a /etc/profile.d/hnn.sh
 echo 'export CPU=$(uname -m)' | sudo tee -a /etc/profile.d/hnn.sh
-echo "export PATH=\$PATH::/usr/lib64/openmpi/bin:$startdir/nrn/build/\$CPU/bin" | sudo tee -a /etc/profile.d/hnn.sh
+echo "export PATH=\$PATH::/usr/lib64/openmpi/bin" | sudo tee -a /etc/profile.d/hnn.sh
 
 # qt, pyqt, and supporting packages - needed for GUI
 # SIP unforutnately not available as a wheel for Python 3.4, so have to compile
