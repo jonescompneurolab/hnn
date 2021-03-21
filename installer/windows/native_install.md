@@ -24,13 +24,13 @@ The PowerShell script used below will create a new directory called "hnn" in the
     OR to download and run the script from a url:
 
     ```powershell
-    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn-windows.ps1'))"
+    @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/windows/hnn-windows.ps1'))"
     ```
 
     OR from a powershell prompt:
 
     ```powershell
-    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/windows/hnn-windows.ps1'))
+    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/windows/hnn-windows.ps1'))
     ```
 
    - There will be a permission prompt to install Microsoft MPI and a couple of terminal windows will

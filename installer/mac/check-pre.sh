@@ -91,8 +91,7 @@ if [ -n "$PYTHONPATH" ]; then
   if [[ "$PYTHONPATH" =~ "NEURON" ]] || [[ "$PYTHONPATH" =~ "NRN" ]]; then
     echo "warning"
     echo "NEURON libraries found in PYTHONPATH variable. This was used before "
-    echo "the 'pip install' method. Make sure this matches the version used to "
-    echo "compile HNN modules with 'make'"
+    echo "the 'pip install' method."
     echo "PYTHONPATH=$PYTHONPATH"
     echo
     return=1

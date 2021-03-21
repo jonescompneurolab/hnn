@@ -97,7 +97,7 @@ fi
 echo "Installing OS compilation toolchain..." | tee -a "$LOGFILE"
 # get prerequisites from pip. requires gcc to build psutil
 sudo -E apt-get install --no-install-recommends -y \
-        make gcc g++ python3-dev &> "$LOGFILE"
+        gcc g++ python3-dev &> "$LOGFILE"
 
 if [[ "$USE_CONDA" -eq 0 ]]; then
   echo "Waiting for python packages for HNN downloads to finish..."
@@ -126,9 +126,6 @@ else
   # create conda environment
   conda env create -f environment.yml
 
-  # conda is faster to install nlopt
-  conda install -y -n hnn -c conda-forge nlopt
-
   source activate hnn && echo "activated conda HNN environment"
 
   echo "Installing MPI compilation toolchain..." | tee -a "$LOGFILE"
@@ -137,7 +134,7 @@ else
           libopenmpi-dev &> "$LOGFILE"
 
   # install hnn-core and prerequisites (e.g. NEURON)
-  pip install mpi4py pyqt5 hnn-core
+  pip install hnn-core mpi4py nlopt
 fi
 
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"

@@ -28,7 +28,7 @@ Some notes:
 Launch the Ubuntu application to open a command line and run the commands below to download and run a script that will install HNN and its prerequisites.
 
 ```bash
-curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-ubuntu.sh
+curl --remote-name https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/ubuntu/hnn-ubuntu.sh
 bash hnn-ubuntu.sh
 ```
 
@@ -67,15 +67,15 @@ You will need to **restart Ubuntu** after this. Until you do so, simulations wil
 
 ## Upgrading to a new version of HNN
 
-HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
+HNN Releases can be found on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
 
-To download the latest release, use the following commands within an Ubuntu terminal:
+To download the latest HNN release, use the following commands within an Ubuntu terminal:
 
 ```bash
 wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+mkdir hnn_source_code
 tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
 cd hnn_source_code
-make
 python3 hnn.py
 ```
 
