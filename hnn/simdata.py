@@ -510,7 +510,7 @@ class SimData(object):
         if paramfn not in self._sim_data:
             raise ValueError("Simulation not in sim_data: %s" % paramfn)
 
-        sim_params = self._sim_data[paramfn]
+        sim_params = self._sim_data[paramfn]['params']
         single_sim = self._sim_data[paramfn]['data']
         self._opt_data = {'paramfn': paramfn,
                           'params': deepcopy(sim_params),
