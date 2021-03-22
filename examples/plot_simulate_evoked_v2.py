@@ -25,7 +25,7 @@ cfg_params.saveCellSecs = True
 cfg_params.saveCellConns = True
 cfg_params.recordLFP = [[50, y, 50] for y in range(0, 1400, 100)]
 
-trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=4, only_read=1) 
+trials_data = simulate_trials(cfg_params, n_trials=1, n_cores=4, only_read=0) 
 
 # # plot connectivity matrix
 pops = ['L2Basket', 'L2Pyr', 'L5Basket', 'L5Pyr']
