@@ -11,15 +11,21 @@ biophysics generating the primary electric currents underlying such data, so sim
 are directly comparable to source localized data (nano-Ampere-meters); this enables precise
 tuning of model parameters to match characteristics of recorded signals.
 
-We are integrating the circuit-level modeling with the [minimum-norm-estimate (MNE) source
-localization software](https://martinos.org/mne/stable/index.html), so researchers can compute
-MEG/EEG source estimates and test hypotheses on
-the circuit origin of their data in one software package. Our goal is to design HNN to be useful
-to researchers with no formal computational neural modeling or coding experience.
+Primary goals are to design HNN to be useful to researchers with no formal computational neural 
+modeling or coding experience, and to enable the neural modeling and coding community to participate 
+in HNN develompent.  An improved version of HNN's underlying neural model is in development as HNN-core, 
+following best practices in open-source software design and enabling command line interface, https://github.com/jonescompneurolab/hnn-core. We are also integrating the circuit-level modeling with 
+the [minimum-norm-estimate (MNE) source localization software](https://martinos.org/mne/stable/index.html), 
+so researchers can compute MEG/EEG source estimates and test hypotheses on the circuit origin of their data 
+in one workflow. An example can be found here 
+https://jonescompneurolab.github.io/hnn-core/stable/auto_examples/index.html. 
+For a full Roadmap of planned HNN improvements and expansions over the next five-years see
+https://jonescompneurolab.github.io/hnn-core/stable/roadmap.html.
 
-For more information visit [https://hnn.brown.edu](https://hnn.brown.edu) . There, we describe the use of HNN in studying the
-circuit-level origin of some of the most commonly measured MEG/EEG and ECoG signal: event related
-potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
+For more information visit [https://hnn.brown.edu](https://hnn.brown.edu) . There, we provide further background 
+information and describe the use of HNN in studying the circuit-level origin of some of the most commonly measured 
+MEG/EEG signal: event related potentials (ERPs) and low frequency rhythms (alpha/beta/gamma).
+
 
 ## Installation
 
