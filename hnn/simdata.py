@@ -584,7 +584,7 @@ class SimData(object):
                     or len(single_sim['spec']) == 0 \
                     or not (params['save_spec_data'] or
                             feeds_to_plot['ongoing'] or
-                            feeds_to_plot['pois'] or feeds_to_plot['tonic']):
+                            feeds_to_plot['pois']):
                 continue
 
             # go ahead and plot figure
