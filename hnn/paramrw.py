@@ -298,6 +298,7 @@ def write_gids_param(fparam, gid_list):
                 f.write('[]')
             f.write('\n')
 
+
 def hnn_core_compat_params(params):
     boolean_params = ['sync_evinput', 'record_vsoma', 'save_spec_data',
                       'save_figs']
