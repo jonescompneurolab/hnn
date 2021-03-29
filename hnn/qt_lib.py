@@ -115,13 +115,12 @@ def setscalegeomcenter(dlg, origw, origh):
 
 
 def scale(val, src, dst):
-    numerator = val - src[0]
-    denominator = float(src[1] - src[0]) * (dst[1] - dst[0]) + dst[0]
+    try:
+        division = (val - src[0]) / float(src[1] - src[0])
+    except ZeroDivisionError:
+        division = 0
 
-    if denominator == 0:
-        return 0
-
-    return numerator / denominator
+    return division * (dst[1] - dst[0]) + dst[0]
 
 
 def lookupresource(fn):
