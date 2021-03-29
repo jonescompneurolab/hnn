@@ -7,6 +7,7 @@ import os
 import numpy as np
 from math import isclose
 from copy import deepcopy
+import re
 
 from PyQt5.QtWidgets import QPushButton, QTabWidget, QWidget, QDialog
 from PyQt5.QtWidgets import QGridLayout, QLabel, QFrame, QSpacerItem
@@ -17,7 +18,7 @@ from PyQt5.QtCore import Qt
 
 from .qt_lib import QRangeSlider, MyLineEdit, ClickLabel, setscalegeom
 from .qt_lib import lookupresource
-from .paramrw import countEvokedInputs
+from .paramrw import _get_ordered_param_inputs
 
 decay_multiplier = 1.6
 
@@ -188,23 +189,7 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
     return chunk_list
 
 
-def _get_param_inputs(params):
-    import re
-    input_list = []
-
-    # first pass through all params to get mu and sigma for each
-    for k in params.keys():
-        input_mu = re.match('^t_ev(prox|dist)_([0-9]+)', k)
-        if input_mu:
-            id_str = 'ev' + input_mu.group(1) + '_' + input_mu.group(2)
-            input_list.append(id_str)
-
-    return input_list
-
-
 def _trans_input(input_var):
-    import re
-
     input_str = input_var
     input_match = re.match('^ev(prox|dist)_([0-9]+)', input_var)
     if input_match:
@@ -423,18 +408,12 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
             # remove all inputs, just modify existing inputs.
             self.removeAllInputs()  # turn off any previously set inputs
 
-            nprox, ndist = countEvokedInputs(din)
-            for i in range(nprox+ndist):
-                if i % 2 == 0:
-                    if self.nprox < nprox:
-                        self.addProx()
-                    elif self.ndist < ndist:
-                        self.addDist()
-                else:
-                    if self.ndist < ndist:
-                        self.addDist()
-                    elif self.nprox < nprox:
-                        self.addProx()
+            input_list = _get_ordered_param_inputs(din)
+            for evinput in input_list:
+                if 'evprox_' in evinput:
+                    self.addProx()
+                elif 'evdist_' in evinput:
+                    self.addDist()
 
         for k, v in din.items():
             if k == 'sync_evinput':
@@ -921,8 +900,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         self.addGridToTab(ddist, tab)
 
     def changeParamEnabledStatus(self, label, toEnable):
-        import re
-
         label_match = re.search('(evprox|evdist)_([0-9]+)', label)
         if label_match:
             my_input_name = label_match.group(1) + '_' + label_match.group(2)
@@ -951,8 +928,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                     ranges[label]['enabled'] = toEnable
 
     def updateRange(self, label, save_slider=True):
-        import re
-
         max_width = 0
 
         label_match = re.search('(evprox|evdist)_([0-9]+)', label)
@@ -1449,8 +1424,6 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 self.dqdiff_label[label].setText(text)
 
     def updateRangeFromSlider(self, label, range_min, range_max):
-        import re
-
         label_match = re.search('(evprox|evdist)_([0-9]+)', label)
         if label_match:
             tab_name = label_match.group(1) + '_' + label_match.group(2)
@@ -1491,7 +1464,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.dtab_idx = {}
             self.dtab_names = {}
 
-            for evinput in _get_param_inputs(din):
+            input_list = _get_ordered_param_inputs(din)
+            for evinput in input_list:
                 if 'evprox_' in evinput:
                     self.addProx()
                 elif 'evdist_' in evinput:

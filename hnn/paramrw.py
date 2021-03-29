@@ -6,6 +6,7 @@
 
 import os
 import numpy as np
+import re
 
 
 def get_output_dir():
@@ -114,12 +115,14 @@ def usingOngoingInputs(params, lty=['_prox', '_dist']):
 
     return False
 
-# return number of evoked inputs (proximal, distal)
-# using dictionary d (or if d is a string, first load the dictionary from
-#                     filename d)
-
 
 def countEvokedInputs(params):
+    """Return number of evoked inputs (proximal, distal)
+
+    using dictionary d (or if d is a string, first load the dictionary from
+    filename d)
+    """
+
     nprox = ndist = 0
     if params is not None:
         for k, v in params.items():
@@ -130,10 +133,27 @@ def countEvokedInputs(params):
                     ndist += 1
     return nprox, ndist
 
-# check if using any evoked inputs
+
+def _get_ordered_param_inputs(params):
+    times_dict = {}
+    input_list = []
+
+    # first pass through all params to get mu and sigma for each
+    for k in params.keys():
+        input_mu = re.match('^t_ev(prox|dist)_([0-9]+)', k)
+        if input_mu is not None:
+            id_str = 'ev' + input_mu.group(1) + '_' + input_mu.group(2)
+            times_dict[id_str] = float(params[k])
+
+    sorted_inputs = dict(sorted(times_dict.items(), key=lambda item: item[1]))
+    for input_str in sorted_inputs.keys():
+        input_list.append(input_str)
+
+    return input_list
 
 
 def usingEvokedInputs(params, lsuffty=['_evprox_', '_evdist_']):
+    """check if using any evoked inputs"""
     nprox, ndist = countEvokedInputs(params)
     if nprox == 0 and ndist == 0:
         return False
