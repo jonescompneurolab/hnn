@@ -231,7 +231,7 @@ class SimData(object):
 
     def __init__(self):
         self._sim_data = {}
-        self._opt_data = {}
+        self._opt_data = {'initial_dpl': None, 'initial_error': 1e9}
         self._exp_data = {}
         self._data_dir = os.path.join(get_output_dir(), 'data')
 
@@ -448,8 +448,7 @@ class SimData(object):
         return lerr, errtot
 
     def clear_opt_data(self):
-        self._initial_opt = {}
-        self._opt_data = {}
+        self._opt_data = {'initial_dpl': None, 'initial_error': 1e9}
 
     def in_sim_data(self, paramfn):
         if paramfn in self._sim_data:
@@ -459,7 +458,9 @@ class SimData(object):
     def update_opt_data(self, paramfn, params, avg_dpl, dpls=None,
                         spikes=None, gid_ranges=None, spec=None,
                         vsoma=None):
-        self._opt_data = {'paramfn': paramfn,
+        self._opt_data = {'initial_dpl': self._opt_data['initial_dpl'],
+                          'initial_error': self._opt_data['initial_error'],
+                          'paramfn': paramfn,
                           'params': params,
                           'data': {'dpls': None,
                                    'avg_dpl': avg_dpl,
@@ -512,7 +513,9 @@ class SimData(object):
 
         sim_params = self._sim_data[paramfn]['params']
         single_sim = self._sim_data[paramfn]['data']
-        self._opt_data = {'paramfn': paramfn,
+        self._opt_data = {'initial_dpl': self._opt_data['initial_dpl'],
+                          'initial_error': self._opt_data['initial_error'],
+                          'paramfn': paramfn,
                           'params': deepcopy(sim_params),
                           'data': {'dpls': deepcopy(single_sim['dpls']),
                                    'avg_dpl': deepcopy(single_sim['avg_dpl']),
@@ -748,7 +751,7 @@ class SimData(object):
                 yl[0] = min(yl[0], dpl.data['agg'].min())
                 yl[1] = max(yl[1], dpl.data['agg'].max())
         else:
-            if 'avg_dpl' not in self._opt_data or \
+            if 'avg_dpl' not in self._opt_data['data'] or \
                     'initial_dpl' not in self._opt_data:
                 # if there was an exception running optimization
                 # still plot average dipole from sim
@@ -757,9 +760,9 @@ class SimData(object):
                 yl[0] = min(yl[0], dpl.data['agg'].min())
                 yl[1] = max(yl[1], dpl.data['agg'].max())
             else:
-                if self._opt_data['avg_dpl'] is not None:
+                if self._opt_data['data']['avg_dpl'] is not None:
                     # show optimized dipole as gray line
-                    optdpl = self._opt_data['avg_dpl']
+                    optdpl = self._opt_data['data']['avg_dpl']
                     ax.plot(optdpl.times, optdpl.data['agg'], 'k',
                             color='gray', linewidth=linewidth + 1)
                     yl[0] = min(yl[0], optdpl.data['agg'].min())
