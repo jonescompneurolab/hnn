@@ -10,7 +10,6 @@ import os
 import multiprocessing
 import numpy as np
 import traceback
-from collections import namedtuple
 from copy import deepcopy
 from psutil import cpu_count
 
@@ -36,7 +35,7 @@ from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdata import SimData
 from .qt_sim import SIMCanvas
-from .qt_thread import SimThread, OptThread
+from .qt_thread import SimThread, OptThread, _add_missing_frames
 from .qt_lib import (getmplDPI, getscreengeom, lookupresource,
                      setscalegeomcenter)
 from .specfn import spec_dpl_kernel, save_spec_data
@@ -83,18 +82,6 @@ def getPyComm():
     if isWindows():
         return 'python'
     return 'python3'
-
-
-def _add_missing_frames(tb):
-    fake_tb = namedtuple(
-        'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
-    )
-    result = fake_tb(tb.tb_frame, tb.tb_lasti, tb.tb_lineno, tb.tb_next)
-    frame = tb.tb_frame.f_back
-    while frame:
-        result = fake_tb(frame, frame.f_lasti, frame.f_lineno, result)
-        frame = frame.f_back
-    return result
 
 
 def bringwintobot(win):
@@ -966,9 +953,7 @@ class HNNGUI(QMainWindow):
             print('Terminating simulation. . .')
             self.statusBar().showMessage('Terminating sim. . .')
             self.runningsim = False
-            self.runthread.stop()  # killed = True # terminate()
-            self.runthread.wait(1000)
-            self.runthread.terminate()
+            self.runthread.stop()
             self.btnsim.setText("Run Simulation")
             self.qbtn.setEnabled(True)
             self.statusBar().showMessage('')
