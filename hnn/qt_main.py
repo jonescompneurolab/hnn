@@ -31,6 +31,7 @@ from hnn_core.dipole import average_dipoles
 from .qt_dialog import (BaseParamDialog, EvokedOrRhythmicDialog,
                         WaitSimDialog, HelpDialog, SchematicDialog,
                         bringwintotop)
+from .qt_evoked import OptEvokedInputParamDialog
 from .paramrw import (usingOngoingInputs, get_output_dir,
                       write_gids_param, get_fname)
 from .simdata import SimData
@@ -291,6 +292,9 @@ class HNNGUI(QMainWindow):
         """show set parameters dialog window"""
         if self.baseparamwin:
             for win in self.baseparamwin.lsubwin:
+                if isinstance(win, OptEvokedInputParamDialog):
+                    # skip hiding optimization window
+                    continue
                 bringwintobot(win)
             bringwintotop(self.baseparamwin)
 
