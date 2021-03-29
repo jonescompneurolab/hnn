@@ -33,7 +33,7 @@ class SIMCanvas(FigureCanvasQTAgg):
         self.lextdatobj = []  # external data object
         self.clridx = 5  # index for next color for drawing external data
         self.errtot = None
-        self.lerr = []
+        self.error_list = []
 
         # legend for dipole signals
         self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
@@ -213,8 +213,8 @@ class SIMCanvas(FigureCanvasQTAgg):
         if self._has_simdata():  # has the simulation been run yet?
             tstop = self.params['tstop']
             # recalculate/save the error
-            self.lerr, self.errtot = self.sim_data.calcerr(self.paramfn,
-                                                           tstop)
+            self.error_list, self.errtot = self.sim_data.calcerr(self.paramfn,
+                                                                 tstop)
 
         if self.axdipole is None:
             self.axdipole = self.figure.add_subplot(self.G[0:-1, 0])
@@ -228,9 +228,23 @@ class SIMCanvas(FigureCanvasQTAgg):
         csm = plt.cm.ScalarMappable(cmap=cmap)
         csm.set_clim((0, 100))
 
-        self.clearlextdatobj()  # clear annotation objects
+        # clear annotation objects
+        self.clearlextdatobj()
 
-        ddx = 0
+        # add legend items
+        if self.is_optimization:
+            self.lpatch.append(mpatches.Patch(color='grey',
+                                              label='Optimization'))
+            self.lpatch.append(mpatches.Patch(color='black', label='Initial'))
+        elif self._has_simdata():
+            self.lpatch.append(mpatches.Patch(color='black',
+                                              label='Simulation'))
+        if hasattr(self, 'annot_avg'):
+            self.annot_avg.set_visible(False)
+            del self.annot_avg
+
+        # add dipole plots of external data
+        err_list_index = 0
         for fn, dat in self.sim_data._exp_data.items():
             shp = dat.shape
             clr = csm.to_rgba(self.getnextcolor())
@@ -241,23 +255,25 @@ class SIMCanvas(FigureCanvasQTAgg):
             xl = ((min(xl[0], min(dat[:, 0]))), (max(xl[1], max(dat[:, 0]))))
             yl = ((min(yl[0], min(dat[:, c]))), (max(yl[1], max(dat[:, c]))))
             fx = int(shp[0] * float(c) / shp[1])
-            if self.lerr:
+            if self.error_list:
                 tx, ty = dat[fx, 0], dat[fx, c]
-                txt = 'RMSE: %.2f' % round(self.lerr[ddx], 2)
+                txt = 'RMSE: %.2f' % round(self.error_list[err_list_index], 2)
                 if not self.is_optimization:
                     self.axdipole.annotate(txt, xy=(dat[0, 0], dat[0, c]),
                                            xytext=(tx, ty), color=clr,
                                            fontweight='bold')
             label = fn.split(os.path.sep)[-1].split('.txt')[0]
             self.lpatch.append(mpatches.Patch(color=clr, label=label))
-            ddx += 1
+            err_list_index += 1
 
+        # update limits based on external data
         self.axdipole.set_xlim(xl)
         self.axdipole.set_ylim(yl)
 
         if len(self.lpatch) > 0:
             self.axdipole.legend(handles=self.lpatch, loc=2)
 
+        # add RMSE labels
         if self.errtot is not None:
             textcoords = 'axes fraction'
             clr = 'black'
@@ -300,17 +316,6 @@ class SIMCanvas(FigureCanvasQTAgg):
         self.lextdatobj = []  # reset list of external data objects
         self.lpatch = []  # reset legend
         self.clridx = 5  # reset index for next color for drawing ext data
-
-        if self.is_optimization:
-            self.lpatch.append(mpatches.Patch(color='grey',
-                                              label='Optimization'))
-            self.lpatch.append(mpatches.Patch(color='black', label='Initial'))
-        elif self._has_simdata():
-            self.lpatch.append(mpatches.Patch(color='black',
-                                              label='Simulation'))
-        if hasattr(self, 'annot_avg'):
-            self.annot_avg.set_visible(False)
-            del self.annot_avg
 
     def plotsimdat(self):
         """plot the simulation data"""
@@ -410,6 +415,7 @@ class SIMCanvas(FigureCanvasQTAgg):
             # no dipole or spec data to plot
             return
 
+        # plot the dipoles
         self.sim_data.plot_dipole(self.paramfn, self.axdipole,
                                   self.parent.linewidth,
                                   dipole_scalefctr, N_pyr_x, N_pyr_y,
