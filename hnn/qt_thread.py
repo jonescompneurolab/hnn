@@ -72,38 +72,56 @@ class ResultObj(QtCore.QObject):
         self.params = params
 
 
-def _kill_list_of_procs(procs):
-    """tries to terminate processes in a list before sending kill signal"""
+def _kill_list_of_procs(process_list):
+    """Try killing processes
+
+    Parameters
+    ----------
+    process_list : list of psutil.Process objects
+        List containing processes to terminate
+
+    Returns
+    ----------
+    alive: list of psutil.Process objects
+        List containing processes that are still alive
+    """
+
     # try terminate first
-    for p in procs:
+    for p in process_list:
         try:
             p.terminate()
         except NoSuchProcess:
             pass
-    _, alive = wait_procs(procs, timeout=3)
+    _, alive = wait_procs(process_list, timeout=3)
 
     # now try kill
     for p in alive:
         p.kill()
-    _, alive = wait_procs(procs, timeout=3)
+    _, alive = wait_procs(process_list, timeout=3)
 
     return alive
 
 
 def _get_nrniv_procs_running():
-    """return a list of nrniv processes running"""
-    ls = []
+    """return a list of nrniv processes running
+
+    Returns
+    ----------
+    process_list : list of psutil.Process objects
+        List containing processes matching name 'nrniv'
+    """
+    process_list = []
     name = 'nrniv'
     for p in process_iter(attrs=["name", "exe", "cmdline"]):
         if name == p.info['name'] or \
                 p.info['exe'] and os.path.basename(p.info['exe']) == name or \
                 p.info['cmdline'] and p.info['cmdline'][0] == name:
-            ls.append(p)
-    return ls
+            process_list.append(p)
+    return process_list
 
 
 def _kill_and_check_nrniv_procs():
-    """handle killing any stale nrniv processess"""
+    """Kill all running processes named nrniv"""
     procs = _get_nrniv_procs_running()
     if len(procs) > 0:
         running = _kill_list_of_procs(procs)
@@ -162,8 +180,6 @@ class SimThread(QtCore.QThread):
         Dictionary of params describing simulation config
     result_callback: function
         Handle to for callback to call after every sim completion
-    waitsimwin : WaitSimDialog
-        Handle to the Qt dialog during a simulation
     mainwin : HNNGUI
         Handle to the main application window
 
@@ -175,10 +191,25 @@ class SimThread(QtCore.QThread):
         Dictionary of params describing simulation config
     mainwin : HNNGUI
         Handle to the main application window
-    opt : bool
+    is_optimization : bool
         Whether this simulation thread is running an optimization
+    baseparamwin : BaseParamDialog
+        Handle to BaseParamDialog
     killed : bool
-        Whether this simulation was forcefully terminated
+        Whether this simulation was forcefully terminated. Will not continue
+        relaunching simulations if True
+    paramfn : str
+        The parameter file name (full path) to simulate
+    result_signal : ObjectSignal object
+        Signal to be emitted at the end of every simulation for updating
+        sim_data in main thread
+    msg_signal : TextSignal object
+        Signal to be emitted for updating the simulations status dialog box
+    param_signal : ParamSignal object
+        Signal to be emitted for updating the params in the GUI
+    done_signal : TextSignal object
+        Signal to be emitted at completion of a simulation. Not emitted for
+        when running an optimization simulation.
     """
 
     def __init__(self, ncore, params, result_callback, mainwin):
@@ -188,15 +219,16 @@ class SimThread(QtCore.QThread):
         self.mainwin = mainwin
         self.is_optimization = self.mainwin.is_optimization
         self.baseparamwin = self.mainwin.baseparamwin
-        self.result_signal = ObjectSignal()
-        self.result_signal.sig.connect(result_callback)
         self.killed = False
 
         self.paramfn = os.path.join(get_output_dir(), 'param',
                                     self.params['sim_prefix'] + '.param')
 
-        self.txtComm = TextSignal()
-        self.txtComm.tsig.connect(self.mainwin.waitsimwin.updatetxt)
+        self.result_signal = ObjectSignal()
+        self.result_signal.sig.connect(result_callback)
+
+        self.msg_signal = TextSignal()
+        self.msg_signal.tsig.connect(self.mainwin.waitsimwin.updatetxt)
 
         self.param_signal = ParamSignal()
         self.param_signal.psig.connect(self.baseparamwin.updateDispParam)
@@ -206,10 +238,10 @@ class SimThread(QtCore.QThread):
 
     def _updatewaitsimwin(self, txt):
         """Used to write messages to simulation window"""
-        self.txtComm.tsig.emit(txt)
+        self.msg_signal.tsig.emit(txt)
 
     class _log_sim_status(object):
-        """Replaces sys.stdout.write() to write message to simulation window"""
+        """Replaces sys.stdout.write() to write output to simulation window"""
         def __init__(self, parent):
             self.out = sys.stdout
             self.parent = parent
@@ -229,7 +261,14 @@ class SimThread(QtCore.QThread):
         self.killed = True
 
     def run(self, sim_length=None):
-        """Start simulation"""
+        """Start simulation
+
+        Parameters
+        ----------
+        sim_length : float | None
+            Optional to limit the stopping point of the simulation. If None,
+            the entire simulation length will be run until 'tstop'
+        """
 
         msg = ''
         banner = not self.is_optimization
@@ -298,38 +337,110 @@ class OptThread(SimThread):
         Number of cores to run this simulation over
     params : dict
         Dictionary of params describing simulation config
-    waitsimwin : WaitSimDialog
-        Handle to the Qt dialog during a simulation
+    num_steps : int
+        Total number of steps in optimization process
+    seed : seed for optimization set in the GUI. The parameter for this is
+        'prng_seedcore_opt', but it is not read from the parameter file by
+        hnn-core
+    sim_data : SimData object
+        Reference to the class containing simulation data. Only used for
+        references to functions for emitting signals. The one exception is
+        using the SimData.in_sim_data member function
     result_callback: function
         Handle to for callback to call after every sim completion
     mainwin : HNNGUI
         Handle to the main application window
+    opt_callback : function
+        Handle for callback after optimization is complete
 
-    Attributes
+    Attributes (unique from SimThread)
     ----------
-    ncore : int
-        Number of cores to run this simulation over
-    params : dict
-        Dictionary of params describing simulation config
-    mainwin : HNNGUI instance
-        Handle to the main application window
-    baseparamwin: BaseParamDialog instance
-        Handle to base parameters dialog
+    optparamwin : OptEvokedInputParamDialog
+        Handle to the optimization configuration dialog box
+    cur_itr : int
+        Current iteration/simulation of the current step
+    cur_step : int
+        Stores the current optimization step in progress
+    num_steps : int
+        Total number of steps in optimization process
+    num_params : int
+        Number of parameters to be optimized in every step
+    step_ranges : dict
+        Parameter ranges for this step
+    step_sims : int
+        Number of sim in this step
+    sim_data : SimData object
+        Reference to the class containing simulation data. Only used for
+        references to functions for emitting signals. The one exception is
+        using the SimData.in_sim_data member function
+    result_callback: function
+        Handle for callback to call after every sim completion
+    seed : seed for optimization set in the GUI. The parameter for this is
+        'prng_seedcore_opt', but it is not read from the parameter file by
+        hnn-core
+    best_step_werr : float
+        The current best weighted RMSE for this step
+    initial_err : float
+        The regular RMSE for initial simulation
     paramfn : str
-        Full pathname of the written parameter file name
+        The parameter file name (full path) to simulate
+    sim_thread : SimThread object
+        The thread running a simulation. Used for running optimization
+        iterations and initial or final simulations, if necessary.
+    sim_running : bool
+        Whether a current simulation is running at sim_thread handle
+    opt_start : float
+        Time in ms to begin optimization over the dipole waveform in this
+        step. Used for weighted RMSE calculation, but not for running
+        simulations (first part of simulation may be ignored)
+    opt_end : float
+        Time is ms to stop
+    opt : nlopt.opt object
+    opt_weights : np.ndarray
+        Array containing the weights used for RMSE calculation for this step
+    killed : bool
+        Whether this simulation was forcefully terminated. Will not continue
+        relaunching simulations if True
+    done_signal : TextSignal object
+        Signal to be emitted at completion of optimization. Connected to
+        opt_callback param to this function
+    refresh_signal : BasicSignal object
+        Signal to be emitted for refreshing the plots in the main GUI
+    update_sim_data_from_opt_data : EventSignal object
+        Signal to be emitted for updating sim_data[paramfn] with the
+        contents of opt_data
+    update_opt_data_from_sim_data : EventSignal object
+        Signal to be emitted for updating opt_data with the
+        contents of sim_data[paramfn]
+    update_initial_opt_data_from_sim_data : EventSignal object
+        Signal to be emitted for updating opt_data with initial dipole
+        and initial error using the contents of sim_data[paramfn]
+    get_err_from_sim_data : QueueSignal object
+        Signal to be emitted to request the regular RMSE be put in the queue
+    get_werr_from_sim_data : QueueDataSignal object
+        Signal to be emitted to request the weighted RMSE be put in the queue
     """
     def __init__(self, ncore, params, num_steps, seed, sim_data,
                  result_callback, opt_callback, mainwin):
         super().__init__(ncore, params, result_callback, mainwin)
-        self.waitsimwin = self.mainwin.waitsimwin
         self.optparamwin = self.baseparamwin.optparamwin
         self.cur_itr = 0
+        self.cur_step = 0
         self.num_steps = num_steps
+        self.num_params = 0
+        self.step_ranges = {}
+        self.step_sims = 0
         self.sim_data = sim_data
         self.result_callback = result_callback
         self.seed = seed
         self.best_step_werr = 1e9
+        self.initial_err = 1e9
+        self.sim_thread = None
         self.sim_running = False
+        self.opt_start = 0.0
+        self.opt_end = 0.0
+        self.opt = None
+        self.opt_weights = None
         self.killed = False
 
         self.done_signal.tsig.connect(opt_callback)
@@ -375,15 +486,16 @@ class OptThread(SimThread):
     def _run(self):
         # initialize RNG with seed from config
         nlopt.srand(self.seed)
-        self.get_initial_data()
+        self._get_initial_data()
 
         for step in range(self.num_steps):
             self.cur_step = step
+            self.cur_itr = 0
 
             # disable range sliders for each step once that step has begun
-            self.optparamwin.toggle_enable_user_fields(step, enable=False)
+            self.optparamwin.toggle_enable_user_fields(self.cur_step,
+                                                       enable=False)
 
-            self.step_ranges = self.optparamwin.get_chunk_ranges(step)
             self.step_sims = self.optparamwin.get_sims_for_chunk(step)
 
             if self.step_sims == 0:
@@ -392,6 +504,7 @@ class OptThread(SimThread):
                 self._updatewaitsimwin(txt)
                 continue
 
+            self.step_ranges = self.optparamwin.get_chunk_ranges(step)
             if len(self.step_ranges) == 0:
                 txt = "Skipping optimization step %d (0 parameters)" % \
                     (step + 1)
@@ -403,9 +516,25 @@ class OptThread(SimThread):
             self._updatewaitsimwin(txt)
             print(txt)
 
-            opt_results = self.run_opt_step()
+            self.opt_start = self.optparamwin.get_chunk_start(self.cur_step)
+            self.opt_end = self.optparamwin.get_chunk_end(self.cur_step)
+            txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
+                                                        self.opt_end)
+            self._updatewaitsimwin(txt)
+            print(txt)
 
-            # update with optimzed params for the next round
+            # weights calculated once per step
+            self.opt_weights = \
+                self.optparamwin.get_chunk_weights(self.cur_step)
+
+            # run an opt step
+            algorithm = nlopt.LN_COBYLA
+            self.num_params = len(self.step_ranges)
+            self.opt = nlopt.opt(algorithm, self.num_params)
+            opt_results = self._run_opt_step(self.step_ranges, self.step_sims,
+                                             algorithm)
+
+            # update with optimized params for the next round
             for var_name, new_value in zip(self.step_ranges, opt_results):
                 old_value = self.step_ranges[var_name]['initial']
 
@@ -467,30 +596,16 @@ class OptThread(SimThread):
                 raise RuntimeError("Failed to run final simulation. "
                                    "See previous traceback.")
 
-    def run_opt_step(self):
-        self.cur_itr = 0
-        self.opt_start = self.optparamwin.get_chunk_start(self.cur_step)
-        self.opt_end = self.optparamwin.get_chunk_end(self.cur_step)
-        txt = 'Optimizing from [%3.3f-%3.3f] ms' % (self.opt_start,
-                                                    self.opt_end)
-        self._updatewaitsimwin(txt)
-        print(txt)
+    def _get_initial_data(self):
+        """Run an initial simulation if necessary"""
 
-        # weights calculated once per step
-        self.opt_weights = \
-            self.optparamwin.get_chunk_weights(self.cur_step)
-
-        # run an opt step
-        algorithm = nlopt.LN_COBYLA
-        self.num_params = len(self.step_ranges)
-        self.opt = nlopt.opt(algorithm, self.num_params)
-        opt_results = self.optimize(self.step_ranges, self.step_sims,
-                                    algorithm)
-
-        return opt_results
-
-    def get_initial_data(self):
         # Has this simulation been run before (is there data?)
+        # Note, we are not sending a signal here because synchronization is
+        # not necessary. The reference to self.sim_data was passed in at
+        # OptThread creation and we are checking here whether there was data
+        # for this paramfn at that time. In other words,
+        # sim_data[self.paramfn] has not been updated since creation of this
+        # OptThread
         if not self.sim_data.in_sim_data(self.paramfn):
             # run a full length simulation
             txt = "Running a simulation with initial parameter set before" + \
@@ -531,7 +646,11 @@ class OptThread(SimThread):
                                              self.params['tstop'])
         self.initial_err = err_queue.get()
 
-    def opt_sim(self, new_params, grad=0):
+    def _opt_sim(self, new_params, grad=0):
+        """Run a SimThread simulation and calculate weighted RMSE
+
+        Called by nlopt.opt routine
+        """
         txt = "Optimization step %d, simulation %d" % (self.cur_step + 1,
                                                        self.cur_itr + 1)
         self._updatewaitsimwin(txt)
@@ -622,7 +741,8 @@ class OptThread(SimThread):
 
         return werr
 
-    def optimize(self, params_input, num_sims, algorithm):
+    def _run_opt_step(self, params_input, num_sims, algorithm):
+        """Core function for starting the nlopt optimization routine"""
         opt_params = []
         lb = []
         ub = []
@@ -646,8 +766,8 @@ class OptThread(SimThread):
         self.opt.set_lower_bounds(lb)
         self.opt.set_upper_bounds(ub)
 
-        # minimize the wRMSE returned by self.opt_sim
-        self.opt.set_min_objective(self.opt_sim)
+        # minimize the wRMSE returned by self._opt_sim
+        self.opt.set_min_objective(self._opt_sim)
         self.opt.set_xtol_rel(1e-4)
         self.opt.set_maxeval(num_sims)
 
