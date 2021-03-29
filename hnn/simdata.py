@@ -566,15 +566,31 @@ class SimData(object):
         times = np.linspace(xmin, xmax, num_step)
 
         for trial_idx in range(ntrial):
+            single_sim = self._sim_data[paramfn]['data']
+
+            # get inputs from spike file
+            gid_ranges = single_sim['gid_ranges']
+            spikes = single_sim['spikes'][trial_idx]
+            extinputs = ExtInputs(spikes, gid_ranges, [trial_idx], params)
+            feeds_to_plot = check_feeds_to_plot(extinputs.inputs, params)
+
+            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
+            if dpl is None:
+                continue
+
+            # whether to draw the specgram - should draw if user saved
+            # it or have ongoing, poisson, or tonic inputs
+            if single_sim['spec'] is None \
+                    or len(single_sim['spec']) == 0 \
+                    or not (params['save_spec_data'] or
+                            feeds_to_plot['ongoing'] or
+                            feeds_to_plot['pois']):
+                continue
+
+            # go ahead and plot figure
             f = plt.figure(figsize=(8, 8))
             font_prop = {'size': 8}
             mpl.rc('font', **font_prop)
-
-            # get inputs from spike file
-            gid_ranges = self._sim_data[paramfn]['data']['gid_ranges']
-            spikes = self._sim_data[paramfn]['data']['spikes'][trial_idx]
-            extinputs = ExtInputs(spikes, gid_ranges, [trial_idx], params)
-            feeds_to_plot = check_feeds_to_plot(extinputs.inputs, params)
 
             if feeds_to_plot['ongoing'] or feeds_to_plot['evoked'] or \
                     feeds_to_plot['pois']:
@@ -606,9 +622,6 @@ class SimData(object):
             # xlim_new = axspec.get_xlim()
 
             # dipole
-            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
-            if dpl is None:
-                break
             dpl.plot(layer='agg', ax=axdipole, show=False)
             axdipole.set_xlim(xlim)
 
@@ -628,6 +641,11 @@ class SimData(object):
         times = np.linspace(xmin, xmax, num_step)
 
         for trial_idx in range(ntrial):
+            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
+            if dpl is None:
+                continue
+
+            # go ahead and plot figure
             f = plt.figure(figsize=(12, 6))
             font_prop = {'size': 8}
             mpl.rc('font', **font_prop)
@@ -652,9 +670,6 @@ class SimData(object):
             axdipole = f.add_subplot(gs0[:, :])
 
             # dipole
-            dpl = self._read_dpl(paramfn, trial_idx, ntrial)
-            if dpl is None:
-                break
             dpl.plot(layer='agg', ax=axdipole, show=False)
             axdipole.set_xlim(xlim)
 

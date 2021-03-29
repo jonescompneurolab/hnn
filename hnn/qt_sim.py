@@ -370,7 +370,7 @@ class SIMCanvas(FigureCanvasQTAgg):
                         and len(single_sim['spec']) > 0 \
                         and (self.params['save_spec_data'] or
                              feeds_to_plot['ongoing'] or
-                             feeds_to_plot['pois'] or feeds_to_plot['tonic']):
+                             feeds_to_plot['pois']):
                     DrawSpec = True
 
                     first_spec_trial = single_sim['spec'][0]
