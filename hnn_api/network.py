@@ -110,7 +110,7 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
     seeds = range(n_trials)
 
     params = specs.ODict()
-    params[('hnn_params','prng_seedcore')] = list(seeds)
+    params[('hnn_params', 'prng_seedcore')] = list(seeds)
  
     b = Batch(params=params, 
              cfgFile=model_folder+'/cfg.py', 
@@ -151,7 +151,7 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
 
 
 
-def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_read=False):
+def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=True, only_read=False, runCfg=None):
 
     from netpyne import sim
     from netpyne.batch import Batch
@@ -166,6 +166,9 @@ def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_re
     # setup and run netpyne batch with different seeds
 
     params = specs.ODict(params_explore)
+
+    seeds = range(n_trials)
+    params[('hnn_params', 'prng_seedcore')] = list(seeds)
  
     b = Batch(params=params, 
              cfgFile=model_folder+'/cfg.py', 
@@ -175,10 +178,13 @@ def explore_params(cfg_params, params_explore, n_cores=1, postproc=True, only_re
     b.batchLabel = 'explore'
     b.saveFolder = model_folder+'/data/'+b.batchLabel
     b.method = 'grid'
-    b.runCfg = {'type': 'mpi_direct', 
-                'script': model_folder+'/init.py',
-                'cores': n_cores, 
-                'skip': False}
+    if runCfg:
+        b.runCfg = runCfg
+    else:
+        b.runCfg = {'type': 'mpi_direct', 
+                    'script': model_folder+'/init.py',
+                    'cores': n_cores, 
+                    'skip': False}
 
     if not only_read:
         b.run() 
