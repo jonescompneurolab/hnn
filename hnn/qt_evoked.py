@@ -43,7 +43,8 @@ def _consolidate_chunks(input_dict):
                       }
 
         if (len(consolidated_chunks) > 0) and \
-                (input_dict['chunk_start'] <= consolidated_chunks[-1]['chunk_end']):
+                (input_dict['chunk_start'] <=
+                 consolidated_chunks[-1]['chunk_end']):
             # update previous chunk
             consolidated_chunks[-1]['inputs'].extend(input_dict['inputs'])
             consolidated_chunks[-1]['chunk_end'] = input_dict['chunk_end']
@@ -51,7 +52,8 @@ def _consolidate_chunks(input_dict):
                 consolidated_chunks[-1]['opt_end'], input_dict['opt_end'])
             # average the weights
             consolidated_chunks[-1]['weights'] = (
-                consolidated_chunks[-1]['weights'] + one_input[1]['weights'])/2
+                consolidated_chunks[-1]['weights'] +
+                one_input[1]['weights']) / 2
         else:
             # new chunk
             consolidated_chunks.append(input_dict)
@@ -127,9 +129,10 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
            opt_params[input_name]['user_end'] < 0:
             # can't optimize over this input
             continue
-        input_dict[input_name] = {'weights': cdfs[input_name].copy(),
-                                  'user_start': opt_params[input_name]['user_start'],
-                                  'user_end': opt_params[input_name]['user_end']}
+        input_dict[input_name] = \
+            {'weights': cdfs[input_name].copy(),
+             'user_start': opt_params[input_name]['user_start'],
+             'user_end': opt_params[input_name]['user_end']}
 
         for other_input in opt_params:
             if opt_params[other_input]['user_start'] > sim_tstop or \
@@ -144,9 +147,10 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
                 # check ordering to only use inputs after us
                 continue
             else:
-                decay_factor = opt_params[input_name]['decay_multiplier']*(opt_params[other_input]['mean'] -
-                                                                           opt_params[input_name]['mean']) / \
-                    sim_tstop
+                decay_factor = \
+                        (opt_params[input_name]['decay_multiplier'] *
+                         (opt_params[other_input]['mean'] -
+                          opt_params[input_name]['mean'])) / sim_tstop
                 input_dict[input_name]['weights'] -= cdfs[other_input] * \
                     decay_factor
 
@@ -162,8 +166,10 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
             input_dict[input_name]['opt_end'] = max(
                 opt_params[input_name]['user_end'], times[good_indices][-1])
         else:
-            input_dict[input_name]['opt_start'] = opt_params[other_input]['user_start']
-            input_dict[input_name]['opt_end'] = opt_params[other_input]['user_end']
+            input_dict[input_name]['opt_start'] = \
+                opt_params[other_input]['user_start']
+            input_dict[input_name]['opt_end'] = \
+                opt_params[other_input]['user_end']
 
         # convert to multiples of dt
         input_dict[input_name]['opt_start'] = floor(
@@ -435,8 +441,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
                 try:
                     new_value = bool(int(v))
                 except ValueError:
-                    print("WARN: bad value for param %s: %s. Unable to convert"
-                          " to a boolean value" % (k, v))
+                    print("WARN: bad value for param %s: %s. Unable to"
+                          " convert to a boolean value" % (k, v))
                     continue
                 if new_value:
                     self.chksync.setChecked(True)
@@ -446,8 +452,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
                 try:
                     new_value = float(v)
                 except ValueError:
-                    print("WARN: bad value for param %s: %s. Unable to convert"
-                          " to a floating point number" % (k, v))
+                    print("WARN: bad value for param %s: %s. Unable to"
+                          " convert to a floating point number" % (k, v))
                     continue
                 self.incedit.setText(str(new_value).strip())
             elif k in self.dqline:
@@ -455,8 +461,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
                     try:
                         new_value = int(v)
                     except ValueError:
-                        print("WARN: bad value for param %s: %s. Unable to convert"
-                              " to a integer" % (k, v))
+                        print("WARN: bad value for param %s: %s. Unable to"
+                              " convert to a integer" % (k, v))
                         continue
                     self.dqline[k].setText(str(new_value))
                 else:
@@ -465,7 +471,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
                 (k.count('evprox') > 0 or
                  k.count('evdist') > 0):
                 # NOTE: will be deprecated in future release
-                # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
+                # for back-compat with old-style specification which didn't
+                # have ampa,nmda in evoked gbar
                 lks = k.split('_')
                 eloc = lks[1]
                 enum = lks[2]
@@ -518,7 +525,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
         self.inclabel.setText('Increment start time (ms)')
         self.inclabel.adjustSize()
         self.inclabel.setToolTip(
-            'Increment mean evoked input start time(s) by this amount on each trial.')
+            'Increment mean evoked input start time(s) by this amount on each'
+            ' trial.')
         self.incedit = QLineEdit(self)
         self.incedit.setText('0.0')
         self.incbox.addWidget(self.inclabel)
@@ -604,7 +612,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
             self.makePixLabel(lookupresource('proxfig')))
         # print('index to', len(self.ltabs)-1)
         self.tabs.setCurrentIndex(len(self.ltabs)-1)
-        # print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+        # print('index now', self.tabs.currentIndex(), ' of ',
+        #       self.tabs.count())
         # self.addtips()
 
     def addDist(self):
@@ -617,7 +626,8 @@ class EvokedInputParamDialog (EvokedInputBaseDialog):
             self.makePixLabel(lookupresource('distfig')))
         # print('index to', len(self.ltabs)-1)
         self.tabs.setCurrentIndex(len(self.ltabs)-1)
-        # print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
+        # print('index now', self.tabs.currentIndex(),
+        #       ' of ',self.tabs.count())
         # self.addtips()
 
 
@@ -744,8 +754,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
     def cleanLabels(self):
         """
-        To avoid memory leaks we need to delete all widgets when we recreate grid.
-        Go through all tabs and check for each var name (k)
+        To avoid memory leaks we need to delete all widgets when we recreate
+        grid. Go through all tabs and check for each var name (k)
         """
         for idx in range(len(self.ltabs)):
             for k in self.ld[idx].keys():
@@ -783,8 +793,10 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         # The first row has column headings
         row = 0
         self.ltabkeys[current_tab].append("")
-        for column_index, column_name in enumerate(["Optimize", "Parameter name",
-                                                    "Initial", "Optimized", "Delta"]):
+        for column_index, column_name in enumerate(["Optimize",
+                                                    "Parameter name",
+                                                    "Initial", "Optimized",
+                                                    "Delta"]):
             widget = QLabel(column_name)
             widget.resize(widget.sizeHint())
             tab.layout.addWidget(widget, row, column_index)
@@ -831,7 +843,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
           }
       """)
             self.dqchkbox[k].setChecked(True)
-            # use partial instead of lamda (so args won't be evaluated ahead of time?)
+            # use partial instead of lamda (so args won't be evaluated ahead
+            # of time?)
             self.dqchkbox[k].clicked.connect(
                 partial(self.toggle_enable_param, k))
             self.dqparam_name[k] = QLabel(self)
@@ -842,7 +855,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
             # add widgets to grid
             tab.layout.addWidget(
-                self.dqchkbox[k], row, 0, alignment=Qt.AlignBaseline | Qt.AlignCenter)
+                self.dqchkbox[k], row, 0,
+                alignment=Qt.AlignBaseline | Qt.AlignCenter)
             tab.layout.addWidget(self.dqparam_name[k], row, 1)
             tab.layout.addWidget(
                 self.dqinitial_label[k], row, 2)  # initial value
@@ -913,7 +927,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         if label_match:
             my_input_name = label_match.group(1) + '_' + label_match.group(2)
         else:
-            print("ERR: can't determine input name from parameter: %s" % label)
+            print("ERR: can't determine input name from parameter: %s" %
+                  label)
             return
 
         # decrease the count of num params
@@ -924,14 +939,16 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                         num_params = int(self.lqnumparams[chunk_index].text())
                     except ValueError:
                         print(
-                            "ERR: could not get number of params for step %d" % chunk_index)
+                            "ERR: could not get number of params for step %d"
+                            % chunk_index)
 
                     if toEnable:
                         num_params += 1
                     else:
                         num_params -= 1
                     self.lqnumparams[chunk_index].setText(str(num_params))
-                    self.opt_params[input_name]['ranges'][label]['enabled'] = toEnable
+                    ranges = self.opt_params[input_name]['ranges']
+                    ranges[label]['enabled'] = toEnable
 
     def updateRange(self, label, save_slider=True):
         import re
@@ -942,14 +959,14 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         if label_match:
             tab_name = label_match.group(1) + '_' + label_match.group(2)
         else:
-            print("ERR: can't determine input name from parameter: %s" % label)
+            print("ERR: can't determine input name from parameter: %s" %
+                  label)
             return
 
         if self.dqchkbox[label].isChecked():
             self.opt_params[tab_name]['ranges'][label]['enabled'] = True
         else:
             self.opt_params[tab_name]['ranges'][label]['enabled'] = False
-            return
 
         if tab_name not in self.initial_opt_ranges or \
                 label not in self.initial_opt_ranges[tab_name]:
@@ -1024,13 +1041,13 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         if self.dqrange_label[label].sizeHint().width() > max_width:
             max_width = self.dqrange_label[label].sizeHint().width() + 15
-        # fix the size for the defined range so that changing the slider doesn't change
-        # the dialog's width
+        # fix the size for the defined range so that changing the slider
+        # doesn't change the dialog's width
         self.dqrange_label[label].setMinimumWidth(max_width)
         self.dqrange_label[label].setMaximumWidth(max_width)
 
     def prepareOptimization(self):
-        self.createOptParams()
+        self.updateOptParams()
         self.rebuildOptStepInfo()
         self.updateOptDeltas()
         self.updateOptRanges(save_sliders=True)
@@ -1082,21 +1099,22 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
     def get_chunk_ranges(self, step):
         ranges = {}
         for input_name in self.chunk_list[step]['inputs']:
-            # make sure initial value is between minval or maxval before returning
-            # ranges to the optimization
-            for label in self.opt_params[input_name]['ranges'].keys():
-                if not self.opt_params[input_name]['ranges'][label]['enabled']:
+            # make sure initial value is between minval or maxval before
+            # returning ranges to the optimization
+            ranges = self.opt_params[input_name]['ranges']
+            for label in ranges.keys():
+                if not ranges[label]['enabled']:
                     continue
-                range_min = self.opt_params[input_name]['ranges'][label]['minval']
-                range_max = self.opt_params[input_name]['ranges'][label]['maxval']
-                if range_min > self.opt_params[input_name]['ranges'][label]['initial']:
-                    self.opt_params[input_name]['ranges'][label]['initial'] = range_min
-                if range_max < self.opt_params[input_name]['ranges'][label]['initial']:
-                    self.opt_params[input_name]['ranges'][label]['initial'] = range_max
+                range_min = ranges[label]['minval']
+                range_max = ranges[label]['maxval']
+                if range_min > ranges[label]['initial']:
+                    ranges[label]['initial'] = range_min
+                if range_max < ranges[label]['initial']:
+                    ranges[label]['initial'] = range_max
 
                 # copy the values to the ranges dict to be returned
                 # to optimization
-                ranges[label] = self.opt_params[input_name]['ranges'][label].copy()
+                ranges[label] = ranges[label].copy()
 
         return ranges
 
@@ -1114,10 +1132,10 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         for input_name in self.chunk_list[step]['inputs']:
             for label in self.opt_params[input_name]['ranges'].keys():
-                if not self.opt_params[input_name]['ranges'][label]['enabled']:
-                    continue
-                else:
+                if self.opt_params[input_name]['ranges'][label]['enabled']:
                     num_params += 1
+                else:
+                    continue
 
         return num_params
 
@@ -1125,8 +1143,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         for label, value in ranges.items():
             for tab_name in self.opt_params.keys():
                 if label in self.opt_params[tab_name]['ranges']:
-                    self.opt_params[tab_name]['ranges'][label]['initial'] = float(
-                        value)
+                    self.opt_params[tab_name]['ranges'][label]['initial'] = \
+                        float(value)
 
     def clean_opt_grid(self):
         # This is the top part of the Configure Optimization dialog.
@@ -1179,7 +1197,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 # clean up the old grid sublayout
                 self.clean_opt_grid()
 
-        # keep track of inputs to optimize over (check against self.opt_params later)
+        # keep track of inputs to optimize over (check against
+        # self.opt_params later)
         all_inputs = []
 
         # create a new grid sublayout with a row for each optimization step
@@ -1208,7 +1227,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 # spacer here for readability of input names and reduce size
                 # of "Num simulations:"
                 self.sublayout.addItem(QSpacerItem(
-                    0, 0, hPolicy=QSizePolicy.MinimumExpanding), chunk_index, 2)
+                    0, 0, hPolicy=QSizePolicy.MinimumExpanding), chunk_index,
+                    2)
 
                 qlabel_params = QLabel("Num params:")
                 qlabel_params.setAlignment(Qt.AlignBaseline | Qt.AlignLeft)
@@ -1240,7 +1260,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             else:
                 self.lqinputs[chunk_index].setText(
                     "Inputs: %s" % ', '.join(inputs))
-                self.lqnumparams[chunk_index].setText(str(chunk['num_params']))
+                self.lqnumparams[chunk_index].setText(
+                        str(chunk['num_params']))
 
         self.old_num_steps = len(self.chunk_list)
 
@@ -1262,7 +1283,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             # rebuild dtab_idx and dtab_names
             temp_dtab_names = {}
             temp_dtab_idx = {}
-            for new_tab_index, old_tab_index in enumerate(self.dtab_idx.values()):
+            for new_tab_index, old_tab_index in enumerate(
+                    self.dtab_idx.values()):
                 # self.dtab_idx[id_str] = tab_index
                 id_str = self.dtab_names[old_tab_index]
                 temp_dtab_names[new_tab_index] = id_str
@@ -1275,7 +1297,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             tab_index = self.dtab_idx[input_name]
             tab = self.ltabs[tab_index]
 
-            for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+            # last row is a spacer
+            for row_index in range(2, tab.layout.rowCount() - 1):
                 label = self.ltabkeys[tab_index][row_index]
                 self.dqchkbox[label].setEnabled(enable)
                 self.dqrange_slider[label].setEnabled(enable)
@@ -1298,10 +1321,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         return timing_sigma
 
-    def createOptParams(self):
+    def updateOptParams(self):
         global decay_multiplier
-
-        self.opt_params = {}
 
         # iterate through tabs. data is contained in grid layout
         for tab_index, tab in enumerate(self.ltabs):
@@ -1323,10 +1344,11 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 continue
 
             timing_sigma = self.get_input_timing_sigma(tab_name)
-            self.opt_params[tab_name] = {'ranges': {},
-                                         'mean': value,
-                                         'sigma': timing_sigma,
-                                         'decay_multiplier': decay_multiplier}
+            if tab_name not in self.opt_params:
+                self.opt_params[tab_name] = {'ranges': {}}
+            self.opt_params[tab_name]['mean'] = value
+            self.opt_params[tab_name]['sigma'] = timing_sigma
+            self.opt_params[tab_name]['decay_multiplier'] = decay_multiplier
 
             timing_bound = timing_sigma * range_multiplier
             self.opt_params[tab_name]['user_start'] = max(
@@ -1334,11 +1356,23 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.opt_params[tab_name]['user_end'] = min(
                 self.simlength, value + timing_bound)
 
-            # add an empty dictionary so that rebuildOptStepInfo() can
-            # determine how many parameters
-            for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+            # last row is a spacer
+            for row_index in range(2, tab.layout.rowCount() - 1):
                 label = self.ltabkeys[tab_index][row_index]
-                self.opt_params[tab_name]['ranges'][label] = {'enabled': True}
+                if label not in self.opt_params[tab_name]['ranges']:
+                    # add an empty dictionary so that rebuildOptStepInfo() can
+                    # determine how many parameters
+                    self.opt_params[tab_name]['ranges'][label] = {}
+
+                if 'enabled' not in \
+                        self.opt_params[tab_name]['ranges'][label]:
+                    # set the enable status for the first time
+                    enabled = True
+                    if label.startswith('numspikes'):
+                        enabled = False
+                    self.opt_params[tab_name]['ranges'][label]['enabled'] = \
+                        enabled
+                    self.dqchkbox[label].setChecked(enabled)
 
     def clear_initial_opt_ranges(self):
         self.initial_opt_ranges = {}
@@ -1355,8 +1389,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         for tab_index, tab in enumerate(self.ltabs):
             tab_name = self.dtab_names[tab_index]
 
-            # update the initial value
-            for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+            # update the initial value (last row is a spacer)
+            for row_index in range(2, tab.layout.rowCount()-1):
                 label = self.ltabkeys[tab_index][row_index]
                 value = self.dparams[label]
 
@@ -1421,12 +1455,14 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         if label_match:
             tab_name = label_match.group(1) + '_' + label_match.group(2)
         else:
-            print("ERR: can't determine input name from parameter: %s" % label)
+            print("ERR: can't determine input name from parameter: %s" %
+                  label)
             return
 
         self.dqrange_min[label] = range_min
         self.dqrange_max[label] = range_max
-        self.dqrange_label[label].setText(_format_range_str(range_min) + " - " +
+        self.dqrange_label[label].setText(_format_range_str(range_min) +
+                                          " - " +
                                           _format_range_str(range_max))
         self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
         self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
@@ -1434,8 +1470,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
     def updateOptRanges(self, save_sliders=False):
         # iterate through tabs. data is contained in grid layout
         for tab_index, tab in enumerate(self.ltabs):
-            # now update the ranges
-            for row_index in range(2, tab.layout.rowCount()-1):  # last row is a spacer
+            # now update the ranges (last row is a spacer)
+            for row_index in range(2, tab.layout.rowCount()-1):
                 label = self.ltabkeys[tab_index][row_index]
                 self.updateRange(label, save_sliders)
 
@@ -1463,13 +1499,22 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         for k, v in din.items():
             if k in self.dparams:
-                try:
-                    new_value = float(v)
-                except ValueError:
-                    print("WARN: bad value for param %s: %s. Unable to convert"
-                          " to a floating point number" % (k, v))
-                    continue
-                self.dparams[k] = new_value
+                if k.startswith('numspikes'):
+                    try:
+                        new_value = int(v)
+                    except ValueError:
+                        print("WARN: bad value for param %s: %s. Unable to"
+                              " convert to a integer" % (k, v))
+                        continue
+                    self.dparams[k] = new_value
+                else:
+                    try:
+                        new_value = float(v)
+                    except ValueError:
+                        print("WARN: bad value for param %s: %s. Unable to"
+                              " convert to a floating point number" % (k, v))
+                        continue
+                    self.dparams[k] = new_value
             elif k.count('gbar') > 0 and \
                 (k.count('evprox') > 0 or
                  k.count('evdist') > 0):
@@ -1479,8 +1524,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 try:
                     new_value = float(v)
                 except ValueError:
-                    print("WARN: bad value for param %s: %s. Unable to convert"
-                          " to a floating point number" % (k, v))
+                    print("WARN: bad value for param %s: %s. Unable to"
+                          " convert to a floating point number" % (k, v))
                     continue
                 lks = k.split('_')
                 eloc = lks[1]
@@ -1502,7 +1547,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                         self.dparams[key_str] = new_value
 
         if not self.optimization_running:
-            self.createOptParams()
+            self.updateOptParams()
             self.rebuildOptStepInfo()
             self.updateOptRanges(save_sliders=True)
 
