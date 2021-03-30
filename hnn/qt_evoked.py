@@ -281,7 +281,7 @@ class EvokedInputBaseDialog(QDialog):
             elif k.startswith('sigma'):
                 self.addtransvar(k, 'Start time stdev (ms)')
             elif k.startswith('numspikes'):
-                self.addtransvar(k, 'Number spikes')
+                self.addtransvar(k, 'Number of spikes')
 
     def addtransvar(self, k, strans):
         self.dtransvar[k] = strans
