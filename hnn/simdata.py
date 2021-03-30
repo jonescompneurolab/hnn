@@ -330,6 +330,7 @@ class SimData(object):
         spikes = read_spktrials(sim_dir, gid_ranges)
         if len(spikes.spike_times) == 0:
             print("Warning: no spikes read from %s" % sim_dir)
+            return False
         elif len(spikes.spike_times) < params['N_trials']:
             print("Warning: only read %d of %d spike files in %s" %
                   (len(spikes.spike_times), params['N_trials'], sim_dir))
