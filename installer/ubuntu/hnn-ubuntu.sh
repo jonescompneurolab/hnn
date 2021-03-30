@@ -106,7 +106,7 @@ if [[ "$USE_CONDA" -eq 0 ]]; then
 
   # install hnn-core and prerequisites (e.g. NEURON)
   echo "Installing python prequisites for HNN with pip..." | tee -a "$LOGFILE"
-  $PIP install --no-cache-dir pyqt5 nlopt psutil hnn-core &> "$LOGFILE"
+  $PIP install --no-cache-dir pyqt5 nlopt psutil https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master &> "$LOGFILE"
 
   # WSL may not have nrnivmodl in PATH
   if ! which nrnivmodl &> /dev/null; then
@@ -134,7 +134,7 @@ else
           libopenmpi-dev &> "$LOGFILE"
 
   # install hnn-core and prerequisites (e.g. NEURON)
-  pip install hnn-core mpi4py nlopt
+  pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master mpi4py nlopt
 fi
 
 echo "Downloading runtime prerequisite packages..." | tee -a "$LOGFILE"

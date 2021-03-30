@@ -16,7 +16,7 @@ sudo yum -y install python34-setuptools
 sudo easy_install-3.4 pip
 pip3 install --upgrade matplotlib --user
 pip3 install --upgrade nlopt scipy --user
-pip3 install hnn-core
+pip3 install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
 sudo yum -y install ncurses-devel
 sudo yum -y install openmpi openmpi-devel
 sudo yum -y install libXext libXext-devel

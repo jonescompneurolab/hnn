@@ -19,4 +19,4 @@ conda env create -f environment.yml
 conda install -y -n hnn openmpi mpi4py
 
 conda activate hnn
-pip install hnn-core nlopt
+pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master nlopt

@@ -23,7 +23,7 @@
 
     ```bash
     conda activate hnn
-    pip install hnn-core
+    pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
     pip install nlopt
     pip install mpi4py
     ```
