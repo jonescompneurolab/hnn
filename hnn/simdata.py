@@ -751,7 +751,7 @@ class SimData(object):
                         linewidth=linewidth + 1)
                 yl[0] = min(yl[0], dpl.data['agg'].min())
                 yl[1] = max(yl[1], dpl.data['agg'].max())
-        else:
+        elif 'data' in self._opt_data:
             if 'avg_dpl' not in self._opt_data['data'] or \
                     'initial_dpl' not in self._opt_data:
                 # if there was an exception running optimization
