@@ -326,8 +326,8 @@ class SIMCanvas(FigureCanvasQTAgg):
         xlim = (0.0, 1.0)
         ylim = (-0.001, 0.001)
 
+        data_to_plot = False
         if self.params is None:
-            data_to_plot = False
             gRow = 0
         else:
             # for later
@@ -340,13 +340,17 @@ class SIMCanvas(FigureCanvasQTAgg):
             # update xlim to tstop
             xlim = (0.0, tstop)
 
-            # for trying to plot a simulation read from disk (e.g. default)
-            if self.paramfn not in self.sim_data._sim_data:
+            # gid_ranges and spike data are needed for plotting input distribs
+            if self.paramfn in self.sim_data._sim_data:
+                sim_data = self.sim_data._sim_data[self.paramfn]['data']
+                if sim_data['gid_ranges'] is not None and \
+                        sim_data['spikes'] is not None:
+                    data_to_plot = True
+
+            if not data_to_plot:
                 # load simulation data from disk
                 data_to_plot = self.sim_data.update_sim_data_from_disk(
                     self.paramfn, self.params)
-            else:
-                data_to_plot = True
 
             if data_to_plot:
                 sim_data = self.sim_data._sim_data[self.paramfn]['data']
