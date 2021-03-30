@@ -165,7 +165,8 @@ def _chunk_evinputs(opt_params, sim_tstop, sim_dt):
             input_dict[input_name]['opt_start'] = min(
                 opt_params[input_name]['user_start'], times[good_indices][0])
             input_dict[input_name]['opt_end'] = max(
-                opt_params[input_name]['user_end'], times[good_indices][-1])
+                opt_params[input_name]['user_end'],
+                round(times[good_indices][-1], 8))  # avoid precision errors
         else:
             input_dict[input_name]['opt_start'] = \
                 opt_params[other_input]['user_start']
