@@ -16,7 +16,7 @@ from collections import namedtuple
 
 import nlopt
 from PyQt5 import QtCore
-from hnn_core import simulate_dipole, Network, MPIBackend
+from hnn_core import simulate_dipole, Network, Params, MPIBackend
 
 from .paramrw import get_output_dir, hnn_core_compat_params
 
@@ -96,6 +96,12 @@ def simulate(net):
     sim_data = {}
     # run the simulation with MPIBackend for faster completion time
     record_vsoma = bool(net.params['record_vsoma'])
+
+    numspikes_params = Params(net.params)['numspikes_*']
+    # optimization can feed in floats for numspikes
+    for param_name, spikes in numspikes_params.items():
+        net.params[param_name] = round(spikes)
+
     sim_data['raw_dpls'] = simulate_dipole(net, net.params['N_trials'],
                                            postproc=False,
                                            record_vsoma=record_vsoma)
