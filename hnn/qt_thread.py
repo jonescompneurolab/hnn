@@ -16,7 +16,7 @@ from collections import namedtuple
 
 import nlopt
 from PyQt5 import QtCore
-from hnn_core import simulate_dipole, Network, Params, MPIBackend
+from hnn_core import simulate_dipole, Network, MPIBackend
 
 from .paramrw import get_output_dir, hnn_core_compat_params
 
@@ -61,11 +61,6 @@ class ParamSignal(QtCore.QObject):
     psig = QtCore.pyqtSignal(dict)
 
 
-class CanvSignal(QtCore.QObject):
-    """for updating main GUI canvas"""
-    csig = QtCore.pyqtSignal(bool)
-
-
 class ResultObj(QtCore.QObject):
     def __init__(self, data, params):
         self.data = data
@@ -97,7 +92,7 @@ def simulate(net):
     # run the simulation with MPIBackend for faster completion time
     record_vsoma = bool(net.params['record_vsoma'])
 
-    numspikes_params = Params(net.params)['numspikes_*']
+    numspikes_params = net.params['numspikes_*']
     # optimization can feed in floats for numspikes
     for param_name, spikes in numspikes_params.items():
         net.params[param_name] = round(spikes)
@@ -248,9 +243,11 @@ class SimThread(QtCore.QThread):
         with self.killed_lock:
             self.killed = False
 
+        # make copy of params dict in Params object before
+        # modifying tstop
         sim_params = hnn_core_compat_params(self.params)
         if sim_length is not None:
-            sim_params['tstop'] = sim_length
+            sim_params['tstop'] = round(sim_length, 8)
 
         while True:
             if self.ncore == 0:
@@ -522,12 +519,14 @@ class OptThread(SimThread):
         self.update_sim_data_from_opt_data.esig.emit(update_event,
                                                      self.paramfn)
         update_event.wait()
+        self.refresh_signal.sig.emit()  # redraw with updated RMSE
 
         # check that optimization improved RMSE
         err_queue = Queue()
         self.get_err_from_sim_data.qsig.emit(err_queue, self.paramfn,
                                              self.params['tstop'])
         final_err = err_queue.get()
+        print("Best RMSE: %f" % final_err)
         if final_err > self.initial_err:
             txt = "Warning: optimization failed to improve RMSE below" + \
                   " %.2f. Reverting to old parameters." % \
@@ -630,7 +629,7 @@ class OptThread(SimThread):
         # populate param values into GUI
         self.baseparamwin.update_gui_params(opt_params)
 
-        sim_params = hnn_core_compat_params(self.params)
+        sim_params = self.params.copy()
         for param_name, param_value in opt_params.items():
             sim_params[param_name] = param_value
 

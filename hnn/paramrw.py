@@ -8,6 +8,8 @@ import os
 import numpy as np
 import re
 
+from hnn_core import Params
+
 
 def get_output_dir():
     """Return the base directory for storing output files"""
@@ -341,4 +343,4 @@ def hnn_core_compat_params(params):
         else:
             param_dict[key] = float(val)
 
-    return param_dict
+    return Params(param_dict)
