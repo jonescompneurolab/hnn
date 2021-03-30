@@ -201,7 +201,10 @@ def _trans_input(input_var):
     return input_str
 
 
-def _format_range_str(value):
+def _format_range_str(value, label):
+    if label.startswith('numspikes'):
+        return str(round(value))
+
     if value == 0:
         value_str = "0.000"
     elif value < 0.1:
@@ -747,6 +750,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 if k in self.dqparam_name:
                     del self.dqparam_name[k]
                 if not self.optimization_running:
+                    if k in self.dqchkbox:
+                        del self.dqchkbox[k]
                     if k in self.dqrange_mode:
                         del self.dqrange_mode[k]
                     if k in self.dqrange_multiplier:
@@ -809,23 +814,27 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
             # create and format widgets
             self.dparams[k] = float(v)
-            self.dqchkbox[k] = QCheckBox()
-            self.dqchkbox[k].setStyleSheet("""
-      .QCheckBox {
-            spacing: 20px;
-          }
-      .QCheckBox::unchecked {
-            color: grey;
-          }
-      .QCheckBox::checked {
-            color: black;
-          }
-      """)
-            self.dqchkbox[k].setChecked(True)
-            # use partial instead of lamda (so args won't be evaluated ahead
-            # of time?)
-            self.dqchkbox[k].clicked.connect(
-                partial(self.toggle_enable_param, k))
+            if k not in self.dqchkbox:
+                self.dqchkbox[k] = QCheckBox()
+                self.dqchkbox[k].setStyleSheet("""
+            .QCheckBox {
+                    spacing: 20px;
+                }
+            .QCheckBox::unchecked {
+                    color: grey;
+                }
+            .QCheckBox::checked {
+                    color: black;
+                }
+            """)
+                if k.startswith('numspikes'):
+                    self.dqchkbox[k].setChecked(False)
+                else:
+                    self.dqchkbox[k].setChecked(True)
+                # use partial instead of lamda (so args won't be evaluated
+                # ahead of time?)
+                self.dqchkbox[k].clicked.connect(
+                    partial(self.toggle_enable_param, k))
             self.dqparam_name[k] = QLabel(self)
             self.dqparam_name[k].setText(self.transvar(k))
             self.dqinitial_label[k] = QLabel()
@@ -910,8 +919,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         # decrease the count of num params
         for chunk_index in range(self.old_num_steps):
-            for input_name in self.chunk_list[chunk_index]['inputs']:
-                if input_name == my_input_name:
+            for input_str in self.chunk_list[chunk_index]['inputs']:
+                if input_str == my_input_name:
                     try:
                         num_params = int(self.lqnumparams[chunk_index].text())
                     except ValueError:
@@ -924,19 +933,13 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                     else:
                         num_params -= 1
                     self.lqnumparams[chunk_index].setText(str(num_params))
-                    ranges = self.opt_params[input_name]['ranges']
-                    ranges[label]['enabled'] = toEnable
+                    self.opt_params[input_str]['ranges'][label]['enabled'] = \
+                        toEnable
 
     def updateRange(self, label, save_slider=True):
         max_width = 0
 
-        label_match = re.search('(evprox|evdist)_([0-9]+)', label)
-        if label_match:
-            tab_name = label_match.group(1) + '_' + label_match.group(2)
-        else:
-            print("ERR: can't determine input name from parameter: %s" %
-                  label)
-            return
+        tab_name = self._get_tab_name_from_label(label)
 
         if self.dqchkbox[label].isChecked():
             self.opt_params[tab_name]['ranges'][label]['enabled'] = True
@@ -1002,7 +1005,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         if range_min == range_max:
             self.dqrange_label[label].setText(
-                _format_range_str(range_min))  # use the exact value
+                _format_range_str(range_min, label))  # use the exact value
             self.dqrange_label[label].setEnabled(False)
             # uncheck because invalid range
             self.dqchkbox[label].setChecked(False)
@@ -1010,9 +1013,11 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.dqrange_slider[label].setEnabled(False)
             self.changeParamEnabledStatus(label, False)
         else:
-            self.dqrange_label[label].setText(_format_range_str(range_min) +
+            self.dqrange_label[label].setText(_format_range_str(range_min,
+                                                                label) +
                                               " - " +
-                                              _format_range_str(range_max))
+                                              _format_range_str(range_max,
+                                                                label))
 
         if self.dqrange_label[label].sizeHint().width() > max_width:
             max_width = self.dqrange_label[label].sizeHint().width() + 15
@@ -1423,20 +1428,25 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                 self.dqdiff_label[label].setStyleSheet(color_fmt)
                 self.dqdiff_label[label].setText(text)
 
-    def updateRangeFromSlider(self, label, range_min, range_max):
+    def _get_tab_name_from_label(self, label):
         label_match = re.search('(evprox|evdist)_([0-9]+)', label)
         if label_match:
             tab_name = label_match.group(1) + '_' + label_match.group(2)
         else:
-            print("ERR: can't determine input name from parameter: %s" %
-                  label)
-            return
+            raise ValueError("Can't determine input name from parameter: %s" %
+                             label)
 
+        return tab_name
+
+    def updateRangeFromSlider(self, label, range_min, range_max):
+        tab_name = self._get_tab_name_from_label(label)
         self.dqrange_min[label] = range_min
         self.dqrange_max[label] = range_max
-        self.dqrange_label[label].setText(_format_range_str(range_min) +
+        self.dqrange_label[label].setText(_format_range_str(range_min,
+                                                            label) +
                                           " - " +
-                                          _format_range_str(range_max))
+                                          _format_range_str(range_max,
+                                                            label))
         self.opt_params[tab_name]['ranges'][label]['minval'] = range_min
         self.opt_params[tab_name]['ranges'][label]['maxval'] = range_max
 
