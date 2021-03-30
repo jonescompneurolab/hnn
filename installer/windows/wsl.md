@@ -28,7 +28,7 @@ Some notes:
 Launch the Ubuntu application to open a command line and run the commands below to download and run a script that will install HNN and its prerequisites.
 
 ```bash
-curl --remote-name https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/ubuntu/hnn-ubuntu.sh
+curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-ubuntu.sh
 bash hnn-ubuntu.sh
 ```
 

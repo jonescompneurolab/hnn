@@ -9,7 +9,7 @@
 - The command below will run a script to check for existing installations of prerequisites. If a compatible version is installed, it will say which steps can be skipped below.
 
     ```bash
-    curl -s "https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/mac/check-pre.sh" | bash
+    curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-pre.sh" | bash
     ```
 
 ## Prerequisite 1: Xcode Command Line Tools
@@ -59,7 +59,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 ## Run post-install checks
 
 ```bash
-curl -s "https://raw.githubusercontent.com/blakecaldwell/hnn/integration_docs/installer/mac/check-post.sh" | bash
+curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
 ```
 
 ## Download HNN source code
