@@ -1,9 +1,9 @@
 Contributions
--------------
+=============
 
 Contributions (including bug reports, fixes, and features additions) are welcome
 from the public open source community subject to the terms in the
-[Brown University Software License](LICENSE). For any contribution, please first
+`Brown University Software License`_. For any contribution, please first
 create an issue describing current behavior and if applicable, the change
 proposed. Changes should be submitted in the form of pull requests
 that reference the previously created issue.
@@ -17,7 +17,7 @@ To help developing HNN, you will need a few adjustments to your
 installation as shown below.
 
 Running tests
-=============
+-------------
 
 To run the tests using ``pytest``, you need to have the git cloned ``hnn``
 repository with an editable pip install::
@@ -36,7 +36,7 @@ The following tests should pass for contributions to be merged::
     $ py.test hnn/tests/
 
 Creating releases
-=================
+-----------------
 
 After every release creation, assets (``.tar.gz`` and ``.zip`` files) need to be uploaded
 to GitHub because those are the files that users will download when following our installation
@@ -46,18 +46,20 @@ Note, that the automatically created assets with each release, named "Source cod
 download stats tracked. Also the installation instructions point directly to the uploaded
 assets named ``hnn.tar.gz`` and ``hnn.zip``.
 
-Steps to create a new release:
+**Steps to create a new release**:
 
-#. `Draft a new release`_ on GitHub with a tag following the scheme: ``v1.3.2``. Include a
-    description of significant changes, features, and bug fixes in user-understandable terms.
-    Click the "Save draft" button.
+#. Draft a `new release`_ on GitHub with a tag following the scheme: ``v1.3.2``. Include a
+   description of significant changes, features, and bug fixes in user-understandable terms.
+   Click the "Save draft" button.
 #. Download the automatically generated "Source code" files to your system
 #. Rename files::
 
     $ mv v1.3.2.zip hnn.zip
     $ mv v1.3.2.tar.gz hnn.tar.gz
 
-#. Upload files to the newly created release, and "Publish release"
+#. Upload files to the newly created release on GitHub, and "Publish release"
 
+
+.. _Brown University Software License: LICENSE
 .. _code of conduct: CODE_OF_CONDUCT.md
-.. _Draft a new release: https://github.com/jonescompneurolab/hnn/releases/new
+.. _new release: https://github.com/jonescompneurolab/hnn/releases/new
