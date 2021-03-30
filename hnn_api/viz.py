@@ -57,6 +57,9 @@ def plot_dipole(trials_data, ax=None, layer='agg', show=True, method='hnn-core')
         The matplotlib figure handle.
     """
     import matplotlib.pyplot as plt
+
+    if isinstance(trials_data, dict):
+        trials_data = trials_data.values()
     
     if method == 'hnn-core':
         # plot dipoles

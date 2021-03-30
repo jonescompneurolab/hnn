@@ -193,11 +193,11 @@ def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=T
     params, data = read_batch_data(model_folder+'/data/', b.batchLabel)
 
     # postprocess dipole data
-    '''
+    
     if postproc:
         from .dipole import Dipole
 
-        for i, trial_data in enumerate(data):
+        for i, trial_data in enumerate(data.values()):
             trial_data['simData']['dipole']['L2'][0] = 0
             trial_data['simData']['dipole']['L5'][0] = 0
             
@@ -211,7 +211,7 @@ def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=T
                                 cfg_params.hnn_params['dipole_scalefctr'])
             dpl_trial.data['L2'][0] = dpl_trial.data['L5'][0] = dpl_trial.data['agg'][0] = 0  
             trial_data['dpl'] = dpl_trial
-    '''
+    
     return data    
 
 
@@ -364,9 +364,9 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
         # save
         if saveAll:
             print('Saving to single file with all data')
-            filename = '%s/%s/%s_allData.json' % (dataFolder, batchLabel, batchLabel)
+            filename = '%s/%s/%s_allData.pkl' % (dataFolder, batchLabel, batchLabel)
             dataSave = {'params': params, 'data': data}
-            with open(filename, 'w') as fileObj:
-                json.dump(dataSave, fileObj)
-        
+            with open(filename, 'wb') as fileObj:
+                pickle.dump(dataSave, fileObj)
+            
         return params, data
