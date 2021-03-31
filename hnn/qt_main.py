@@ -992,18 +992,6 @@ class HNNGUI(QMainWindow):
                   " Setting to 1.")
             self.baseparamwin.params['N_trials'] = 1
 
-        if self.baseparamwin.params['record_vsoma'] and ncore > 1:
-            txt = 'A bug currently prevents recording somatic voltages' + \
-                  ' for simulatioins run on more than one core. This' + \
-                  ' simulation will proceed using only a single core.'
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-            msg.setText(txt)
-            msg.setWindowTitle('Rerun simulation')
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec_()
-            ncore = 1
-
         self.runthread = SimThread(ncore, self.baseparamwin.params,
                                    self.sim_result_callback, mainwin=self)
 
