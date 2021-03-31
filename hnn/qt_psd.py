@@ -92,7 +92,7 @@ class PSDCanvas(FigureCanvasQTAgg):
 
         ltitle = ['Layer 2/3', 'Layer 5', 'Aggregate']
 
-        yl = [1e9, -1e9]
+        yl = [sys.float_info, -(sys.float_info)]
 
         for _, kS in enumerate(lkS):
             avg = np.mean(dspec[kS], axis=1)

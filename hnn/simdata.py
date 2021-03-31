@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 from math import ceil
 from glob import glob
@@ -231,7 +232,8 @@ class SimData(object):
 
     def __init__(self):
         self._sim_data = {}
-        self._opt_data = {'initial_dpl': None, 'initial_error': 1e9}
+        self._opt_data = {'initial_dpl': None,
+                          'initial_error': sys.float_info.max}
         self._exp_data = {}
         self._data_dir = os.path.join(get_output_dir(), 'data')
 
@@ -449,7 +451,8 @@ class SimData(object):
         return lerr, errtot
 
     def clear_opt_data(self):
-        self._opt_data = {'initial_dpl': None, 'initial_error': 1e9}
+        self._opt_data = {'initial_dpl': None,
+                          'initial_error': sys.float_info.max}
 
     def in_sim_data(self, paramfn):
         if paramfn in self._sim_data:
