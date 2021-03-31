@@ -38,7 +38,7 @@ class SIMCanvas(FigureCanvasQTAgg):
         # legend for dipole signals
         self.lpatch = [mpatches.Patch(color='black', label='Sim.')]
         self.setParent(parent)
-        self.linewidth = parent.linewidth
+        self.parent = parent
         FigureCanvasQTAgg.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding,
                                         QtWidgets.QSizePolicy.Expanding)
         FigureCanvasQTAgg.updateGeometry(self)
@@ -81,7 +81,7 @@ class SIMCanvas(FigureCanvasQTAgg):
                 # hist gridspec
                 axes = plot_hists_on_gridspec(self.figure, self.G,
                                               feeds_to_plot, extinputs, times,
-                                              xlim, self.linewidth)
+                                              xlim, self.parent.linewidth)
 
                 plot_distribs = False
 
@@ -104,7 +104,7 @@ class SIMCanvas(FigureCanvasQTAgg):
                 n_hists += 1
 
                 axdist.plot(dinput['evdist'][0][0], dist_tot, color='g',
-                            lw=self.linewidth,
+                            lw=self.parent.linewidth,
                             label='evdist distribution')
                 axdist.set_xlim(dinput['evdist'][0][0][0],
                                 dinput['evdist'][0][0][-1])
@@ -120,7 +120,7 @@ class SIMCanvas(FigureCanvasQTAgg):
                 n_hists += 1
 
                 axprox.plot(dinput['evprox'][0][0], prox_tot, color='r',
-                            lw=self.linewidth,
+                            lw=self.parent.linewidth,
                             label='evprox distribution')
                 axprox.set_xlim(dinput['evprox'][0][0][0],
                                 dinput['evprox'][0][0][-1])
@@ -236,7 +236,8 @@ class SIMCanvas(FigureCanvasQTAgg):
             clr = csm.to_rgba(self.getnextcolor())
             c = min(shp[1], 1)
             self.lextdatobj.append(self.axdipole.plot(dat[:, 0], dat[:, c],
-                                   color=clr, linewidth=self.linewidth + 1))
+                                   color=clr,
+                                   linewidth=self.parent.linewidth + 1))
             xl = ((min(xl[0], min(dat[:, 0]))), (max(xl[1], max(dat[:, 0]))))
             yl = ((min(yl[0], min(dat[:, c]))), (max(yl[1], max(dat[:, c]))))
             fx = int(shp[0] * float(c) / shp[1])
@@ -409,7 +410,8 @@ class SIMCanvas(FigureCanvasQTAgg):
             # no dipole or spec data to plot
             return
 
-        self.sim_data.plot_dipole(self.paramfn, self.axdipole, self.linewidth,
+        self.sim_data.plot_dipole(self.paramfn, self.axdipole,
+                                  self.parent.linewidth,
                                   dipole_scalefctr, N_pyr_x, N_pyr_y,
                                   self.is_optimization)
 
