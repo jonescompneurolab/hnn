@@ -68,6 +68,10 @@ class ResultObj(QtCore.QObject):
 
 
 def _add_missing_frames(tb):
+    """take back frames that PyQt hides
+
+    see: https://fman.io/blog/pyqt-excepthook/
+    """
     fake_tb = namedtuple(
         'fake_tb', ('tb_frame', 'tb_lasti', 'tb_lineno', 'tb_next')
     )
@@ -396,8 +400,8 @@ class OptThread(SimThread):
         self.sim_data = sim_data
         self.result_callback = result_callback
         self.seed = seed
-        self.best_step_werr = 1e9
-        self.initial_err = 1e9
+        self.best_step_werr = sys.float_info.max
+        self.initial_err = sys.float_info.max
         self.sim_thread = None
         self.sim_running = False
         self.opt_start = 0.0
@@ -624,7 +628,7 @@ class OptThread(SimThread):
                       % (param_value, param_name,
                          self.step_ranges[param_name]['minval'],
                          self.step_ranges[param_name]['maxval']))
-                return 1e9  # invalid param value -> large error
+                return sys.float_info.max  # return the worst fit ever
 
         # populate param values into GUI
         self.baseparamwin.update_gui_params(opt_params)

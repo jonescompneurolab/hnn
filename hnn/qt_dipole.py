@@ -4,6 +4,7 @@
 #          Blake Caldwell <blake_caldwell@brown.edu>
 
 import numpy as np
+import sys
 
 from PyQt5.QtWidgets import QSizePolicy
 
@@ -58,7 +59,7 @@ class DipoleCanvas(FigureCanvasQTAgg):
         if len(self.sim_data['dpls']) > 0:
             lpatch = [white_patch, gray_patch]
 
-        yl = [1e9, -1e9]
+        yl = [sys.float_info.max, -(sys.float_info.max)]
         for key in dipole_keys:
             yl[0] = min(yl[0], np.amin(self.sim_data['avg_dpl'].data[key]))
             yl[1] = max(yl[1], np.amax(self.sim_data['avg_dpl'].data[key]))
