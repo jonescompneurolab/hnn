@@ -376,23 +376,26 @@ class SIMCanvas(FigureCanvasQTAgg):
 
                 # whether to draw the specgram - should draw if user saved
                 # it or have ongoing, poisson, or tonic inputs
-                if single_sim['spec'] is not None \
-                        and len(single_sim['spec']) > 0 \
-                        and (self.params['save_spec_data'] or
-                             feeds_to_plot['ongoing'] or
-                             feeds_to_plot['pois']):
-                    DrawSpec = True
+                if self.params['save_spec_data'] or \
+                        feeds_to_plot['ongoing'] or \
+                        feeds_to_plot['pois']:
+                    # also need to have data loaded!
+                    if single_sim['spec'] is not None and \
+                            len(single_sim['spec']) > 0 and \
+                            single_sim['spec'][0] is not None:
+                        DrawSpec = True
 
-                    first_spec_trial = single_sim['spec'][0]
-
-                    # adjust dipole to match spectogram limits (e.g. missing
-                    # first 50 ms b/c edge effects)
-                    xlim = (first_spec_trial['time'][0],
-                            first_spec_trial['time'][-1])
-
-        if DrawSpec:  # dipole axis takes fewer rows if also drawing specgram
+        if DrawSpec:
+            # dipole axis takes fewer rows if also drawing specgram
             self.axdipole = self.figure.add_subplot(self.G[gRow:5, 0])
             bottom = 0.08
+
+            first_spec_trial = single_sim['spec'][0]
+            # adjust dipole to match spectogram limits (e.g. missing
+            # first 50 ms b/c edge effects)
+            xlim = (first_spec_trial['time'][0],
+                    first_spec_trial['time'][-1])
+
 
             # set the axes of input histograms to match dipole and spec plots
             for ax in hist_axes:
