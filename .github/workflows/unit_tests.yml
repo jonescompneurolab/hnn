@@ -38,7 +38,7 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        flake8 --count hnn_core
+        flake8 --count hnn
     - name: Test with pytest
       run: |
-        python -m py.test .  --cov=hnn_core hnn_core/tests/ --cov-report=xml
+        python -m py.test .  --cov=hnn hnn/tests/ --cov-report=xml
