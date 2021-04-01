@@ -90,7 +90,7 @@ def getdspk(spikes, extinputs, tstop):
             haveinputs = True
     for ty in dhist.keys():
         dhist[ty] = np.histogram(dhist[ty], range=(0, tstop),
-                                 bins=int(tstop / binsz))
+                                 bins=ceil(tstop / binsz))
         if smoothsz > 0:
             dhist[ty] = hammfilt(dhist[ty][0], smoothsz)
         else:
