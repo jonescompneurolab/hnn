@@ -98,6 +98,9 @@ class HNNGUI(QMainWindow):
         """initialize the main HNN GUI"""
 
         super().__init__()
+
+        # used in exceptions
+        self.waitsimwin = WaitSimDialog(self)
         sys.excepthook = self.excepthook
 
         global fontsize
@@ -126,7 +129,6 @@ class HNNGUI(QMainWindow):
         self.erselectprox = \
             EvokedOrRhythmicDialog(self, False, self.baseparamwin.evparamwin,
                                    self.baseparamwin.proxparamwin)
-        self.waitsimwin = WaitSimDialog(self)
 
         default_param = os.path.join(get_output_dir(), 'data', 'default')
         first_load = not (os.path.exists(default_param))
@@ -151,7 +153,8 @@ class HNNGUI(QMainWindow):
             "include this output when opening an issue on GitHub: "
             "<a href=https://github.com/jonescompneurolab/hnn/issues>"
             "https://github.com/jonescompneurolab/hnn/issues</a>")
-        self.done('Exception')
+        if self.runningsim:
+            self.done('Exception')
 
     def redraw(self):
         """redraw simulation and external data"""
