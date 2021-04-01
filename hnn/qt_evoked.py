@@ -735,36 +735,35 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
 
         return tab
 
-    def cleanLabels(self):
+    def cleanLabels(self, tab_index):
         """
         To avoid memory leaks we need to delete all widgets when we recreate
-        grid. Go through all tabs and check for each var name (k)
+        grid. For a given tab, delete key from all dictionaries if it exists
         """
-        for idx in range(len(self.ltabs)):
-            for k in self.ld[idx].keys():
-                if k in self.dqinitial_label:
-                    del self.dqinitial_label[k]
-                if k in self.dqopt_label:
-                    del self.dqopt_label[k]
-                if k in self.dqdiff_label:
-                    del self.dqdiff_label[k]
-                if k in self.dqparam_name:
-                    del self.dqparam_name[k]
-                if not self.optimization_running:
-                    if k in self.dqchkbox:
-                        del self.dqchkbox[k]
-                    if k in self.dqrange_mode:
-                        del self.dqrange_mode[k]
-                    if k in self.dqrange_multiplier:
-                        del self.dqrange_multiplier[k]
-                    if k in self.dqrange_label:
-                        del self.dqrange_label[k]
-                    if k in self.dqrange_slider:
-                        del self.dqrange_slider[k]
-                    if k in self.dqrange_min:
-                        del self.dqrange_min[k]
-                    if k in self.dqrange_max:
-                        del self.dqrange_max[k]
+        for k in self.ld[tab_index].keys():
+            if k in self.dqinitial_label:
+                del self.dqinitial_label[k]
+            if k in self.dqopt_label:
+                del self.dqopt_label[k]
+            if k in self.dqdiff_label:
+                del self.dqdiff_label[k]
+            if k in self.dqparam_name:
+                del self.dqparam_name[k]
+            if not self.optimization_running:
+                if k in self.dqchkbox:
+                    del self.dqchkbox[k]
+                if k in self.dqrange_mode:
+                    del self.dqrange_mode[k]
+                if k in self.dqrange_multiplier:
+                    del self.dqrange_multiplier[k]
+                if k in self.dqrange_label:
+                    del self.dqrange_label[k]
+                if k in self.dqrange_slider:
+                    del self.dqrange_slider[k]
+                if k in self.dqrange_min:
+                    del self.dqrange_min[k]
+                if k in self.dqrange_max:
+                    del self.dqrange_max[k]
 
     def addGridToTab(self, d, tab):
         from functools import partial
@@ -1256,6 +1255,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             tab_name = remove_list.pop()
             tab_index = self.dtab_idx[tab_name]
 
+            self.cleanLabels(tab_index)  # remove GUI objects
             self.removeInput(tab_index)
             del self.dtab_idx[tab_name]
             del self.dtab_names[tab_index]
@@ -1469,7 +1469,8 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
             self.simlength = float(din['tstop'])
             self.sim_dt = float(din['dt'])
 
-            self.cleanLabels()
+            for tab_index in range(len(self.ltabs)):
+                self.cleanLabels(tab_index)
             self.removeAllInputs()  # turn off any previously set inputs
             self.ltabkeys = []
             self.dtab_idx = {}
