@@ -13,7 +13,7 @@ import os
 
 from neuron import h
 from netpyne import sim, specs
-
+from collections import OrderedDict
 
 def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=100):
 
@@ -231,7 +231,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
         if os.path.isfile(outFile+'.json'):
             outFile = outFile + '.json'
             with open(outFile, 'rb') as fileObj:
-                output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+                output = json.load(fileObj, object_pairs_hook=OrderedDict)
         elif os.path.isfile(outFile+'.pkl'):
             outFile = outFile + '.pkl'
             with open(outFile, 'rb') as fileObj:
@@ -280,7 +280,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
         print('\nLoading single file with all data...')
         filename = '%s/%s/%s_allData.json' % (dataFolder, batchLabel, batchLabel)
         with open(filename, 'r') as fileObj:
-            dataLoad = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+            dataLoad = json.load(fileObj, object_pairs_hook=OrderedDict)
         params = dataLoad['params']
         data = dataLoad['data']
         return params, data
@@ -323,7 +323,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
                 if os.path.isfile(outFile+'.json'):
                     outFile = outFile + '.json'
                     with open(outFile, 'rb') as fileObj:
-                        output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+                        output = json.load(fileObj, object_pairs_hook=OrderedDict)
                 elif os.path.isfile(outFile+'.pkl'):
                     outFile = outFile + '.pkl'
                     with open(outFile, 'rb') as fileObj:
