@@ -167,7 +167,7 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
 
 
 
-def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=True, only_read=False, runCfg=None,groupedParams={}):
+def explore_params(cfg_params, params_explore, n_trials=1, n_cores=1, runMethod='mpi_direct', postproc=True, only_read=False, runCfg=None,groupedParams={}):
 
     from netpyne import sim
     from netpyne.batch import Batch
@@ -197,7 +197,7 @@ def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=T
     if runCfg:
         b.runCfg = runCfg
     else:
-        b.runCfg = {'type': 'mpi_direct', 
+        b.runCfg = {'type': runMethod, #mpi_bulletin', #'mpi_direct' 
                     'script': model_folder+'/init.py',
                     'cores': n_cores, 
                     'skip': False}

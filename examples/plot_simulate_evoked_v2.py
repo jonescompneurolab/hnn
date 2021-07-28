@@ -49,13 +49,17 @@ plot_LFP(trials_data, showFig = True, plots=['spectrogram'], electrodes=[1, 10, 
 netpyne_plot('plotCSD', trials_data)
 
 # granger causality
-netpyne_plot('granger', trials_data, cells1=['L2Pyr'], cells2=['L5Pyr'], label1='L2Pyr', label2='L5Pyr')
+# netpyne_plot('granger', trials_data, cells1=['L2Pyr'], cells2=['L5Pyr'], label1='L2Pyr', label2='L5Pyr')
 
 # batch explore params
-params_explore = {}
-params_explore[('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa')] = [0.05, 0.1]
-params_explore[('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')] = [0.001, 0.005]
+# Note: the explore_params() method accepts an optional arg runMethod with default 'mpi_direct'
+# to use instead NEURON's bulletin board set runMethod='mpi_bulletin'
+# 'mpi_bulletin' requires running this file via mpiexec: e.g. 'mpiexec -np 4 nrniv -mpi plot_simulate_evoked.py'
 
-explore_data = explore_params(cfg_params, params_explore, n_cores=1, n_trials=2, postproc=True, groupedParams = {('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa'),('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')})
+params_explore = {}
+params_explore[('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa')] = [0.05, 0.1, 0.2]
+params_explore[('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')] = [0.001, 0.005, 0.01]
+
+explore_data = explore_params(cfg_params, params_explore, n_cores=4, n_trials=2, postproc=False, groupedParams = {('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa'),('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')})
 
 plot_dipole(explore_data)
