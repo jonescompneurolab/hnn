@@ -50,6 +50,22 @@ def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=1
     return sim.net
 
 
+def add_evoked_drive(hnn_params, label, mu, sigma, numspikes, 
+        weights_ampa={}, weights_nmda={}, location='distal', synaptic_delays={}, seedcore=4):
+
+    hnn_params['t_' + label] = mu
+    hnn_params['sigma_t_' + label] = sigma
+    hnn_params['numspikes_' + label] = numspikes
+
+    for k,v in weights_ampa.items():
+        hnn_params['gbar_' + label + '_' + k + '_ampa'] = v# check that k correspond to hnn params pops
+
+    for k,v in weights_nmda.items():
+        hnn_params['gbar_' + label + '_' + k + '_nmda'] = v# check that k correspond to hnn params pops
+
+
+        
+
 def _is_loaded_mechanisms():
     # copied from:
     # https://www.neuron.yale.edu/neuron/static/py_doc/modelspec/programmatic/mechtype.html
