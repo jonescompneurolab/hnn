@@ -56,6 +56,6 @@ params_explore = {}
 params_explore[('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa')] = [0.05, 0.1]
 params_explore[('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')] = [0.001, 0.005]
 
-explore_data = explore_params(cfg_params, params_explore, n_cores=1, n_trials=2, postproc=True)
+explore_data = explore_params(cfg_params, params_explore, n_cores=1, n_trials=2, postproc=True, groupedParams = {('hnn_params', 'gbar_L5Basket_L5Pyr_gabaa'),('hnn_params', 'gbar_L5Pyr_L5Pyr_ampa')})
 
 plot_dipole(explore_data)

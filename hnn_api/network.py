@@ -13,7 +13,7 @@ import os
 
 from neuron import h
 from netpyne import sim, specs
-
+from collections import OrderedDict
 
 def create_network(cfg_params, createNEURONObj=True, addConns=False, xzScaling=100):
 
@@ -167,7 +167,7 @@ def simulate_trials(cfg_params, n_trials, n_cores=1, postproc=True, only_read=Fa
 
 
 
-def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=True, only_read=False, runCfg=None):
+def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=True, only_read=False, runCfg=None,groupedParams={}):
 
     from netpyne import sim
     from netpyne.batch import Batch
@@ -186,7 +186,7 @@ def explore_params(cfg_params, params_explore, n_cores=1, n_trials=1, postproc=T
     seeds = range(n_trials)
     params[('hnn_params', 'prng_seedcore')] = list(seeds)
  
-    b = Batch(params=params, 
+    b = Batch(params=params,groupedParams=groupedParams, 
              cfgFile=model_folder+'/cfg.py', 
              netParamsFile=model_folder+'/netParams.py', 
              cfg=cfg_params)
@@ -247,7 +247,7 @@ def read_trials_data(dataFolder, batchLabel, n_trials):
         if os.path.isfile(outFile+'.json'):
             outFile = outFile + '.json'
             with open(outFile, 'rb') as fileObj:
-                output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+                output = json.load(fileObj, object_pairs_hook=OrderedDict)
         elif os.path.isfile(outFile+'.pkl'):
             outFile = outFile + '.pkl'
             with open(outFile, 'rb') as fileObj:
@@ -296,7 +296,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
         print('\nLoading single file with all data...')
         filename = '%s/%s/%s_allData.json' % (dataFolder, batchLabel, batchLabel)
         with open(filename, 'r') as fileObj:
-            dataLoad = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+            dataLoad = json.load(fileObj, object_pairs_hook=OrderedDict)
         params = dataLoad['params']
         data = dataLoad['data']
         return params, data
@@ -339,7 +339,7 @@ def read_batch_data(dataFolder, batchLabel, loadAll=False, saveAll=True, vars=No
                 if os.path.isfile(outFile+'.json'):
                     outFile = outFile + '.json'
                     with open(outFile, 'rb') as fileObj:
-                        output = json.load(fileObj, object_pairs_hook=specs.OrderedDict)
+                        output = json.load(fileObj, object_pairs_hook=OrderedDict)
                 elif os.path.isfile(outFile+'.pkl'):
                     outFile = outFile + '.pkl'
                     with open(outFile, 'rb') as fileObj:
