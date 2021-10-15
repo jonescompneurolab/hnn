@@ -84,7 +84,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version=$VCS_TAG
 
 # install hnn-core
-RUN sudo pip install hnn-core
+RUN sudo pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
 
 # install HNN
 RUN sudo apt-get update && \

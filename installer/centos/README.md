@@ -1,4 +1,4 @@
-# HNN "Python" install (CentOS)
+# HNN install (CentOS)
 
 The script below assumes that it can update OS packages for python and prerequisites for HNN.
 
@@ -33,17 +33,19 @@ The script below assumes that it can update OS packages for python and prerequis
 
 ## Upgrading to a new version of HNN
 
-HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
+HNN Releases can be found on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
 
-To download the latest release, use the following commands within an Ubuntu terminal:
+To download the latest HNN release:
 
 ```bash
 curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+mkdir hnn_source_code
 tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
 cd hnn_source_code
-make
 python3 hnn.py
 ```
+
+If you are using `git`, then run `git pull origin master` from the source code directory.
 
 ## Troubleshooting
 

@@ -4,7 +4,7 @@
 
 Below is Microsoft's guide for installing WSL. Note that both WSL 1 and WSL 2 will work with, but **WSL1 is recommended** because the DISPLAY variable will need to be adjusted with WSL 2.
 
-https://docs.microsoft.com/en-us/windows/wsl/install-win10
+[https://docs.microsoft.com/en-us/windows/wsl/install-win10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 Some notes:
 
@@ -35,7 +35,7 @@ bash hnn-ubuntu.sh
 Some notes:
 
 * You'll be asked for the password you created in WSL (above)
-* While it gets tested frequently as part of our automated builds, please let us know if you run into a failure by creating a GitHub issue](https://github.com/jonescompneurolab/hnn/issues).
+* While it gets tested frequently as part of our automated builds, please let us know if you run into a failure by [creating a GitHub issue](https://github.com/jonescompneurolab/hnn/issues).
 
 You will need to **restart Ubuntu** after this. Until you do so, simulations will fail to run from HNN.
 
@@ -67,15 +67,15 @@ You will need to **restart Ubuntu** after this. Until you do so, simulations wil
 
 ## Upgrading to a new version of HNN
 
-HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
+HNN Releases can be found on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
 
-To download the latest release, use the following commands within an Ubuntu terminal:
+To download the latest HNN release, use the following commands within an Ubuntu terminal:
 
 ```bash
 wget -O hnn.tar.gz https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+mkdir hnn_source_code
 tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
 cd hnn_source_code
-make
 python3 hnn.py
 ```
 
@@ -84,29 +84,5 @@ python3 hnn.py
 If you still want to use WSL, you can just remove the hnn source code directory with Ubuntu. Or you can remove the entire distribution by finding Ubuntu in "Add or remove programs" and clicking Uninstall. VcXsrv can also be uninstall from "Add or remove programs".
 
 ## Troubleshooting
-
-### VcXsrv
-
-Make sure VcXsrv has been updated to at least 1.20.60. Earlier versions can cause the errors below:
-
-`hnn_docker.sh` would fail:
-
-```bash
-Starting VcXsrv... done
-Checking for xauth... found
-Checking for X11 authentication keys... *failed*
-```
-
-`hnn_docker.log` contains:
-
-```bash
-Retrieving host xauth keys...
-
-  ** Command: /c/Program Files/VcXsrv/xauth.exe -f /c/Users/user/.Xauthority -ni nlist localhost:0
-  ** Stderr: C:\Program Files\VcXsrv\xauth.exe: (argv):1:  bad display name "localhost:0" in "nlist" command
-*failed*
-```
-
-### Other
 
 If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.

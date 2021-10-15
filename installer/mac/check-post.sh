@@ -28,34 +28,6 @@ echo "--------------------------------------"
 
 CUR_DIR=$(pwd)
 
-echo -n "Checking if HNN is compiled..."
-if [[ -f ${CUR_DIR}/hnn.py ]]; then
-  if [[ -f "${CUR_DIR}/x86_64/hh2.mod" ]]; then
-    echo "ok"
-    if [[ "$VERBOSE" -eq "1" ]]; then
-      echo "HNN source code compiled and ready to use at ${CUR_DIR}"
-      echo
-    fi
-  else
-    echo "failed"
-    echo "Found a source code directory at ${CUR_DIR}, but it needs to be compiled (run make)."
-    echo
-    return=2
-  fi
-else
-  if [[ -f "$HOME/hnn/x86_64/hh2.mod" ]]; then
-    echo "warning"
-    echo "Did you mean to run this from $HOME/hnn instead?"
-    echo
-    return=1
-  else
-    echo "failed"
-    echo "Didn't find HNN source code in this directory"
-    echo
-    return=2
-  fi
-fi
-
 echo -n "Checking for miniconda..."
 MINICONDA_FOUND=
 which conda > /dev/null 2>&1
@@ -161,24 +133,6 @@ else
   echo "ok"
 fi
 
-MPI_WORKS=
-if [[ "$MPI_FOUND" -eq "1" ]]; then
-  echo -n "Checking MPI functionality..."
-  COMMAND="mpiexec -n 1 echo \"hello\" 2>&1"
-  OUTPUT=$(mpiexec -n 1 echo "hello" 2>&1)
-  if [[ "$?" -eq "0" ]] && [[ "$OUTPUT" =~ "hello" ]]; then
-    echo "ok"
-    MPI_WORKS=1
-  else
-    echo "failed"
-    echo "the command that failed was:"
-    echo "$COMMAND"
-    echo $OUTPUT
-    echo
-    return=2
-  fi
-fi
-
 # NEURON functionality checks from https://github.com/jonescompneurolab/hnn/issues/11
 NRNIV_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]]; then
@@ -202,7 +156,7 @@ else
 fi
 
 PREREQS_INSTALLED=1
-for prereq in "matplotlib" "scipy" "psutil" "numpy" "nlopt" "neuron"; do
+for prereq in "matplotlib" "scipy" "psutil" "numpy" "nlopt" "neuron" "hnn_core"; do
   echo -n "Checking Python can import $prereq module..."
   $PYTHON -c "import $prereq" > /dev/null 2>&1
   if [[ "$?" -eq "0" ]]; then
@@ -237,47 +191,24 @@ else
   echo "Skipping NEURON funtionality tests with Python."
 fi
 
-echo -n "Checking for setting LD_LIBRARY_PATH..."
-source ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh > /dev/null 2>&1
-if [[ "$?" -eq "0" ]] && [[ -n "${LD_LIBRARY_PATH}" ]]; then
-  echo "ok"
-else
-  echo "warning"
-  echo "The LD_LIBRARY_PATH variable is not set correctly. Make sure you follow the installation"
-  echo "instructions to add the correct lines to ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh"
-  return=1
-fi
-
-
 MPI_AND_NRNIV_WORKS=
-if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]]; then
+if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]]; then
   echo -n "Checking NEURON nrniv funtionality with MPI..."
-  mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()' > /dev/null 2>&1
+  COMMAND="mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()'"
+  OUTPUT=$(export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib; mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()')
   if [[ "$?" -eq "0" ]]; then
     echo "ok"
     MPI_AND_NRNIV_WORKS=1
   else
-    # try with LD_LIBRARY_PATH
-    COMMAND="mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()'"
-    OUTPUT=$(export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib; mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()')
-    if [[ "$?" -eq "0" ]]; then
-      echo "warning"
-      echo "The LD_LIBRARY_PATH variable is not set correctly. Make sure you follow the installation"
-      echo "instructions to add the correct lines to ${CONDA_PREFIX}/etc/conda/activate.d/env_vars.sh"
-      echo
-      return=1
-      MPI_AND_NRNIV_WORKS=1
-    else
-      echo "failed"
-      echo "Could not run nrniv with MPI"
-      echo "The command that failed was:"
-      echo "$COMMAND"
-      echo "Tried environment variable LD_LIBRARY_PATH=${CONDA_PREFIX}/lib"
-      echo "Command output (on a single line):"
-      echo $OUTPUT
-      echo
-      return=2
-    fi
+    echo "failed"
+    echo "Could not run nrniv with MPI"
+    echo "The command that failed was:"
+    echo "$COMMAND"
+    echo "Tried environment variable LD_LIBRARY_PATH=${CONDA_PREFIX}/lib"
+    echo "Command output (on a single line):"
+    echo $OUTPUT
+    echo
+    return=2
   fi
 else
   echo "Skipping NEURON funtionality tests with MPI."
@@ -285,24 +216,27 @@ fi
 
 NRNIV_AND_PYTHON_AND_MPI_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] &&
-  [[ "$PREREQS_INSTALLED" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]] &&
+  [[ "$PREREQS_INSTALLED" -eq "1" ]] &&
   [[ "$MPI_AND_NRNIV_WORKS" -eq "1" ]]; then
- echo -n "Checking NEURON nrniv funtionality with Python and MPI..."
- COMMAND="mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1"
- OUTPUT=$(mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1)
- if [[ "$?" -eq "0" ]]; then
-   echo "ok"
-   NRNIV_AND_PYTHON_AND_MPI_WORKS=1
- else
-   echo "failed"
-   echo "Could not run nrniv with Python and MPI"
-   echo "the command that failed was:"
-   echo "$COMMAND"
-   echo $OUTPUT
-   return=2
-   fi
+  echo -n "Checking NEURON nrniv funtionality with Python and MPI..."
+  COMMAND="mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1"
+  OUTPUT=$(export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib; mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()' 2>&1)
+  if [[ "$?" -eq "0" ]]; then
+    echo "ok"
+    NRNIV_AND_PYTHON_AND_MPI_WORKS=1
+  else
+    echo "failed"
+    echo "Could not run nrniv with Python and MPI"
+    echo "the command that failed was:"
+    echo "$COMMAND"
+    echo "Tried environment variable LD_LIBRARY_PATH=${CONDA_PREFIX}/lib"
+    echo "Command output (on a single line):"
+    echo $OUTPUT
+    echo
+    return=2
+  fi
 else
- echo "Skipping NEURON funtionality tests with Python and MPI."
+  echo "Skipping NEURON funtionality tests with Python and MPI."
 fi
 
 

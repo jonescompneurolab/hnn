@@ -1,4 +1,4 @@
-# HNN "Python" install (Mac OS)
+# HNN install (Mac OS)
 
 ## Opening a terminal window
 
@@ -14,7 +14,7 @@
 
 ## Prerequisite 1: Xcode Command Line Tools
 
-The Xcode Command Line Tools package includes utilities for compiling code from the terminal (gcc, make, etc.). This is needed for compiling mod files in NEURON.
+The Xcode Command Line Tools package includes utilities for compiling code from the terminal. This is needed for compiling NEURON mod files during the hnn-core installation.
 
 1. To install the package, type the following from a terminal.app window:
 
@@ -25,9 +25,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
      - If you get the following error, you can skip this step.
       `xcode-select: error: command line tools are already installed, use "Software Update" to install updates`
 
-2. Then press `Install` in the pop-up dialog
-
-  <img src="install_pngs/xcode_tools.png" width="400" />
+2. Then press `Install` in the pop-up dialog.
 
 ## Prerequisite 2: Miniconda (Python 3)
 
@@ -46,79 +44,64 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
     ```bash
     conda env create -f environment.yml
+    conda install -y -n hnn openmpi mpi4py
     ```
 
-2. Activate the HNN conda environment and install nlopt and NEURON
+2. Activate the HNN conda environment and python prerequisite packages
 
     ```bash
-    source activate hnn
-    pip install nlopt NEURON
-    ```
-
-3. Set the LD_LIBRARY_PATH for openmpi on conda activation. This environnement variable must be set before HNN can run simulations with openmpi. The variable is only useful inside the 'hnn' conda environment, so we will set the variable when conda is activated with `source activate hnn`. Run the following commands to make this automatic.
-
-    ```bash
-    cd ${CONDA_PREFIX}
-    mkdir -p etc/conda/activate.d etc/conda/deactivate.d
-    echo "export OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
-    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
-    echo "export LD_LIBRARY_PATH=\$OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
-    echo "unset OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
-    ```
-
-4. Open a new terminal window for the settings in the previous step to take effect and activate the HNN conda environment
-
-    ```bash
-    source activate hnn
+    conda activate hnn
+    pip install https://api.github.com/repos/jonescompneurolab/hnn-core/zipball/master
+    pip install nlopt
+    pip install mpi4py
     ```
 
 ## Run post-install checks
 
-- Run the command below to check that all of the steps were successful and are ready to run HNN.
-
-    ```bash
-    curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
-    ```
+```bash
+curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
+```
 
 ## Download HNN source code
 
-- The following commands will download the hnn source code and compile HNN's mod files for NEURON. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
-
-    ```bash
-    curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
-    mkdir hnn_source_code
-    tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
-    cd hnn_source_code
-    make
-    ```
+```bash
+git clone https://github.com/jonescompneurolab/hnn.git
+cd hnn
+```
 
 ## Run the HNN model
 
-1. Start the HNN GUI from a terminal window:
+1. Start the HNN GUI from a terminal window. Make sure the hnn environment has been activated each time a terminal window is opened:
 
     ```bash
-    source activate hnn
+    conda activate hnn
     python hnn.py
     ```
 
 2. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
 
-3. When you run simulations for the first time, the following dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.
+3. When you run simulations for the first time, two dialog boxes may pop-up and ask you for permission to allow connections through the firewall. Saying 'Deny' is fine since simulations will just run locally on your Mac.
 
-    <img src="install_pngs/nrniv_firewall.png" width="400" />
+4. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
 
-    <img src="install_pngs/orterun_firewall.png" width="400" />
-
-4. You can now proceed to running the tutorials at https://hnn.brown.edu/index.php/tutorials/ . Some things to note:
     - A directory called "hnn_out" exists in your home directory where the results from your simulations (data and param files) will be stored.
 
 ## Upgrading to a new version of HNN
 
-HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
+HNN Releases can be found on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
 
-If you downloaded the `tar.gz` file, simply re-run the steps above, but replace `hnn_source_code` with a new directory name.
+To download the latest HNN release:
 
-Otherwise, if you are using `git`, then run `git pull origin master` from the source code directory.
+```bash
+curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+mkdir hnn_source_code
+tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+cd hnn_source_code
+conda activate hnn
+python3 hnn.py
+```
+
+If you are using `git`, then run `git pull origin master` from the source code directory.
 
 ## Troubleshooting
 
