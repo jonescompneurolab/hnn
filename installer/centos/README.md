@@ -5,14 +5,14 @@ The script below assumes that it can update OS packages for python and prerequis
 * CentOS 7: [centos7-installer.sh](centos7-installer.sh)
 
     ```bash
-    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-centos-7.sh
+    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos7.sh
     bash hnn-centos7.sh
     ```
 
 * CentOS 6 (no longer maintained): [centos6-installer.sh](centos6-installer.sh)
 
     ```bash
-    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-centos-6.sh
+    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos6.sh
     bash hnn-centos6.sh
     ```
 
