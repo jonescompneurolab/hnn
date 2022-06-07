@@ -2,14 +2,14 @@
 
 The script below assumes that it can update OS packages for python and prerequisites for HNN.
 
-* CentOS 7: [centos7-installer.sh](centos7-installer.sh)
+* CentOS 7: [hnn-centos7.sh](hnn-centos7.sh)
 
     ```bash
     curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos7.sh
     bash hnn-centos7.sh
     ```
 
-* CentOS 6 (no longer maintained): [centos6-installer.sh](centos6-installer.sh)
+* CentOS 6 (no longer maintained): [hnn-centos6.sh](hnn-centos6.sh)
 
     ```bash
     curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos6.sh
