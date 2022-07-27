@@ -8,5 +8,7 @@ dependencies:
 - scipy
 - matplotlib
 - psutil
+- openmpi
+- mpi4py
 - pip:
   - PyQt5

@@ -40,11 +40,21 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     rm /tmp/Miniconda3-latest-MacOSX-x86_64.sh
     ```
 
+## Download HNN source code
+
+- The following commands will download the hnn source code and compile HNN's mod files for NEURON. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
+
+    ```bash
+    curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+    mkdir hnn_source_code
+    tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+
 ## Prepare the Python environment
 
 1. Create a conda environment with the Python prerequisites for HNN.
 
     ```bash
+    cd hnn_source_code
     conda env create -f environment.yml
     ```
 
@@ -60,10 +70,10 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     ```bash
     cd ${CONDA_PREFIX}
     mkdir -p etc/conda/activate.d etc/conda/deactivate.d
-    echo "export OLD_LD_LIBRARY_PATH=\$LD_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
-    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
-    echo "export LD_LIBRARY_PATH=\$OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
-    echo "unset OLD_LD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    echo "export OLD_DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
+    echo "export DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
+    echo "export DYLD_LIBRARY_PATH=\$OLD_DYLD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    echo "unset OLD_DYLD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
     ```
 
 4. Open a new terminal window for the settings in the previous step to take effect and activate the HNN conda environment
