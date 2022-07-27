@@ -48,6 +48,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
     mkdir hnn_source_code
     tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+    ```
 
 ## Prepare the Python environment
 
@@ -84,7 +85,8 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 ## Run post-install checks and compile NEURON mode files
 
-- Run the command below to check that all of the steps were successful and are ready to run HNN.
+- Run a post-installation check to ensure that all necessary libraries were 
+  successful installed. Finally, we will compile the NEURON mod files.
 
     ```bash
     curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
