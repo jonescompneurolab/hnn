@@ -82,22 +82,12 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     source activate hnn
     ```
 
-## Run post-install checks
+## Run post-install checks and compile NEURON mode files
 
 - Run the command below to check that all of the steps were successful and are ready to run HNN.
 
     ```bash
     curl -s "https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/mac/check-post.sh" | bash
-    ```
-
-## Download HNN source code
-
-- The following commands will download the hnn source code and compile HNN's mod files for NEURON. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
-
-    ```bash
-    curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
-    mkdir hnn_source_code
-    tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
     cd hnn_source_code
     make
     ```
