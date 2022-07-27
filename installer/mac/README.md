@@ -42,7 +42,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
 ## Download HNN source code
 
-- The following commands will download the hnn source code and compile HNN's mod files for NEURON. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
+- The following commands will download the hnn source code. We use the directory `hnn_source_code` for consistency with all of our instructions, but any directory can be used. You can use `git` if you prefer.
 
     ```bash
     curl -OL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
