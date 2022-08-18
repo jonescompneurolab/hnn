@@ -72,10 +72,10 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
     ```bash
     cd ${CONDA_PREFIX}
     mkdir -p etc/conda/activate.d etc/conda/deactivate.d
-    echo "export OLD_DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
-    echo "export DYLD_LIBRARY_PATH=\$DYLD_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
-    echo "export DYLD_LIBRARY_PATH=\$OLD_DYLD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
-    echo "unset OLD_DYLD_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    echo "export OLD_DYLD_FALLBACK_LIBRARY_PATH=\$DYLD_FALLBACK_LIBRARY_PATH" >> etc/conda/activate.d/env_vars.sh
+    echo "export DYLD_FALLBACK_LIBRARY_PATH=\$DYLD_FALLBACK_LIBRARY_PATH:\${CONDA_PREFIX}/lib" >> etc/conda/activate.d/env_vars.sh
+    echo "export DYLD_FALLBACK_LIBRARY_PATH=\$OLD_DYLD_FALLBACK_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
+    echo "unset OLD_DYLD_FALLBACK_LIBRARY_PATH" >> etc/conda/deactivate.d/env_vars.sh
     ```
 
 4. Open a new terminal window for the settings in the previous step to take effect and activate the HNN conda environment
