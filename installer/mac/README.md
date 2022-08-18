@@ -56,6 +56,7 @@ The Xcode Command Line Tools package includes utilities for compiling code from 
 
     ```bash
     cd hnn_source_code
+    curl -O https://raw.githubusercontent.com/jonescompneurolab/hnn/master/environment.yml
     conda env create -f environment.yml
     ```
 
