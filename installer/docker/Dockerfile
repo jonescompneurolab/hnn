@@ -1,7 +1,11 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # avoid questions from debconf
 ENV DEBIAN_FRONTEND noninteractive
+
+# install sudo
+RUN apt-get update && \
+      apt-get -y install sudo git
 
 # create the group hnn_group and user hnn_user
 # add hnn_user to the sudo group
@@ -26,18 +30,21 @@ RUN apt-get update && \
         python3-pip python3-setuptools openssh-server openmpi-bin lsof netcat xauth && \
     apt-get clean
 
+
 # get HNN python dependencies
 # python3-dev and gcc needed for building psutil
-RUN sudo pip3 install --no-cache-dir --upgrade pip && \
-    sudo apt-get update && \
-    sudo apt-get install --no-install-recommends -y \
+RUN pip3 install --no-cache-dir --upgrade pip setuptools && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y \
         gcc python3-dev && \
-    sudo pip install --no-cache-dir matplotlib \
-        pyqt5 scipy numpy nlopt psutil && \
-    sudo apt-get -y remove --purge \
+    apt-get install --no-install-recommends -y \
+        cmake make build-essential python3-pyqt5 libnlopt-dev octave guile-2.2 && \
+    pip install --no-cache-dir matplotlib scipy numpy psutil swig matlab && \
+    pip install --no-cache-dir nlopt && \
+    apt-get -y remove --purge \
         gcc python3-dev && \
-    sudo apt-get autoremove -y --purge && \
-    sudo apt-get clean
+    apt-get autoremove -y --purge && \
+    apt-get clean
 
 COPY date_base_install.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/date_base_install.sh && \
@@ -84,17 +91,17 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version=$VCS_TAG
 
 # install hnn-core
-RUN sudo pip install hnn-core
+RUN pip install hnn-core
+
+RUN sudo apt-get update && \
+    sudo apt-get install -y neuron-dev
 
 # install HNN
 RUN sudo apt-get update && \
     sudo apt-get install --no-install-recommends -y \
         make gcc libc6-dev libtinfo-dev libncurses-dev \
         libx11-dev libreadline-dev g++ && \
-    git clone --single-branch --branch maint/pre-hnn-core \
-    ${SOURCE_REPO} \
-      --depth 1 --single-branch --branch $SOURCE_BRANCH \
-      $HOME/hnn_source_code && \
+    git clone --single-branch --branch maint/pre-hnn-core ${SOURCE_REPO} $HOME/hnn_source_code &&\
     cd $HOME/hnn_source_code && \
     make && \
     sudo apt-get -y remove --purge \
