@@ -90,9 +90,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.schema-version=$VCS_TAG
 
-# install hnn-core
-RUN pip install hnn-core
-
 RUN sudo apt-get update && \
     sudo apt-get install -y neuron-dev
 
