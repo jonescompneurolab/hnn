@@ -182,7 +182,7 @@ fi
 # NEURON functionality checks from https://github.com/jonescompneurolab/hnn/issues/11
 NRNIV_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]]; then
-  echo -n "Checking NEURON nrniv funtionality..."
+  echo -n "Checking NEURON nrniv functionality..."
   COMMAND="nrniv -nobanner -nopython -c '{print \"hello\" quit()}' 2>&1"
   OUTPUT=$(nrniv -nobanner -nopython -c '{print "hello" quit()}' 2>&1)
   if [[ "$?" -eq "0" ]]; then
@@ -198,7 +198,7 @@ if [[ "$NRN_FOUND" -eq "1" ]]; then
     return=2
   fi
 else
-  echo "Skipping NEURON funtionality tests."
+  echo "Skipping NEURON functionality tests."
 fi
 
 PREREQS_INSTALLED=1
@@ -218,7 +218,7 @@ done
 
 NRNIV_AND_PYTHON_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$PREREQS_INSTALLED" -eq "1" ]]; then
-  echo -n "Checking NEURON nrniv funtionality with Python..."
+  echo -n "Checking NEURON nrniv functionality with Python..."
   COMMAND="nrniv -nobanner -python -c 'from neuron import h; print(\"Hello\"); h.quit()' 2>&1"
   OUTPUT=$(nrniv -nobanner -python -c 'from neuron import h; print("Hello"); h.quit()' 2>&1)
   if [[ "$?" -eq "0" ]]; then
@@ -234,7 +234,7 @@ if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$PREREQS_IN
     return=2
     fi
 else
-  echo "Skipping NEURON funtionality tests with Python."
+  echo "Skipping NEURON functionality tests with Python."
 fi
 
 echo -n "Checking for setting LD_LIBRARY_PATH..."
@@ -251,7 +251,7 @@ fi
 
 MPI_AND_NRNIV_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]]; then
-  echo -n "Checking NEURON nrniv funtionality with MPI..."
+  echo -n "Checking NEURON nrniv functionality with MPI..."
   mpiexec -n 2 nrniv -nobanner -nopython -mpi -c 'quit()' > /dev/null 2>&1
   if [[ "$?" -eq "0" ]]; then
     echo "ok"
@@ -280,14 +280,14 @@ if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] && [[ "$MPI_WORKS"
     fi
   fi
 else
-  echo "Skipping NEURON funtionality tests with MPI."
+  echo "Skipping NEURON functionality tests with MPI."
 fi
 
 NRNIV_AND_PYTHON_AND_MPI_WORKS=
 if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] &&
   [[ "$PREREQS_INSTALLED" -eq "1" ]] && [[ "$MPI_WORKS" -eq "1" ]] &&
   [[ "$MPI_AND_NRNIV_WORKS" -eq "1" ]]; then
- echo -n "Checking NEURON nrniv funtionality with Python and MPI..."
+ echo -n "Checking NEURON nrniv functionality with Python and MPI..."
  COMMAND="mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1"
  OUTPUT=$(mpiexec -n 2 nrniv -nobanner -mpi -python -c 'from neuron import h; pc = h.ParallelContext(); h.quit()'  2>&1)
  if [[ "$?" -eq "0" ]]; then
@@ -302,7 +302,7 @@ if [[ "$NRN_FOUND" -eq "1" ]] && [[ "$NRNIV_WORKS" -eq "1" ]] &&
    return=2
    fi
 else
- echo "Skipping NEURON funtionality tests with Python and MPI."
+ echo "Skipping NEURON functionality tests with Python and MPI."
 fi
 
 

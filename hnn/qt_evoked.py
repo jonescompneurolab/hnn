@@ -831,7 +831,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
                     self.dqchkbox[k].setChecked(False)
                 else:
                     self.dqchkbox[k].setChecked(True)
-                # use partial instead of lamda (so args won't be evaluated
+                # use partial instead of lambda (so args won't be evaluated
                 # ahead of time?)
                 self.dqchkbox[k].clicked.connect(
                     partial(self.toggle_enable_param, k))
@@ -1155,7 +1155,7 @@ class OptEvokedInputParamDialog (EvokedInputBaseDialog):
         self.old_num_steps = 0
 
     def rebuildOptStepInfo(self):
-        # split chunks from paramter file
+        # split chunks from parameter file
         self.chunk_list = _chunk_evinputs(
             self.opt_params, self.simlength, self.sim_dt)
 
