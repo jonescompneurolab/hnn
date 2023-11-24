@@ -20,7 +20,7 @@ cd "$HOME/hnn_source_code"
 QT_CONF="$HOME/.config/QtProject.conf"
 if [[ -f "$QT_CONF" ]]; then
   if [[ ! -w "$QT_CONF" ]]; then
-    echo "Incorrect permissions to modifiy $QT_CONF"
+    echo "Incorrect permissions to modify $QT_CONF"
   else
     echo -n "Updating Qt preferences... "
     grep -q "SYSTEM_USER_DIR" "$QT_CONF" > /dev/null 2>&1

@@ -38,7 +38,7 @@ function script_fail {
 trap script_fail EXIT
 
 DISTRIB=$(grep DISTRIB_CODENAME /etc/lsb-release | cut -d'=' -f2)
-echo "Starting installation of HNN on dectected Ubuntu OS: $DISTRIB" | tee -a "$LOGFILE"
+echo "Starting installation of HNN on detected Ubuntu OS: $DISTRIB" | tee -a "$LOGFILE"
 echo "Output in log file: $LOGFILE"
 
 [[ $PYTHON_VERSION ]] || {
@@ -51,7 +51,7 @@ echo "Output in log file: $LOGFILE"
   elif [[ "$DISTRIB" =~ "focal" ]]; then
     PYTHON_VERSION=3.8
   else
-    echo "Error: Ubuntu distribtion $DISTRIB not supported" | tee -a "$LOGFILE"
+    echo "Error: Ubuntu distribution $DISTRIB not supported" | tee -a "$LOGFILE"
     exit 1
   fi
 }

@@ -8,7 +8,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
 
 1. Hardware virtualization features (manual setting)
 
-    If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. Only old systems do not support this feature. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manger. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
+    If not already enabled, it may be necessary to manually set these through your PC manufacturer's BIOS settings. Only old systems do not support this feature. However, if Docker cannot turn this feature on from its installer, you may need to reboot your computer and change your PC manufacturer's BIOS settings. You can check whether it is enabled from the Task Manager. The picture below shows that hardware virtualization is disabled and will need to be manually enabled in the BIOS.
 
     <img src="install_pngs/virtualization_disabled.png" width="600" />
 
@@ -125,7 +125,7 @@ There are two related requirements needed for Docker to be able to run HNN in a 
    - The HNN repository with sample data and parameter files exists at /home/hnn_user/hnn_source_code
    - If you run into problems starting the Docker container or the GUI is not displaying, please see the [Docker troubleshooting section](../docker/README.md#Troubleshooting)
 
-## Updgrading to a new version of HNN
+## Upgrading to a new version of HNN
 
 1. Verify that VcXsrv and Docker are running. VcXsrv will not start automatically after a reboot by default.
 2. Open a Command Prompt (cmd.exe)

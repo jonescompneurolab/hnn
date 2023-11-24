@@ -366,7 +366,7 @@ function output_run_command_arguments {
   if [[ -n "$__output" ]]; then
     echo >> "$LOGFILE"
     if [[ $SUPPRESS_OUTPUT -eq 1 ]]; then
-      echo "  ** Stdout: ** suppresed **" >> "$LOGFILE"
+      echo "  ** Stdout: ** suppressed **" >> "$LOGFILE"
       SUPPRESS_OUTPUT=1
     else
       echo "  ** Stdout: $__output" | tr -d '\r' >> "$LOGFILE"
@@ -644,7 +644,7 @@ function get_container_port {
 function ssh_start_hnn_print {
   # no args
   # Will try to ssh into container to start HNN. Designed to be called
-  # multiple times beause the function could fail due to trouble
+  # multiple times because the function could fail due to trouble
   # getting the container port or the ssh command fails (bad keys maybe).
   check_var DOCKER_TOOLBOX
   check_var SSH_PRIVKEY
@@ -1674,7 +1674,7 @@ function docker_run_fail {
     cleanup 2
   fi
 
-  # make sure "docker ps | grep HNN_CONTAINER_NAME" succeeeds
+  # make sure "docker ps | grep HNN_CONTAINER_NAME" succeeds
   __started=$(wait_for_container_to_start $__timeout)
   if [[ ! "$__started" =~ "1" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
@@ -1773,7 +1773,7 @@ function check_xauth_keys_print {
 }
 
 function start_check_container_sshd_fail {
-  # no arguemnts
+  # no arguments
   # run /start_ssh.sh within container and detach, leaving sshd running
   check_var docker_cmd
   check_var HNN_CONTAINER_NAME
@@ -1922,7 +1922,7 @@ function get_valid_host_xauth_key {
 
 function get_container_xauth_key {
   # first argument is username inside container to check permissions for
-  # checks that xauth run within container retuns valid keys
+  # checks that xauth run within container returns valid keys
 
   check_args "$@" $# 1
 
