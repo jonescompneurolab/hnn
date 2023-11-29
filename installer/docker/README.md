@@ -1,5 +1,114 @@
 # HNN Docker Container
 
+### ** UPDATED Instructions: 11/29/2023 **
+
+### Windows Installation Process
+
+## Part 1 Install WSL
+1. Open the Command Prompt application. Can be found by searching `Command Prompt` in the Windows search bar.
+2. Paste the following command to install Windows Subsystem for Linux (WSL)
+```
+wsl --install
+``` 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/f94c9ea6-1459-4082-8a01-af69d115368c)
+
+3. Once the installation is completed, you will see that an `Ubuntu` application is also downloaded. This can be found in `Settings > Apps > Installed apps` or by searching `Ubuntu` in the Windows search bar. 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/aa1635db-ccd7-4989-bdbd-7f89f5493225)
+
+4. Once WSL is installed, navigate to the Windows Start Menu and in the search bar, look up `Turn Windows Features on or off` and click on it
+
+5. Go down the list until you see Windows Subsystem for Linux, and check the box so that it is enabled. Click ok so the changes can be applied. 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d9c9580f-2082-4ac8-bdee-ca599e9b2da1)
+
+6. Then open up the Ubuntu application that was mentioned in Step 3. 
+7. The very first time you open up this application, you will be instructed to create a new UNIX username and password. If dont correctly, it will show you an `installation successful!` message. 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d6e26399-804d-4780-a451-492c1ccdf81f)
+
+
+
+## Part 2 Install Docker
+1. Please install Docker Desktop from this link https://docs.docker.com/desktop/wsl/#download
+2. Once installed, click on the newly added Docker icon to open up the Docker Desktop application. 
+3. Navigate to Settings, and click on General. Make sure that `Use the WSL 2 Based Engine` is checked. 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/84d0078a-ba4f-478c-8af1-e7771ba896b3)
+
+4. Next, click on Resources > WSL Integration
+5. Inside here, make sure that all Ubuntu options are toggled. Then press apply & restart. 
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d01a0c14-37b2-456a-b7d8-3ed3bdd5283c)
+
+6. To check if Docker is correctly installed, you can open up the Ubuntu terminal (application) and type `docker --version` this should display the version and build number of the software installed. 
+
+
+## Part 3 Install Vcxsrv
+1. Please install Vcxsrv https://sourceforge.net/projects/vcxsrv/
+2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder.
+3. A new icon named XLaunch should now appear on your computer. Click on the icon to continue with the installation steps. 
+4. Choose "Multiple windows". Choose '0' for the "Display number". Click 'Next'.
+![image](<Screenshot 2023-11-29 163402-1.png>)
+5. Select "Start no client" and click 'Next'.
+![Alt text](<Screenshot 2023-11-29 164111.png>)
+6. Please make sure "Disable access control" is checked and click 'Next'. This will take you to the final page where you can press 'Finish' to finish the installation. 
+![Alt text](<Screenshot 2023-11-29 163550.png>)
+
+
+## Part 4 Configure and Run HNN Application
+1. Open up a new Ubuntu terminal application, referenced in Step 3 of Part 1.
+2. We will now download the source code that starts up the GUI. Paste this command to create a copy of the source code on your computer.
+```
+git clone https://github.com/jonescompneurolab/hnn.git
+```
+3. Paste the following command to navigate to inside the project in your Ubuntu terminal. 
+```
+cd hnn
+```
+4. Before we can start up the application, an additional step is required. We have to set up the right configurations for Vcxsrv (downloaded in Step 3) before we can start up the HNN interface. To do so, please paste the following command in the terminal to run the `configure_vcxsrv.sh` script which will handle the configurations for you.
+```
+./scripts/configure_vcxsrv.sh
+``` 
+A successful run of the `configure_vcxsrv.sh` script should output the following logs. 
+![Alt text](<Screenshot 2023-11-29 165651.png>)
+
+5. Run the following command to start up the hnn GUI.
+```
+./hnn_docker.sh start
+``` 
+
+Your terminal should show the following logs if it successfully starts up the hnn GUI.
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/2e5942cb-100f-44cf-9c6f-fdee72576844)
+
+The resulting hnn GUI on initial startup.
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/cb6f404c-d6df-45ef-ab80-cf85e293bf8b)
+
+
+## Troubleshooting
+If you run into the following error while running `./hnn_docker.sh start` 
+
+`
+ docker-machine could not be found.
+`
+- Please make sure you have gone over the previous steps for installing the docker desktop. 
+- If this error persists, please try closing and restarting the docker desktop application. 
+
+If you run into the following error while running `./hnn_docker.sh start`
+
+`
+xuath: (argv):1: couldn't query Security extension on display “:0”
+`
+- Please double check that you have gone through the steps in Part 3 to configure the magic cookie credentials required for the VcXsrv server to accept connections. 
+
+
+
+
+
+
+
+### ** END OF UPDATED INSTALLATION STEPS **
+
+_______________________________________________________________________
+
+
+** The following is deprectated ** 
+
 This directory contains files for building the HNN Docker container. The container itself is running the Ubuntu 18.04 Linux distribution, but can run on any operating system assuming that [Docker](https://www.docker.com/) is installed.
 
 ## Pulling the prebuilt Docker container from Docker Hub
