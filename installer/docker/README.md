@@ -44,11 +44,13 @@ wsl --install
 2. Run the installer, choosing "C:\Program Files\VcXsrv" as the destination folder.
 3. A new icon named XLaunch should now appear on your computer. Click on the icon to continue with the installation steps. 
 4. Choose "Multiple windows". Choose '0' for the "Display number". Click 'Next'.
-![image](<Screenshot 2023-11-29 163402-1.png>)
+![Screenshot 2023-11-29 163402](https://github.com/jonescompneurolab/hnn/assets/34087669/89bcad1a-56fd-4026-a718-ea3c81b8554d)
+
 5. Select "Start no client" and click 'Next'.
-![Alt text](<Screenshot 2023-11-29 164111.png>)
+![Screenshot 2023-11-29 164111](https://github.com/jonescompneurolab/hnn/assets/34087669/57ba748c-6a05-424d-aa7b-8afcc7f9b917)
+
 6. Please make sure "Disable access control" is checked and click 'Next'. This will take you to the final page where you can press 'Finish' to finish the installation. 
-![Alt text](<Screenshot 2023-11-29 163550.png>)
+![Screenshot 2023-11-29 163550](https://github.com/jonescompneurolab/hnn/assets/34087669/d4c7341b-1b00-4721-b49d-79b5dd081047)
 
 
 ## Part 4 Configure and Run HNN Application
