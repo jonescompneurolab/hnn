@@ -18,7 +18,7 @@ wsl --install
 
 5. Once WSL is installed, navigate to the Windows Start Menu and in the search bar, look up `Turn Windows Features on or off` and click on it
 
-6. Go down the list until you see Windows Subsystem for Linux, and check the box so that it is enabled. Click ok so the changes can be applied.
+6. Go down the list until you see Windows Subsystem for Linux, and check the box so that it is enabled. Click OK so the changes can be applied.
    
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d9c9580f-2082-4ac8-bdee-ca599e9b2da1)
 
@@ -32,7 +32,7 @@ wsl --install
 ## Part 2 Install Docker
 1. Please install Docker Desktop from this link https://docs.docker.com/desktop/install/windows-install/
 2. Once installed, click on the newly added Docker Desktop icon on your computer to open up the application.
-3. Press on the Settings Icon in the navigation bar to navigate to the Settings. Once ther, click on the General tab. Make sure that `Use the WSL 2 Based Engine` is checked as shown in the screenshot below.
+3. Press on the Settings Icon in the navigation bar to navigate to the Settings. Once there, click on the General tab. Make sure that `Use the WSL 2 Based Engine` is checked as shown in the screenshot below.
    
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/84d0078a-ba4f-478c-8af1-e7771ba896b3)
 
