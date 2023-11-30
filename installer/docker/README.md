@@ -118,7 +118,7 @@ xauth: (argv):1: couldn't query Security extension on display “:0”
 _______________________________________________________________________
 
 
-** The following is deprectated ** 
+** The following is deprecated ** 
 
 This directory contains files for building the HNN Docker container. The container itself is running the Ubuntu 18.04 Linux distribution, but can run on any operating system assuming that [Docker](https://www.docker.com/) is installed.
 
