@@ -13,16 +13,19 @@ wsl --install
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/f94c9ea6-1459-4082-8a01-af69d115368c)
 
 3. Once the installation is completed, you will see that an `Ubuntu` application is also downloaded. This can be found in `Settings > Apps > Installed apps` or by searching `Ubuntu` in the Windows search bar. Please take note of this as it will be important later on in this installation.
-   ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/aa1635db-ccd7-4989-bdbd-7f89f5493225)
 
-4. Once WSL is installed, navigate to the Windows Start Menu and in the search bar, look up `Turn Windows Features on or off` and click on it
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/aa1635db-ccd7-4989-bdbd-7f89f5493225)
 
-5. Go down the list until you see Windows Subsystem for Linux, and check the box so that it is enabled. Click ok so the changes can be applied.
-   ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d9c9580f-2082-4ac8-bdee-ca599e9b2da1)
+5. Once WSL is installed, navigate to the Windows Start Menu and in the search bar, look up `Turn Windows Features on or off` and click on it
 
-6. Then open up the Ubuntu application that was mentioned in Step 3.
-7. The very first time you open up this application, you will be instructed to create a new UNIX username and password. If done correctly, it will show an `installation successful!` message.
-   ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d6e26399-804d-4780-a451-492c1ccdf81f)
+6. Go down the list until you see Windows Subsystem for Linux, and check the box so that it is enabled. Click ok so the changes can be applied.
+   
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d9c9580f-2082-4ac8-bdee-ca599e9b2da1)
+
+8. Then open up the Ubuntu application that was mentioned in Step 3.
+9. The very first time you open up this application, you will be instructed to create a new UNIX username and password. If done correctly, it will show an `installation successful!` message.
+   
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d6e26399-804d-4780-a451-492c1ccdf81f)
 
 
 
@@ -30,13 +33,15 @@ wsl --install
 1. Please install Docker Desktop from this link https://docs.docker.com/desktop/install/windows-install/
 2. Once installed, click on the newly added Docker Desktop icon on your computer to open up the application.
 3. Press on the Settings Icon in the navigation bar to navigate to the Settings. Once ther, click on the General tab. Make sure that `Use the WSL 2 Based Engine` is checked as shown in the screenshot below.
-   ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/84d0078a-ba4f-478c-8af1-e7771ba896b3)
+   
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/84d0078a-ba4f-478c-8af1-e7771ba896b3)
 
-4. Next, click on the Resources tab on the left and navigate to `WSL Integration`
-5. Inside here, make sure that all Ubuntu options are toggled. Then press apply & restart.
-   ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d01a0c14-37b2-456a-b7d8-3ed3bdd5283c)
+5. Next, click on the Resources tab on the left and navigate to `WSL Integration`
+6. Inside here, make sure that all Ubuntu options are toggled. Then press apply & restart.
+   
+![image](https://github.com/jonescompneurolab/hnn/assets/34087669/d01a0c14-37b2-456a-b7d8-3ed3bdd5283c)
 
-6. To check if Docker is correctly installed, you can open up the Ubuntu terminal (application) and type `docker --version`, If done correctly, a version and build number of the software installed should be fed back.
+8. To check if Docker is correctly installed, you can open up the Ubuntu terminal (application) and type `docker --version`, If done correctly, a version and build number of the software installed should be fed back.
 
 
 ## Part 3 Install Vcxsrv
@@ -79,9 +84,11 @@ A successful run of the `configure_vcxsrv.sh` script should output the following
 ``` 
 
 Your terminal should display the following messages if it successfully started up the HNN GUI.
+
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/2e5942cb-100f-44cf-9c6f-fdee72576844)
 
 The resulting HNN GUI on initial startup.
+
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/cb6f404c-d6df-45ef-ab80-cf85e293bf8b)
 
 
