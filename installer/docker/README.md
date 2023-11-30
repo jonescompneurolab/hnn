@@ -70,15 +70,15 @@ cd hnn
 A successful run of the `configure_vcxsrv.sh` script should output the following logs. 
 ![Alt text](<Screenshot 2023-11-29 165651.png>)
 
-5. Run the following command to start up the hnn GUI.
+5. Run the following command to start up the HNN GUI.
 ```
 ./hnn_docker.sh start
 ``` 
 
-Your terminal should show the following logs if it successfully starts up the hnn GUI.
+Your terminal should display the following messages if it successfully started up the HNN GUI.
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/2e5942cb-100f-44cf-9c6f-fdee72576844)
 
-The resulting hnn GUI on initial startup.
+The resulting HNN GUI on initial startup.
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/cb6f404c-d6df-45ef-ab80-cf85e293bf8b)
 
 
@@ -94,7 +94,7 @@ If you run into the following error while running `./hnn_docker.sh start`
 If you run into the following error while running `./hnn_docker.sh start`
 
 `
-xuath: (argv):1: couldn't query Security extension on display “:0”
+xauth: (argv):1: couldn't query Security extension on display “:0”
 `
 - Please double check that you have gone through the steps in Part 3 to configure the magic cookie credentials required for the VcXsrv server to accept connections. 
 
