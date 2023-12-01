@@ -62,7 +62,7 @@ wsl --install
 
 
 ## Part 4 Configure and Run HNN Application
-1. Open up a new Ubuntu terminal application, referenced in Step 3 of Part 1.
+1. Open up a new Ubuntu terminal application, referenced in Step 3 of Part 1. (Note: ensure that the Ubuntu terminal is being used and not the Windows Powershell)
 2. We will now download the source code that starts up the GUI. Paste this command to create a copy of the source code on your computer.
 ```
 git clone https://github.com/jonescompneurolab/hnn.git
