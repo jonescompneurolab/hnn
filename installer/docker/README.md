@@ -1,8 +1,8 @@
 # HNN Docker Container
 
-### Windows Installation Process
+## Windows Installation Process
 
-## Part 1 Install WSL
+### Part 1 Install WSL
 1. Open the Command Prompt application. Can be found by searching `Command Prompt` in the Windows search bar.
 2. Paste the following command to install Windows Subsystem for Linux (WSL)
 ```
@@ -27,7 +27,7 @@ wsl --install
 
 
 
-## Part 2 Install Docker
+### Part 2 Install Docker
 1. Please install Docker Desktop from this link https://docs.docker.com/desktop/install/windows-install/
 2. Once installed, click on the newly added Docker Desktop icon on your computer to open up the application.
 3. Press on the Settings Icon in the navigation bar to navigate to the Settings. Once there, click on the General tab. Make sure that `Use the WSL 2 Based Engine` is checked as shown in the screenshot below.
@@ -42,7 +42,7 @@ wsl --install
 8. To check if Docker is correctly installed, you can open up the Ubuntu terminal (application) and type `docker --version`, If done correctly, a version and build number of the software installed should be fed back.
 
 
-## Part 3 Install Vcxsrv
+### Part 3 Install Vcxsrv
 1. Please install Vcxsrv https://sourceforge.net/projects/vcxsrv/
 2. Run the installer, choosing `C:\Program Files\VcXsrv` as the destination folder.
 3. A new icon named `XLaunch` should now appear on your computer. Click on the icon to open up the application and continue with the installation steps.
@@ -59,7 +59,7 @@ wsl --install
 ![Screenshot 2023-11-29 163550](https://github.com/jonescompneurolab/hnn/assets/34087669/d4c7341b-1b00-4721-b49d-79b5dd081047)
 
 
-## Part 4 Configure and Run HNN Application
+### Part 4 Configure and Run HNN Application
 1. Open up a new Ubuntu terminal application, referenced in Step 3 of Part 1. (Note: ensure that the Ubuntu terminal is being used and not the Windows Powershell)
 2. We will now download the source code that starts up the GUI. Paste this command to create a copy of the source code on your computer.
 ```
@@ -90,7 +90,7 @@ The resulting HNN GUI on initial startup.
 ![image](https://github.com/jonescompneurolab/hnn/assets/34087669/cb6f404c-d6df-45ef-ab80-cf85e293bf8b)
 
 
-## Troubleshooting
+### Troubleshooting
 If you run into the following error while running `./hnn_docker.sh start`
 
 `
@@ -105,11 +105,3 @@ If you run into the following error while running `./hnn_docker.sh start`
 xauth: (argv):1: couldn't query Security extension on display “:0”
 `
 - Please double check that you have gone through the steps in Part 3 to correctly set up the Vcxsrv server. Also check that you have successfully ran the `configure_vcxsrv.sh` script from the previous Step 4 of this Part 4 of the installation.
-
-
-export XAUTHORITY=/tmp/.Xauthority
-export SYSTEM_USER_DIR="$HOME"
-ssh -o SendEnv=DISPLAY -o SendEnv=XAUTHORITY -o SendEnv=SYSTEM_USER_DIR -o SendEnv=TRAVIS_TESTING -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -v -i "SSH_PRIVKEY" -R 6000:127.0.0.1:6000 hnn_user@localhost -p 32791
-```
-
-* Commands should be run from the HNN source code directory
