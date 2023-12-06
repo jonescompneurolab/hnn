@@ -5,8 +5,6 @@ Currently, HNN is only supported on Docker. Please refer to the link below for m
 [Docker](docker)
 
 
-** The following is deprectated ** 
-
 This directory contains instructions and files supporting installation of HNN on supported platforms. Click on the link below corresponding to your operating system:
 
 * [Windows](windows)
