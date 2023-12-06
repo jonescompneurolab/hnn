@@ -1,11 +1,9 @@
 # HNN Installation
 
-### UPDATED: 11/29/2023
 Currently, HNN is only supported on Docker. Please refer to the link below for more information on installing HNN on either Mac or Windows. 
 
 [Docker](docker)
 
-___________________________________________________________________
 
 ** The following is deprectated ** 
 
