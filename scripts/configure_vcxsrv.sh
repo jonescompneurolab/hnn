@@ -27,6 +27,6 @@ xauth list
 # Copy .Xauthority to Windows user profile
 echo "Copying credentials to Windows user profile..."
 userprofile=$(wslpath $(/mnt/c/Windows/System32/cmd.exe /C "echo %USERPROFILE%" | tr -d '\r\n'))
-cp ~/.Xauthority "$userprofile"
+cp "~/.Xauthority" "${userprofile}/."
 
 echo "Done setting up X server credentials!"
