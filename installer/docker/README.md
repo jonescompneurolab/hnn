@@ -5,6 +5,8 @@
 ### Part 1 Install WSL
 1. Open the Command Prompt application. Can be found by searching `Command Prompt` in the Windows search bar.
 2. Paste the following command to install Windows Subsystem for Linux (WSL)
+
+_Note: if WSL is already installed on your computer, please ensure it is WSL2 . WSL1 is incompatible with Docker install._
 ```
 wsl --install
 ``` 
