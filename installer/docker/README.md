@@ -65,7 +65,7 @@ wsl --install
 1. Open up a new Ubuntu terminal application, referenced in Step 3 of Part 1. (Note: ensure that the Ubuntu terminal is being used and not the Windows Powershell)
 2. We will now download the source code that starts up the GUI. Paste this command to create a copy of the source code on your computer.
 ```
-git clone https://github.com/jonescompneurolab/hnn.git
+git clone --single-branch --branch maint/pre-hnn-core https://github.com/jonescompneurolab/hnn.git
 ```
 3. Paste the following command to navigate to inside the project in your Ubuntu terminal.
 ```
