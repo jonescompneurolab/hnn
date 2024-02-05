@@ -2140,13 +2140,13 @@ function config_xquartz_for_tcp {
   local __xquartz_nolisten
 
   # check if xquartz needs to be restarted to access preferences
-  __xquartz_output=$(output_run_command "defaults read org.macosforge.xquartz.X11.plist")
+  __xquartz_output=$(output_run_command "defaults read org.xquartz.X11.plist")
   if [[ $? -ne 0 ]]; then
     __restart_xquartz=1
     return 1
   elif [[ -z "$__xquartz_output" ]]; then
     echo "*failed*" | tee -a "$LOGFILE"
-    echo -e "\nNo valid output from org.macosforge.xquartz.X11.plist" | tee -a "$LOGFILE"
+    echo -e "\nNo valid output from org.xquartz.X11.plist" | tee -a "$LOGFILE"
     cleanup 2
   fi
 
@@ -2167,13 +2167,13 @@ function config_xquartz_for_tcp {
     if [[ "$__xquartz_nolisten" == "1" ]]; then
       __restart_xquartz=1
       print_header_message "Setting XQuartz preferences to listen for network connections... "
-      run_command_print_status_failure_exit "defaults write org.macosforge.xquartz.X11.plist nolisten_tcp 0"
+      run_command_print_status_failure_exit "defaults write org.xquartz.X11.plist nolisten_tcp 0"
     fi
 
     if [[ "$__xquartz_noauth" == "1" ]]; then
       __restart_xquartz=1
       print_header_message "Setting XQuartz preferences to use authentication... "
-      run_command_print_status_failure_exit "defaults write org.macosforge.xquartz.X11.plist no_auth 0"
+      run_command_print_status_failure_exit "defaults write org.xquartz.X11.plist no_auth 0"
     fi
   else
     check_x_port_netcat
