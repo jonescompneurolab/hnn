@@ -97,7 +97,7 @@ class MorletSpec():
         f_mask = (self.TFR==max_spec).sum(axis=1)
         f_at_max = self.f[f_mask == 1]
 
-        return np.array((max_spec, t_at_max, f_at_max))
+        return np.array((max_spec, t_at_max, f_at_max), dtype=object)
 
     # also creates self.timevec
     def __traces2TFR(self):
