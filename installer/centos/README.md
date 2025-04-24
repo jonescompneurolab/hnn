@@ -1,5 +1,7 @@
 # HNN "Python" install (CentOS)
 
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+
 The script below assumes that it can update OS packages for python and prerequisites for HNN.
 
 * CentOS 7: [hnn-centos7.sh](hnn-centos7.sh)
@@ -44,11 +46,3 @@ cd hnn_source_code
 make
 python3 hnn.py
 ```
-
-## Troubleshooting
-
-If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
-
-Another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
-
-* [Virtualbox install instructions](../virtualbox/README.md)
