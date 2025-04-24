@@ -1,45 +1,61 @@
-# HNN "Python" install (Ubuntu)
+# Installing HNN via Python on Ubuntu Linux
 
-The script below assumes that it can update OS packages for python and prerequisites for NHNN.
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+
+These instructions were last successfully testing in April 2025, using Kubuntu 24.04.
+
+## 1) Install system packages
+
+First, open a terminal program and update the following system packages using a command like the following:
 
 ```bash
-curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-ubuntu.sh
-bash hnn-ubuntu.sh
+sudo apt-get update
+sudo apt-get install --no-install-recommends -y \
+    make gcc g++ \
+    openmpi-bin lsof \
+    libfontconfig1 libxext6 libx11-xcb1 libxcb-glx0 \
+    libxkbcommon-x11-0 libgl1-mesa-dev \
+    libncurses6 libreadline8 libdbus-1-3 libopenmpi-dev \
+    libc6-dev libtinfo-dev libncurses-dev \
+    libx11-dev libreadline-dev \
+    libxcb-icccm4 libxcb-util1 libxcb-image0 libxcb-keysyms1 \
+    libxcb-render0 libxcb-shape0 libxcb-randr0 libxcb-render-util0 \
+    libxcb-xinerama0 libxcb-xfixes0
 ```
 
-## Start HNN
+## 2) Install Python and Python dependencies
 
-1. From the command-line, type following commands
+We recommend installing Python via the [Anaconda Distribution](https://www.anaconda.com/download/success), but any virtual environment tool should work. Create a new virtual environment and enter it. (If you are new to Python virtual environments, see [https://www.anaconda.com/docs/getting-started/getting-started](https://www.anaconda.com/docs/getting-started/getting-started)).
 
-    ```bash
-    cd hnn_source_code
-    python3 hnn.py
-    ```
+We recommend you use Python 3.8. Python version 3.10 or later is unlikely to work.
 
-2. The HNN GUI should show up. Make sure that you can run simulations by clicking the 'Run Simulation' button. This will run a simulation with the default configuration. After it completes, graphs should be displayed in the main window.
+Once you are inside your environment, install the following packages from pip using a command like the following:
 
-3. You can now proceed to running the tutorials at [https://hnn.brown.edu/index.php/tutorials/](https://hnn.brown.edu/index.php/tutorials/) . Some things to note:
+```bash
+pip install --no-cache-dir --user \
+    NEURON matplotlib PyOpenGL \
+    pyqt5 pyqtgraph scipy numpy nlopt psutil
+```
 
-    * A directory called "hnn_out" exists in your home directory in Ubuntu where the results from your simulations (data and param files) will be stored.
+## 3) Download HNN code and compile mechanisms
 
-## Upgrading to a new version of HNN
-
-HNN Releases can be seen on the [GitHub releases page](https://github.com/jonescompneurolab/hnn/releases/). You can also be notified of new releases by watching the hnn [repository on GitHub](https://github.com/jonescompneurolab/hnn/).
-
-To download the latest release, use the following commands within an Ubuntu terminal:
+Next, you need to download and unpack the HNN release. Note that these files are NOT the same as cloning the `hnn` repository! Once you `cd` into the directory of your choosing, you can run the following command to download, extract, and compile the NEURON mechanisms of the HNN code:
 
 ```bash
 curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
 tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
 cd hnn_source_code
 make
-python3 hnn.py
+```
+
+## 4) Run HNN
+
+Finally, once you have done all of the above, you can start the HNN-GUI using the following command:
+
+```bash
+python hnn.py
 ```
 
 ## Troubleshooting
 
-If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
-
-Another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
-
-* [Virtualbox install instructions](../virtualbox/README.md)
+If you have issues with the above installation method, you can view older but different install methods at [this link here](2021_instructions). You can also try downloading [Docker Desktop](https://www.docker.com/products/docker-desktop/), downloading git (`sudo apt-get install git`), then using the HNN Docker image by following the instructions starting with "Part 4" from this comment: https://github.com/jonescompneurolab/hnn/pull/337#issuecomment-1799006204 .
