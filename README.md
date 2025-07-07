@@ -1,5 +1,17 @@
 # Human Neocortical Neurosolver (HNN)
 
+-----
+
+## Deprecation Notice
+
+This is the repository and code for the **original** version of HNN, as documented in [(Neymotin, et al., 2020) here](https://elifesciences.org/articles/51214). This version of HNN is **no longer supported** and **no longer actively-developed**.
+
+If you are reading this, **you should switch** to the newest version of HNN, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core) and also at the [main HNN website here](https://hnn.brown.edu). HNN-Core includes its own version of the GUI alongside many other features of the original.
+
+This repository and code has been left as it is for the purposes of scientific reproducibility. The contents of the original README follows this section.
+
+-----
+
 ## About
 
 The **Human Neocortical Neurosolver (HNN)** is an open-source neural modeling tool designed to help
