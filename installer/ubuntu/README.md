@@ -2,7 +2,7 @@
 
 **Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
 
-These instructions were last successfully testing in April 2025, using Kubuntu 24.04.
+These instructions were last successfully testing in September 2025, using Kubuntu 24.04 and Linux Mint 21.2 Cinnamon.
 
 ## 1) Install system packages
 
@@ -32,7 +32,7 @@ We recommend you use Python 3.8. Python version 3.10 or later is unlikely to wor
 Once you are inside your environment, install the following packages from pip using a command like the following:
 
 ```bash
-pip install --no-cache-dir --user \
+pip install --no-cache-dir \
     NEURON matplotlib PyOpenGL \
     pyqt5 pyqtgraph scipy numpy nlopt psutil
 ```
@@ -42,8 +42,8 @@ pip install --no-cache-dir --user \
 Next, you need to download and unpack the HNN release. Note that these files are NOT the same as cloning the `hnn` repository! Once you `cd` into the directory of your choosing, you can run the following command to download, extract, and compile the NEURON mechanisms of the HNN code:
 
 ```bash
-curl --remote-name https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
-tar -x --strip-components 1 -f hnn.tar.gz -C hnn_source_code
+curl -sOL https://github.com/jonescompneurolab/hnn/releases/latest/download/hnn.tar.gz
+tar -x --strip-components 1 -f hnn.tar.gz --one-top-level=hnn_source_code
 cd hnn_source_code
 make
 ```
