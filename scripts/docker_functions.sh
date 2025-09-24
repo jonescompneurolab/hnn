@@ -628,7 +628,7 @@ function get_container_port {
       return 1
     fi
 
-    __ssh_port=$(echo $__port_string| cut -d':' -f 2)
+    __ssh_port=$(echo "$__port_string" | tr -d '\r' | tail -n1 | awk -F':' '{print $NF}' | tr -d '[:space:]')
     re='^[0-9]+$'
     if ! [[ $__ssh_port =~ $re ]] ; then
       echo "*failed*" >> "$LOGFILE"
