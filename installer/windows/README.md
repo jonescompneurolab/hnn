@@ -32,7 +32,7 @@ After restart, start Docker so that it is running. Make sure to accept any licen
 
 ## 6) Configure VcXsrv for WSL
 
-Open the new program called "Ubuntu" to access your WSL install, then follow the instructions at https://sourceforge.net/p/vcxsrv/wiki/VcXsrv%20%26%20Win10/ . The "Alternate Setup" after the main text is another method that works, and is somewhat easier to follow.
+Open the new program called "Ubuntu" to access your WSL install, then follow the instructions at https://sourceforge.net/p/vcxsrv/wiki/VcXsrv%20%26%20Win10/ . The "Alternate Setup" after the main text is another method that works, and is somewhat easier to follow. If you want to use the "Alternate Setup", then you can launch the program "XLaunch" from your start menu, and enter the commands that resemble `export ...` into your "Ubuntu" window.
 
 ## 7) Download the HNN repository
 
