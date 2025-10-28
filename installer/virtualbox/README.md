@@ -1,5 +1,7 @@
 # Running HNN in VirtualBox VM
 
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+
 We have created a VirtualBox VM image that allows users to run HNN using virtualization software. The virtualized machine runs Ubuntu Linux with HNN pre-installed.
 
 You will need an additional ~20 GB of storage space on your machine to set up the VirtualBox image. Of note, any virtualization software can be used to the same effect.
@@ -46,10 +48,4 @@ Additional Notes:
 
 ## Updating HNN
 
-Improvements to HNN with updated releases can be found on [our GitHub page](https://github.com/jonescompneurolab/hnn/releases">https://github.com/jonescompneurolab/hnn/releases). These changes may need to be incorporated into to the VM by running the command `git pull origin master` from the `/home/hnn_user/hnn_source_code` directory in a terminal window.
-
-## Troubleshooting
-
-If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will be able to suggest possible fixes.
-
-For other HNN software issues, please visit the [HNN bulletin board](https://www.neuron.yale.edu/phpBB/viewforum.php?f=46)
+Improvements to HNN with updated releases can be found on [our GitHub page](https://github.com/jonescompneurolab/hnn/releases). These changes may need to be incorporated into to the VM by running the command `git pull origin master` from the `/home/hnn_user/hnn_source_code` directory in a terminal window.

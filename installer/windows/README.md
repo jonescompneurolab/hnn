@@ -1,13 +1,50 @@
-# Installing HNN on Windows
+# Installing HNN via Docker on Windows (WSL)
 
-This guide describes installing HNN on Windows 10.
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
 
-We recommend the Microsoft [Windows Subsystem for Linux (WSL) installation](wsl.md) because:
+## 1) Install Docker Desktop
 
-1. The simulation code is compiled into a Linux system compatible format, which actually runs faster than when compiled to run directly on Windows.
-2. With WSL installed, the installation process becomes nearly identical to that on a Linux system, which helps ensure that the installation process remains reliable with common troubleshooting steps.
+Simply scroll down and follow the instructions on the website to download and install Docker Desktop: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/).
 
-The major drawbacks to the recommend option are:
+You do NOT need to create an account.
 
-1. Using WSL requires running a X server on the Windows OS to display graphics from the WSL environment. The steps to install VcXsrv (a free X server for Windows) are part of the HNN installation instructions above.
-2. The data and parameter files from HNN simulations are stored in a filesystem specific for the Ubuntu application. You can read Windows files from Ubuntu in the Ubuntu command-line (e.g. via `/mnt/c/users/`). However, you cannot access simulation results from Windows applications without copying the file to the mount directory first. See [WSL FAQ](https://docs.microsoft.com/en-us/windows/wsl/faq#how-do-i-use-a-windows-file-with-a-linux-app). If this is a limitation for your workflow, please try the Windows-native install instructions.
+## 2) Install Windows Subsystem for Linux (WSL)
+
+Open the "PowerShell" or "Windows Command Prompt" programs in administrator mode by right-clicking either and selecting "Run as administrator". Then, in the window, run the following command:
+
+```
+wsl --install
+```
+
+Follow the default options for your install. For more information, see https://learn.microsoft.com/en-us/windows/wsl/install .
+
+## 3) Install VcXsrv
+
+Download "VcXsrv Windows X Server" from either https://sourceforge.net/projects/vcxsrv/ (older) or https://github.com/marchaesen/vcxsrv/releases (newer). Either should work.
+
+## 4) Restart your computer
+
+Make sure to restart your computer.
+
+## 5) Start Docker Desktop
+
+After restart, start Docker so that it is running. Make sure to accept any license agreements if it prompts you to.
+
+## 6) Configure VcXsrv for WSL
+
+Open the new program called "Ubuntu" to access your WSL install, then follow the instructions at https://sourceforge.net/p/vcxsrv/wiki/VcXsrv%20%26%20Win10/ . The "Alternate Setup" after the main text is another method that works, and is somewhat easier to follow. If you want to use the "Alternate Setup", then you can launch the program "XLaunch" from your start menu, and enter the commands that resemble `export ...` into your "Ubuntu" window.
+
+## 7) Download the HNN repository
+
+Download the repository from https://github.com/jonescompneurolab/hnn . You can do this by either installing git then running `git clone https://github.com/jonescompneurolab/hnn`, or clicking the green `Code` button and selecting `Download ZIP`. If you downloaded the ZIP file, extract it into a folder.
+
+## 8) Run the HNN Docker script
+
+In **the Ubuntu app, which is the same as your WSL installation**, navigate to inside the `hnn` or `hnn-master` folder that you just downloaded. Then, run `./hnn_docker.sh start` to start the script, which should take a minute to download the Docker image, and then it will start up the GUI. Note that you must do this through your Ubuntu/WSL install, *not* via Windows Powershell or Command-Prompt. Then get simulating!
+
+## Troubleshooting
+
+If you receive an error, try running `./hnn_docker.sh uninstall` first, before running `./hnn_docker.sh start` again. This could happen if you're trying to run an old version of HNN. Note that these instructions were based off of the instructions provided in this pull request: https://github.com/jonescompneurolab/hnn/pull/337 . See the following comment in particular:  https://github.com/jonescompneurolab/hnn/pull/337#issuecomment-1799006204 . If you run into issues, follow the instructions in that comment.
+
+If you have further issues with the above installation method, you can view older but different install methods at [this link here](2021_instructions).
+

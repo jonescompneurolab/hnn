@@ -1,5 +1,7 @@
 # HNN Installation
 
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+
 This directory contains instructions and files supporting installation of HNN on supported platforms. Click on the link below corresponding to your operating system:
 
 * [Windows](windows)

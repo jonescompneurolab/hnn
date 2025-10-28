@@ -1,22 +1,11 @@
-# HNN "Python" install (CentOS)
+# HNN "Python" install (Ubuntu)
 
-**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+The script below assumes that it can update OS packages for python and prerequisites for NHNN.
 
-The script below assumes that it can update OS packages for python and prerequisites for HNN.
-
-* CentOS 7: [hnn-centos7.sh](hnn-centos7.sh)
-
-    ```bash
-    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos7.sh
-    bash hnn-centos7.sh
-    ```
-
-* CentOS 6 (no longer maintained): [hnn-centos6.sh](hnn-centos6.sh)
-
-    ```bash
-    curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/centos/hnn-centos6.sh
-    bash hnn-centos6.sh
-    ```
+```bash
+curl --remote-name https://raw.githubusercontent.com/jonescompneurolab/hnn/master/installer/ubuntu/hnn-ubuntu.sh
+bash hnn-ubuntu.sh
+```
 
 ## Start HNN
 
@@ -46,3 +35,11 @@ cd hnn_source_code
 make
 python3 hnn.py
 ```
+
+## Troubleshooting
+
+If you run into other issues with the installation, please [open an issue on our GitHub](https://github.com/jonescompneurolab/hnn/issues). Our team monitors these issues and will investigate possible fixes.
+
+Another option for users that are running into problems with the above methods, we provide a VirtualBox VM pre-installed with HNN.
+
+* [Virtualbox install instructions](../virtualbox/README.md)

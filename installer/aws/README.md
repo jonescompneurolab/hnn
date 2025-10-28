@@ -1,5 +1,7 @@
 # HNN on Amazon Cloud (AWS)
 
+**Note**: these are instructions for installing the *original* version of HNN, which is **no longer actively-developed**, and only made available for scientific reproducibility. If you are reading this, you probably want to be using the actively-developed version, called *HNN-Core*, which is [available here](https://github.com/jonescompneurolab/hnn-core).
+
 This guide describes running HNN on Amazon Web Services (AWS). An image containing HNN pre-installed is available as a Community AMI.
 
 ## Starting an Amazon EC2 instance with HNN pre-installed
