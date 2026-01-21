@@ -94,20 +94,22 @@ def simulate(net):
 
     sim_data = {}
     # run the simulation with MPIBackend for faster completion time
-    record_vsoma = bool(net.params['record_vsoma'])
+    record_vsoma = bool(net._params['record_vsoma'])
 
-    numspikes_params = net.params['numspikes_*']
+    numspikes_params = net._params['numspikes_*']
     # optimization can feed in floats for numspikes
     for param_name, spikes in numspikes_params.items():
-        net.params[param_name] = round(spikes)
+        net._params[param_name] = round(spikes)
 
-    sim_data['raw_dpls'] = simulate_dipole(net, net.params['N_trials'],
+    sim_data['raw_dpls'] = simulate_dipole(net, 
+                                           n_trials=net._params['N_trials'],
                                            postproc=False,
-                                           record_vsoma=record_vsoma)
+                                           record_vsoma=record_vsoma,
+                                           tstop=net._params['tstop'])
 
     # hnn-core changes this to bool, change back to int
-    if isinstance(net.params['record_vsoma'], bool):
-        net.params['record_vsoma'] = int(record_vsoma)
+    if isinstance(net._params['record_vsoma'], bool):
+        net._params['record_vsoma'] = int(record_vsoma)
     sim_data['gid_ranges'] = net.gid_ranges
     sim_data['spikes'] = net.cell_response
     sim_data['vsoma'] = net.cell_response.vsoma
