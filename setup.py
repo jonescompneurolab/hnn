@@ -37,5 +37,7 @@ if __name__ == "__main__":
           packages=find_packages(),
           package_data={'hnn':
                         ['../param/*.param']},
-          install_requires=['hnn-core']
+          install_requires=['nlopt',
+                            'psutil',
+                            'pyqt5']
           )

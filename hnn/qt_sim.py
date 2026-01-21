@@ -396,7 +396,6 @@ class SIMCanvas(FigureCanvasQTAgg):
             xlim = (first_spec_trial['time'][0],
                     first_spec_trial['time'][-1])
 
-
             # set the axes of input histograms to match dipole and spec plots
             for ax in hist_axes:
                 ax.set_xlim(xlim)
